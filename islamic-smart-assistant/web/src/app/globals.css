@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&family=Scheherazade+New:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-grad-1: #FBF8EF;
+  --bg-grad-2: #F1EDDC;
+  --bg-grad-3: #E7E0C4;
+}
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+  color: theme('colors.ink');
+  font-family: theme('fontFamily.sans');
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(16,185,129,0.10), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(201,162,39,0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 60%, var(--bg-grad-3) 100%);
+  background-attachment: fixed;
+}
+
+.font-arabic { font-family: theme('fontFamily.arabic'); direction: rtl; }
+
+/* ---- reusable components ---- */
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-card-soft;
+  }
+  .glass-dark {
+    @apply bg-midnight-800/70 backdrop-blur-xl border border-white/10 text-parchment;
+  }
+  .card {
+    @apply rounded-2xl bg-white/80 backdrop-blur-md border border-emerald-100/70 shadow-card-soft;
+  }
+  .card-pad   { @apply p-6; }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white px-6 py-3 font-semibold
+           shadow-glow-emerald hover:bg-emerald-700 transition;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-full border border-emerald-700/20 text-emerald-800
+           px-6 py-3 font-semibold hover:bg-emerald-50 transition;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800
+           text-xs font-semibold px-3 py-1 border border-emerald-100;
+  }
+  .chip-gold {
+    @apply inline-flex items-center gap-1 rounded-full bg-gold-100 text-gold-700
+           text-xs font-semibold px-3 py-1 border border-gold-300/40;
+  }
+  .h-display {
+    @apply font-display tracking-tight;
+  }
+  .pattern-bg {
+    background-image: theme('backgroundImage.islamic-pattern');
+    background-repeat: repeat;
+  }
+  .shimmer-bar {
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(6,95,70,0.25); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(6,95,70,0.45); }
+::-webkit-scrollbar-track { background: transparent; }

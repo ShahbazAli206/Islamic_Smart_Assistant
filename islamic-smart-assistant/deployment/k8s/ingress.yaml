@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: islamic-assistant
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # WebSocket sticky sessions for /v1/sync
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "ia-ws-aff"
+spec:
+  tls:
+    - hosts: [api.islamicassistant.app, admin.islamicassistant.app]
+      secretName: islamic-tls
+  rules:
+    - host: api.islamicassistant.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: backend-api, port: { number: 80 } } }
+    - host: admin.islamicassistant.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: web, port: { number: 80 } } }

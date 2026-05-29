@@ -1,0 +1,29 @@
+{
+  "name": "islamic-assistant-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:web": "npm --prefix ../web run dev",
+    "dev:electron": "wait-on http://localhost:3000 && electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "app.islamicassistant.desktop",
+    "productName": "Islamic Assistant",
+    "files": ["electron/**/*"],
+    "win":   { "target": ["nsis"] },
+    "mac":   { "target": ["dmg"], "category": "public.app-category.lifestyle" },
+    "linux": { "target": ["AppImage", "deb"] }
+  }
+}

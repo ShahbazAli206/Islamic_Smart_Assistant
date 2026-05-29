@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: web }
+  template:
+    metadata:
+      labels: { app: web }
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/ORG/islamic-assistant-web:latest
+          ports:
+            - { containerPort: 3000 }
+          env:
+            - { name: NEXT_PUBLIC_API_URL, value: "https://api.islamicassistant.app/v1" }
+            - { name: NEXT_PUBLIC_WS_URL,  value: "wss://api.islamicassistant.app/v1/sync" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector: { app: web }
+  ports:
+    - { port: 80, targetPort: 3000 }

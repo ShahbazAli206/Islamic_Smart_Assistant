@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend-worker }
+  template:
+    metadata:
+      labels: { app: backend-worker }
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/ORG/islamic-assistant-backend:latest
+          envFrom:
+            - secretRef: { name: backend-env }
+          env:
+            - { name: ROLE, value: "worker" }
+          resources:
+            requests: { cpu: "300m", memory: "256Mi" }
+            limits:   { cpu: "1500m", memory: "1Gi" }
