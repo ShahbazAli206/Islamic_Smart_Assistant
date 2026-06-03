@@ -12,6 +12,7 @@ import { PrayerTimesModule } from './modules/prayer-times/prayer-times.module';
 import { AzanModule } from './modules/azan/azan.module';
 import { QuranModule } from './modules/quran/quran.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
+import { WorkersModule } from './modules/scheduling/workers/workers.module';
 import { DevicesModule } from './modules/devices/devices.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -37,6 +38,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     AzanModule,
     QuranModule,
     SchedulingModule,
+    WorkersModule,
     DevicesModule,
     SyncModule,
     NotificationsModule,

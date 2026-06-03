@@ -1,0 +1,46 @@
+# Hugging Face Spaces Dockerfile
+# Runs Redis + NestJS backend in a single container
+
+FROM node:20-bookworm-slim AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build && npm prune --omit=dev
+
+FROM node:20-bookworm-slim AS runtime
+
+# Install Redis
+RUN apt-get update && apt-get install -y --no-install-recommends redis-server && \
+    rm -rf /var/lib/apt/lists/*
+
+# HF Spaces requires user ID 1000
+RUN useradd -m -u 1000 user
+
+# Create Redis data directory with correct permissions
+RUN mkdir -p /data/redis && chown -R user:user /data/redis
+
+# Set working directory
+WORKDIR /home/user/app
+
+# Copy built app
+COPY --from=build --chown=user /app/node_modules ./node_modules
+COPY --from=build --chown=user /app/dist ./dist
+COPY --from=build --chown=user /app/package.json ./package.json
+COPY --chown=user db ./db
+COPY --chown=user start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# HF Spaces requires port 7860
+ENV PORT=7860
+ENV NODE_ENV=production
+ENV REDIS_URL=redis://localhost:6379
+
+EXPOSE 7860
+
+USER user
+CMD ["./start.sh"]

@@ -3,10 +3,13 @@
 
 import type { ColumnType } from 'kysely';
 
+// Columns with DB-generated defaults: readable always, optional on insert, not directly updated.
+type Generated<T> = ColumnType<T, T | undefined, never>;
 type Timestamp = ColumnType<Date, Date | string | undefined, Date | string>;
+type AutoTimestamp = ColumnType<Date, Date | string | undefined, never>;
 
 export interface UsersTable {
-  id: string;
+  id: Generated<string>;
   email: string;
   password_hash: string | null;
   name: string;
@@ -16,7 +19,7 @@ export interface UsersTable {
   fiqh_method: 'hanafi' | 'shafi' | 'maliki' | 'hanbali' | 'jafari' | null;
   is_admin: boolean;
   is_email_verified: boolean;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
   updated_at: Timestamp;
   deleted_at: Timestamp | null;
 }
@@ -33,7 +36,7 @@ export interface UserLocationsTable {
 }
 
 export interface DevicesTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   device_type: 'mobile' | 'tablet' | 'web' | 'desktop' | 'speaker';
   platform: 'android' | 'ios' | 'web' | 'windows' | 'macos' | 'linux' | 'alexa' | 'google_home';
@@ -41,7 +44,7 @@ export interface DevicesTable {
   push_token: string | null;
   sync_group: string;
   last_seen_at: Timestamp | null;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
 }
 
 export interface PrayerTimesTable {
@@ -74,11 +77,20 @@ export interface AzanVoicesTable {
   is_default: boolean;
   is_custom: boolean;
   uploaded_by: string | null;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
+}
+
+export interface QuranRecitersTable {
+  id: string;
+  name: string;
+  audio_base_url: string;
+  language: string | null;
+  is_default: boolean;
+  created_at: AutoTimestamp;
 }
 
 export interface QuranSchedulesTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   surah: number;
   ayah_from: number | null;
@@ -91,33 +103,33 @@ export interface QuranSchedulesTable {
   trigger_cron: string | null;
   repeat_type: 'once' | 'daily' | 'weekly' | 'custom';
   enabled: boolean;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
 }
 
 export interface RefreshTokensTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   token_hash: string;
   expires_at: Timestamp;
   revoked_at: Timestamp | null;
   user_agent: string | null;
   ip: string | null;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
 }
 
 export interface NotificationsTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   kind: string;
   title: string;
   body: string | null;
   data: any | null;
   read_at: Timestamp | null;
-  created_at: Timestamp;
+  created_at: AutoTimestamp;
 }
 
 export interface PlaybackEventsTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   device_id: string | null;
   playback_id: string;
@@ -134,6 +146,7 @@ export interface DB {
   prayer_times: PrayerTimesTable;
   azan_settings: AzanSettingsTable;
   azan_voices: AzanVoicesTable;
+  quran_reciters: QuranRecitersTable;
   quran_schedules: QuranSchedulesTable;
   refresh_tokens: RefreshTokensTable;
   notifications: NotificationsTable;

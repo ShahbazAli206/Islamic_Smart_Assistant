@@ -1,25 +1,22 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 
 import { SchedulingService } from './scheduling.service';
-import { AzanWorker } from './workers/azan.worker';
-import { QuranWorker } from './workers/quran.worker';
 import { DailyRolloverCron } from './daily-rollover.cron';
-import { SyncModule } from '../sync/sync.module';
-import { NotificationsModule } from '../notifications/notifications.module';
 import { PrayerTimesModule } from '../prayer-times/prayer-times.module';
 
 export const QUEUE_AZAN = 'azan';
 export const QUEUE_QURAN = 'quran';
 
+// Producer module: registers queues + enqueues jobs.
+// Consumers (AzanWorker, QuranWorker) live in WorkersModule to avoid
+// NestJS BullMQ circular factory dep between @InjectQueue and @Processor.
 @Module({
   imports: [
     BullModule.registerQueue({ name: QUEUE_AZAN }, { name: QUEUE_QURAN }),
-    forwardRef(() => PrayerTimesModule),
-    SyncModule,
-    NotificationsModule,
+    PrayerTimesModule,
   ],
-  providers: [SchedulingService, AzanWorker, QuranWorker, DailyRolloverCron],
-  exports: [SchedulingService, BullModule],
+  providers: [SchedulingService, DailyRolloverCron],
+  exports: [SchedulingService],
 })
 export class SchedulingModule {}
