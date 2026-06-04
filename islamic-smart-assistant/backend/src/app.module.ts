@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BullModule } from '@nestjs/bullmq';
 import { LoggerModule } from 'nestjs-pino';
 
 import { DbModule } from './common/db.module';
@@ -28,9 +27,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     ScheduleModule.forRoot(),
-    BullModule.forRoot({
-      connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' },
-    }),
     DbModule,
     AuthModule,
     UsersModule,

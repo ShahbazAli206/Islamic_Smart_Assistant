@@ -1,6 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Inject, Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Inject, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Worker, Job } from 'bullmq';
 import { Kysely } from 'kysely';
 
 import { DB_TOKEN } from '../../../common/db.module';
@@ -10,19 +9,35 @@ import { SyncGateway } from '../../sync/sync.gateway';
 import { NotificationsService } from '../../notifications/notifications.service';
 import type { QuranJob } from '../scheduling.service';
 
-@Processor(QUEUE_QURAN)
-export class QuranWorker extends WorkerHost {
+@Injectable()
+export class QuranWorker implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger(QuranWorker.name);
+  private worker!: Worker<QuranJob>;
 
   constructor(
     @Inject(DB_TOKEN) private readonly db: Kysely<DB>,
     private readonly sync: SyncGateway,
     private readonly notif: NotificationsService,
-  ) {
-    super();
+  ) {}
+
+  onModuleInit() {
+    const connection = { url: process.env.REDIS_URL ?? 'redis://localhost:6379' };
+    this.worker = new Worker<QuranJob>(
+      QUEUE_QURAN,
+      async (job) => this.process(job),
+      { connection },
+    );
+    this.worker.on('failed', (job, err) => {
+      this.log.error(`Quran job ${job?.id} failed: ${err.message}`);
+    });
+    this.log.log('QuranWorker started');
   }
 
-  async process(job: Job<QuranJob>): Promise<void> {
+  async onModuleDestroy() {
+    await this.worker?.close();
+  }
+
+  private async process(job: Job<QuranJob>): Promise<void> {
     const { userId, scheduleId, playbackId } = job.data;
     const sched = await this.db
       .selectFrom('quran_schedules')
