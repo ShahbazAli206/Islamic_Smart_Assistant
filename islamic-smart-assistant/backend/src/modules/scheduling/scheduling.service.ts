@@ -1,5 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Kysely } from 'kysely';
 import { DateTime } from 'luxon';
@@ -25,15 +24,27 @@ export interface QuranJob {
 }
 
 @Injectable()
-export class SchedulingService {
+export class SchedulingService implements OnModuleDestroy {
   private readonly log = new Logger(SchedulingService.name);
+  private readonly azanQ: Queue<AzanJob>;
+  private readonly quranQ: Queue<QuranJob>;
 
   constructor(
     @Inject(DB_TOKEN) private readonly db: Kysely<DB>,
-    @InjectQueue(QUEUE_AZAN) private readonly azanQ: Queue<AzanJob>,
-    @InjectQueue(QUEUE_QURAN) private readonly quranQ: Queue<QuranJob>,
     private readonly prayer: PrayerTimesService,
-  ) {}
+  ) {
+    // Create BullMQ Queue instances directly — avoids NestJS BullModule.registerQueue
+    // factory-provider circular dependency with @nestjs/bullmq@10 + @nestjs/core@10.3.
+    // @Processor workers (AzanWorker, QuranWorker) are wired by BullExplorer from
+    // BullModule.forRoot() in AppModule and do NOT need registerQueue.
+    const connection = { url: process.env.REDIS_URL ?? 'redis://localhost:6379' };
+    this.azanQ = new Queue<AzanJob>(QUEUE_AZAN, { connection });
+    this.quranQ = new Queue<QuranJob>(QUEUE_QURAN, { connection });
+  }
+
+  async onModuleDestroy() {
+    await Promise.all([this.azanQ.close(), this.quranQ.close()]);
+  }
 
   /** Recompute prayer times + (re)enqueue all Azan and Quran jobs for the next N days. */
   async rescheduleAllForUser(userId: string, days = 2): Promise<void> {
