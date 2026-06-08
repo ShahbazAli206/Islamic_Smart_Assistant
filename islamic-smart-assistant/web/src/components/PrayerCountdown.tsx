@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MapPin, Sunrise, Sun, Sunset, Moon, Star, Compass } from 'lucide-react';
-import { fetchTimingsByCity, nextPrayer, formatCountdown, type PrayerTimes } from '@/lib/prayer';
+import { fetchTimingsByCity, nextPrayer, formatCountdown, type PrayerTimes, type MethodId } from '@/lib/prayer';
 
 const ICONS: Record<keyof PrayerTimes, any> = {
   Fajr: Star, Sunrise: Sunrise, Dhuhr: Sun, Asr: Compass, Maghrib: Sunset, Isha: Moon,
@@ -17,10 +17,11 @@ const URDU: Record<keyof PrayerTimes, string> = {
 export function PrayerCountdownHero({
   city = 'Karachi',
   country = 'Pakistan',
-}: { city?: string; country?: string }) {
+  method,
+}: { city?: string; country?: string; method?: MethodId }) {
   const { data, isLoading } = useQuery({
-    queryKey: ['timings', city, country],
-    queryFn: () => fetchTimingsByCity(city, country),
+    queryKey: ['timings', city, country, method],
+    queryFn: () => fetchTimingsByCity(city, country, method),
     staleTime: 5 * 60 * 1000,
   });
 

@@ -1,11 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Sparkles, BookOpenCheck } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { QuranPlayer } from '@/components/QuranPlayer';
+import { useLocalStorage } from '@/lib/useLocalStorage';
 import type { ReciterId, TranslationId } from '@/lib/quran';
+
+function langToTranslation(lang: string): TranslationId {
+  if (lang === 'en')   return 'en.sahih';
+  if (lang === 'none') return 'none';
+  return 'ur.jalandhry'; // default / Urdu
+}
 
 const QUICK_PICKS = [
   { number: 1,  label: 'Al-Fatihah', tag: 'The Opening' },
@@ -22,6 +29,12 @@ export default function QuranPage() {
   const [reciter, setReciter] = useState<ReciterId>('ar.abdulbasitmurattal');
   const [translation, setTranslation] = useState<TranslationId>('ur.jalandhry');
   const [ptv, setPtv] = useState(true);
+
+  // Apply the user's preferred language once it loads from localStorage
+  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  useEffect(() => {
+    setTranslation(langToTranslation(language));
+  }, [language]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
