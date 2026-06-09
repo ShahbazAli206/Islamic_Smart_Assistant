@@ -7,6 +7,7 @@ import {
   ShieldCheck, Languages, Bell, CalendarClock,
 } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
+import { useStoredLocation } from '@/lib/useStoredLocation';
 
 const FEATURES = [
   { icon: Bell,         title: 'Auto Azan',         desc: 'Triggers Makkah, Madinah, Pakistani, Turkish & Egyptian Azan on every linked device — in sync.', color: 'from-emerald-500 to-emerald-700' },
@@ -20,6 +21,7 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const loc = useStoredLocation();
   return (
     <main className="relative">
       {/* nav */}
@@ -79,7 +81,14 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7 }}
           >
-            <PrayerCountdownHero />
+            <PrayerCountdownHero
+              lat={loc.lat ?? undefined}
+              lng={loc.lng ?? undefined}
+              city={loc.city}
+              country={loc.country}
+              method={loc.method}
+              label={loc.hasCoords ? loc.label : undefined}
+            />
           </motion.div>
         </div>
       </section>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ export function LocationScreen({ navigation }: any) {
   const dispatch = useDispatch();
   const [busy, setBusy] = useState(false);
   const [resolved, setResolved] = useState<any>(null);
+  const autoPrompted = useRef(false);
 
   const onDetect = async () => {
     setBusy(true);
@@ -29,6 +30,17 @@ export function LocationScreen({ navigation }: any) {
       setBusy(false);
     }
   };
+
+  // First launch: request location the moment this onboarding step appears, so
+  // the OS permission prompt shows automatically. The button below stays as a
+  // retry if the user dismisses or denies it.
+  useEffect(() => {
+    if (!autoPrompted.current) {
+      autoPrompted.current = true;
+      onDetect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.bg }]}>

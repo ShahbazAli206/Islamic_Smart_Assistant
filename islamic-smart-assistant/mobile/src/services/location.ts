@@ -30,11 +30,31 @@ async function gpsLocation(timezone: string): Promise<ResolvedLocation> {
 
   return new Promise((resolve, reject) => {
     Geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, timezone, detected_via: 'gps' }),
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        // Reverse-geocode so we can show a city name; failure is non-fatal since
+        // the backend computes prayer times from the raw coordinates anyway.
+        const place = await reverseGeocode(lat, lng).catch(() => ({}));
+        resolve({ lat, lng, timezone, ...place, detected_via: 'gps' });
+      },
       (err) => reject(err),
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
     );
   });
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<{ city?: string; country?: string }> {
+  const r = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+    params: { format: 'json', lat, lon: lng, zoom: 10, 'accept-language': 'en' },
+    headers: { 'User-Agent': 'NoorIslamicApp/1.0 (mobile)' },
+    timeout: 8000,
+  });
+  const a = r.data?.address ?? {};
+  return {
+    city: a.city || a.town || a.village || a.county || a.state || undefined,
+    country: a.country || undefined,
+  };
 }
 
 async function ipLocation(timezone: string): Promise<ResolvedLocation> {

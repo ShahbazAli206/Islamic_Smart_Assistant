@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, Globe, User, ChevronRight, Check, Loader2 } from 'lucide-react';
 
@@ -42,6 +42,9 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   const [geoError,   setGeoError]   = useState('');
   const [geoSuccess, setGeoSuccess] = useState(false);
 
+  // Ensures we only fire the automatic permission prompt once per mount.
+  const autoPrompted = useRef(false);
+
   useEffect(() => {
     if (forceOpen) {
       prefill();
@@ -59,6 +62,18 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceOpen]);
+
+  // First visit only: proactively ask for location the moment the wizard opens,
+  // so the browser's native permission popup appears without an extra click.
+  // (When re-opened from the profile "edit preferences" button we leave it to a
+  // deliberate click instead.)
+  useEffect(() => {
+    if (show && !forceOpen && step === 0 && !geoSuccess && !autoPrompted.current) {
+      autoPrompted.current = true;
+      detectLocation();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, forceOpen, step]);
 
   const prefill = () => {
     try {

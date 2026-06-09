@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { Admin } from '@/lib/api';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
+import { useStoredLocation } from '@/lib/useStoredLocation';
 import Link from 'next/link';
 
 const sample = Array.from({ length: 14 }, (_, i) => ({
@@ -21,6 +22,7 @@ const sample = Array.from({ length: 14 }, (_, i) => ({
 export default function Overview() {
   const { data } = useQuery({ queryKey: ['analytics'], queryFn: Admin.analytics });
   const stats = data ?? { users: 0, devicesOnline: 0, azanFiredToday: 0, quranFiredToday: 0 };
+  const loc = useStoredLocation();
 
   const cards = [
     { label: 'Total users',     value: stats.users,           icon: Users,      grad: 'from-emerald-500 to-emerald-700', delta: '+12.4%' },
@@ -48,7 +50,14 @@ export default function Overview() {
       </motion.div>
 
       {/* hero countdown */}
-      <PrayerCountdownHero />
+      <PrayerCountdownHero
+        lat={loc.lat ?? undefined}
+        lng={loc.lng ?? undefined}
+        city={loc.city}
+        country={loc.country}
+        method={loc.method}
+        label={loc.hasCoords ? loc.label : undefined}
+      />
 
       {/* stat cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

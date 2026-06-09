@@ -25,6 +25,19 @@ function createWindow() {
     },
   });
   mainWindow.loadURL(APP_URL);
+
+  // The wrapped web app uses browser geolocation to detect the user's city for
+  // prayer times. Electron denies geolocation by default, so navigator.geolocation
+  // never resolves until we approve the permission request here (this is what
+  // surfaces the "first time" allow flow). Notifications are also granted for Azan.
+  // NOTE: packaged builds may additionally need a Chromium geolocation key set at
+  // build time (GOOGLE_API_KEY); if location is unavailable the web app falls back
+  // to manual city entry.
+  const ses = mainWindow.webContents.session;
+  const allowed = new Set(['geolocation', 'notifications']);
+  ses.setPermissionRequestHandler((_wc, permission, callback) => callback(allowed.has(permission)));
+  ses.setPermissionCheckHandler((_wc, permission) => allowed.has(permission));
+
   mainWindow.on('close', (e) => {
     if (!app.isQuitting) {
       e.preventDefault();

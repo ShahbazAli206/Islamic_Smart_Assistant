@@ -68,14 +68,34 @@ export default function ProfilePage() {
 
   const detectLocation = () => {
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) =>
-      saveLocation.mutate({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        detected_via: 'gps',
-      }),
-    );
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      // 1. Persist to the account (synced across signed-in devices).
+      saveLocation.mutate({ lat, lng, timezone, detected_via: 'gps' });
+
+      // 2. Mirror into localStorage so the prayer-time hero + sidebar — which
+      //    read the isa:* keys on this device — refresh immediately.
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
+          { headers: { Accept: 'application/json' }, cache: 'no-store' },
+        );
+        const addr = (await res.json())?.address ?? {};
+        const city = addr.city || addr.town || addr.village || addr.county || addr.state || '';
+        const country = addr.country || '';
+        persistLocal('isa:lat', lat);
+        persistLocal('isa:lng', lng);
+        if (city) persistLocal('isa:city', city);
+        if (country) persistLocal('isa:country', country);
+      } catch {
+        // Reverse geocode failed — still store the coords for exact times.
+        persistLocal('isa:lat', lat);
+        persistLocal('isa:lng', lng);
+      }
+    });
   };
 
   const fiqhOptions = form.sect ? FIQH[form.sect] : [];
@@ -201,6 +221,13 @@ export default function ProfilePage() {
       </motion.div>
     </div>
   );
+}
+
+/** Write a value to localStorage and notify same-tab useLocalStorage listeners. */
+function persistLocal(key: string, val: unknown) {
+  const json = JSON.stringify(val);
+  localStorage.setItem(key, json);
+  window.dispatchEvent(new StorageEvent('storage', { key, newValue: json }));
 }
 
 function Field({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) {
