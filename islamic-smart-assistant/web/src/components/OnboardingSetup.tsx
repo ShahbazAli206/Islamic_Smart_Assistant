@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Globe, User, ChevronRight, Check, Loader2 } from 'lucide-react';
+import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle } from 'lucide-react';
+import { fetchTimingsByCity } from '@/lib/prayer';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'none';
@@ -41,6 +42,10 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError,   setGeoError]   = useState('');
   const [geoSuccess, setGeoSuccess] = useState(false);
+
+  // Validation of the city/country combination before leaving the location step.
+  const [validating, setValidating] = useState(false);
+  const [locError,   setLocError]   = useState('');
 
   // Ensures we only fire the automatic permission prompt once per mount.
   const autoPrompted = useRef(false);
@@ -128,6 +133,35 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       },
       { timeout: 10_000 },
     );
+  };
+
+  // Advance from a step. On the location step we first confirm the city/country
+  // combination actually resolves to real prayer times — so a mismatch like
+  // "Taxila, Canada" is caught here with a friendly prompt instead of surfacing
+  // a broken/empty prayer-time card later.
+  const goNext = async () => {
+    if (step !== 0) {
+      setStep((s) => s + 1);
+      return;
+    }
+    const city = draftCity.trim();
+    const country = draftCountry.trim();
+    if (!city || !country) {
+      setLocError('Please enter both your city and country.');
+      return;
+    }
+    setValidating(true);
+    setLocError('');
+    try {
+      await fetchTimingsByCity(city, country);
+      setStep((s) => s + 1);
+    } catch {
+      setLocError(
+        `We couldn't find "${city}, ${country}". Please double-check it — the city must be in the selected country (e.g. Taxila is in Pakistan, not Canada).`,
+      );
+    } finally {
+      setValidating(false);
+    }
   };
 
   const save = () => {
@@ -239,6 +273,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                   <p className="text-xs text-rose-600 leading-relaxed">{geoError}</p>
                 )}
 
+                {locError && (
+                  <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-amber-800">
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                    <p className="text-xs leading-relaxed">{locError}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 text-xs text-ink/40">
                   <div className="flex-1 border-t border-ink/10" />
                   <span>or type manually</span>
@@ -250,7 +291,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                     <label className="text-xs font-medium text-ink/55 mb-1 block">City</label>
                     <input
                       value={draftCity}
-                      onChange={(e) => setDraftCity(e.target.value)}
+                      onChange={(e) => { setDraftCity(e.target.value); setLocError(''); }}
                       placeholder="Karachi"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />
@@ -259,7 +300,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                     <label className="text-xs font-medium text-ink/55 mb-1 block">Country</label>
                     <input
                       value={draftCountry}
-                      onChange={(e) => setDraftCountry(e.target.value)}
+                      onChange={(e) => { setDraftCountry(e.target.value); setLocError(''); }}
                       placeholder="Pakistan"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />
@@ -375,10 +416,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
           )}
           {step < TOTAL_STEPS - 1 ? (
             <button
-              onClick={() => setStep((s) => s + 1)}
-              className="btn-primary px-6 py-2.5 text-sm"
+              onClick={goNext}
+              disabled={validating}
+              className="btn-primary px-6 py-2.5 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Next <ChevronRight size={16} />
+              {validating
+                ? <><Loader2 size={16} className="animate-spin" /> Checking…</>
+                : <>Next <ChevronRight size={16} /></>}
             </button>
           ) : (
             <button onClick={save} className="btn-primary px-8 py-2.5 text-sm">

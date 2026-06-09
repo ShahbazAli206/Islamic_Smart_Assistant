@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, BarChart3, Settings,
-  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil,
+  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
@@ -49,6 +49,9 @@ const NAV = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [editPrefs, setEditPrefs] = useState(false);
+  // Off-canvas sidebar for mobile; always visible from `lg` up.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const [name]     = useLocalStorage<string>('isa:name',     '');
   const [city]     = useLocalStorage<string>('isa:city',     'Karachi');
@@ -57,13 +60,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [language] = useLocalStorage<string>('isa:language', 'ur');
 
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-72 shrink-0 bg-mosque-gradient text-parchment p-5 flex flex-col gap-4 relative overflow-hidden">
+    <div className="min-h-screen lg:flex">
+      {/* mobile top bar with menu button (hidden on lg+) */}
+      <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-mosque-gradient text-parchment px-4 py-3 shadow-md">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          className="p-1.5 rounded-lg hover:bg-white/15 transition"
+        >
+          <Menu size={22} />
+        </button>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="inline-flex w-8 h-8 rounded-lg items-center justify-center bg-white/10 border border-white/15">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
+              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
+              <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
+            </svg>
+          </span>
+          <span className="font-display text-lg font-bold">Noor</span>
+        </Link>
+      </header>
+
+      {/* backdrop (mobile only, when drawer open) */}
+      {sidebarOpen && (
+        <div
+          onClick={closeSidebar}
+          aria-hidden
+          className="fixed inset-0 z-40 bg-midnight-900/60 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-5 flex flex-col gap-4 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="absolute inset-0 pattern-bg opacity-25 pointer-events-none" />
         <div className="absolute -top-32 -left-24 w-72 h-72 rounded-full bg-glow-emerald pointer-events-none" />
 
+        {/* close button (mobile only) */}
+        <button
+          onClick={closeSidebar}
+          aria-label="Close menu"
+          className="lg:hidden absolute top-4 right-4 z-10 p-1.5 rounded-lg hover:bg-white/15 text-emerald-100/80 transition"
+        >
+          <X size={20} />
+        </button>
+
         {/* logo */}
-        <Link href="/" className="relative flex items-center gap-2 mb-2 px-2">
+        <Link href="/" onClick={closeSidebar} className="relative flex items-center gap-2 mb-2 px-2">
           <span className="inline-flex w-9 h-9 rounded-xl items-center justify-center bg-white/10 backdrop-blur border border-white/15">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
               <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
@@ -90,6 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <Link
                       key={n.href}
                       href={n.href}
+                      onClick={closeSidebar}
                       className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
                         active
                           ? 'bg-white/15 text-white shadow-inner ring-1 ring-white/15'
@@ -144,7 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+      <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">{children}</main>
 
       <AutoAzanScheduler />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />

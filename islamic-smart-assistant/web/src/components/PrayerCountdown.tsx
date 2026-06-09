@@ -41,13 +41,14 @@ export function PrayerCountdownHero({
   label,
 }: HeroProps) {
   const byCoords = typeof lat === 'number' && typeof lng === 'number';
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: byCoords ? ['timings', 'coords', lat, lng, method, school] : ['timings', 'city', city, country],
     queryFn: () =>
       byCoords
         ? fetchTimingsByCoords(lat!, lng!, { method, school, label })
         : fetchTimingsByCity(city, country),
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const [now, setNow] = useState<Date>(() => new Date());
@@ -79,13 +80,17 @@ export function PrayerCountdownHero({
           </div>
           <p className="text-gold-300 text-sm tracking-widest uppercase">{data?.hijriDate ?? '—'}</p>
           <h2 className="text-4xl md:text-5xl font-display font-semibold leading-tight">
-            {next ? `${next.name} in` : 'Loading prayer times…'}
+            {next ? `${next.name} in` : isError ? 'Update your location' : 'Loading prayer times…'}
           </h2>
           <p className="text-6xl md:text-7xl font-display font-bold text-gold-300 tabular-nums">
             {next ? formatCountdown(next.inMs) : '--:--:--'}
           </p>
           <p className="text-emerald-100/80">
-            {next ? `at ${next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+            {next
+              ? `at ${next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : isError
+              ? 'We couldn’t find this place — set your city in Profile or Prayer Times.'
+              : ''}
           </p>
         </div>
 
