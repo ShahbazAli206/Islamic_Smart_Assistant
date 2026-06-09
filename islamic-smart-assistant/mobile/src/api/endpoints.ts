@@ -13,6 +13,13 @@ export const Users = {
     api.post('/users/me/location', loc).then((r) => r.data),
 };
 
+export type MosqueHit = { id: string; name: string; lat: number; lng: number; city?: string; distanceKm?: number };
+
+export const Mosques = {
+  nearby: (lat: number, lng: number, radius = 5000, limit = 60) =>
+    api.get('/mosques/nearby', { params: { lat, lng, radius, limit } }).then((r) => r.data as MosqueHit[]),
+};
+
 export const Prayer = {
   today: (date?: string) => api.get('/prayer-times', { params: { date } }).then((r) => r.data),
   range: (from: string, days: number) => api.get('/prayer-times/range', { params: { from, days } }).then((r) => r.data),

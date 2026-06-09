@@ -4,7 +4,7 @@ import { Kysely } from 'kysely';
 
 import { DB_TOKEN } from '../../../common/db.module';
 import type { DB } from '../../../common/db.types';
-import { QUEUE_AZAN } from '../queue.constants';
+import { QUEUE_AZAN } from '../scheduling.constants';
 import { SyncGateway } from '../../sync/sync.gateway';
 import { NotificationsService } from '../../notifications/notifications.service';
 import type { AzanJob } from '../scheduling.service';

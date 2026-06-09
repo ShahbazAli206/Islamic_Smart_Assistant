@@ -1,7 +1,7 @@
 // Minimal Kysely DB type shapes. Mirrors db/schema.sql.
 // In production: generate this file from the live schema via `kysely-codegen`.
 
-import type { ColumnType } from 'kysely';
+import type { ColumnType, Generated } from 'kysely';
 
 // Columns with DB-generated defaults: readable always, optional on insert, not directly updated.
 type Generated<T> = ColumnType<T, T | undefined, never>;
@@ -87,6 +87,13 @@ export interface QuranRecitersTable {
   language: string | null;
   is_default: boolean;
   created_at: AutoTimestamp;
+}
+
+export interface QuranRecitersTable {
+  id: string;                 // app-supplied, e.g. 'mishary'
+  name: string;
+  style: string | null;       // 'murattal' | 'mujawwad'
+  audio_base_url: string;
 }
 
 export interface QuranSchedulesTable {

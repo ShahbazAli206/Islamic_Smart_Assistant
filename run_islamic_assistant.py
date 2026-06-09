@@ -32,10 +32,10 @@ import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PROJECT_DIR = ROOT / "islamic-smart-assistant"
+PROJECT_DIR = ROOT
 BACKEND_DIR = PROJECT_DIR / "backend"
 WEB_DIR = PROJECT_DIR / "web"
-ASSET_DOWNLOADER = ROOT / "download_assets.py"
+ASSET_DOWNLOADER = PROJECT_DIR / "download_assets.py"
 ASSET_MARKER = WEB_DIR / "public" / "audio" / "azan" / "makkah.mp3"
 
 BACKEND_PORT = 4000

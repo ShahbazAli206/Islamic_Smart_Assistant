@@ -20,6 +20,30 @@ const ICON: Record<string, any> = {
   mobile: Smartphone, tablet: Tablet, desktop: Monitor, speaker: Speaker, earbuds: Headphones,
 };
 
+// Generate a short 0.4s sine-wave beep as a WAV data URI (no asset needed),
+// used to test-route audio to a chosen output device via setSinkId.
+function beepDataUri(freq = 660, ms = 400, sampleRate = 44100): string {
+  const samples = Math.floor((sampleRate * ms) / 1000);
+  const dataSize = samples * 2; // 16-bit mono
+  const buf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buf);
+  const wr = (off: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+  wr(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); wr(8, 'WAVE');
+  wr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  wr(36, 'data'); view.setUint32(40, dataSize, true);
+  for (let i = 0; i < samples; i++) {
+    const fade = Math.min(1, i / 1000, (samples - i) / 1000); // soft attack/release
+    const v = Math.sin((2 * Math.PI * freq * i) / sampleRate) * 0.3 * fade;
+    view.setInt16(44 + i * 2, v * 0x7fff, true);
+  }
+  let bin = '';
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+
 type DiagInfo = {
   ua: string;
   hasMediaDevices: boolean;
@@ -42,14 +66,42 @@ export default function DevicesPage() {
   const [diag, setDiag] = useState<DiagInfo | null>(null);
   const [showDiag, setShowDiag] = useState(false);
 
-  // Detect picker support on mount
+  // Detect picker support on mount + auto-refresh when devices connect/disconnect.
   useEffect(() => {
     setPickerSupported(
       typeof navigator !== 'undefined' &&
       typeof (navigator.mediaDevices as any)?.selectAudioOutput === 'function',
     );
     refreshList();
+
+    // When you connect your airbuds (or any output) at the OS level, the browser
+    // fires `devicechange`. Re-enumerate automatically so the list stays live —
+    // this is the usual reason a "connected in Windows" device wasn't showing here.
+    const md = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined;
+    if (md && typeof md.addEventListener === 'function') {
+      const onChange = () => refreshList();
+      md.addEventListener('devicechange', onChange);
+      return () => md.removeEventListener('devicechange', onChange);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Play a short beep on the currently selected output to confirm routing works.
+  const testOutput = async () => {
+    setError(null);
+    try {
+      const audio = new Audio(beepDataUri());
+      if (selectedOutputId && typeof (audio as any).setSinkId === 'function') {
+        await (audio as any).setSinkId(selectedOutputId);
+      }
+      await audio.play();
+    } catch (e: any) {
+      setError(
+        `Couldn't play the test on "${selectedOutputLabel}": ${e?.message ?? e}. ` +
+        `If this is your earbuds, make sure they're Connected (not just Paired) in Windows.`,
+      );
+    }
+  };
 
   const captureDiag = async () => {
     if (typeof navigator === 'undefined') return;
@@ -170,6 +222,9 @@ export default function DevicesPage() {
               <Volume2 size={16}/> Choose output…
             </button>
           )}
+          <button onClick={testOutput} className="btn-ghost text-sm py-2 px-4" title="Play a test beep on the selected output">
+            <Volume2 size={16}/> Test sound
+          </button>
           <button onClick={refreshList} className="btn-ghost text-sm py-2 px-4">
             <RefreshCw size={16} className={scanning ? 'animate-spin' : ''}/> Rescan
           </button>

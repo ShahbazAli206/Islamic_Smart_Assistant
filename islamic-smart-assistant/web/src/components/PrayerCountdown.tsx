@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MapPin, Sunrise, Sun, Sunset, Moon, Star, Compass } from 'lucide-react';
-import { fetchTimingsByCity, nextPrayer, formatCountdown, type PrayerTimes, type MethodId } from '@/lib/prayer';
+import {
+  fetchTimingsByCity,
+  fetchTimingsByCoords,
+  nextPrayerInZone,
+  formatCountdown,
+  type PrayerTimes,
+} from '@/lib/prayer';
 
 const ICONS: Record<keyof PrayerTimes, any> = {
   Fajr: Star, Sunrise: Sunrise, Dhuhr: Sun, Asr: Compass, Maghrib: Sunset, Isha: Moon,
@@ -14,14 +20,33 @@ const URDU: Record<keyof PrayerTimes, string> = {
   Fajr: 'فجر', Sunrise: 'طلوع', Dhuhr: 'ظهر', Asr: 'عصر', Maghrib: 'مغرب', Isha: 'عشاء',
 };
 
+type HeroProps = {
+  city?: string;
+  country?: string;
+  // Coordinate mode (e.g. a selected mosque). When lat/lng are set, these win.
+  lat?: number;
+  lng?: number;
+  method?: number;
+  school?: 0 | 1;
+  label?: string; // "Name, City" shown when in coordinate mode
+};
+
 export function PrayerCountdownHero({
   city = 'Karachi',
   country = 'Pakistan',
-  method,
-}: { city?: string; country?: string; method?: MethodId }) {
+  lat,
+  lng,
+  method = 3,
+  school = 0,
+  label,
+}: HeroProps) {
+  const byCoords = typeof lat === 'number' && typeof lng === 'number';
   const { data, isLoading } = useQuery({
-    queryKey: ['timings', city, country, method],
-    queryFn: () => fetchTimingsByCity(city, country, method),
+    queryKey: byCoords ? ['timings', 'coords', lat, lng, method, school] : ['timings', 'city', city, country],
+    queryFn: () =>
+      byCoords
+        ? fetchTimingsByCoords(lat!, lng!, { method, school, label })
+        : fetchTimingsByCity(city, country),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -31,7 +56,10 @@ export function PrayerCountdownHero({
     return () => clearInterval(t);
   }, []);
 
-  const next = useMemo(() => (data ? nextPrayer(data.timings, now) : null), [data, now]);
+  const next = useMemo(
+    () => (data ? nextPrayerInZone(data.timings, data.timezone, now) : null),
+    [data, now],
+  );
 
   return (
     <motion.div

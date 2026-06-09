@@ -8,7 +8,7 @@ import { setLocation, completeOnboarding } from '../../store/slices/user';
 import { Users } from '../../api/endpoints';
 import { useTheme } from '../../theme';
 
-export function LocationScreen() {
+export function LocationScreen({ navigation }: any) {
   const { t } = useTranslation();
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -41,6 +41,12 @@ export function LocationScreen() {
       <Pressable onPress={onDetect} disabled={busy} style={[styles.button, { backgroundColor: theme.accent }]}>
         {busy ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>{t('onboarding.detectLocation')}</Text>}
       </Pressable>
+
+      <Pressable onPress={() => navigation.navigate('Mosque')} style={styles.linkBtn}>
+        <Text style={[styles.linkText, { color: theme.accent }]}>
+          {t('onboarding.chooseMosque', 'Or choose a specific mosque on the map')}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -51,4 +57,6 @@ const styles = StyleSheet.create({
   detected: { fontSize: 16, marginBottom: 24, textAlign: 'center' },
   button: { paddingVertical: 14, paddingHorizontal: 48, borderRadius: 28 },
   buttonText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  linkBtn: { marginTop: 20, padding: 8 },
+  linkText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
 });
