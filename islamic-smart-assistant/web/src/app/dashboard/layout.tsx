@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home, Users, Smartphone, Music2, BarChart3, Settings,
+  Home, User, Smartphone, Music2, BarChart3, Settings,
   BookOpen, Bell, Clock, Sparkles,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -17,10 +17,10 @@ const NAV = [
       { href: '/dashboard/azan',         label: 'Azan Voices',  icon: Bell, color: 'text-rose-500' },
     ],
   },
-  { group: 'Admin',
+  { group: 'Account',
     items: [
       { href: '/dashboard',           label: 'Overview',  icon: Home,       color: 'text-emerald-700' },
-      { href: '/dashboard/users',     label: 'Users',     icon: Users,      color: 'text-indigo-500' },
+      { href: '/dashboard/profile',   label: 'Profile',   icon: User,       color: 'text-indigo-500' },
       { href: '/dashboard/devices',   label: 'Devices',   icon: Smartphone, color: 'text-cyan-600' },
       { href: '/dashboard/audio',     label: 'Audio',     icon: Music2,     color: 'text-fuchsia-500' },
       { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3,  color: 'text-amber-600' },
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           <div className="leading-tight">
             <p className="font-display text-lg font-bold">Noor</p>
-            <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Admin Console</p>
+            <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Smart Assistant</p>
           </div>
         </Link>
 

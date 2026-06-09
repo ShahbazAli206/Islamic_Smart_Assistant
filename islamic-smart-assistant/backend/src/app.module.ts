@@ -9,6 +9,7 @@ import { DbModule } from './common/db.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrayerTimesModule } from './modules/prayer-times/prayer-times.module';
+import { MosquesModule } from './modules/mosques/mosques.module';
 import { AzanModule } from './modules/azan/azan.module';
 import { QuranModule } from './modules/quran/quran.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
@@ -34,6 +35,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     AuthModule,
     UsersModule,
     PrayerTimesModule,
+    MosquesModule,
     AzanModule,
     QuranModule,
     SchedulingModule,

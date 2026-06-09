@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 
 import { DB_TOKEN } from '../../common/db.module';
 import type { DB } from '../../common/db.types';
-import { QUEUE_AZAN, QUEUE_QURAN } from './scheduling.module';
+import { QUEUE_AZAN, QUEUE_QURAN } from './scheduling.constants';
 import { PrayerTimesService } from '../prayer-times/prayer-times.service';
 
 export interface AzanJob {

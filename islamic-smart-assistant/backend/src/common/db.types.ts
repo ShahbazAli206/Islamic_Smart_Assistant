@@ -1,12 +1,12 @@
 // Minimal Kysely DB type shapes. Mirrors db/schema.sql.
 // In production: generate this file from the live schema via `kysely-codegen`.
 
-import type { ColumnType } from 'kysely';
+import type { ColumnType, Generated } from 'kysely';
 
 type Timestamp = ColumnType<Date, Date | string | undefined, Date | string>;
 
 export interface UsersTable {
-  id: string;
+  id: Generated<string>;
   email: string;
   password_hash: string | null;
   name: string;
@@ -33,7 +33,7 @@ export interface UserLocationsTable {
 }
 
 export interface DevicesTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   device_type: 'mobile' | 'tablet' | 'web' | 'desktop' | 'speaker';
   platform: 'android' | 'ios' | 'web' | 'windows' | 'macos' | 'linux' | 'alexa' | 'google_home';
@@ -77,8 +77,15 @@ export interface AzanVoicesTable {
   created_at: Timestamp;
 }
 
+export interface QuranRecitersTable {
+  id: string;                 // app-supplied, e.g. 'mishary'
+  name: string;
+  style: string | null;       // 'murattal' | 'mujawwad'
+  audio_base_url: string;
+}
+
 export interface QuranSchedulesTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   surah: number;
   ayah_from: number | null;
@@ -95,7 +102,7 @@ export interface QuranSchedulesTable {
 }
 
 export interface RefreshTokensTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   token_hash: string;
   expires_at: Timestamp;
@@ -106,7 +113,7 @@ export interface RefreshTokensTable {
 }
 
 export interface NotificationsTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   kind: string;
   title: string;
@@ -117,7 +124,7 @@ export interface NotificationsTable {
 }
 
 export interface PlaybackEventsTable {
-  id: string;
+  id: Generated<string>;
   user_id: string;
   device_id: string | null;
   playback_id: string;
@@ -134,6 +141,7 @@ export interface DB {
   prayer_times: PrayerTimesTable;
   azan_settings: AzanSettingsTable;
   azan_voices: AzanVoicesTable;
+  quran_reciters: QuranRecitersTable;
   quran_schedules: QuranSchedulesTable;
   refresh_tokens: RefreshTokensTable;
   notifications: NotificationsTable;

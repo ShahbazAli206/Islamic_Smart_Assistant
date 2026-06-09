@@ -8,9 +8,9 @@ import { DailyRolloverCron } from './daily-rollover.cron';
 import { SyncModule } from '../sync/sync.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PrayerTimesModule } from '../prayer-times/prayer-times.module';
+import { QUEUE_AZAN, QUEUE_QURAN } from './scheduling.constants';
 
-export const QUEUE_AZAN = 'azan';
-export const QUEUE_QURAN = 'quran';
+export { QUEUE_AZAN, QUEUE_QURAN } from './scheduling.constants';
 
 @Module({
   imports: [

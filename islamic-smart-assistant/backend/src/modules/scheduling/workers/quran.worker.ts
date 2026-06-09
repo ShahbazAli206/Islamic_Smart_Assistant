@@ -5,7 +5,7 @@ import { Kysely } from 'kysely';
 
 import { DB_TOKEN } from '../../../common/db.module';
 import type { DB } from '../../../common/db.types';
-import { QUEUE_QURAN } from '../scheduling.module';
+import { QUEUE_QURAN } from '../scheduling.constants';
 import { SyncGateway } from '../../sync/sync.gateway';
 import { NotificationsService } from '../../notifications/notifications.service';
 import type { QuranJob } from '../scheduling.service';

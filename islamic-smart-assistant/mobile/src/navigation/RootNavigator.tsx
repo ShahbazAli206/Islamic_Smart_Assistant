@@ -11,6 +11,7 @@ import { WelcomeScreen } from '../screens/onboarding/Welcome';
 import { LanguageScreen } from '../screens/onboarding/Language';
 import { SectScreen } from '../screens/onboarding/Sect';
 import { LocationScreen } from '../screens/onboarding/Location';
+import { MosqueScreen } from '../screens/onboarding/Mosque';
 
 import { DashboardScreen } from '../screens/dashboard/Dashboard';
 import { AzanSettingsScreen } from '../screens/azan/AzanSettings';
@@ -53,6 +54,7 @@ export function RootNavigator() {
           <Stack.Screen name="Language" component={LanguageScreen} />
           <Stack.Screen name="Sect" component={SectScreen} />
           <Stack.Screen name="Location" component={LocationScreen} />
+          <Stack.Screen name="Mosque" component={MosqueScreen} />
         </>
       ) : (
         <>
