@@ -10,8 +10,10 @@ import type { ReciterId, TranslationId } from '@/lib/quran';
 
 function langToTranslation(lang: string): TranslationId {
   if (lang === 'en')   return 'en.sahih';
+  if (lang === 'ur')   return 'ur.jalandhry';
   if (lang === 'none') return 'none';
-  return 'ur.jalandhry'; // default / Urdu
+  // For other languages (tr, bn, zh, fr, hi) fall back to English translation
+  return 'en.sahih';
 }
 
 const QUICK_PICKS = [
@@ -28,7 +30,7 @@ export default function QuranPage() {
   const [surah, setSurah] = useState(1);
   const [reciter, setReciter] = useState<ReciterId>('ar.abdulbasitmurattal');
   const [translation, setTranslation] = useState<TranslationId>('ur.jalandhry');
-  const [ptv, setPtv] = useState(true);
+  const [translationMode, setTranslationMode] = useState(true);
 
   // Apply the user's preferred language once it loads from localStorage
   const [language] = useLocalStorage<string>('isa:language', 'ur');
@@ -81,10 +83,10 @@ export default function QuranPage() {
         surahNumber={surah}
         reciter={reciter}
         translation={translation}
-        ptvMode={ptv}
+        translationMode={translationMode}
         onReciterChange={setReciter}
         onTranslationChange={setTranslation}
-        onPtvChange={setPtv}
+        onTranslationModeChange={setTranslationMode}
       />
 
       {/* full surah index */}

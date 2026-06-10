@@ -15,7 +15,7 @@ const TILES = [
 
 const FLAGS = [
   { key: 'azan_auto',       label: 'Auto-play Azan on all linked devices',             on: true },
-  { key: 'ptv_translation', label: 'PTV-style translation playback (Arabic + Urdu)',   on: true },
+  { key: 'translation_mode', label: 'Translation playback (Arabic + Urdu)',             on: true },
   { key: 'qibla_compass',   label: 'Show Qibla compass on mobile dashboard',           on: true },
   { key: 'dst_adjust',      label: 'Auto-adjust prayer times for Daylight Saving',     on: true },
   { key: 'analytics',       label: 'Share anonymous usage analytics',                  on: false },

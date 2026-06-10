@@ -26,14 +26,18 @@ export function AutoAzanScheduler() {
   const [city]    = useLocalStorage<string>('isa:city', 'Karachi');
   const [country] = useLocalStorage<string>('isa:country', 'Pakistan');
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
+  // Persists whether the user has clicked "Enable" so we don't nag on every load.
+  const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
+
   const [needsGesture, setNeedsGesture] = useState(false);
   const [firing, setFiring] = useState<null | { prayer: string; voice: string }>(null);
+  // A prayer that tried to fire but was blocked by the browser's autoplay policy.
+  const [pendingPrayer, setPendingPrayer] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  /** Track which prayers already fired so we never double-play. Key = "YYYY-M-D:Prayer" */
+  /** Key = "YYYY-M-D:Prayer" — never double-play. */
   const firedRef = useRef<Set<string>>(new Set());
 
-  // Keep mutable refs so the interval callback always reads fresh values.
   const voiceRef = useRef(voice);
   voiceRef.current = voice;
   const outputIdRef = useRef(outputId);
@@ -50,28 +54,48 @@ export function AutoAzanScheduler() {
     },
   });
 
+  // Route audio to the selected output device, falling back to default speakers
+  // if the device is unavailable (e.g. Bluetooth disconnected).
+  const setAudioOutput = useCallback(async (el: HTMLAudioElement) => {
+    if (!outputIdRef.current || !('setSinkId' in el)) return;
+    try {
+      await Promise.race([
+        (el as any).setSinkId(outputIdRef.current),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2_000)),
+      ]);
+    } catch {
+      // Device unavailable — reset to default (laptop speakers).
+      try { await (el as any).setSinkId(''); } catch {}
+    }
+  }, []);
+
   const fire = useCallback(async (prayer: string) => {
     const el = audioRef.current;
     if (!el) return;
     el.muted = false;
     el.src = `/audio/azan/${voiceRef.current}.mp3`;
-    // Route to chosen output device if the browser supports it.
-    try {
-      if (outputIdRef.current && 'setSinkId' in el) await (el as any).setSinkId(outputIdRef.current);
-    } catch {}
+    await setAudioOutput(el);
     try {
       await el.play();
       setFiring({ prayer, voice: voiceRef.current });
-      // Browser desktop notification too.
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(`${prayer} prayer time`, { body: `Playing ${voiceRef.current} Azan`, silent: true });
         }
       }
     } catch {
+      // Autoplay blocked by browser — remember the prayer and ask for a gesture.
+      setPendingPrayer(prayer);
+      setUnlocked(false);
       setNeedsGesture(true);
     }
-  }, []);
+  }, [setAudioOutput, setUnlocked]);
+
+  // Show the Enable banner whenever the user hasn't yet clicked it this session.
+  useEffect(() => {
+    if (!enabled) { setNeedsGesture(false); return; }
+    if (!unlocked) setNeedsGesture(true);
+  }, [enabled, unlocked]);
 
   // ── Core: poll every second, fire when a prayer time arrives ──
   useEffect(() => {
@@ -79,7 +103,8 @@ export function AutoAzanScheduler() {
 
     const timings = data.timings;
 
-    // Mark all already-passed prayers as "fired" so we only trigger future ones.
+    // Mark already-passed prayers as fired so we only trigger future ones.
+    // Use 60 s threshold so a tab-sleep that delayed the interval still catches up.
     const now = new Date();
     const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     for (const name of AZAN_PRAYERS) {
@@ -89,7 +114,7 @@ export function AutoAzanScheduler() {
       if (isNaN(h) || isNaN(m)) continue;
       const pt = new Date(now);
       pt.setHours(h, m, 0, 0);
-      if (now.getTime() - pt.getTime() > 5_000) {
+      if (now.getTime() - pt.getTime() > 60_000) {
         firedRef.current.add(`${dateKey}:${name}`);
       }
     }
@@ -110,11 +135,11 @@ export function AutoAzanScheduler() {
         pt.setHours(h, m, 0, 0);
 
         const diff = now.getTime() - pt.getTime();
-        // Fire if we're 0-5 s after the exact prayer time.
-        if (diff >= 0 && diff < 5_000) {
+        // 60 s window survives browser tab throttling; still only fires once per prayer.
+        if (diff >= 0 && diff < 60_000) {
           firedRef.current.add(key);
           fire(name);
-          break; // one azan at a time
+          break;
         }
       }
     };
@@ -123,18 +148,6 @@ export function AutoAzanScheduler() {
     const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
   }, [enabled, data, fire]);
-
-  // Browser-permission probe: once user enables, try a 0-volume silent play
-  // to confirm autoplay is unlocked. If it throws, surface the gesture prompt.
-  useEffect(() => {
-    if (!enabled) return;
-    const el = audioRef.current;
-    if (!el) return;
-    el.muted = true;
-    el.src = '/audio/azan/makkah.mp3';
-    el.play().then(() => { el.pause(); el.currentTime = 0; el.muted = false; setNeedsGesture(false); })
-             .catch(() => setNeedsGesture(true));
-  }, [enabled]);
 
   const stop = () => {
     const el = audioRef.current;
@@ -145,17 +158,29 @@ export function AutoAzanScheduler() {
   const unlock = async () => {
     const el = audioRef.current;
     if (!el) return;
+    // A muted play registers a user gesture with the browser, unlocking future autoplay.
     el.muted = true;
     el.src = `/audio/azan/${voice}.mp3`;
     try {
       await el.play();
-      el.pause(); el.currentTime = 0; el.muted = false;
-      setNeedsGesture(false);
-      // Ask for desktop notification permission while we're here.
-      if ('Notification' in window && Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
     } catch {}
+
+    setUnlocked(true);
+    setNeedsGesture(false);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // If a prayer was blocked, play it now that we have a gesture.
+    if (pendingPrayer) {
+      const p = pendingPrayer;
+      setPendingPrayer(null);
+      await fire(p);
+    }
   };
 
   return (
@@ -171,7 +196,11 @@ export function AutoAzanScheduler() {
             <BellRing className="text-emerald-700 shrink-0" />
             <div className="flex-1">
               <p className="font-semibold">Enable auto-Azan</p>
-              <p className="text-xs text-ink/60 mt-0.5">Click once so the browser allows the Azan to autoplay at prayer time.</p>
+              <p className="text-xs text-ink/60 mt-0.5">
+                {pendingPrayer
+                  ? `${pendingPrayer} prayer time just arrived — click to play the Azan now.`
+                  : 'Click once so the browser allows the Azan to autoplay at prayer time.'}
+              </p>
               <button onClick={unlock} className="btn-primary text-sm py-2 px-4 mt-3">Enable</button>
             </div>
             <button onClick={() => setEnabled(false)} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>

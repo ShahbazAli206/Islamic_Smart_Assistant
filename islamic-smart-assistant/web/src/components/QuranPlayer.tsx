@@ -18,20 +18,20 @@ type Props = {
   surahNumber: number;
   reciter: ReciterId;
   translation: TranslationId;
-  ptvMode: boolean;
+  translationMode: boolean;
   onReciterChange?: (r: ReciterId) => void;
   onTranslationChange?: (t: TranslationId) => void;
-  onPtvChange?: (v: boolean) => void;
+  onTranslationModeChange?: (v: boolean) => void;
 };
 
 /**
- * Ayah-by-ayah player. In "PTV mode" (Arabic + translation), we play the Arabic
+ * Ayah-by-ayah player. In translation mode (Arabic + translation), we play the Arabic
  * recitation for each ayah, then briefly pause to let the on-screen translation
- * appear before moving on — mirroring the classic PTV broadcast format.
+ * appear before advancing to the next ayah.
  */
 export function QuranPlayer({
-  surahNumber, reciter, translation, ptvMode,
-  onReciterChange, onTranslationChange, onPtvChange,
+  surahNumber, reciter, translation, translationMode,
+  onReciterChange, onTranslationChange, onTranslationModeChange,
 }: Props) {
   const surahMeta = SURAHS.find((s) => s.number === surahNumber)!;
   const editions = useMemo(
@@ -94,7 +94,7 @@ export function QuranPlayer({
     if (!pre) return;
 
     const wantsTranslation =
-      ptvMode &&
+      translationMode &&
       stage === 'arabic' &&
       translation !== 'none' &&
       translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah);
@@ -111,7 +111,7 @@ export function QuranPlayer({
       pre.src = nextUrl;
       pre.load();
     }
-  }, [arabic, currentAyah, ayahIdx, stage, ptvMode, translation, surahNumber, reciter]);
+  }, [arabic, currentAyah, ayahIdx, stage, translationMode, translation, surahNumber, reciter]);
 
   // Play / pause based on `playing` flag.
   useEffect(() => {
@@ -133,7 +133,7 @@ export function QuranPlayer({
     // PTV mode: after Arabic, play the spoken translation (if we have audio for it),
     // then advance to the next ayah.
     if (
-      ptvMode &&
+      translationMode &&
       stage === 'arabic' &&
       translation !== 'none' &&
       translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah)
@@ -148,7 +148,7 @@ export function QuranPlayer({
       if (repeat) setAyahIdx(0);
       else { setPlaying(false); return; }
     } else {
-      const delay = ptvMode ? 400 : 0;
+      const delay = translationMode ? 400 : 0;
       setStage('arabic');
       setTimeout(() => setAyahIdx((i) => i + 1), delay);
     }
@@ -208,8 +208,8 @@ export function QuranPlayer({
         >
           <input
             type="checkbox"
-            checked={ptvMode}
-            onChange={(e) => onPtvChange?.(e.target.checked)}
+            checked={translationMode}
+            onChange={(e) => onTranslationModeChange?.(e.target.checked)}
             className="accent-emerald-600"
           />
           Recite each ayah with its translation
