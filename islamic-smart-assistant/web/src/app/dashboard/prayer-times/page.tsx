@@ -6,10 +6,10 @@ import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { useStoredLocation } from '@/lib/useStoredLocation';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
 import { geocodePlace } from '@/lib/geo';
 import { detectLocationByIP } from '@/lib/prayer';
+import { readStoredLocation, clearPinnedMosque } from '@/lib/location';
 import {
   FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
   type Sect, type Fiqh,
@@ -40,9 +40,6 @@ export default function PrayerTimesPage() {
     return { method: methodOverride >= 0 ? methodOverride : base.method, school: base.school };
   }, [fiqh, methodOverride]);
 
-  // --- user's stored location (from onboarding / profile) ---
-  const storedLoc = useStoredLocation();
-
   // --- map + mosques ---
   const [center, setCenter] = useState(FALLBACK_CENTER);
   const [mosques, setMosques] = useState<Mosque[]>([]);
@@ -70,30 +67,48 @@ export default function PrayerTimesPage() {
     }
   }, []);
 
-  // Initialise map center from the best available source:
-  // 1. Stored GPS coordinates (from onboarding / profile)
-  // 2. Stored city → geocode to get coordinates
-  // 3. Browser geolocation (GPS)
-  // 4. IP-based geolocation
-  // 5. Fallback to Karachi
+  // Initialise the map center ONCE on mount, from the best available source:
+  //   1. Stored coordinates that belong to the chosen city (onboarding/profile)
+  //   2. Stored city → geocode to coordinates
+  //   3. Browser geolocation (GPS)   4. IP geolocation   5. Karachi fallback
+  // We read localStorage synchronously here to avoid the hydration race where
+  // the reactive hook still holds its defaults during the first render.
   useEffect(() => {
     if (initialised.current) return;
     initialised.current = true;
 
     const init = async () => {
-      // 1. User has stored coordinates from onboarding
-      if (storedLoc.hasCoords && storedLoc.lat != null && storedLoc.lng != null) {
-        const c = { lat: storedLoc.lat, lng: storedLoc.lng };
+      const loc = readStoredLocation();
+
+      // Heal: a mosque pinned by an older build could be left over from a
+      // previous location. If the stored coords are stale (the user has since
+      // changed their city), drop the stale pin so it can't override the center.
+      //
+      // Two-pronged fix for a useLocalStorage hydration race:
+      //   1. clearPinnedMosque() removes the key from localStorage AND dispatches
+      //      a StorageEvent so the hook's same-tab listener calls setValue(null).
+      //      This fires AFTER the hook's read-effect has already scheduled a
+      //      re-render with the stale mosque — the StorageEvent fires later during
+      //      that same effect flush and its setValue(null) wins as the last update.
+      //   2. setSelected(null) also directly sets React state for the common case
+      //      where nothing was pinned (so the re-render is cheap).
+      if (loc.coordsAreStale) {
+        clearPinnedMosque();
+        setSelected(null);
+      }
+
+      // 1. Stored coordinates that match the chosen city
+      if (loc.hasCoords && loc.lat != null && loc.lng != null) {
+        const c = { lat: loc.lat, lng: loc.lng };
         setCenter(c);
         loadMosques(c.lat, c.lng);
         return;
       }
 
-      // 2. User has a stored city — geocode it
-      if (storedLoc.city && storedLoc.city !== 'Karachi') {
+      // 2. Stored city — geocode it
+      if (loc.city && loc.city !== 'Karachi') {
         try {
-          const query = `${storedLoc.city}, ${storedLoc.country}`;
-          const hits = await geocodePlace(query, 1);
+          const hits = await geocodePlace(`${loc.city}, ${loc.country}`, 1);
           if (hits[0]) {
             const c = { lat: hits[0].lat, lng: hits[0].lng };
             setCenter(c);
@@ -120,9 +135,9 @@ export default function PrayerTimesPage() {
 
       // 4. IP-based geolocation
       try {
-        const loc = await detectLocationByIP();
-        if (loc.lat && loc.lng) {
-          const c = { lat: loc.lat, lng: loc.lng };
+        const ip = await detectLocationByIP();
+        if (ip.lat && ip.lng) {
+          const c = { lat: ip.lat, lng: ip.lng };
           setCenter(c);
           loadMosques(c.lat, c.lng);
           return;
@@ -135,7 +150,7 @@ export default function PrayerTimesPage() {
 
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storedLoc.hasCoords, storedLoc.lat, storedLoc.lng, storedLoc.city]);
+  }, []);
 
   // Debounced reload when the map centre changes.
   const onMoveEnd = useCallback((c: { lat: number; lng: number }) => {

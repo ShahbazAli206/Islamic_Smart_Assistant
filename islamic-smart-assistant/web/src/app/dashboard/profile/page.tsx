@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, User, Mail, BookOpen, Globe2, MapPin, Check, Loader2, Crosshair } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Me, type MeProfile, type SetLocation } from '@/lib/api';
+import { setLocationByCoords } from '@/lib/location';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -86,14 +87,11 @@ export default function ProfilePage() {
         const addr = (await res.json())?.address ?? {};
         const city = addr.city || addr.town || addr.village || addr.county || addr.state || '';
         const country = addr.country || '';
-        persistLocal('isa:lat', lat);
-        persistLocal('isa:lng', lng);
-        if (city) persistLocal('isa:city', city);
-        if (country) persistLocal('isa:country', country);
+        // Centralized writer: tags coords with the city + dispatches StorageEvents.
+        setLocationByCoords(lat, lng, city || undefined, country || undefined, { clearMosque: true });
       } catch {
-        // Reverse geocode failed — still store the coords for exact times.
-        persistLocal('isa:lat', lat);
-        persistLocal('isa:lng', lng);
+        // Reverse geocode failed — still store the raw GPS coords (trusted).
+        setLocationByCoords(lat, lng, undefined, undefined, { clearMosque: true });
       }
     });
   };
@@ -221,13 +219,6 @@ export default function ProfilePage() {
       </motion.div>
     </div>
   );
-}
-
-/** Write a value to localStorage and notify same-tab useLocalStorage listeners. */
-function persistLocal(key: string, val: unknown) {
-  const json = JSON.stringify(val);
-  localStorage.setItem(key, json);
-  window.dispatchEvent(new StorageEvent('storage', { key, newValue: json }));
 }
 
 function Field({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) {

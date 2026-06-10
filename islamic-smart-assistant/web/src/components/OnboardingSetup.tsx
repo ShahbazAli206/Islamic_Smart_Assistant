@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass } from 'lucide-react';
 import { fetchTimingsByCity, detectLocationByIP } from '@/lib/prayer';
-import { setLocationByCity, setLocationByCoords } from '@/lib/location';
+import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'none';
@@ -103,10 +103,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       setDraftLang(lang);
       setDraftName(name);
       setGeoSuccess(Boolean(city && country));
-      // Carry over the stored coordinates so they survive an edit that doesn't
-      // touch the location; they're matched to the prefilled city/country.
-      setDraftLat(safeReadNum('isa:lat'));
-      setDraftLng(safeReadNum('isa:lng'));
+      // Carry over stored coordinates ONLY if they're tagged for this same city;
+      // otherwise they're stale and save() should re-geocode the city instead of
+      // re-stamping an unrelated old GPS point.
+      const coordsFor = safeRead('isa:coordsFor', '');
+      const coordsMatch = coordsFor !== '' && coordsFor === locLabel(city, country);
+      setDraftLat(coordsMatch ? safeReadNum('isa:lat') : null);
+      setDraftLng(coordsMatch ? safeReadNum('isa:lng') : null);
       setLocDirty(false);
     } catch {}
   };
