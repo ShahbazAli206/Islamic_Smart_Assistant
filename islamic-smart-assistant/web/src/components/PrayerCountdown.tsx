@@ -8,6 +8,7 @@ import {
   fetchTimingsByCity, fetchTimingsByCoords, detectLocationByIP, nextPrayerInZone, formatCountdown,
   LocationError, type PrayerTimes,
 } from '@/lib/prayer';
+import { setLocationByCity, setLocationByCoords } from '@/lib/location';
 
 const ICONS: Record<keyof PrayerTimes, any> = {
   Fajr: Star, Sunrise: Sunrise, Dhuhr: Sun, Asr: Compass, Maghrib: Sunset, Isha: Moon,
@@ -70,6 +71,10 @@ export function PrayerCountdownHero({
   const [popupCity, setPopupCity] = useState('');
   const [popupCountry, setPopupCountry] = useState('');
   const [popupError, setPopupError] = useState('');
+  // Exact coords from a detect button in the popup; cleared when the user edits
+  // the city/country by hand so "Update location" knows to geocode instead.
+  const [popupLat, setPopupLat] = useState<number | null>(null);
+  const [popupLng, setPopupLng] = useState<number | null>(null);
 
   // Show popup automatically when there's a location error
   useEffect(() => {
@@ -78,28 +83,35 @@ export function PrayerCountdownHero({
       setPopupCity('');
       setPopupCountry('');
       setPopupError('');
+      setPopupLat(null);
+      setPopupLng(null);
     }
   }, [isError, error]);
 
-  const applyNewLocation = useCallback((newCity: string, newCountry: string) => {
+  const applyNewLocation = useCallback(async (newCity: string, newCountry: string) => {
     const safeCity = newCity.trim();
     const safeCountry = newCountry.trim();
     if (!safeCity || !safeCountry) {
       setPopupError('Please enter both city and country.');
       return;
     }
+    setIpLoading(true);
+    setPopupError('');
+    // Commit through the centralized writer so coords, labels and the pinned
+    // mosque all stay in sync (and listeners get a StorageEvent).
     try {
-      const persist = (key: string, val: unknown) => {
-        const json = JSON.stringify(val);
-        localStorage.setItem(key, json);
-        window.dispatchEvent(new StorageEvent('storage', { key, newValue: json }));
-      };
-      persist('isa:city', safeCity);
-      persist('isa:country', safeCountry);
-    } catch {}
+      if (popupLat != null && popupLng != null) {
+        // Exact coords from a detect button → keep that precision.
+        setLocationByCoords(popupLat, popupLng, safeCity, safeCountry, { clearMosque: true });
+      } else {
+        // Manually typed city → geocode to coordinates (falls back to city-only).
+        await setLocationByCity(safeCity, safeCountry);
+      }
+    } catch { /* helpers already degrade gracefully */ }
+    setIpLoading(false);
     queryClient.invalidateQueries({ queryKey: ['timings'] });
     setShowLocPopup(false);
-  }, [queryClient]);
+  }, [queryClient, popupLat, popupLng]);
 
   const detectByIP = useCallback(async () => {
     setIpLoading(true);
@@ -109,10 +121,11 @@ export function PrayerCountdownHero({
       if (loc.city && loc.country) {
         setPopupCity(loc.city);
         setPopupCountry(loc.country);
-        try {
-          localStorage.setItem('isa:lat', JSON.stringify(loc.lat));
-          localStorage.setItem('isa:lng', JSON.stringify(loc.lng));
-        } catch {}
+        // Stage the coords; they're committed (with a StorageEvent) on "Update location".
+        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+          setPopupLat(loc.lat);
+          setPopupLng(loc.lng);
+        }
       } else {
         setPopupError('Could not detect your city. Please type it manually.');
       }
@@ -143,10 +156,11 @@ export function PrayerCountdownHero({
           const detectedCountry = addr.country || '';
           setPopupCity(detectedCity);
           setPopupCountry(detectedCountry);
-          try {
-            localStorage.setItem('isa:lat', JSON.stringify(lat));
-            localStorage.setItem('isa:lng', JSON.stringify(lng));
-          } catch {}
+          // Stage the coords; committed (with a StorageEvent) on "Update location".
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            setPopupLat(lat);
+            setPopupLng(lng);
+          }
         } catch {
           setPopupError('Location detected but city lookup failed. Please type your city below.');
         } finally {
@@ -319,7 +333,7 @@ export function PrayerCountdownHero({
                     <label className="text-xs font-medium text-black/55 mb-1 block">City</label>
                     <input
                       value={popupCity}
-                      onChange={(e) => setPopupCity(e.target.value)}
+                      onChange={(e) => { setPopupCity(e.target.value); setPopupLat(null); setPopupLng(null); }}
                       placeholder="e.g. Toronto"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />
@@ -328,7 +342,7 @@ export function PrayerCountdownHero({
                     <label className="text-xs font-medium text-black/55 mb-1 block">Country</label>
                     <input
                       value={popupCountry}
-                      onChange={(e) => setPopupCountry(e.target.value)}
+                      onChange={(e) => { setPopupCountry(e.target.value); setPopupLat(null); setPopupLng(null); }}
                       placeholder="e.g. Canada"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />

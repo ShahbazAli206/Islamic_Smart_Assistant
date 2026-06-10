@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass } from 'lucide-react';
 import { fetchTimingsByCity, detectLocationByIP } from '@/lib/prayer';
+import { setLocationByCity, setLocationByCoords } from '@/lib/location';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'none';
@@ -46,6 +47,15 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   // Validation of the city/country combination before leaving the location step.
   const [validating, setValidating] = useState(false);
   const [locError,   setLocError]   = useState('');
+  const [saving,     setSaving]     = useState(false);
+
+  // Coordinates that match the *currently shown* city/country. Set by GPS/IP
+  // detection (and prefill); cleared the moment the user types a different
+  // city/country so we know to re-derive coords on save instead of keeping a
+  // stale GPS point. `locDirty` tracks whether the location changed this session.
+  const [draftLat, setDraftLat] = useState<number | null>(null);
+  const [draftLng, setDraftLng] = useState<number | null>(null);
+  const [locDirty, setLocDirty] = useState(false);
 
   // Ensures we only fire the automatic permission prompt once per mount.
   const autoPrompted = useRef(false);
@@ -93,6 +103,11 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       setDraftLang(lang);
       setDraftName(name);
       setGeoSuccess(Boolean(city && country));
+      // Carry over the stored coordinates so they survive an edit that doesn't
+      // touch the location; they're matched to the prefilled city/country.
+      setDraftLat(safeReadNum('isa:lat'));
+      setDraftLng(safeReadNum('isa:lng'));
+      setLocDirty(false);
     } catch {}
   };
 
@@ -119,8 +134,9 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
           setDraftCity(city);
           setDraftCountry(country);
           setGeoSuccess(true);
-          localStorage.setItem('isa:lat', JSON.stringify(lat));
-          localStorage.setItem('isa:lng', JSON.stringify(lng));
+          setDraftLat(lat);
+          setDraftLng(lng);
+          setLocDirty(true);
         } catch {
           setGeoError('Location found but city lookup failed. Please type your city below.');
         } finally {
@@ -145,8 +161,9 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         setDraftCity(loc.city);
         setDraftCountry(loc.country);
         setGeoSuccess(true);
-        localStorage.setItem('isa:lat', JSON.stringify(loc.lat));
-        localStorage.setItem('isa:lng', JSON.stringify(loc.lng));
+        setDraftLat(loc.lat);
+        setDraftLng(loc.lng);
+        setLocDirty(true);
       } else {
         setGeoError('Could not detect your city from IP. Please type it manually.');
       }
@@ -186,7 +203,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     }
   };
 
-  const save = () => {
+  const save = async () => {
     const school = draftSect;
     const method = SECTS.find((s) => s.id === school)?.method ?? 1;
     const city    = draftCity.trim()    || 'Karachi';
@@ -208,15 +225,28 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       window.dispatchEvent(new StorageEvent('storage', { key, newValue: json }));
     };
 
-    persist('isa:city',      city);
-    persist('isa:country',   country);
+    setSaving(true);
+
     persist('isa:sect',      sectValue);
     persist('isa:fiqh',      fiqhValue);
     persist('isa:method',    method);
     persist('isa:language',  draftLang);
     persist('isa:name',      draftName.trim());
+
+    // Location — keep coordinates in sync with the chosen city so a previously
+    // detected GPS fix can never override an explicitly typed city/country.
+    if (draftLat != null && draftLng != null) {
+      // Coords already match the shown city (from detection or an untouched prefill).
+      // Clear a stale pinned mosque only when the location actually changed.
+      setLocationByCoords(draftLat, draftLng, city, country, { clearMosque: locDirty });
+    } else {
+      // Manually typed / changed city → geocode to fresh coords (also clears the mosque).
+      await setLocationByCity(city, country);
+    }
+
     persist('isa:setupDone', true);
 
+    setSaving(false);
     setShow(false);
     onClose?.();
   };
@@ -335,7 +365,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                     <label className="text-xs font-medium text-ink/55 mb-1 block">City</label>
                     <input
                       value={draftCity}
-                      onChange={(e) => { setDraftCity(e.target.value); setLocError(''); }}
+                      onChange={(e) => { setDraftCity(e.target.value); setLocError(''); setDraftLat(null); setDraftLng(null); setLocDirty(true); }}
                       placeholder="Karachi"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />
@@ -344,7 +374,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                     <label className="text-xs font-medium text-ink/55 mb-1 block">Country</label>
                     <input
                       value={draftCountry}
-                      onChange={(e) => { setDraftCountry(e.target.value); setLocError(''); }}
+                      onChange={(e) => { setDraftCountry(e.target.value); setLocError(''); setDraftLat(null); setDraftLng(null); setLocDirty(true); }}
                       placeholder="Pakistan"
                       className="w-full px-3 py-2.5 rounded-xl border border-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-sm"
                     />
@@ -469,8 +499,14 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                 : <>Next <ChevronRight size={16} /></>}
             </button>
           ) : (
-            <button onClick={save} className="btn-primary px-8 py-2.5 text-sm">
-              <Check size={16} /> Done
+            <button
+              onClick={save}
+              disabled={saving}
+              className="btn-primary px-8 py-2.5 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {saving
+                ? <><Loader2 size={16} className="animate-spin" /> Saving…</>
+                : <><Check size={16} /> Done</>}
             </button>
           )}
         </div>
@@ -485,5 +521,16 @@ function safeRead(key: string, fallback: string): string {
     return raw !== null ? (JSON.parse(raw) as string) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function safeReadNum(key: string): number | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return null;
+    const v = JSON.parse(raw);
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+  } catch {
+    return null;
   }
 }
