@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle } from 'lucide-react';
-import { fetchTimingsByCity } from '@/lib/prayer';
+import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass } from 'lucide-react';
+import { fetchTimingsByCity, detectLocationByIP } from '@/lib/prayer';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'none';
@@ -98,7 +98,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
 
   const detectLocation = () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGeoError('Geolocation is not supported by your browser.');
+      setGeoError('Geolocation is not supported by your browser. Try "Detect by IP" instead.');
       return;
     }
     setGeoLoading(true);
@@ -129,10 +129,32 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       },
       () => {
         setGeoLoading(false);
-        setGeoError('Permission denied — please type your city and country below.');
+        setGeoError('Permission denied — try "Detect by IP" or type your city and country below.');
       },
       { timeout: 10_000 },
     );
+  };
+
+  const detectByIP = async () => {
+    setGeoLoading(true);
+    setGeoError('');
+    setGeoSuccess(false);
+    try {
+      const loc = await detectLocationByIP();
+      if (loc.city && loc.country) {
+        setDraftCity(loc.city);
+        setDraftCountry(loc.country);
+        setGeoSuccess(true);
+        localStorage.setItem('isa:lat', JSON.stringify(loc.lat));
+        localStorage.setItem('isa:lng', JSON.stringify(loc.lng));
+      } else {
+        setGeoError('Could not detect your city from IP. Please type it manually.');
+      }
+    } catch {
+      setGeoError('IP detection failed. Please type your city and country below.');
+    } finally {
+      setGeoLoading(false);
+    }
   };
 
   // Advance from a step. On the location step we first confirm the city/country
@@ -252,22 +274,34 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                 transition={{ duration: 0.2 }}
                 className="flex-1 flex flex-col gap-4"
               >
-                <button
-                  onClick={detectLocation}
-                  disabled={geoLoading}
-                  className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl border-2 font-semibold text-sm transition select-none
-                    ${geoSuccess
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed'
-                    }`}
-                >
-                  {geoLoading
-                    ? <><Loader2 size={17} className="animate-spin" /> Detecting location…</>
-                    : geoSuccess
-                    ? <><Check size={17} /> Location detected</>
-                    : <><Navigation size={17} /> Use my location</>
-                  }
-                </button>
+                {geoSuccess ? (
+                  <div className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold text-sm">
+                    <Check size={17} /> Location detected
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={detectLocation}
+                      disabled={geoLoading}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm transition select-none"
+                    >
+                      {geoLoading
+                        ? <><Loader2 size={15} className="animate-spin" /> Detecting…</>
+                        : <><Navigation size={15} /> Use GPS</>
+                      }
+                    </button>
+                    <button
+                      onClick={detectByIP}
+                      disabled={geoLoading}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm transition select-none"
+                    >
+                      {geoLoading
+                        ? <><Loader2 size={15} className="animate-spin" /> Detecting…</>
+                        : <><Compass size={15} /> Detect by IP</>
+                      }
+                    </button>
+                  </div>
+                )}
 
                 {geoError && (
                   <p className="text-xs text-rose-600 leading-relaxed">{geoError}</p>

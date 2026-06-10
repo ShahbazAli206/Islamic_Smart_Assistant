@@ -33,20 +33,64 @@ export const METHODS = {
 
 export type MethodId = (typeof METHODS)[keyof typeof METHODS];
 
+/** Error thrown when the location is invalid or the API cannot resolve it. */
+export class LocationError extends Error {
+  constructor(message: string, public city: string, public country: string) {
+    super(message);
+    this.name = 'LocationError';
+  }
+}
+
 export async function fetchTimingsByCity(
   city: string,
   country: string,
   method: MethodId = METHODS.Karachi,
 ): Promise<Timings> {
+  if (!city.trim() || !country.trim()) {
+    throw new LocationError('City and country are required.', city, country);
+  }
+
   const url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`;
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch prayer times');
+
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store' });
+  } catch {
+    throw new LocationError('Network error — could not reach prayer times service.', city, country);
+  }
+
+  if (!res.ok) {
+    throw new LocationError(
+      `Could not find prayer times for "${city}, ${country}". Please check your location.`,
+      city,
+      country,
+    );
+  }
+
   const json = await res.json();
-  const d = json.data;
+  const d = json?.data;
+
+  if (!d?.timings || !d?.date) {
+    throw new LocationError(
+      `Invalid response for "${city}, ${country}". The city/country combination may be incorrect.`,
+      city,
+      country,
+    );
+  }
+
+  const timings = trimTimings(d.timings);
+  if (!isValidTimings(timings)) {
+    throw new LocationError(
+      `Could not calculate prayer times for "${city}, ${country}". Please verify your location.`,
+      city,
+      country,
+    );
+  }
+
   return {
-    timings: trimTimings(d.timings),
-    hijriDate: `${d.date.hijri.day} ${d.date.hijri.month.en} ${d.date.hijri.year}`,
-    gregorianDate: `${d.date.gregorian.weekday.en}, ${d.date.gregorian.day} ${d.date.gregorian.month.en} ${d.date.gregorian.year}`,
+    timings,
+    hijriDate: `${d.date.hijri?.day ?? '?'} ${d.date.hijri?.month?.en ?? '?'} ${d.date.hijri?.year ?? '?'}`,
+    gregorianDate: `${d.date.gregorian?.weekday?.en ?? ''}, ${d.date.gregorian?.day ?? '?'} ${d.date.gregorian?.month?.en ?? '?'} ${d.date.gregorian?.year ?? '?'}`,
     city,
     country,
   };
@@ -66,41 +110,80 @@ export async function fetchTimingsByCoords(
   const url =
     `https://api.aladhan.com/v1/timings/${dd}` +
     `?latitude=${lat}&longitude=${lng}&method=${method}&school=${school}`;
-  const res = await fetch(url, { cache: 'no-store' });
+
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store' });
+  } catch {
+    throw new Error('Network error — could not reach prayer times service.');
+  }
+
   if (!res.ok) throw new Error('Failed to fetch prayer times');
+
   const json = await res.json();
-  const d = json.data;
+  const d = json?.data;
+
+  if (!d?.timings || !d?.date) throw new Error('Invalid response for coordinates');
+
+  const timings = trimTimings(d.timings);
+  if (!isValidTimings(timings)) throw new Error('Invalid timing data for coordinates');
+
   const [city, country] = label.includes(',')
     ? [label.split(',')[0].trim(), label.split(',').slice(1).join(',').trim()]
     : [label || 'Selected location', ''];
   return {
-    timings: trimTimings(d.timings),
-    hijriDate: `${d.date.hijri.day} ${d.date.hijri.month.en} ${d.date.hijri.year}`,
-    gregorianDate: `${d.date.gregorian.weekday.en}, ${d.date.gregorian.day} ${d.date.gregorian.month.en} ${d.date.gregorian.year}`,
+    timings,
+    hijriDate: `${d.date.hijri?.day ?? '?'} ${d.date.hijri?.month?.en ?? '?'} ${d.date.hijri?.year ?? '?'}`,
+    gregorianDate: `${d.date.gregorian?.weekday?.en ?? ''}, ${d.date.gregorian?.day ?? '?'} ${d.date.gregorian?.month?.en ?? '?'} ${d.date.gregorian?.year ?? '?'}`,
     city,
     country,
     timezone: d.meta?.timezone,
   };
 }
 
+/** Detect approximate location from IP using a free geolocation API. */
+export async function detectLocationByIP(): Promise<{ city: string; country: string; lat: number; lng: number }> {
+  const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+  if (!res.ok) throw new Error('IP geolocation failed');
+  const data = await res.json();
+  return {
+    city: data.city ?? '',
+    country: data.country_name ?? '',
+    lat: data.latitude ?? 0,
+    lng: data.longitude ?? 0,
+  };
+}
+
+const TIME_RE = /^\d{2}:\d{2}$/;
+
+function isValidTimings(t: PrayerTimes): boolean {
+  return TIME_RE.test(t.Fajr) && TIME_RE.test(t.Sunrise) && TIME_RE.test(t.Dhuhr)
+      && TIME_RE.test(t.Asr) && TIME_RE.test(t.Maghrib) && TIME_RE.test(t.Isha);
+}
+
 function trimTimings(t: any): PrayerTimes {
   const pick = (s: string) => (s ?? '').slice(0, 5); // strip "(PKT)" suffix
   return {
-    Fajr: pick(t.Fajr),
-    Sunrise: pick(t.Sunrise),
-    Dhuhr: pick(t.Dhuhr),
-    Asr: pick(t.Asr),
-    Maghrib: pick(t.Maghrib),
-    Isha: pick(t.Isha),
+    Fajr: pick(t?.Fajr),
+    Sunrise: pick(t?.Sunrise),
+    Dhuhr: pick(t?.Dhuhr),
+    Asr: pick(t?.Asr),
+    Maghrib: pick(t?.Maghrib),
+    Isha: pick(t?.Isha),
   };
 }
 
 export type NextPrayer = { name: keyof PrayerTimes; at: Date; inMs: number };
 
-export function nextPrayer(times: PrayerTimes, now: Date = new Date()): NextPrayer {
+export function nextPrayer(times: PrayerTimes, now: Date = new Date()): NextPrayer | null {
+  if (!times || !isValidTimings(times)) return null;
+
   const order: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
   for (const name of order) {
-    const [h, m] = times[name].split(':').map(Number);
+    const parts = times[name]?.split(':');
+    if (!parts || parts.length < 2) continue;
+    const [h, m] = parts.map(Number);
+    if (isNaN(h) || isNaN(m)) continue;
     const at = new Date(now);
     at.setHours(h, m, 0, 0);
     if (at.getTime() > now.getTime()) {
@@ -108,7 +191,10 @@ export function nextPrayer(times: PrayerTimes, now: Date = new Date()): NextPray
     }
   }
   // All passed — next is tomorrow's Fajr
-  const [h, m] = times.Fajr.split(':').map(Number);
+  const parts = times.Fajr?.split(':');
+  if (!parts || parts.length < 2) return null;
+  const [h, m] = parts.map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
   const at = new Date(now);
   at.setDate(at.getDate() + 1);
   at.setHours(h, m, 0, 0);
@@ -124,20 +210,28 @@ export function nextPrayerInZone(
   times: PrayerTimes,
   timezone?: string,
   now: Date = new Date(),
-): NextPrayer {
+): NextPrayer | null {
+  if (!times || !isValidTimings(times)) return null;
   if (!timezone) return nextPrayer(times, now);
+
   const order: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
   const localNow = DateTime.fromJSDate(now).setZone(timezone);
   const todayStart = localNow.startOf('day');
   for (const name of order) {
-    const [h, m] = times[name].split(':').map(Number);
+    const parts = times[name]?.split(':');
+    if (!parts || parts.length < 2) continue;
+    const [h, m] = parts.map(Number);
+    if (isNaN(h) || isNaN(m)) continue;
     const at = todayStart.set({ hour: h, minute: m, second: 0, millisecond: 0 });
     if (at.toMillis() > localNow.toMillis()) {
       const atJs = at.toJSDate();
       return { name, at: atJs, inMs: atJs.getTime() - now.getTime() };
     }
   }
-  const [h, m] = times.Fajr.split(':').map(Number);
+  const parts = times.Fajr?.split(':');
+  if (!parts || parts.length < 2) return null;
+  const [h, m] = parts.map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
   const at = todayStart.plus({ days: 1 }).set({ hour: h, minute: m, second: 0, millisecond: 0 });
   const atJs = at.toJSDate();
   return { name: 'Fajr', at: atJs, inMs: atJs.getTime() - now.getTime() };

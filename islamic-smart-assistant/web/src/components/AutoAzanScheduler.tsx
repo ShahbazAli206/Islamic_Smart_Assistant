@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellRing, Pause, Volume2, X } from 'lucide-react';
-import { fetchTimingsByCity, nextPrayer } from '@/lib/prayer';
+import { fetchTimingsByCity, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
+/** Prayers that get an Azan (Sunrise is excluded). */
+const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
 /**
- * Tracks the next prayer and plays the user's chosen Azan when that moment hits.
+ * Polls every second and plays the user's chosen Azan the moment a prayer
+ * time arrives — reliable even across tab-sleeps and query refetches.
  *
  * Limits of running this in a browser:
  *  - The page must be open in a tab. (To survive a closed tab, the backend cron
@@ -18,7 +22,7 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
  */
 export function AutoAzanScheduler() {
   const [voice]   = useLocalStorage<string>('isa:azanVoice', 'makkah');
-  const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', false);
+  const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [city]    = useLocalStorage<string>('isa:city', 'Karachi');
   const [country] = useLocalStorage<string>('isa:country', 'Pakistan');
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
@@ -26,25 +30,99 @@ export function AutoAzanScheduler() {
   const [firing, setFiring] = useState<null | { prayer: string; voice: string }>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Track which prayers already fired so we never double-play. Key = "YYYY-M-D:Prayer" */
+  const firedRef = useRef<Set<string>>(new Set());
+
+  // Keep mutable refs so the interval callback always reads fresh values.
+  const voiceRef = useRef(voice);
+  voiceRef.current = voice;
+  const outputIdRef = useRef(outputId);
+  outputIdRef.current = outputId;
 
   const { data } = useQuery({
     queryKey: ['timings', city, country],
     queryFn: () => fetchTimingsByCity(city, country),
     staleTime: 5 * 60 * 1000,
     enabled,
+    retry: (failureCount, err) => {
+      if (err instanceof LocationError) return false;
+      return failureCount < 2;
+    },
   });
 
-  // Schedule a one-shot timer for the very next prayer.
+  const fire = useCallback(async (prayer: string) => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.muted = false;
+    el.src = `/audio/azan/${voiceRef.current}.mp3`;
+    // Route to chosen output device if the browser supports it.
+    try {
+      if (outputIdRef.current && 'setSinkId' in el) await (el as any).setSinkId(outputIdRef.current);
+    } catch {}
+    try {
+      await el.play();
+      setFiring({ prayer, voice: voiceRef.current });
+      // Browser desktop notification too.
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceRef.current} Azan`, silent: true });
+        }
+      }
+    } catch {
+      setNeedsGesture(true);
+    }
+  }, []);
+
+  // ── Core: poll every second, fire when a prayer time arrives ──
   useEffect(() => {
-    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
     if (!enabled || !data) return;
-    const np = nextPrayer(data.timings);
-    // Skip Sunrise — most users don't want an Azan for it.
-    const ms = np.name === 'Sunrise' ? np.inMs + 60_000 : np.inMs;
-    timeoutRef.current = setTimeout(() => fire(np.name), Math.max(1_000, ms));
-    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
-  }, [enabled, data]);
+
+    const timings = data.timings;
+
+    // Mark all already-passed prayers as "fired" so we only trigger future ones.
+    const now = new Date();
+    const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    for (const name of AZAN_PRAYERS) {
+      const parts = timings[name]?.split(':');
+      if (!parts || parts.length < 2) continue;
+      const [h, m] = parts.map(Number);
+      if (isNaN(h) || isNaN(m)) continue;
+      const pt = new Date(now);
+      pt.setHours(h, m, 0, 0);
+      if (now.getTime() - pt.getTime() > 5_000) {
+        firedRef.current.add(`${dateKey}:${name}`);
+      }
+    }
+
+    const tick = () => {
+      const now = new Date();
+      const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+      for (const name of AZAN_PRAYERS) {
+        const key = `${dateKey}:${name}`;
+        if (firedRef.current.has(key)) continue;
+
+        const parts = timings[name]?.split(':');
+        if (!parts || parts.length < 2) continue;
+        const [h, m] = parts.map(Number);
+        if (isNaN(h) || isNaN(m)) continue;
+        const pt = new Date(now);
+        pt.setHours(h, m, 0, 0);
+
+        const diff = now.getTime() - pt.getTime();
+        // Fire if we're 0-5 s after the exact prayer time.
+        if (diff >= 0 && diff < 5_000) {
+          firedRef.current.add(key);
+          fire(name);
+          break; // one azan at a time
+        }
+      }
+    };
+
+    tick(); // check immediately (page might open right at prayer time)
+    const id = setInterval(tick, 1_000);
+    return () => clearInterval(id);
+  }, [enabled, data, fire]);
 
   // Browser-permission probe: once user enables, try a 0-volume silent play
   // to confirm autoplay is unlocked. If it throws, surface the gesture prompt.
@@ -57,29 +135,6 @@ export function AutoAzanScheduler() {
     el.play().then(() => { el.pause(); el.currentTime = 0; el.muted = false; setNeedsGesture(false); })
              .catch(() => setNeedsGesture(true));
   }, [enabled]);
-
-  const fire = async (prayer: string) => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.muted = false;
-    el.src = `/audio/azan/${voice}.mp3`;
-    // Route to chosen output device if the browser supports it.
-    try {
-      if (outputId && 'setSinkId' in el) await (el as any).setSinkId(outputId);
-    } catch {}
-    try {
-      await el.play();
-      setFiring({ prayer, voice });
-      // Browser desktop notification too.
-      if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification(`${prayer} prayer time`, { body: `Playing ${voice} Azan`, silent: true });
-        }
-      }
-    } catch {
-      setNeedsGesture(true);
-    }
-  };
 
   const stop = () => {
     const el = audioRef.current;
