@@ -9,11 +9,17 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import type { ReciterId, TranslationId } from '@/lib/quran';
 
 function langToTranslation(lang: string): TranslationId {
-  if (lang === 'en')   return 'en.sahih';
-  if (lang === 'ur')   return 'ur.jalandhry';
-  if (lang === 'none') return 'none';
-  // For other languages (tr, bn, zh, fr, hi) fall back to English translation
-  return 'en.sahih';
+  const map: Record<string, TranslationId> = {
+    en:   'en.sahih',
+    ur:   'ur.jalandhry',
+    tr:   'tr.vakfi',      // Diyanet Vakfı — text matches its spoken audio exactly
+    bn:   'bn.bengali',
+    zh:   'zh.majian',
+    fr:   'fr.hamidullah',
+    hi:   'hi.hindi',
+    none: 'none',
+  };
+  return map[lang] ?? 'en.sahih';
 }
 
 const QUICK_PICKS = [

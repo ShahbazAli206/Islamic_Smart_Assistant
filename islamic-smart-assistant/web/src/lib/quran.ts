@@ -16,12 +16,31 @@ export const RECITERS = [
 
 export type ReciterId = (typeof RECITERS)[number]['id'];
 
+// `audio: true` means spoken ayah-by-ayah translation audio is available (see
+// AUDIO_TRANSLATION below). Languages without a free per-ayah recording are
+// marked `audio: false` and display the translation text only.
 export const TRANSLATIONS = [
-  { id: 'none',          name: 'No translation', short: 'Arabic only' },
-  { id: 'en.asad',       name: 'English — Muhammad Asad',  short: 'English' },
-  { id: 'en.sahih',      name: 'English — Saheeh Intl.',   short: 'English (Saheeh)' },
-  { id: 'ur.jalandhry',  name: 'Urdu — Fateh M. Jalandhry', short: 'اردو ترجمہ' },
-  { id: 'ur.junagarhi',  name: 'Urdu — M. Junagarhi',      short: 'اردو ترجمہ' },
+  { id: 'none',           name: 'No translation',                short: 'Arabic only', audio: false },
+  // English — spoken audio by Ibrahim Walk (Saheeh International)
+  { id: 'en.sahih',       name: 'English — Saheeh Intl.',        short: 'English',  audio: true },
+  { id: 'en.asad',        name: 'English — Muhammad Asad',       short: 'English',  audio: true },
+  // Urdu — spoken audio by Shamshad Ali Khan
+  { id: 'ur.jalandhry',   name: 'Urdu — Fateh M. Jalandhry',     short: 'اردو',     audio: true },
+  { id: 'ur.junagarhi',   name: 'Urdu — M. Junagarhi',           short: 'اردو',     audio: true },
+  // Turkish — spoken audio by Diyanet Vakfı (matches the tr.vakfi text exactly)
+  { id: 'tr.vakfi',       name: 'Turkish — Diyanet Vakfı',       short: 'Türkçe',   audio: true },
+  { id: 'tr.diyanet',     name: 'Turkish — Diyanet İşleri',      short: 'Türkçe',   audio: true },
+  { id: 'tr.yazir',       name: 'Turkish — Elmalılı H. Yazır',   short: 'Türkçe',   audio: true },
+  // Chinese — spoken audio (Ma Jian)
+  { id: 'zh.majian',      name: 'Chinese — Ma Jian',             short: '中文',     audio: true },
+  // French — spoken audio by Youssouf Leclerc
+  { id: 'fr.hamidullah',  name: 'French — Muhammad Hamidullah',  short: 'Français', audio: true },
+  // Bengali — text only (no free per-ayah spoken-audio recording exists)
+  { id: 'bn.bengali',     name: 'Bengali — Muhiuddin Khan (text only)', short: 'বাংলা', audio: false },
+  { id: 'bn.hoque',       name: 'Bengali — Zohurul Hoque (text only)',  short: 'বাংলা', audio: false },
+  // Hindi — text only (no free per-ayah spoken-audio recording exists)
+  { id: 'hi.hindi',       name: 'Hindi — Suhel Farooq Khan (text only)', short: 'हिन्दी', audio: false },
+  { id: 'hi.farooq',      name: 'Hindi — M. Farooq Khan (text only)',    short: 'हिन्दी', audio: false },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -35,30 +54,43 @@ export function ayahAudioUrl(globalAyahNumber: number, reciter: ReciterId, bitra
   return `${CDN}/${bitrate}/${reciter}/${globalAyahNumber}.mp3`;
 }
 
+// Spoken ayah-by-ayah translation audio editions on the islamic.network CDN
+// (the same CDN used for Arabic recitation). Each edition is hosted at exactly
+// ONE bitrate; the others return 403. Keyed by the chosen TEXT translation id —
+// where a language has only one spoken recording, every text edition of that
+// language maps to it. All five recordings below were verified to cover the
+// full Quran (global ayah numbers 1..6236).
+const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 192 }> = {
+  'en.sahih':      { edition: 'en.walk',        bitrate: 192 }, // Ibrahim Walk (Saheeh Intl.)
+  'en.asad':       { edition: 'en.walk',        bitrate: 192 }, // only English recording available
+  'ur.jalandhry':  { edition: 'ur.khan',        bitrate: 64  }, // Shamshad Ali Khan
+  'ur.junagarhi':  { edition: 'ur.khan',        bitrate: 64  },
+  'tr.vakfi':      { edition: 'tr.vakfi-audio', bitrate: 128 }, // Diyanet Vakfı (exact text match)
+  'tr.diyanet':    { edition: 'tr.vakfi-audio', bitrate: 128 },
+  'tr.yazir':      { edition: 'tr.vakfi-audio', bitrate: 128 },
+  'zh.majian':     { edition: 'zh.chinese',     bitrate: 128 }, // Ma Jian
+  'fr.hamidullah': { edition: 'fr.leclerc',     bitrate: 128 }, // Youssouf Leclerc
+  // bn.* and hi.* have no free per-ayah spoken-audio recording — text only.
+};
+
+/** Whether the given translation has spoken ayah-by-ayah audio. */
+export function hasTranslationAudio(translation: TranslationId): boolean {
+  return translation in AUDIO_TRANSLATION;
+}
+
 /**
- * Spoken translation audio (PTV-style). Returns null when the chosen translation
- * has no recorded audio — caller should then either skip or use TTS.
- *
- * everyayah.com numbering is 3-digit-surah + 3-digit-ayahInSurah, e.g. 001001.mp3
+ * Spoken translation audio for one ayah, served from the islamic.network CDN by
+ * GLOBAL ayah number (1..6236 across the whole Quran — i.e. AyahResponse.number,
+ * NOT numberInSurah). Returns null when the chosen translation has no recorded
+ * audio (e.g. Bengali, Hindi) — the player then shows the text without audio.
  */
 export function translationAudioUrl(
   translation: TranslationId,
-  surahNumber: number,
-  ayahInSurah: number,
+  globalAyahNumber: number,
 ): string | null {
-  const id = `${String(surahNumber).padStart(3, '0')}${String(ayahInSurah).padStart(3, '0')}`;
-  switch (translation) {
-    case 'ur.jalandhry':
-    case 'ur.junagarhi':
-      // Shamshad Ali Khan recites the Fateh Jalandhry Urdu translation.
-      return `https://everyayah.com/data/translations/urdu_shamshad_ali_khan_46kbps/${id}.mp3`;
-    case 'en.asad':
-    case 'en.sahih':
-      // Ibrahim Walk recites the Sahih International English translation.
-      return `https://everyayah.com/data/English/Sahih_Intnl_Ibrahim_Walk_192kbps/${id}.mp3`;
-    default:
-      return null;
-  }
+  const a = AUDIO_TRANSLATION[translation];
+  if (!a) return null;
+  return `${CDN}/${a.bitrate}/${a.edition}/${globalAyahNumber}.mp3`;
 }
 
 export type AyahResponse = {

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import {
   RECITERS, TRANSLATIONS, fetchSurahMulti, ayahAudioUrl, translationAudioUrl,
+  hasTranslationAudio,
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
@@ -73,7 +74,7 @@ export function QuranPlayer({
     if (stage === 'arabic') {
       return currentAyah.audio ?? ayahAudioUrl(currentAyah.number, reciter);
     }
-    return translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah);
+    return translationAudioUrl(translation, currentAyah.number);
   })();
 
   // Load whenever the URL changes — without touching `playing`,
@@ -97,11 +98,11 @@ export function QuranPlayer({
       translationMode &&
       stage === 'arabic' &&
       translation !== 'none' &&
-      translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah);
+      translationAudioUrl(translation, currentAyah.number);
 
     let nextUrl: string | null = null;
     if (wantsTranslation) {
-      nextUrl = translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah);
+      nextUrl = translationAudioUrl(translation, currentAyah.number);
     } else if (ayahIdx < arabic.ayahs.length - 1) {
       const next = arabic.ayahs[ayahIdx + 1];
       nextUrl = next.audio ?? ayahAudioUrl(next.number, reciter);
@@ -111,7 +112,7 @@ export function QuranPlayer({
       pre.src = nextUrl;
       pre.load();
     }
-  }, [arabic, currentAyah, ayahIdx, stage, translationMode, translation, surahNumber, reciter]);
+  }, [arabic, currentAyah, ayahIdx, stage, translationMode, translation, reciter]);
 
   // Play / pause based on `playing` flag.
   useEffect(() => {
@@ -130,13 +131,13 @@ export function QuranPlayer({
   const onEnded = () => {
     if (!arabic || !currentAyah) return;
 
-    // PTV mode: after Arabic, play the spoken translation (if we have audio for it),
-    // then advance to the next ayah.
+    // Translation mode: after Arabic, play the spoken translation (if we have
+    // audio for it), then advance to the next ayah.
     if (
       translationMode &&
       stage === 'arabic' &&
       translation !== 'none' &&
-      translationAudioUrl(translation, surahNumber, currentAyah.numberInSurah)
+      translationAudioUrl(translation, currentAyah.number)
     ) {
       setStage('translation');
       return;
@@ -158,6 +159,8 @@ export function QuranPlayer({
   const goPrev = () => { setStage('arabic'); setAyahIdx((i) => Math.max(0, i - 1)); };
   const goNext = () => arabic && (setStage('arabic'), setAyahIdx((i) => Math.min(arabic.ayahs.length - 1, i + 1)));
   const isUrdu = translation.startsWith('ur.');
+  // Some translations (e.g. Bengali, Hindi) have no spoken ayah-by-ayah audio.
+  const noAudio = translation !== 'none' && !hasTranslationAudio(translation);
 
   return (
     <div className="card overflow-hidden">
@@ -230,6 +233,14 @@ export function QuranPlayer({
           </button>
         </div>
       </div>
+
+      {/* Heads-up: this translation has no spoken audio, so only the text shows. */}
+      {translationMode && noAudio && (
+        <div className="px-5 py-2.5 text-xs text-amber-800 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5">
+          <Languages size={13} className="shrink-0" />
+          Spoken audio isn’t available for this translation yet — the Arabic is recited and the translation is shown as text.
+        </div>
+      )}
 
       {/* now-reading */}
       <div className="p-6">

@@ -15,6 +15,14 @@ const OVERPASS_ENDPOINTS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
+// Mosques are tagged inconsistently in OpenStreetMap: many lack religion=muslim
+// and are only recognisable by name (e.g. "Jamia Masjid", "مسجد ..."). Matching
+// these names — in any language — recovers a large number of otherwise-missed
+// mosques. Keyword list is curated to stay mosque-specific (avoids e.g. "James"
+// churches). Used as a case-insensitive Overpass value regex against any name key.
+const MOSQUE_NAME_RE =
+  'masjid|masjed|musjid|musjit|mosque|mosquée|moschee|moskee|mezquita|musalla|jamia|eidgah|imambargah|imambara|مسجد|جامع|مصلى';
+
 @Injectable()
 export class MosquesService {
   private readonly log = new Logger(MosquesService.name);
@@ -28,13 +36,21 @@ export class MosquesService {
     const now = Date.now();
     if (hit && now - hit.at < this.ttlMs) return hit.data.slice(0, limit);
 
+    // Pull a generous candidate pool so the nearest `limit` results stay accurate
+    // even in dense cities; parse() sorts by distance and we trim to `limit` below.
+    const fetchCap = Math.max(limit, 200);
+    const at = `(around:${radiusM},${lat},${lng})`;
+    // `nwr` = node + way + relation. Three unioned sets, deduped by OSM id:
+    //   1. explicit Muslim places of worship
+    //   2. explicit mosque buildings (often missing the amenity/religion tags)
+    //   3. any place of worship whose name matches a mosque keyword
     const query =
       `[out:json][timeout:25];` +
       `(` +
-      `node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lng});` +
-      `way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lng});` +
-      `relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lng});` +
-      `);out center ${limit};`;
+      `nwr["amenity"="place_of_worship"]["religion"="muslim"]${at};` +
+      `nwr["building"="mosque"]${at};` +
+      `nwr["amenity"="place_of_worship"][~"name"~"${MOSQUE_NAME_RE}",i]${at};` +
+      `);out center ${fetchCap};`;
 
     let lastErr: unknown;
     for (const endpoint of OVERPASS_ENDPOINTS) {
