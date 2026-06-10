@@ -9,7 +9,8 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
 import { geocodePlace } from '@/lib/geo';
 import {
-  FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, type Sect, type Fiqh,
+  FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
+  type Sect, type Fiqh,
 } from '@/lib/sect';
 
 const MosqueMap = dynamic(() => import('@/components/MosqueMap'), {
@@ -21,9 +22,16 @@ const DEFAULT_CENTER = { lat: 24.8607, lng: 67.0011 }; // Karachi
 
 export default function PrayerTimesPage() {
   // --- sect / madhab (persisted) ---
-  const [sect, setSect] = useLocalStorage<Sect>('isa:sect', 'sunni');
-  const [fiqh, setFiqh] = useLocalStorage<Fiqh>('isa:fiqh', 'hanafi');
+  // The onboarding wizard may store isa:sect as a madhab name ('hanafi', 'shafii', …)
+  // instead of 'sunni'/'shia'. We normalize on read so the page never crashes.
+  const [rawSect, setRawSect] = useLocalStorage<string>('isa:sect', 'sunni');
+  const [rawFiqh, setRawFiqh] = useLocalStorage<string>('isa:fiqh', 'hanafi');
   const [methodOverride, setMethodOverride] = useLocalStorage<number>('isa:method', -1);
+
+  const sect: Sect = normalizeSect(rawSect);
+  const fiqh: Fiqh = normalizeFiqh(rawFiqh);
+  const setSect = (s: Sect) => setRawSect(s);
+  const setFiqh = (f: Fiqh) => setRawFiqh(f);
 
   const params = useMemo(() => {
     const base = defaultParams(fiqh);

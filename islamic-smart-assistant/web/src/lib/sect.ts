@@ -63,6 +63,26 @@ export interface CalcParams {
 }
 
 /**
+ * The onboarding wizard stores isa:sect as the madhab name (hanafi, shafii, etc.)
+ * but the prayer-times page expects 'sunni' | 'shia'. This normalizes any value.
+ */
+export function normalizeSect(raw: string): Sect {
+  if (raw === 'sunni' || raw === 'shia') return raw;
+  if (raw === 'shia' || raw === 'jafari') return 'shia';
+  return 'sunni'; // hanafi, shafii, maliki, hanbali, or any unknown → sunni
+}
+
+/**
+ * Map a legacy onboarding school name to the new Fiqh type.
+ * The onboarding stores 'shafii' but sect.ts uses 'shafi'.
+ */
+export function normalizeFiqh(raw: string): Fiqh {
+  if (raw === 'shafii') return 'shafi';
+  if (['hanafi', 'shafi', 'maliki', 'hanbali', 'jafari'].includes(raw)) return raw as Fiqh;
+  return 'hanafi'; // default
+}
+
+/**
  * Default calculation parameters for a sect/madhab. The `method` here is a sensible
  * default; users can override it with METHOD_LABELS for their local convention.
  */

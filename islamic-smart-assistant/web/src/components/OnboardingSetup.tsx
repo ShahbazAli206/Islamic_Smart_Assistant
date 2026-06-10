@@ -187,10 +187,19 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   };
 
   const save = () => {
-    const sect   = draftSect;
-    const method = SECTS.find((s) => s.id === sect)?.method ?? 1;
+    const school = draftSect;
+    const method = SECTS.find((s) => s.id === school)?.method ?? 1;
     const city    = draftCity.trim()    || 'Karachi';
     const country = draftCountry.trim() || 'Pakistan';
+
+    // Map the onboarding school to the sect/fiqh format the prayer-times page expects.
+    // Onboarding uses: hanafi, shafii, maliki, hanbali, shia
+    // Prayer-times uses: isa:sect = 'sunni'|'shia', isa:fiqh = 'hanafi'|'shafi'|…
+    const sectValue = school === 'shia' ? 'shia' : 'sunni';
+    const FIQH_MAP: Record<string, string> = {
+      hanafi: 'hanafi', shafii: 'shafi', maliki: 'maliki', hanbali: 'hanbali', shia: 'jafari',
+    };
+    const fiqhValue = FIQH_MAP[school] ?? 'hanafi';
 
     const persist = (key: string, val: unknown) => {
       const json = JSON.stringify(val);
@@ -201,7 +210,8 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
 
     persist('isa:city',      city);
     persist('isa:country',   country);
-    persist('isa:sect',      sect);
+    persist('isa:sect',      sectValue);
+    persist('isa:fiqh',      fiqhValue);
     persist('isa:method',    method);
     persist('isa:language',  draftLang);
     persist('isa:name',      draftName.trim());
