@@ -1,0 +1,5 @@
+# Generated audio + caches — never commit (hundreds of MB)
+out/
+_probe/
+__pycache__/
+*.pyc

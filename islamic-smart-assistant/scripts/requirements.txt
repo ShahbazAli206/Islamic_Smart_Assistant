@@ -1,0 +1,10 @@
+# Default (edge) engine — free, no API key, neural quality, tiny install.
+edge-tts>=6.1.9
+requests>=2.31.0
+
+# Offline (mms) engine — uncomment to run Meta MMS-TTS fully offline.
+# Also requires ffmpeg installed on your PATH.
+# torch>=2.0
+# transformers>=4.38
+# scipy>=1.10
+# pydub>=0.25

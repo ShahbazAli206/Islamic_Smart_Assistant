@@ -16,31 +16,33 @@ export const RECITERS = [
 
 export type ReciterId = (typeof RECITERS)[number]['id'];
 
-// `audio: true` means spoken ayah-by-ayah translation audio is available (see
-// AUDIO_TRANSLATION below). Languages without a free per-ayah recording are
-// marked `audio: false` and display the translation text only.
+// Whether a translation has spoken ayah-by-ayah audio is decided at runtime by
+// hasTranslationAudio() — human editions on the islamic.network CDN are always
+// available; Bengali/Hindi audio is self-generated (TTS) and only "on" once the
+// files have been uploaded (see the audio section below). Don't bake an audio
+// flag into this list — it would go stale.
 export const TRANSLATIONS = [
-  { id: 'none',           name: 'No translation',                short: 'Arabic only', audio: false },
+  { id: 'none',           name: 'No translation',                short: 'Arabic only' },
   // English — spoken audio by Ibrahim Walk (Saheeh International)
-  { id: 'en.sahih',       name: 'English — Saheeh Intl.',        short: 'English',  audio: true },
-  { id: 'en.asad',        name: 'English — Muhammad Asad',       short: 'English',  audio: true },
+  { id: 'en.sahih',       name: 'English — Saheeh Intl.',        short: 'English' },
+  { id: 'en.asad',        name: 'English — Muhammad Asad',       short: 'English' },
   // Urdu — spoken audio by Shamshad Ali Khan
-  { id: 'ur.jalandhry',   name: 'Urdu — Fateh M. Jalandhry',     short: 'اردو',     audio: true },
-  { id: 'ur.junagarhi',   name: 'Urdu — M. Junagarhi',           short: 'اردو',     audio: true },
+  { id: 'ur.jalandhry',   name: 'Urdu — Fateh M. Jalandhry',     short: 'اردو' },
+  { id: 'ur.junagarhi',   name: 'Urdu — M. Junagarhi',           short: 'اردو' },
   // Turkish — spoken audio by Diyanet Vakfı (matches the tr.vakfi text exactly)
-  { id: 'tr.vakfi',       name: 'Turkish — Diyanet Vakfı',       short: 'Türkçe',   audio: true },
-  { id: 'tr.diyanet',     name: 'Turkish — Diyanet İşleri',      short: 'Türkçe',   audio: true },
-  { id: 'tr.yazir',       name: 'Turkish — Elmalılı H. Yazır',   short: 'Türkçe',   audio: true },
+  { id: 'tr.vakfi',       name: 'Turkish — Diyanet Vakfı',       short: 'Türkçe' },
+  { id: 'tr.diyanet',     name: 'Turkish — Diyanet İşleri',      short: 'Türkçe' },
+  { id: 'tr.yazir',       name: 'Turkish — Elmalılı H. Yazır',   short: 'Türkçe' },
   // Chinese — spoken audio (Ma Jian)
-  { id: 'zh.majian',      name: 'Chinese — Ma Jian',             short: '中文',     audio: true },
+  { id: 'zh.majian',      name: 'Chinese — Ma Jian',             short: '中文' },
   // French — spoken audio by Youssouf Leclerc
-  { id: 'fr.hamidullah',  name: 'French — Muhammad Hamidullah',  short: 'Français', audio: true },
-  // Bengali — text only (no free per-ayah spoken-audio recording exists)
-  { id: 'bn.bengali',     name: 'Bengali — Muhiuddin Khan (text only)', short: 'বাংলা', audio: false },
-  { id: 'bn.hoque',       name: 'Bengali — Zohurul Hoque (text only)',  short: 'বাংলা', audio: false },
-  // Hindi — text only (no free per-ayah spoken-audio recording exists)
-  { id: 'hi.hindi',       name: 'Hindi — Suhel Farooq Khan (text only)', short: 'हिन्दी', audio: false },
-  { id: 'hi.farooq',      name: 'Hindi — M. Farooq Khan (text only)',    short: 'हिन्दी', audio: false },
+  { id: 'fr.hamidullah',  name: 'French — Muhammad Hamidullah',  short: 'Français' },
+  // Bengali — spoken audio is self-generated (TTS) and hosted on Supabase
+  { id: 'bn.bengali',     name: 'Bengali — Muhiuddin Khan',      short: 'বাংলা' },
+  { id: 'bn.hoque',       name: 'Bengali — Zohurul Hoque',       short: 'বাংলা' },
+  // Hindi — spoken audio is self-generated (TTS) and hosted on Supabase
+  { id: 'hi.hindi',       name: 'Hindi — Suhel Farooq Khan',     short: 'हिन्दी' },
+  { id: 'hi.farooq',      name: 'Hindi — M. Farooq Khan',        short: 'हिन्दी' },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -54,12 +56,17 @@ export function ayahAudioUrl(globalAyahNumber: number, reciter: ReciterId, bitra
   return `${CDN}/${bitrate}/${reciter}/${globalAyahNumber}.mp3`;
 }
 
-// Spoken ayah-by-ayah translation audio editions on the islamic.network CDN
-// (the same CDN used for Arabic recitation). Each edition is hosted at exactly
-// ONE bitrate; the others return 403. Keyed by the chosen TEXT translation id —
-// where a language has only one spoken recording, every text edition of that
-// language maps to it. All five recordings below were verified to cover the
-// full Quran (global ayah numbers 1..6236).
+// ── Spoken translation audio ───────────────────────────────────────────────
+// Two sources, both addressed by GLOBAL ayah number (1..6236, i.e.
+// AyahResponse.number — NOT numberInSurah):
+//
+//  (1) Pre-recorded HUMAN editions on the islamic.network CDN (same CDN as the
+//      Arabic recitation). Each edition is hosted at exactly ONE bitrate; the
+//      others 403. All five were verified to cover the full Quran.
+//  (2) Self-generated TTS audio for Bengali & Hindi (no free human ayah-by-ayah
+//      recording exists) — produced once by scripts/generate_translation_audio.py
+//      and uploaded to a public Supabase Storage bucket.
+
 const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 192 }> = {
   'en.sahih':      { edition: 'en.walk',        bitrate: 192 }, // Ibrahim Walk (Saheeh Intl.)
   'en.asad':       { edition: 'en.walk',        bitrate: 192 }, // only English recording available
@@ -70,27 +77,53 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 1
   'tr.yazir':      { edition: 'tr.vakfi-audio', bitrate: 128 },
   'zh.majian':     { edition: 'zh.chinese',     bitrate: 128 }, // Ma Jian
   'fr.hamidullah': { edition: 'fr.leclerc',     bitrate: 128 }, // Youssouf Leclerc
-  // bn.* and hi.* have no free per-ayah spoken-audio recording — text only.
 };
 
-/** Whether the given translation has spoken ayah-by-ayah audio. */
+// Translation editions for which we generate TTS audio. The generator reads the
+// text of EXACTLY these editions, so the spoken words match the on-screen text;
+// the sibling editions (bn.hoque, hi.farooq) stay text-only. Value = the folder
+// the files live under in the bucket (translations/<folder>/<globalAyah>.mp3).
+const TTS_EDITIONS: Record<string, string> = {
+  'bn.bengali': 'bn',
+  'hi.hindi':   'hi',
+};
+
+// A TTS language only becomes "available" once its files have been uploaded.
+// Flip it on by listing the folder(s) in NEXT_PUBLIC_TTS_TRANSLATION_LANGS
+// (e.g. "bn,hi"); until then Bengali/Hindi gracefully fall back to text-only.
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '');
+const TTS_BUCKET = process.env.NEXT_PUBLIC_TTS_BUCKET || 'quran-audio';
+const TTS_LANGS = new Set(
+  (process.env.NEXT_PUBLIC_TTS_TRANSLATION_LANGS ?? '')
+    .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+);
+
+function ttsAudioUrl(translation: TranslationId, globalAyahNumber: number): string | null {
+  const folder = TTS_EDITIONS[translation];
+  if (!folder || !SUPABASE_URL || !TTS_LANGS.has(folder)) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/${TTS_BUCKET}/translations/${folder}/${globalAyahNumber}.mp3`;
+}
+
+/** Whether the given translation currently has spoken ayah-by-ayah audio. */
 export function hasTranslationAudio(translation: TranslationId): boolean {
-  return translation in AUDIO_TRANSLATION;
+  if (translation in AUDIO_TRANSLATION) return true;
+  const folder = TTS_EDITIONS[translation];
+  return Boolean(folder && SUPABASE_URL && TTS_LANGS.has(folder));
 }
 
 /**
- * Spoken translation audio for one ayah, served from the islamic.network CDN by
- * GLOBAL ayah number (1..6236 across the whole Quran — i.e. AyahResponse.number,
- * NOT numberInSurah). Returns null when the chosen translation has no recorded
- * audio (e.g. Bengali, Hindi) — the player then shows the text without audio.
+ * Spoken translation audio for one ayah, by GLOBAL ayah number. Human editions
+ * stream from the islamic.network CDN; Bengali/Hindi stream self-generated TTS
+ * from Supabase Storage. Returns null when no audio exists — the player then
+ * shows the translation text only.
  */
 export function translationAudioUrl(
   translation: TranslationId,
   globalAyahNumber: number,
 ): string | null {
-  const a = AUDIO_TRANSLATION[translation];
-  if (!a) return null;
-  return `${CDN}/${a.bitrate}/${a.edition}/${globalAyahNumber}.mp3`;
+  const human = AUDIO_TRANSLATION[translation];
+  if (human) return `${CDN}/${human.bitrate}/${human.edition}/${globalAyahNumber}.mp3`;
+  return ttsAudioUrl(translation, globalAyahNumber);
 }
 
 export type AyahResponse = {
