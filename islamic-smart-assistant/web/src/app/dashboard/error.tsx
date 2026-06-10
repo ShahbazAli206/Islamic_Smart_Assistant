@@ -38,6 +38,11 @@ export default function DashboardError({
             : 'An unexpected error occurred in the dashboard. You can try again or update your settings.'
           }
         </p>
+        {process.env.NODE_ENV === 'development' && (
+          <pre className="mt-2 text-xs text-left text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3 max-h-32 overflow-auto whitespace-pre-wrap">
+            {error.message}
+          </pre>
+        )}
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <button
             onClick={reset}
