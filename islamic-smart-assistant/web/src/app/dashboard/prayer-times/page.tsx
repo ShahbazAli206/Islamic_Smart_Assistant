@@ -6,8 +6,10 @@ import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useStoredLocation } from '@/lib/useStoredLocation';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
 import { geocodePlace } from '@/lib/geo';
+import { detectLocationByIP } from '@/lib/prayer';
 import {
   FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
   type Sect, type Fiqh,
@@ -18,7 +20,7 @@ const MosqueMap = dynamic(() => import('@/components/MosqueMap'), {
   loading: () => <div className="w-full h-[420px] rounded-2xl bg-emerald-50 animate-pulse" />,
 });
 
-const DEFAULT_CENTER = { lat: 24.8607, lng: 67.0011 }; // Karachi
+const FALLBACK_CENTER = { lat: 24.8607, lng: 67.0011 }; // Karachi — last resort only
 
 export default function PrayerTimesPage() {
   // --- sect / madhab (persisted) ---
@@ -38,8 +40,11 @@ export default function PrayerTimesPage() {
     return { method: methodOverride >= 0 ? methodOverride : base.method, school: base.school };
   }, [fiqh, methodOverride]);
 
+  // --- user's stored location (from onboarding / profile) ---
+  const storedLoc = useStoredLocation();
+
   // --- map + mosques ---
-  const [center, setCenter] = useState(DEFAULT_CENTER);
+  const [center, setCenter] = useState(FALLBACK_CENTER);
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loadingMosques, setLoadingMosques] = useState(false);
   const [mosqueErr, setMosqueErr] = useState<string | null>(null);
@@ -50,6 +55,7 @@ export default function PrayerTimesPage() {
   const [geocoding, setGeocoding] = useState(false);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialised = useRef(false);
 
   const loadMosques = useCallback(async (lat: number, lng: number) => {
     setLoadingMosques(true);
@@ -64,18 +70,72 @@ export default function PrayerTimesPage() {
     }
   }, []);
 
-  // Initial load + try device geolocation once.
+  // Initialise map center from the best available source:
+  // 1. Stored GPS coordinates (from onboarding / profile)
+  // 2. Stored city → geocode to get coordinates
+  // 3. Browser geolocation (GPS)
+  // 4. IP-based geolocation
+  // 5. Fallback to Karachi
   useEffect(() => {
-    loadMosques(center.lat, center.lng);
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {}, // ignore denial; keep default
-        { enableHighAccuracy: true, timeout: 8000 },
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (initialised.current) return;
+    initialised.current = true;
+
+    const init = async () => {
+      // 1. User has stored coordinates from onboarding
+      if (storedLoc.hasCoords && storedLoc.lat != null && storedLoc.lng != null) {
+        const c = { lat: storedLoc.lat, lng: storedLoc.lng };
+        setCenter(c);
+        loadMosques(c.lat, c.lng);
+        return;
+      }
+
+      // 2. User has a stored city — geocode it
+      if (storedLoc.city && storedLoc.city !== 'Karachi') {
+        try {
+          const query = `${storedLoc.city}, ${storedLoc.country}`;
+          const hits = await geocodePlace(query, 1);
+          if (hits[0]) {
+            const c = { lat: hits[0].lat, lng: hits[0].lng };
+            setCenter(c);
+            loadMosques(c.lat, c.lng);
+            return;
+          }
+        } catch { /* fall through */ }
+      }
+
+      // 3. Try browser geolocation
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true, timeout: 8000,
+            }),
+          );
+          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setCenter(c);
+          loadMosques(c.lat, c.lng);
+          return;
+        } catch { /* fall through */ }
+      }
+
+      // 4. IP-based geolocation
+      try {
+        const loc = await detectLocationByIP();
+        if (loc.lat && loc.lng) {
+          const c = { lat: loc.lat, lng: loc.lng };
+          setCenter(c);
+          loadMosques(c.lat, c.lng);
+          return;
+        }
+      } catch { /* fall through */ }
+
+      // 5. Last resort — use fallback
+      loadMosques(FALLBACK_CENTER.lat, FALLBACK_CENTER.lng);
+    };
+
+    init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storedLoc.hasCoords, storedLoc.lat, storedLoc.lng, storedLoc.city]);
 
   // Debounced reload when the map centre changes.
   const onMoveEnd = useCallback((c: { lat: number; lng: number }) => {
