@@ -7,7 +7,7 @@ import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation }
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
-import { geocodePlace } from '@/lib/geo';
+import { geocodePlace, reverseGeocode } from '@/lib/geo';
 import { detectLocationByIP } from '@/lib/prayer';
 import { readStoredLocation, clearPinnedMosque } from '@/lib/location';
 import {
@@ -46,6 +46,9 @@ export default function PrayerTimesPage() {
   const [loadingMosques, setLoadingMosques] = useState(false);
   const [mosqueErr, setMosqueErr] = useState<string | null>(null);
   const [selected, setSelected] = useLocalStorage<Mosque | null>('isa:mosque', null);
+
+  // --- clicked pin (map click drops a pin and re-centres mosques) ---
+  const [clickedPin, setClickedPin] = useState<{ lat: number; lng: number; label: string } | null>(null);
 
   // --- city search ---
   const [q, setQ] = useState('');
@@ -164,6 +167,7 @@ export default function PrayerTimesPage() {
       (pos) => {
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setCenter(c);
+        setClickedPin(null);
         loadMosques(c.lat, c.lng);
       },
       (err) => setMosqueErr(err.message),
@@ -181,6 +185,7 @@ export default function PrayerTimesPage() {
       if (hits[0]) {
         const c = { lat: hits[0].lat, lng: hits[0].lng };
         setCenter(c);
+        setClickedPin(null);
         loadMosques(c.lat, c.lng);
       } else {
         setMosqueErr(`No place found for "${q}".`);
@@ -191,6 +196,17 @@ export default function PrayerTimesPage() {
       setGeocoding(false);
     }
   };
+
+  const handleMapClick = useCallback(async ({ lat, lng }: { lat: number; lng: number }) => {
+    setCenter({ lat, lng });
+    setSelected(null);
+    setClickedPin({ lat, lng, label: 'Selected location' });
+    loadMosques(lat, lng);
+    // Reverse-geocode in background to get a human-readable label.
+    reverseGeocode(lat, lng).then((label) => {
+      setClickedPin((prev) => prev?.lat === lat && prev?.lng === lng ? { lat, lng, label } : prev);
+    }).catch(() => {/* keep default label */});
+  }, [loadMosques, setSelected]);
 
   const fiqhOptions = FIQH_BY_SECT[sect];
 
@@ -255,13 +271,19 @@ export default function PrayerTimesPage() {
         </div>
       </div>
 
-      {/* Hero countdown for the selected mosque (or map centre fallback) */}
+      {/* Hero countdown for the selected mosque, clicked pin, or map centre */}
       <PrayerCountdownHero
-        lat={selected?.lat ?? center.lat}
-        lng={selected?.lng ?? center.lng}
+        lat={selected?.lat ?? clickedPin?.lat ?? center.lat}
+        lng={selected?.lng ?? clickedPin?.lng ?? center.lng}
         method={params.method}
         school={params.school}
-        label={selected ? `${selected.name}${selected.city ? ', ' + selected.city : ''}` : 'Map centre'}
+        label={
+          selected
+            ? `${selected.name}${selected.city ? ', ' + selected.city : ''}`
+            : clickedPin
+              ? clickedPin.label
+              : 'Map centre'
+        }
       />
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -289,12 +311,14 @@ export default function PrayerTimesPage() {
             center={center}
             mosques={mosques}
             selectedId={selected?.id ?? null}
+            clickPin={clickedPin}
             onMoveEnd={onMoveEnd}
-            onSelectMosque={(m) => setSelected(m)}
+            onSelectMosque={(m) => { setSelected(m); setClickedPin(null); }}
+            onMapClick={handleMapClick}
           />
 
           <p className="text-xs text-ink/50 flex items-center gap-1.5">
-            <Navigation size={12}/> Pan or zoom the map to load mosques in a new area. Data © OpenStreetMap.
+            <Navigation size={12}/> Click anywhere on the map to find mosques at that location. Pan or zoom to explore. Data © OpenStreetMap.
           </p>
         </div>
 

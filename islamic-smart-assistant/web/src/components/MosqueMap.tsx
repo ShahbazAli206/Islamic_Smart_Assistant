@@ -13,8 +13,10 @@ type Props = {
   zoom?: number;
   mosques: Mosque[];
   selectedId?: string | null;
+  clickPin?: { lat: number; lng: number } | null;
   onMoveEnd?: (center: { lat: number; lng: number }, zoom: number) => void;
   onSelectMosque?: (m: Mosque) => void;
+  onMapClick?: (latlng: { lat: number; lng: number }) => void;
 };
 
 export default function MosqueMap({
@@ -22,15 +24,18 @@ export default function MosqueMap({
   zoom = 13,
   mosques,
   selectedId,
+  clickPin,
   onMoveEnd,
   onSelectMosque,
+  onMapClick,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const clickPinMarkerRef = useRef<Marker | null>(null);
   // Keep latest callbacks in refs so the map init effect runs once only.
-  const cbRef = useRef({ onMoveEnd, onSelectMosque });
-  cbRef.current = { onMoveEnd, onSelectMosque };
+  const cbRef = useRef({ onMoveEnd, onSelectMosque, onMapClick });
+  cbRef.current = { onMoveEnd, onSelectMosque, onMapClick };
 
   // Init map once.
   useEffect(() => {
@@ -50,6 +55,10 @@ export default function MosqueMap({
     map.on('moveend', () => {
       const c = map.getCenter();
       cbRef.current.onMoveEnd?.({ lat: c.lat, lng: c.lng }, map.getZoom());
+    });
+    // Mosque marker buttons call stopPropagation, so this only fires on empty map area.
+    map.on('click', (e) => {
+      cbRef.current.onMapClick?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
     });
     mapRef.current = map;
     return () => {
@@ -100,6 +109,31 @@ export default function MosqueMap({
       markersRef.current.push(marker);
     }
   }, [mosques, selectedId]);
+
+  // Render / move the click-pin marker whenever the parent updates it.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!clickPin) {
+      clickPinMarkerRef.current?.remove();
+      clickPinMarkerRef.current = null;
+      return;
+    }
+    if (clickPinMarkerRef.current) {
+      clickPinMarkerRef.current.setLngLat([clickPin.lng, clickPin.lat]);
+    } else {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width:18px;height:18px;border-radius:50%;
+        background:#0ea5e9;border:3px solid #fff;
+        box-shadow:0 0 0 3px rgba(14,165,233,0.35),0 2px 6px rgba(0,0,0,.35);
+        cursor:default;`;
+      el.title = 'Clicked location';
+      clickPinMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([clickPin.lng, clickPin.lat])
+        .addTo(map);
+    }
+  }, [clickPin]);
 
   return <div ref={containerRef} className="w-full h-[420px] rounded-2xl overflow-hidden" />;
 }
