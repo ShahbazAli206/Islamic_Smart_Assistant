@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
-import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation, X, Check } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
-import { geocodePlace, reverseGeocode } from '@/lib/geo';
+import { geocodePlace, reverseGeocodeDetails } from '@/lib/geo';
 import { detectLocationByIP } from '@/lib/prayer';
-import { readStoredLocation, clearPinnedMosque } from '@/lib/location';
+import { readStoredLocation, clearPinnedMosque, setLocationByCoords } from '@/lib/location';
 import {
   FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
   type Sect, type Fiqh,
@@ -347,7 +347,7 @@ export default function PrayerTimesPage() {
               {geocoding ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Go
             </button>
             <button type="button" onClick={useMyLocation} className="btn-ghost text-sm px-4" title="Use my location">
-              <LocateFixed size={16} /> Near me
+              <LocateFixed size={16} /> My Location
             </button>
           </form>
 
