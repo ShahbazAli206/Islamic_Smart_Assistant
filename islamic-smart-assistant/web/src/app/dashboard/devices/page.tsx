@@ -155,7 +155,13 @@ export default function DevicesPage() {
         setEnumPermission('granted');
       }
 
-      setOutputs(outs.map((d) => ({ deviceId: d.deviceId, label: d.label || 'Output device' })));
+      // Filter out Windows virtual role endpoints ("default" and "communications") —
+      // they duplicate the physical device entry and "System default" is already shown above.
+      setOutputs(
+        outs
+          .filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications')
+          .map((d) => ({ deviceId: d.deviceId, label: d.label || 'Output device' })),
+      );
       await captureDiag();
     } catch (e: any) {
       setError(`Couldn't list audio devices: ${e?.message ?? e}`);
@@ -254,7 +260,7 @@ export default function DevicesPage() {
           <div>
             <h3 className="font-bold">Detected on this PC</h3>
             <p className="text-xs text-ink/55">
-              {outputs.length} audio output{outputs.length === 1 ? '' : 's'} known to Windows
+              {outputs.length} physical audio output{outputs.length === 1 ? '' : 's'} detected
               {outputs.length > 0 && ' — Bluetooth speakers/earbuds appear here once Connected (not just Paired)'}
             </p>
           </div>

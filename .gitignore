@@ -2,3 +2,5 @@ Mobile App Projects/
 Web Projects/
 zRouter data/
 ~$*.docx
+.vercel
+.claude/settings.local.json
