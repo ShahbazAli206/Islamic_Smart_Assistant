@@ -45,7 +45,7 @@ export function resolveCoordsState(
   coordsFor: string,
 ): { hasCoords: boolean; coordsAreStale: boolean } {
   const rawHasCoords = typeof lat === 'number' && typeof lng === 'number';
-  const coordsMatchCity = coordsFor === 'gps' || (coordsFor !== '' && coordsFor === locLabel(city, country));
+  const coordsMatchCity = coordsFor !== '' && coordsFor === locLabel(city, country);
   return { hasCoords: rawHasCoords && coordsMatchCity, coordsAreStale: rawHasCoords && !coordsMatchCity };
 }
 

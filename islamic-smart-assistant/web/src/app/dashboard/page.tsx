@@ -56,7 +56,7 @@ export default function Overview() {
         city={loc.city}
         country={loc.country}
         method={loc.method}
-        label={loc.hasCoords ? loc.label : undefined}
+        label={`${loc.city}, ${loc.country}`}
       />
 
       {/* stat cards */}
