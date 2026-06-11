@@ -21,6 +21,14 @@ export async function geocodePlace(query: string, limit = 5): Promise<GeoHit[]> 
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const d = await reverseGeocodeDetails(lat, lng);
+  return d.label;
+}
+
+export type GeoDetail = { label: string; city: string; country: string };
+
+/** Like reverseGeocode but also returns the city and country strings separately. */
+export async function reverseGeocodeDetails(lat: number, lng: number): Promise<GeoDetail> {
   const url =
     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}` +
     `&zoom=12&accept-language=en`;
@@ -28,13 +36,16 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
     headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' },
     cache: 'no-store',
   });
-  if (!res.ok) return 'Selected location';
+  if (!res.ok) return { label: 'Selected location', city: '', country: '' };
   const data = await res.json();
   const addr = data.address ?? {};
+  const city    = addr.city || addr.town || addr.village || addr.county || addr.state || '';
+  const country = addr.country || '';
   const parts = [
     addr.suburb || addr.neighbourhood || addr.quarter,
-    addr.city || addr.town || addr.village || addr.county,
-    addr.country,
+    city,
+    country,
   ].filter(Boolean);
-  return parts.length ? parts.join(', ') : (data.display_name as string) ?? 'Selected location';
+  const label = parts.length ? parts.join(', ') : (data.display_name as string) ?? 'Selected location';
+  return { label, city, country };
 }

@@ -51,6 +51,11 @@ export default function PrayerTimesPage() {
   // --- clicked pin (map click drops a pin and re-centres mosques) ---
   const [clickedPin, setClickedPin] = useState<{ lat: number; lng: number; label: string } | null>(null);
 
+  // --- update-location prompt shown after a map click ---
+  type LocPrompt = { lat: number; lng: number; city: string; country: string; label: string };
+  const [updateLocPrompt, setUpdateLocPrompt] = useState<LocPrompt | null>(null);
+  const [savingLoc, setSavingLoc] = useState(false);
+
   // --- city search ---
   const [q, setQ] = useState('');
   const [geocoding, setGeocoding] = useState(false);
@@ -244,9 +249,10 @@ export default function PrayerTimesPage() {
     setSelected(null);
     setClickedPin({ lat, lng, label: 'Selected location' });
     loadMosques(lat, lng);
-    // Reverse-geocode in background to get a human-readable label.
-    reverseGeocode(lat, lng).then((label) => {
-      setClickedPin((prev) => prev?.lat === lat && prev?.lng === lng ? { lat, lng, label } : prev);
+    // Reverse-geocode to get a human-readable label, then show the update-location prompt.
+    reverseGeocodeDetails(lat, lng).then((detail) => {
+      setClickedPin((prev) => prev?.lat === lat && prev?.lng === lng ? { lat, lng, label: detail.label } : prev);
+      setUpdateLocPrompt({ lat, lng, ...detail });
     }).catch(() => {/* keep default label */});
   }, [loadMosques, setSelected]);
 
@@ -365,6 +371,109 @@ export default function PrayerTimesPage() {
             <Navigation size={12}/> Click anywhere on the map to find mosques at that location. Pan or zoom to explore. Data © OpenStreetMap.
           </p>
         </div>
+
+        {/* ── Update-location prompt ── */}
+        <AnimatePresence>
+          {updateLocPrompt && (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={() => setUpdateLocPrompt(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.97 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 220 }}
+                className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+              >
+                {/* header */}
+                <div className="bg-mosque-gradient text-parchment px-6 py-5 relative overflow-hidden">
+                  <div className="absolute inset-0 pattern-bg opacity-30 pointer-events-none" />
+                  <div className="relative flex items-start justify-between">
+                    <div>
+                      <h3 className="font-display text-lg font-bold flex items-center gap-2">
+                        <MapPin size={18} className="text-gold-300" /> Update your location?
+                      </h3>
+                      <p className="text-emerald-100/75 text-sm mt-1">
+                        Save this spot as your default prayer location
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setUpdateLocPrompt(null)}
+                      className="p-1.5 rounded-lg hover:bg-white/15 transition"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* body */}
+                <div className="px-6 py-5 space-y-3">
+                  {/* Selected location */}
+                  <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4">
+                    <p className="text-xs font-medium text-emerald-700/70 uppercase tracking-wide mb-1.5">Selected on map</p>
+                    <div className="flex items-start gap-2">
+                      <MapPin size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-emerald-900">
+                          {updateLocPrompt.city || updateLocPrompt.label.split(',')[0]}
+                        </p>
+                        {updateLocPrompt.country && (
+                          <p className="text-sm text-emerald-700/70">{updateLocPrompt.country}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Current saved location */}
+                  <div className="rounded-xl border border-ink/10 bg-ink/[0.03] p-4">
+                    <p className="text-xs font-medium text-ink/45 uppercase tracking-wide mb-1.5">Your saved location</p>
+                    <div className="flex items-start gap-2">
+                      <MapPin size={16} className="text-ink/35 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-ink/80">{loc.city}</p>
+                        <p className="text-sm text-ink/50">{loc.country}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => setUpdateLocPrompt(null)}
+                      className="flex-1 py-2.5 rounded-xl border border-ink/15 text-ink/60 text-sm font-medium hover:bg-ink/5 transition"
+                    >
+                      Keep as is
+                    </button>
+                    <button
+                      disabled={savingLoc}
+                      onClick={async () => {
+                        setSavingLoc(true);
+                        const p = updateLocPrompt;
+                        setUpdateLocPrompt(null);
+                        const city    = p.city    || p.label.split(',')[0].trim();
+                        const country = p.country || p.label.split(',').slice(-1)[0].trim();
+                        setLocationByCoords(p.lat, p.lng, city, country, { clearMosque: true });
+                        setSavingLoc(false);
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition flex items-center justify-center gap-1.5"
+                    >
+                      {savingLoc ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                      Set as my location
+                    </button>
+                  </div>
+
+                  <p className="text-center text-xs text-ink/40 pt-1">
+                    Prayer times on this page will continue to use the map selection either way
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Nearby mosque list */}
         <div className="card overflow-hidden lg:col-span-1">
