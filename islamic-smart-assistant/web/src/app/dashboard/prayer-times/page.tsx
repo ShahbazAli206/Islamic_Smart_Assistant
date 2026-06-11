@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useStoredLocation } from '@/lib/useStoredLocation';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
 import { geocodePlace, reverseGeocode } from '@/lib/geo';
 import { detectLocationByIP } from '@/lib/prayer';
@@ -54,8 +55,12 @@ export default function PrayerTimesPage() {
   const [q, setQ] = useState('');
   const [geocoding, setGeocoding] = useState(false);
 
+  // Reactive stored location — keeps hero and map in sync with the profile popup.
+  const loc = useStoredLocation();
+
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
+  const locChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadMosques = useCallback(async (lat: number, lng: number) => {
     setLoadingMosques(true);
@@ -69,6 +74,43 @@ export default function PrayerTimesPage() {
       setLoadingMosques(false);
     }
   }, []);
+
+  // Re-centre the map whenever the user saves a new location in the profile popup.
+  // We listen to StorageEvents (fired by persist()) rather than the reactive hook so
+  // we never trigger on the initial hydration transition (default → actual values).
+  useEffect(() => {
+    const LOCATION_KEYS = new Set(['isa:city', 'isa:country', 'isa:lat', 'isa:lng', 'isa:coordsFor']);
+    const handler = (e: StorageEvent) => {
+      if (!LOCATION_KEYS.has(e.key ?? '')) return;
+      // Debounce: setLocationByCity calls persist() several times in a row.
+      if (locChangeTimer.current) clearTimeout(locChangeTimer.current);
+      locChangeTimer.current = setTimeout(() => {
+        const newLoc = readStoredLocation();
+        setSelected(null);
+        setClickedPin(null);
+        if (newLoc.hasCoords && newLoc.lat != null && newLoc.lng != null) {
+          setCenter({ lat: newLoc.lat, lng: newLoc.lng });
+          loadMosques(newLoc.lat, newLoc.lng);
+        } else if (newLoc.city) {
+          geocodePlace(`${newLoc.city}, ${newLoc.country}`, 1)
+            .then((hits) => {
+              if (hits[0]) {
+                const c = { lat: hits[0].lat, lng: hits[0].lng };
+                setCenter(c);
+                loadMosques(c.lat, c.lng);
+              }
+            })
+            .catch(() => {});
+        }
+      }, 200);
+    };
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('storage', handler);
+      if (locChangeTimer.current) clearTimeout(locChangeTimer.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadMosques]);
 
   // Initialise the map center ONCE on mount, from the best available source:
   //   1. Stored coordinates that belong to the chosen city (onboarding/profile)
@@ -271,10 +313,12 @@ export default function PrayerTimesPage() {
         </div>
       </div>
 
-      {/* Hero countdown for the selected mosque, clicked pin, or map centre */}
+      {/* Hero countdown: selected mosque → clicked pin → user's stored location */}
       <PrayerCountdownHero
-        lat={selected?.lat ?? clickedPin?.lat ?? center.lat}
-        lng={selected?.lng ?? clickedPin?.lng ?? center.lng}
+        lat={selected?.lat ?? clickedPin?.lat ?? (loc.lat ?? undefined)}
+        lng={selected?.lng ?? clickedPin?.lng ?? (loc.lng ?? undefined)}
+        city={loc.city}
+        country={loc.country}
         method={params.method}
         school={params.school}
         label={
@@ -282,7 +326,7 @@ export default function PrayerTimesPage() {
             ? `${selected.name}${selected.city ? ', ' + selected.city : ''}`
             : clickedPin
               ? clickedPin.label
-              : 'Map centre'
+              : `${loc.city}, ${loc.country}`
         }
       />
 
