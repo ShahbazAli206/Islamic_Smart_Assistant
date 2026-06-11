@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass, X } from 'lucide-react';
+import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass, X, BellRing, Bell, Volume2 } from 'lucide-react';
 import { detectLocationByIP } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
 
@@ -28,7 +28,7 @@ export const LANGUAGES: { id: Language; label: string; native: string }[] = [
   { id: 'none', label: 'Arabic only', native: 'عربي فقط' },
 ];
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 type Props = {
   forceOpen?: boolean;
@@ -61,6 +61,36 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   const [draftLat, setDraftLat] = useState<number | null>(null);
   const [draftLng, setDraftLng] = useState<number | null>(null);
   const [locDirty, setLocDirty] = useState(false);
+
+  // ── Azan step state ──────────────────────────────────────────────────────────
+  const [azanStatus, setAzanStatus] = useState<'idle' | 'enabling' | 'done'>('idle');
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const azanAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const enableAzan = async () => {
+    setAzanStatus('enabling');
+    // Muted play → registers a user gesture so the browser allows future autoplay.
+    if (!azanAudioRef.current) azanAudioRef.current = new Audio();
+    const el = azanAudioRef.current;
+    el.muted = true;
+    el.src = '/audio/azan/makkah.mp3';
+    try { await el.play(); el.pause(); el.currentTime = 0; el.muted = false; } catch {}
+    const persist = (key: string, val: unknown) => {
+      const json = JSON.stringify(val);
+      localStorage.setItem(key, json);
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue: json }));
+    };
+    persist('isa:azanAutoplay', true);
+    persist('isa:azanUnlocked', true);
+    // Request notification permission for background alerts.
+    if ('Notification' in window) {
+      const perm = await Notification.requestPermission();
+      setNotifPermission(perm);
+    } else {
+      setNotifPermission('unsupported');
+    }
+    setAzanStatus('done');
+  };
 
   // Ensures we only fire the automatic permission prompt once per mount.
   const autoPrompted = useRef(false);
@@ -339,11 +369,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
               {step === 0 && 'Where are you?'}
               {step === 1 && 'Your school of thought'}
               {step === 2 && 'Quran & translation'}
+              {step === 3 && 'Enable Auto-Azan'}
             </h2>
             <p className="text-emerald-100/75 text-sm mt-1">
               {step === 0 && 'Needed for accurate prayer times and Azan scheduling'}
               {step === 1 && 'Sets the correct prayer time calculation method'}
               {step === 2 && 'Preferred translation language for the Holy Quran'}
+              {step === 3 && 'Hear the call to prayer automatically — 5 times a day'}
             </p>
           </div>
         </div>
@@ -520,21 +552,113 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                 </div>
               </motion.div>
             )}
+            {/* ── Step 3 : Auto-Azan ── */}
+            {step === 3 && (
+              <motion.div
+                key="s3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 flex flex-col gap-4"
+              >
+                {/* Prayer pills */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((p) => (
+                    <span key={p} className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">
+                      {p}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="text-sm text-ink/60 text-center leading-relaxed">
+                  The Azan plays automatically in this browser tab at each prayer time.
+                  One tap unlocks audio — no app installation needed.
+                </p>
+
+                {/* Enable button / success state */}
+                {azanStatus !== 'done' ? (
+                  <motion.button
+                    onClick={enableAzan}
+                    disabled={azanStatus === 'enabling'}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-70 transition"
+                  >
+                    {azanStatus === 'enabling'
+                      ? <><Loader2 size={16} className="animate-spin" /> Enabling…</>
+                      : <><BellRing size={16} /> Enable Auto-Azan</>}
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-700 font-semibold text-sm"
+                  >
+                    <Check size={17} strokeWidth={2.5} /> Auto-Azan enabled!
+                  </motion.div>
+                )}
+
+                {/* Notification result */}
+                <AnimatePresence>
+                  {azanStatus === 'done' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex items-start gap-2.5 rounded-xl px-3.5 py-3 text-xs leading-relaxed
+                        ${notifPermission === 'granted'
+                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                          : 'bg-amber-50 border border-amber-200 text-amber-800'}`}
+                    >
+                      {notifPermission === 'granted'
+                        ? <Bell size={14} className="shrink-0 mt-0.5 text-emerald-600" />
+                        : <Bell size={14} className="shrink-0 mt-0.5 text-amber-600" />}
+                      {notifPermission === 'granted'
+                        ? 'Notifications allowed — you\'ll be alerted even when the tab is in the background.'
+                        : 'Notification permission denied. Keep this tab open to hear the Azan. You can allow notifications in browser settings anytime.'}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Info row */}
+                <div className="flex items-center gap-4 pt-1">
+                  {[
+                    { icon: Volume2, label: 'Azan audio' },
+                    { icon: Bell,    label: 'Notifications' },
+                    { icon: Check,   label: 'No app needed' },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex-1 flex flex-col items-center gap-1 text-center">
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                        <Icon size={14} className="text-emerald-600" />
+                      </div>
+                      <span className="text-[10px] text-ink/50 font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
         {/* footer */}
         <div className="px-8 pb-7 flex items-center justify-between">
-          {step > 0 ? (
-            <button
-              onClick={() => setStep((s) => s - 1)}
-              className="text-sm text-ink/45 hover:text-ink/80 transition"
-            >
+          {/* Left action */}
+          {step === 3 ? (
+            azanStatus !== 'done'
+              ? <button onClick={save} disabled={saving} className="text-sm text-ink/45 hover:text-ink/80 transition disabled:opacity-50">
+                  Skip Azan for now
+                </button>
+              : <div />
+          ) : step > 0 ? (
+            <button onClick={() => setStep((s) => s - 1)} className="text-sm text-ink/45 hover:text-ink/80 transition">
               ← Back
             </button>
           ) : (
             <div />
           )}
+
+          {/* Right action */}
           {step < TOTAL_STEPS - 1 ? (
             <button
               onClick={goNext}
@@ -553,7 +677,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
             >
               {saving
                 ? <><Loader2 size={16} className="animate-spin" /> Saving…</>
-                : <><Check size={16} /> Done</>}
+                : <><Check size={16} /> {azanStatus === 'done' ? 'Finish' : 'Done'}</>}
             </button>
           )}
         </div>
