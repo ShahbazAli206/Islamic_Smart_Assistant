@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass } from 'lucide-react';
-import { fetchTimingsByCity, detectLocationByIP } from '@/lib/prayer';
+import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass, X } from 'lucide-react';
+import { detectLocationByIP } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
@@ -182,10 +182,10 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     }
   };
 
-  // Advance from a step. On the location step we first confirm the city/country
-  // combination actually resolves to real prayer times — so a mismatch like
-  // "Taxila, Canada" is caught here with a friendly prompt instead of surfacing
-  // a broken/empty prayer-time card later.
+  // Advance from a step. On the location step we verify via geocoding that the
+  // city actually exists in the stated country. AlAdhan's API ignores the country
+  // field and returns prayer times for the city globally, so it would silently
+  // accept "Taxila, Canada" — geocoding is the only way to catch the mismatch.
   const goNext = async () => {
     if (step !== 0) {
       setStep((s) => s + 1);
@@ -200,12 +200,44 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     setValidating(true);
     setLocError('');
     try {
-      await fetchTimingsByCity(city, country);
+      const url =
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&addressdetails=1` +
+        `&q=${encodeURIComponent(`${city}, ${country}`)}`;
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' },
+        cache: 'no-store',
+      });
+      const hits: any[] = res.ok ? await res.json() : [];
+
+      if (!hits.length) {
+        setLocError(`"${city}, ${country}" couldn't be found. Please check the spelling.`);
+        return;
+      }
+
+      // Check the top result's country against what the user typed (case-insensitive).
+      const resultCountry: string = (hits[0].address?.country ?? '').toLowerCase();
+      const typed = country.toLowerCase();
+      const countryOk =
+        resultCountry.includes(typed) || typed.includes(resultCountry);
+
+      if (!countryOk) {
+        const actual = hits[0].address?.country ?? 'a different country';
+        setLocError(
+          `"${city}" is in ${actual}, not "${country}". Please fix the city or country.`,
+        );
+        return;
+      }
+
+      // Cache geocoded coords so save() uses them without another API call.
+      if (draftLat == null || draftLng == null) {
+        setDraftLat(parseFloat(hits[0].lat));
+        setDraftLng(parseFloat(hits[0].lon));
+      }
+
       setStep((s) => s + 1);
     } catch {
-      setLocError(
-        `We couldn't find "${city}, ${country}". Please double-check it — the city must be in the selected country (e.g. Taxila is in Pakistan, not Canada).`,
-      );
+      // Nominatim unreachable — allow through rather than blocking the user.
+      setStep((s) => s + 1);
     } finally {
       setValidating(false);
     }
@@ -281,6 +313,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         <div className="relative bg-mosque-gradient text-parchment px-8 pt-8 pb-6 overflow-hidden">
           <div className="absolute inset-0 pattern-bg opacity-30 pointer-events-none" />
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-glow-emerald pointer-events-none" />
+          <button
+            onClick={() => { setShow(false); onClose?.(); }}
+            className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-parchment transition"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
           <div className="relative">
             {/* step progress */}
             <div className="flex items-center gap-2 mb-5">
