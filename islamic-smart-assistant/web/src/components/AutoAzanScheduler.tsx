@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellRing, Pause, Volume2, X } from 'lucide-react';
-import { fetchTimingsByCity, LocationError, type PrayerTimes } from '@/lib/prayer';
+import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useStoredLocation } from '@/lib/useStoredLocation';
+import { defaultParams, normalizeFiqh } from '@/lib/sect';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -21,13 +23,28 @@ const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 
  *    A first-load "Enable auto-Azan" prompt resolves that.
  */
 export function AutoAzanScheduler() {
-  const [voice]   = useLocalStorage<string>('isa:azanVoice', 'makkah');
+  const [voice]    = useLocalStorage<string>('isa:azanVoice', 'makkah');
   const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
-  const [city]    = useLocalStorage<string>('isa:city', 'Karachi');
-  const [country] = useLocalStorage<string>('isa:country', 'Pakistan');
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
-  // Persists whether the user has clicked "Enable" so we don't nag on every load.
   const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
+  // Method/fiqh — must match what the hero uses so we fire on the same times.
+  const [rawFiqh]        = useLocalStorage<string>('isa:fiqh', 'hanafi');
+  const [methodOverride] = useLocalStorage<number>('isa:method', -1);
+
+  // Same location source as the overview-page hero so query keys are identical
+  // and both components share a single React Query cache entry.
+  const loc = useStoredLocation();
+
+  const { method, school } = useMemo(() => {
+    const fiqh = normalizeFiqh(rawFiqh);
+    const base = defaultParams(fiqh);
+    return {
+      method: methodOverride >= 0 ? methodOverride : base.method,
+      school: base.school as 0 | 1,
+    };
+  }, [rawFiqh, methodOverride]);
+
+  const byCoords = loc.hasCoords && loc.lat != null && loc.lng != null;
 
   const [needsGesture, setNeedsGesture] = useState(false);
   const [firing, setFiring] = useState<null | { prayer: string; voice: string }>(null);
@@ -43,9 +60,15 @@ export function AutoAzanScheduler() {
   const outputIdRef = useRef(outputId);
   outputIdRef.current = outputId;
 
+  // Query key matches PrayerCountdownHero exactly so both share the same cache.
   const { data } = useQuery({
-    queryKey: ['timings', city, country],
-    queryFn: () => fetchTimingsByCity(city, country),
+    queryKey: byCoords
+      ? ['timings', 'coords', loc.lat, loc.lng, method, school]
+      : ['timings', 'city', loc.city, loc.country],
+    queryFn: () =>
+      byCoords && loc.lat != null && loc.lng != null
+        ? fetchTimingsByCoords(loc.lat, loc.lng, { method, school })
+        : fetchTimingsByCity(loc.city, loc.country),
     staleTime: 5 * 60 * 1000,
     enabled,
     retry: (failureCount, err) => {
@@ -91,7 +114,7 @@ export function AutoAzanScheduler() {
     }
   }, [setAudioOutput, setUnlocked]);
 
-  // Show the Enable banner whenever the user hasn't yet clicked it this session.
+  // Show the Enable banner whenever the user hasn't yet unlocked autoplay.
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
     if (!unlocked) setNeedsGesture(true);
@@ -175,7 +198,7 @@ export function AutoAzanScheduler() {
       Notification.requestPermission();
     }
 
-    // If a prayer was blocked, play it now that we have a gesture.
+    // If a prayer was blocked while waiting for gesture, play it now.
     if (pendingPrayer) {
       const p = pendingPrayer;
       setPendingPrayer(null);
@@ -203,7 +226,8 @@ export function AutoAzanScheduler() {
               </p>
               <button onClick={unlock} className="btn-primary text-sm py-2 px-4 mt-3">Enable</button>
             </div>
-            <button onClick={() => setEnabled(false)} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>
+            {/* X dismisses the banner only — does NOT disable azan */}
+            <button onClick={() => setNeedsGesture(false)} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>
           </motion.div>
         )}
 
