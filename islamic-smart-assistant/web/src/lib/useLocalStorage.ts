@@ -10,25 +10,28 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  */
 export function useLocalStorage<T>(key: string, initial: T): [T, (next: T | ((prev: T) => T)) => void] {
   const [value, setValue] = useState<T>(initial);
-  const hydrated = useRef(false);
+  // The read effect (below) sets this to true before the write effect runs in the
+  // same commit, causing the write effect to skip its first execution for each key.
+  // Without this, the write effect fires on mount with the `initial` default and
+  // overwrites whatever the user previously stored — because the read effect's
+  // setValue() call only applies in the *next* render, not the current commit.
+  const skipWrite = useRef(true);
 
-  // Read from localStorage on mount (runs before the write effect).
+  // Read from localStorage whenever key changes (including initial mount).
   useEffect(() => {
+    skipWrite.current = true; // suppress the paired write that fires in this same commit
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(key);
       if (raw !== null) setValue(JSON.parse(raw) as T);
     } catch {}
-    // Mark as hydrated so the write effect knows the initial read is done.
-    hydrated.current = true;
   }, [key]);
 
-  // Write to localStorage only AFTER the initial read has set the real value.
-  // Without this guard, the write effect fires on mount with the `initial` default
-  // and overwrites whatever the user previously stored.
+  // Write to localStorage when value changes, but never on the same commit as a
+  // key-change/mount read (skipWrite guards that first spurious write).
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!hydrated.current) return; // skip the first render (still using default)
+    if (skipWrite.current) { skipWrite.current = false; return; }
     try { window.localStorage.setItem(key, JSON.stringify(value)); } catch {}
   }, [key, value]);
 
