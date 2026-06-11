@@ -336,9 +336,17 @@ export function QuranPlayer({
   const onTranslationAudioError = () => {
     if (stage === 'translation') {
       const last = !arabic || ayahIdx >= arabic.ayahs.length - 1;
-      setStage('arabic');
-      if (last) { if (repeat) setAyahIdx(0); else setPlaying(false); }
-      else setTimeout(() => setAyahIdx((i) => i + 1), 400);
+      if (last) {
+        setStage('arabic');
+        if (repeat) setAyahIdx(0); else setPlaying(false);
+      } else {
+        // Batch stage + idx in one setTimeout so stageUrl jumps directly to the
+        // next Arabic ayah without an intermediate reload of the current one.
+        setTimeout(() => {
+          setStage('arabic');
+          setAyahIdx((i) => i + 1);
+        }, 400);
+      }
     } else {
       setPlaying(false);
       setError('Audio failed to load from the CDN.');
@@ -347,21 +355,36 @@ export function QuranPlayer({
 
   const onEnded = () => {
     if (!arabic || !currentAyah) return;
+
+    // Arabic ended with translation mode on → play the translation audio next.
     if (
       translationMode && stage === 'arabic' && translation !== 'none' &&
       translationAudioUrl(translation, currentAyah.number)
     ) {
       setStage('translation'); return;
     }
+
+    // Translation (or Arabic without translation) ended → advance to next ayah.
     const last = ayahIdx >= arabic.ayahs.length - 1;
     if (last) {
       setStage('arabic');
       if (repeat) setAyahIdx(0);
-      else { setPlaying(false); return; }
+      else setPlaying(false);
+      return;
+    }
+
+    if (translationMode) {
+      // Keep stage='translation' during the 400ms gap so stageUrl stays on the
+      // translation URL (already ended). Setting stage='arabic' first would
+      // immediately re-load the same Arabic ayah and cause a spurious replay +
+      // AbortError when ayahIdx advances 400ms later.
+      setTimeout(() => {
+        setStage('arabic');
+        setAyahIdx((i) => i + 1);
+      }, 400);
     } else {
-      const delay = translationMode ? 400 : 0;
       setStage('arabic');
-      setTimeout(() => setAyahIdx((i) => i + 1), delay);
+      setAyahIdx((i) => i + 1);
     }
   };
 
