@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellRing, Pause, Volume2, X } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
@@ -124,27 +125,48 @@ export function AutoAzanScheduler() {
   useEffect(() => {
     if (!enabled || !data) return;
 
-    const timings = data.timings;
+    const { timings, timezone } = data;
+
+    // Resolve prayer time HH:MM to an absolute UTC millisecond timestamp.
+    // MUST use the location's timezone (from AlAdhan meta), not the user's local
+    // clock — otherwise Isha 22:45 in China fires at 22:45 Pakistan time, 3h late.
+    const prayerMs = (h: number, m: number, refNow: Date): number => {
+      if (timezone) {
+        const loc = DateTime.fromJSDate(refNow).setZone(timezone);
+        return loc.startOf('day').set({ hour: h, minute: m, second: 0, millisecond: 0 }).toMillis();
+      }
+      const pt = new Date(refNow);
+      pt.setHours(h, m, 0, 0);
+      return pt.getTime();
+    };
+
+    // dateKey uses the location's calendar date, not the user's local date, so
+    // we never double-fire when the user and the prayer location are in different days.
+    const locationDateKey = (refNow: Date): string => {
+      if (timezone) {
+        const loc = DateTime.fromJSDate(refNow).setZone(timezone);
+        return `${loc.year}-${loc.month}-${loc.day}`;
+      }
+      return `${refNow.getFullYear()}-${refNow.getMonth()}-${refNow.getDate()}`;
+    };
 
     // Mark already-passed prayers as fired so we only trigger future ones.
     // Use 60 s threshold so a tab-sleep that delayed the interval still catches up.
     const now = new Date();
-    const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    const initKey = locationDateKey(now);
     for (const name of AZAN_PRAYERS) {
       const parts = timings[name]?.split(':');
       if (!parts || parts.length < 2) continue;
       const [h, m] = parts.map(Number);
       if (isNaN(h) || isNaN(m)) continue;
-      const pt = new Date(now);
-      pt.setHours(h, m, 0, 0);
-      if (now.getTime() - pt.getTime() > 60_000) {
-        firedRef.current.add(`${dateKey}:${name}`);
+      if (now.getTime() - prayerMs(h, m, now) > 60_000) {
+        firedRef.current.add(`${initKey}:${name}`);
       }
     }
 
     const tick = () => {
       const now = new Date();
-      const dateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+      const dateKey = locationDateKey(now);
 
       for (const name of AZAN_PRAYERS) {
         const key = `${dateKey}:${name}`;
@@ -154,10 +176,8 @@ export function AutoAzanScheduler() {
         if (!parts || parts.length < 2) continue;
         const [h, m] = parts.map(Number);
         if (isNaN(h) || isNaN(m)) continue;
-        const pt = new Date(now);
-        pt.setHours(h, m, 0, 0);
 
-        const diff = now.getTime() - pt.getTime();
+        const diff = now.getTime() - prayerMs(h, m, now);
         // 60 s window survives browser tab throttling; still only fires once per prayer.
         if (diff >= 0 && diff < 60_000) {
           firedRef.current.add(key);

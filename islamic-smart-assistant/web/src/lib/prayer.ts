@@ -93,6 +93,7 @@ export async function fetchTimingsByCity(
     gregorianDate: `${d.date.gregorian?.weekday?.en ?? ''}, ${d.date.gregorian?.day ?? '?'} ${d.date.gregorian?.month?.en ?? '?'} ${d.date.gregorian?.year ?? '?'}`,
     city,
     country,
+    timezone: d.meta?.timezone,
   };
 }
 
