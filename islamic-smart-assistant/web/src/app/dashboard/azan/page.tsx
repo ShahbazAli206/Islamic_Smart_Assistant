@@ -82,7 +82,7 @@ const VOICES: AzanVoice[] = [
 export default function AzanPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'makkah');
-  const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', false);
+  const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
