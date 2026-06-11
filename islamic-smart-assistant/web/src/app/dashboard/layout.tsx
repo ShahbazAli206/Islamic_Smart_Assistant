@@ -79,6 +79,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           <span className="font-display text-lg font-bold">Noor</span>
         </Link>
+
+        {/* quick-access icons — Prayer Times, Quran, Azan */}
+        <div className="ml-auto flex items-center gap-0.5">
+          {[
+            { href: '/dashboard/prayer-times', icon: Clock,    label: 'Prayer Times' },
+            { href: '/dashboard/quran',        icon: BookOpen, label: 'Holy Quran'   },
+            { href: '/dashboard/azan',         icon: Bell,     label: 'Azan'         },
+          ].map(({ href, icon: Icon, label }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-label={label}
+                className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl transition
+                  ${active ? 'bg-white/20 text-white' : 'text-emerald-100/75 hover:bg-white/15 hover:text-white'}`}
+              >
+                <Icon size={18} />
+                <span className="text-[9px] font-semibold tracking-wide leading-none">{label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </header>
 
       {/* backdrop (mobile only, when drawer open) */}
