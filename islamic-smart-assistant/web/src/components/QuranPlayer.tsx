@@ -318,6 +318,11 @@ export function QuranPlayer({
     if (!el) return;
     if (playing) {
       el.play().catch((e) => {
+        // AbortError fires whenever el.load() interrupts a pending play() call —
+        // this happens on every ayah advance (stageUrl effect calls el.load() first,
+        // then this effect calls el.play() for the new src). It is not a real failure;
+        // the next effect run will successfully play the new audio.
+        if (e?.name === 'AbortError') return;
         setPlaying(false);
         setError(`Couldn't play audio: ${e?.message ?? 'browser blocked playback'}`);
       });
@@ -325,6 +330,20 @@ export function QuranPlayer({
       el.pause();
     }
   }, [playing, stageUrl]);
+
+  // When a translation audio file fails to load (e.g. TTS not yet uploaded),
+  // fall back silently to text-only for this ayah and advance to the next.
+  const onTranslationAudioError = () => {
+    if (stage === 'translation') {
+      const last = !arabic || ayahIdx >= arabic.ayahs.length - 1;
+      setStage('arabic');
+      if (last) { if (repeat) setAyahIdx(0); else setPlaying(false); }
+      else setTimeout(() => setAyahIdx((i) => i + 1), 400);
+    } else {
+      setPlaying(false);
+      setError('Audio failed to load from the CDN.');
+    }
+  };
 
   const onEnded = () => {
     if (!arabic || !currentAyah) return;
@@ -539,7 +558,7 @@ export function QuranPlayer({
       <audio
         ref={audioRef}
         onEnded={onEnded}
-        onError={() => { setPlaying(false); setError('Audio failed to load from the CDN.'); }}
+        onError={onTranslationAudioError}
         preload="auto"
       />
       <audio ref={preloadRef} preload="auto" muted aria-hidden style={{ display: 'none' }} />
