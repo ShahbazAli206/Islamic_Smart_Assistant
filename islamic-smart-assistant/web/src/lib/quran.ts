@@ -85,9 +85,7 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 1
 // the files live under in the bucket (translations/<folder>/<globalAyah>.mp3).
 const TTS_EDITIONS: Record<string, string> = {
   'bn.bengali': 'bn',
-  'bn.hoque':   'bn',  // shares the Muhiuddin Khan TTS audio
   'hi.hindi':   'hi',
-  'hi.farooq':  'hi',  // shares the Suhel Farooq Khan TTS audio
 };
 
 // A TTS language only becomes "available" once its files have been uploaded.
