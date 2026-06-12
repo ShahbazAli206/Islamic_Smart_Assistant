@@ -20,6 +20,7 @@ import {
   formatTime, type RecitationSchedule, type RepeatMode,
 } from '@/lib/recitationSchedule';
 
+// Repeat modes for the modal's segmented picker, with their labels + icons.
 const REPEAT_MODES: RepeatMode[] = ['once', 'daily', 'weekly', 'monthly'];
 const REPEAT_LABEL: Record<RepeatMode, string> = {
   once: 'Once', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
@@ -28,10 +29,15 @@ const REPEAT_ICON: Record<RepeatMode, typeof Repeat> = {
   once: CalendarDays, daily: Repeat, weekly: CalendarClock, monthly: CalendarDays,
 };
 
+// ── date helpers (all local-time, matching how the runner reads a schedule) ──
+/** Zero-pad to two digits ("3" → "03"). */
 function pad(n: number) { return String(n).padStart(2, '0'); }
+/** Today as a local "YYYY-MM-DD" — the value an <input type="date"> expects. */
 function todayYMD() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+/** Parse "YYYY-MM-DD" into a LOCAL Date (avoids the UTC shift of `new Date(str)`). */
 function localDate(ymd: string) { const [y, m, d] = ymd.split('-').map(Number); return new Date(y || 1970, (m || 1) - 1, d || 1); }
 
+/** Full sentence describing the recurrence — shown under the Repeat picker. */
 function describeRepeat(repeat: RepeatMode, date: string): string {
   const d = localDate(date);
   switch (repeat) {
@@ -41,6 +47,7 @@ function describeRepeat(repeat: RepeatMode, date: string): string {
     case 'monthly': return `Plays on day ${d.getDate()} of every month.`;
   }
 }
+/** Compact recurrence label for the schedule list cards. */
 function shortRecurrence(s: RecitationSchedule): string {
   const d = localDate(s.date);
   switch (s.repeat) {
@@ -51,6 +58,7 @@ function shortRecurrence(s: RecitationSchedule): string {
   }
 }
 
+/** Speaker icon reflecting the current volume level (muted / low / high). */
 function VolIcon({ v, className = '' }: { v: number; className?: string }) {
   if (v === 0) return <VolumeX size={18} className={className} />;
   if (v < 0.5) return <Volume1 size={18} className={className} />;
@@ -70,6 +78,8 @@ function SoundWaves({ className = '' }: { className?: string }) {
 }
 
 export default function RecitationSchedulerPage() {
+  // Profile language (drives the default translation) + the persisted schedule list
+  // that the global SurahScheduleRunner reads from the same localStorage key.
   const [language] = useLocalStorage<string>('isa:language', 'ur');
   const [schedules, setSchedules] = useLocalStorage<RecitationSchedule[]>('isa:recitationSchedules', []);
 
@@ -106,6 +116,7 @@ export default function RecitationSchedulerPage() {
     return () => { previewCtrlRef.current?.stop(); };
   }, []);
 
+  // Surah search — matches English name, meaning, Arabic, or number.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SURAHS;
@@ -118,10 +129,13 @@ export default function RecitationSchedulerPage() {
     );
   }, [query]);
 
+  // Add/remove a Surah from the ordered selection (added order = play order).
   const toggleSurah = (n: number) =>
     setSelectedSurahs((prev) => (prev.includes(n) ? prev.filter((x) => x !== n) : [...prev, n]));
   const removeSurah = (n: number) => setSelectedSurahs((prev) => prev.filter((x) => x !== n));
 
+  // Preview playback for the "Test" button and each card's "Play now". Always
+  // triggered by a click (a user gesture), so the browser allows autoplay.
   const startPreview = (surahs: number[], id: 'test' | string) => {
     const ctrl = previewCtrlRef.current;
     if (!ctrl) return;
@@ -134,13 +148,16 @@ export default function RecitationSchedulerPage() {
   };
   const stopPreview = () => { previewCtrlRef.current?.stop(); setPreviewingId(null); };
 
+  // Test the current form settings: previews the first selected Surah (or Al-Fatihah).
   const test = () => {
     if (previewingId === 'test') { stopPreview(); return; }
     startPreview(selectedSurahs.length ? [selectedSurahs[0]] : [1], 'test');
   };
 
+  // Update volume live so a running preview reflects the slider immediately.
   const onVolume = (v: number) => { setVolume(v); previewCtrlRef.current?.setVolume(v); };
 
+  // Reset the modal form back to a blank "new schedule" state.
   const resetForm = () => {
     setSelectedSurahs([]); setQuery(''); setEditingId(null); setError(null);
     setReciter('ar.abdulbasitmurattal'); setWithTranslation(false);
@@ -148,6 +165,7 @@ export default function RecitationSchedulerPage() {
     setTime('06:00'); setDate(todayYMD()); setRepeat('daily'); setVolume(0.8);
   };
 
+  // Open the modal in create mode (blank form) or edit mode (prefilled).
   const openCreate = () => { resetForm(); setModalOpen(true); };
 
   const openEdit = (s: RecitationSchedule) => {
@@ -164,11 +182,13 @@ export default function RecitationSchedulerPage() {
     setModalOpen(true);
   };
 
+  // Close the modal, halting any in-progress Test preview first.
   const closeModal = useCallback(() => {
     if (previewCtrlRef.current?.isPlaying() && previewingId === 'test') stopPreview();
     setModalOpen(false);
   }, [previewingId]);
 
+  // Validate the form, then create or update the schedule in localStorage and close.
   const save = () => {
     if (!selectedSurahs.length) { setError('Choose at least one Surah.'); return; }
     if (!time) { setError('Pick a time.'); return; }
@@ -182,6 +202,7 @@ export default function RecitationSchedulerPage() {
         ...prev,
       ]);
     }
+    // Ask for notification permission so scheduled fires can show a desktop alert.
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().catch(() => {});
     }
@@ -189,12 +210,14 @@ export default function RecitationSchedulerPage() {
     setModalOpen(false);
   };
 
+  // Delete a schedule (stopping its preview if playing).
   const removeSchedule = (id: string) => {
     setSchedules((prev) => prev.filter((s) => s.id !== id));
     setConfirmDeleteId(null);
     if (previewingId === id) stopPreview();
   };
 
+  // Pause/resume a schedule — the runner only fires enabled ones.
   const toggleEnabled = (id: string) =>
     setSchedules((prev) => prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
 
