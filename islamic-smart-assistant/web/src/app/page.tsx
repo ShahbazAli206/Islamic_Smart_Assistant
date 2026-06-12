@@ -26,7 +26,7 @@ const FEATURES = [
   { icon: Bell,         title: 'Auto Azan',         desc: 'Triggers Makkah, Madinah, Pakistani, Turkish & Egyptian Azan on every linked device — in sync.', color: 'from-emerald-500 to-emerald-700' },
   { icon: BookOpen,     title: 'Full Quran',        desc: 'All 114 Surahs by Abdul Basit, Sudais, Alafasy & more — with Urdu and English translation.', color: 'from-gold-400 to-gold-600' },
   { icon: Compass,      title: 'Qibla & Times',     desc: 'Pinpoint Qibla direction. Live prayer times by city, fiqh and DST-aware.', color: 'from-cyan-500 to-emerald-600' },
-  { icon: Radio,        title: 'PTV-style Tilawat', desc: 'Arabic recitation followed by Urdu translation, ayah by ayah — like classic PTV broadcasts.', color: 'from-rose-500 to-amber-500' },
+  { icon: Radio,        title: 'Ayah-by-Ayah Tilawat', desc: 'Arabic recitation followed by its translation, ayah by ayah — each verse recited, then its meaning.', color: 'from-rose-500 to-amber-500' },
   { icon: Smartphone,   title: 'Multi-device sync', desc: 'Phones, tablets, desktops, Alexa & Google Home. Group as Home, Office, Mosque.', color: 'from-indigo-500 to-violet-600' },
   { icon: CalendarClock, title: 'Smart Scheduler',  desc: 'Yaseen after Fajr, Waqiah after Maghrib, Mulk before sleep — set it once.', color: 'from-emerald-600 to-teal-500' },
   { icon: Languages,    title: '10+ Languages',     desc: 'UI in English, اردو, العربية, Türkçe, 中文, 日本語, हिन्दी, বাংলা, and more.', color: 'from-fuchsia-500 to-pink-500' },
