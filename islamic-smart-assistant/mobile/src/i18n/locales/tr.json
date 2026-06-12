@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "Kibla"
+  },
+  "qibla": {
+    "title": "Kibla Bulucu",
+    "subtitle": "Namaz Kilma Yonu",
+    "live": "Canli Pusula",
+    "noSensor": "Pusula Sensoru Yok",
+    "noSensorDesc": "Yonu belirlemek icin asagidaki aciyi kullanin.",
+    "aligned": "Kibleden yonunuz dogru!",
+    "calibrate": "Kalibrasyon icin cihazi sekiz cizerek hareket ettirin",
+    "noLocation": "Konum belirlenmedi",
+    "noLocationDesc": "Konumunuzu ayarlamak icin Namaz Vakitleri sayfasina gidin.",
+    "fromKaaba": "Kabeden",
+    "heading": "yon",
+    "hint": "Ibre duz yukari gosterene kadar dondurun — bu Kibla yonudur."
   }
 }

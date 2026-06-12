@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "किबला"
+  },
+  "qibla": {
+    "title": "किबला फाइंडर",
+    "subtitle": "नमाज की दिशा",
+    "live": "लाइव कम्पास",
+    "noSensor": "कोई कम्पास नहीं",
+    "noSensorDesc": "नीचे दिए गए दिशा कोण का उपयोग करें।",
+    "aligned": "आप किबले की तरफ हैं!",
+    "calibrate": "कम्पास कैलिब्रेट करने के लिए figure-8 में घुमाएं",
+    "noLocation": "स्थान सेट नहीं है",
+    "noLocationDesc": "नमाज के समय पेज पर जाकर स्थान सेट करें।",
+    "fromKaaba": "काबा से",
+    "heading": "दिशा",
+    "hint": "तब तक घुमाएं जब तक सुई सीधे ऊपर न हो।"
   }
 }

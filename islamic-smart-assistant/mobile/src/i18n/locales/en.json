@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "qibla": {
+    "title": "Qibla Finder",
+    "subtitle": "Direction of Prayer",
+    "live": "Live Compass",
+    "noSensor": "No Compass Sensor",
+    "noSensorDesc": "Use the bearing below to orient yourself manually.",
+    "aligned": "You are facing the Qibla!",
+    "calibrate": "Wave device in a figure-8 to calibrate",
+    "noLocation": "Location not set",
+    "noLocationDesc": "Go to Prayer Times to set your location.",
+    "fromKaaba": "from Kaaba",
+    "heading": "heading",
+    "hint": "Rotate until the needle tip points straight up — that is the Qibla direction."
   }
 }

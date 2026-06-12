@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "قبله"
+  },
+  "qibla": {
+    "title": "قبله موندونکی",
+    "subtitle": "د لمانځه لور",
+    "live": "ژوندی قطب نما",
+    "noSensor": "د قطب نما سینسر نشته",
+    "noSensorDesc": "د لاندې لوری لاسي موندلو لپاره وکاروئ.",
+    "aligned": "تاسو قبله ته مخامخ یاست!",
+    "calibrate": "د کالیبریشن لپاره وسیله figure-8 ته وخوځوئ",
+    "noLocation": "موقعیت ټاکل نه دی",
+    "noLocationDesc": "خپل موقعیت ټاکلو لپاره د لمانځه وختونو مخ ته لاړ شئ.",
+    "fromKaaba": "د کعبې نه",
+    "heading": "لور",
+    "hint": "هغه وخت پورې وڅرخوئ چې ستن مستقیم پورته اشاره وکړي."
   }
 }

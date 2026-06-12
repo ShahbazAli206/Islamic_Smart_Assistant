@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "qibla": {
+    "title": "Chercheur de Qibla",
+    "subtitle": "Direction de la Priere",
+    "live": "Boussole en Direct",
+    "noSensor": "Pas de Boussole",
+    "noSensorDesc": "Utilisez le cap ci-dessous pour vous orienter manuellement.",
+    "aligned": "Vous etes face a la Qibla !",
+    "calibrate": "Tracez un 8 avec l appareil pour calibrer",
+    "noLocation": "Emplacement non defini",
+    "noLocationDesc": "Allez aux Horaires de Priere pour definir votre emplacement.",
+    "fromKaaba": "de la Kaaba",
+    "heading": "cap",
+    "hint": "Tournez jusqu a ce que la pointe de l aiguille pointe vers le haut."
   }
 }

@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "কিবলা"
+  },
+  "qibla": {
+    "title": "কিবলা ফাইন্ডার",
+    "subtitle": "নামাজের দিক",
+    "live": "লাইভ কম্পাস",
+    "noSensor": "কোনো কম্পাস নেই",
+    "noSensorDesc": "নিচের বিয়ারিং দিয়ে দিকনির্ণয় করুন।",
+    "aligned": "আপনি কিবলামুখী!",
+    "calibrate": "ক্যালিব্রেট করতে figure-8 ভাবে নাড়ান",
+    "noLocation": "অবস্থান সেট নয়",
+    "noLocationDesc": "নামাজের সময় পৃষ্ঠায় গিয়ে অবস্থান সেট করুন।",
+    "fromKaaba": "কাবা থেকে",
+    "heading": "দিক",
+    "hint": "ঘোরান যতক্ষণ না সুচ সরাসরি উপরে নির্দেশ করে।"
   }
 }

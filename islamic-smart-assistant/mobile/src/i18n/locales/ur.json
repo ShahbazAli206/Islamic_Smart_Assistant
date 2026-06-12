@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "قبلہ"
+  },
+  "qibla": {
+    "title": "قبلہ فائنڈر",
+    "subtitle": "نماز کی سمت",
+    "live": "براہ راست کمپاس",
+    "noSensor": "کمپاس سینسر نہیں",
+    "noSensorDesc": "نیچے دی گئی سمت سے خود کو درست کریں۔",
+    "aligned": "آپ قبلہ رخ ہیں!",
+    "calibrate": "کمپاس کیلیبریٹ کرنے کے لیے figure-8 میں ہلائیں",
+    "noLocation": "مقام سیٹ نہیں",
+    "noLocationDesc": "نماز اوقات میں جا کر مقام سیٹ کریں۔",
+    "fromKaaba": "کعبہ سے",
+    "heading": "رخ",
+    "hint": "اسی وقت تک گھمائیں جب تک سوئی سیدھی اوپر نہ ہو — یہی قبلہ کی سمت ہے۔"
   }
 }

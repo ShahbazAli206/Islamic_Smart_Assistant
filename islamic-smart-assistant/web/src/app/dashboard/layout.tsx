@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, BarChart3, Settings,
-  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock,
+  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock, Compass,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
@@ -36,9 +36,10 @@ const LANG_LABELS: Record<string, string> = {
 const NAV = [
   { group: 'Worship',
     items: [
-      { href: '/dashboard/prayer-times', label: 'Prayer Times', icon: Clock,    color: 'text-emerald-600' },
-      { href: '/dashboard/quran',        label: 'Holy Quran',   icon: BookOpen, color: 'text-gold-600' },
-      { href: '/dashboard/azan',         label: 'Azan Voices',  icon: Bell,     color: 'text-rose-500' },
+      { href: '/dashboard/prayer-times', label: 'Prayer Times',    icon: Clock,      color: 'text-emerald-600' },
+      { href: '/dashboard/quran',        label: 'Holy Quran',      icon: BookOpen,   color: 'text-gold-600' },
+      { href: '/dashboard/qibla',        label: 'Qibla Finder',    icon: Compass,    color: 'text-teal-600' },
+      { href: '/dashboard/azan',         label: 'Azan Voices',     icon: Bell,       color: 'text-rose-500' },
       { href: '/dashboard/recitation',   label: 'Recitation Alarm', icon: AlarmClock, color: 'text-violet-600' },
     ],
   },
@@ -99,11 +100,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="font-display text-lg font-bold">Noor</span>
         </Link>
 
-        {/* quick-access icons — Prayer Times, Quran, Azan */}
+        {/* quick-access icons — Prayer Times, Quran, Qibla, Azan */}
         <div className="ml-auto flex items-center gap-0.5">
           {[
             { href: '/dashboard/prayer-times', icon: Clock,    label: 'Prayer Times' },
             { href: '/dashboard/quran',        icon: BookOpen, label: 'Holy Quran'   },
+            { href: '/dashboard/qibla',        icon: Compass,  label: 'Qibla'        },
             { href: '/dashboard/azan',         icon: Bell,     label: 'Azan'         },
           ].map(({ href, icon: Icon, label }) => {
             const active = pathname === href;

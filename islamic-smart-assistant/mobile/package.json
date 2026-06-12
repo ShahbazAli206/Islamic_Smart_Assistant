@@ -39,6 +39,7 @@
     "axios": "^1.6.5",
     "luxon": "^3.4.4",
     "adhan": "^4.4.3",
+    "react-native-compass-heading": "^2.0.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

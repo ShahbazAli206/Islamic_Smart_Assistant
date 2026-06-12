@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "القبلة"
+  },
+  "qibla": {
+    "title": "محدد القبلة",
+    "subtitle": "اتجاه الصلاة",
+    "live": "البوصلة المباشرة",
+    "noSensor": "لا توجد بوصلة",
+    "noSensorDesc": "استخدم الاتجاه ادناه للتوجه يدويا.",
+    "aligned": "انت تواجه القبلة!",
+    "calibrate": "حرك الجهاز بشكل الرقم 8 للمعايرة",
+    "noLocation": "الموقع غير محدد",
+    "noLocationDesc": "اذهب الى اوقات الصلاة لتحديد موقعك.",
+    "fromKaaba": "من الكعبة",
+    "heading": "الاتجاه",
+    "hint": "ادر حتى تشير الابرة مباشرة للاعلى — هذا اتجاه القبلة."
   }
 }

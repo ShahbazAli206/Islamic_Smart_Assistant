@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "朝拜"
+  },
+  "qibla": {
+    "title": "朝拜方向",
+    "subtitle": "礼拜方向",
+    "live": "实时指南针",
+    "noSensor": "无指南针传感器",
+    "noSensorDesc": "请使用下方方位角手动调整方向。",
+    "aligned": "您正面向朝拜方向！",
+    "calibrate": "将设备以8字形移动以校准",
+    "noLocation": "未设置位置",
+    "noLocationDesc": "请前往礼拜时间页面设置您的位置。",
+    "fromKaaba": "距天房",
+    "heading": "方位",
+    "hint": "旋转直到指针竖直向上——那就是朝拜方向。"
   }
 }

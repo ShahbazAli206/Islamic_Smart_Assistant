@@ -38,6 +38,21 @@
     "quran": "Quran",
     "azan": "Azan",
     "devices": "Devices",
-    "settings": "Settings"
+    "settings": "Settings",
+    "qibla": "キブラ"
+  },
+  "qibla": {
+    "title": "キブラ方向検索",
+    "subtitle": "礼拝の方向",
+    "live": "ライブコンパス",
+    "noSensor": "コンパスなし",
+    "noSensorDesc": "以下の方位角で手動で方向を確認してください。",
+    "aligned": "キブラの方向を向いています！",
+    "calibrate": "校正するために8の字を描くようにデバイスを動かしてください",
+    "noLocation": "位置が設定されていません",
+    "noLocationDesc": "礼拝時間ページで位置を設定してください。",
+    "fromKaaba": "カアバから",
+    "heading": "方位",
+    "hint": "針が真上を向くまで回転させてください。"
   }
 }

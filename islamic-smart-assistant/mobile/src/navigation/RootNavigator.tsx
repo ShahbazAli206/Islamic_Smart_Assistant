@@ -17,6 +17,7 @@ import { DashboardScreen } from '../screens/dashboard/Dashboard';
 import { AzanSettingsScreen } from '../screens/azan/AzanSettings';
 import { QuranPlayerScreen } from '../screens/quran/QuranPlayer';
 import { QuranSchedulerScreen } from '../screens/quran/QuranScheduler';
+import { QiblaScreen } from '../screens/qibla/QiblaScreen';
 import { DevicesScreen } from '../screens/devices/Devices';
 import { SettingsScreen } from '../screens/settings/Settings';
 
@@ -37,6 +38,7 @@ function MainTabs() {
       }}>
       <Tabs.Screen name="Home" component={DashboardScreen} options={{ title: t('tabs.home') }} />
       <Tabs.Screen name="Quran" component={QuranPlayerScreen} options={{ title: t('tabs.quran') }} />
+      <Tabs.Screen name="Qibla" component={QiblaScreen} options={{ title: t('tabs.qibla') }} />
       <Tabs.Screen name="Azan" component={AzanSettingsScreen} options={{ title: t('tabs.azan') }} />
       <Tabs.Screen name="Devices" component={DevicesScreen} options={{ title: t('tabs.devices') }} />
       <Tabs.Screen name="Settings" component={SettingsScreen} options={{ title: t('tabs.settings') }} />
