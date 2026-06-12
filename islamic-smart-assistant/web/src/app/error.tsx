@@ -3,6 +3,12 @@
 import { useEffect } from 'react';
 import { AlertTriangle, RotateCw, Home } from 'lucide-react';
 
+/**
+ * Next.js App Router error boundary. Automatically rendered when a route
+ * segment throws during render. Receives the caught `error` plus a `reset()`
+ * callback that re-renders the segment to retry, and shows a friendly fallback
+ * with "Try again" / "Go home" actions instead of a blank crash.
+ */
 export default function GlobalError({
   error,
   reset,
@@ -10,6 +16,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log the error to the console for diagnostics whenever a new error arrives.
   useEffect(() => {
     console.error('Unhandled app error:', error);
   }, [error]);

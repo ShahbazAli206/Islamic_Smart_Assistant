@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * Public marketing landing page for Noor (the "/" route).
+ *
+ * Layout, top to bottom: sticky nav → hero (with the live PrayerCountdown card) →
+ * Azan/Quran/Devices feature showcases → the feature grid → closing CTA → footer.
+ * Animations are powered by framer-motion (entrance + scroll-into-view reveals).
+ * The only live data here is the visitor's stored location, fed into the hero
+ * countdown so it shows real prayer times on first paint.
+ */
+
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -10,6 +20,8 @@ import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 
+// Cards rendered in the feature grid. `icon` is a lucide component and `color`
+// is a Tailwind gradient stop pair used for the icon chip + the corner glow.
 const FEATURES = [
   { icon: Bell,         title: 'Auto Azan',         desc: 'Triggers Makkah, Madinah, Pakistani, Turkish & Egyptian Azan on every linked device — in sync.', color: 'from-emerald-500 to-emerald-700' },
   { icon: BookOpen,     title: 'Full Quran',        desc: 'All 114 Surahs by Abdul Basit, Sudais, Alafasy & more — with Urdu and English translation.', color: 'from-gold-400 to-gold-600' },
@@ -21,6 +33,7 @@ const FEATURES = [
   { icon: ShieldCheck,  title: 'Privacy first',     desc: 'No tracking. Your location stays on-device; only your settings sync across login.', color: 'from-slate-500 to-emerald-700' },
 ];
 
+// In-page anchor links shown in the nav; each href targets a section `id` below.
 const NAV_LINKS = [
   { href: '#prayer',  label: 'Prayer' },
   { href: '#azan',    label: 'Azan' },
@@ -28,7 +41,10 @@ const NAV_LINKS = [
   { href: '#devices', label: 'Devices' },
 ];
 
+/** Renders the full marketing landing page. */
 export default function HomePage() {
+  // Visitor's saved location (if any) — passed to the hero countdown so it can
+  // show real prayer times immediately instead of a placeholder.
   const loc = useStoredLocation();
   return (
     <main className="relative overflow-x-hidden">
@@ -57,13 +73,15 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── hero ── */}
+      {/* ── hero ── (headline + CTAs on the left, live prayer countdown on the right) */}
       <section id="prayer" className="relative max-w-7xl mx-auto px-6 pt-10 pb-20">
-        {/* animated background orbs */}
+        {/* Decorative blurred gradient orbs that drift via the `animate-aurora`
+            keyframes; the second is offset by 5s so the two never pulse in unison. */}
         <div aria-hidden className="absolute -top-20 -left-24 w-[28rem] h-[28rem] rounded-full bg-emerald-300/25 blur-3xl animate-aurora pointer-events-none" />
         <div aria-hidden className="absolute top-10 right-0 w-[24rem] h-[24rem] rounded-full bg-gold-300/25 blur-3xl animate-aurora pointer-events-none" style={{ animationDelay: '5s' }} />
 
         <div className="relative grid lg:grid-cols-2 gap-10 items-center">
+          {/* Left column: headline copy + primary/secondary CTAs, fading up on load. */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -96,11 +114,14 @@ export default function HomePage() {
             </div>
           </motion.div>
 
+          {/* Right column: the live prayer countdown card, scaling in on load. */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7 }}
           >
+            {/* Coords are preferred; fall back to city/country. `label` is only
+                passed once we actually have coordinates to show. */}
             <PrayerCountdownHero
               lat={loc.lat ?? undefined}
               lng={loc.lng ?? undefined}
@@ -113,12 +134,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── feature showcases ── */}
+      {/* ── feature showcases ── (self-contained marketing sections; their #ids back the nav anchors) */}
       <AzanShowcase />
       <QuranShowcase />
       <DevicesShowcase />
 
-      {/* ── feature grid (everything in one place) ── */}
+      {/* ── feature grid ── (the FEATURES array rendered as a responsive card grid) */}
       <section className="relative max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
           <span className="chip-gold"><Sparkles size={12}/> Everything in one place</span>
@@ -127,6 +148,8 @@ export default function HomePage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {FEATURES.map((f, i) => (
+            // Cards reveal as they scroll into view (`once` = animate a single time).
+            // `delay: i * 0.04` staggers them so they cascade rather than pop in together.
             <motion.div
               key={f.title}
               initial={{ opacity: 0, y: 12 }}
@@ -147,7 +170,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── closing CTA ── */}
+      {/* ── closing CTA ── (final reveal-on-scroll banner driving users to the dashboard) */}
       <section className="relative max-w-7xl mx-auto px-6 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -156,6 +179,7 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="relative overflow-hidden rounded-3xl bg-mosque-gradient text-parchment px-8 py-14 md:px-16 md:py-20 text-center shadow-glow-emerald"
         >
+          {/* Layered decoration: faint Islamic pattern overlay + a soft emerald glow. */}
           <div className="absolute inset-0 pattern-bg opacity-20 pointer-events-none" />
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-glow-emerald pointer-events-none" />
           <div className="relative">
@@ -190,6 +214,7 @@ export default function HomePage() {
   );
 }
 
+/** The Noor brand mark: a crescent-and-star glyph in a gradient rounded tile. */
 function NoorMark({ size = 28 }: { size?: number }) {
   return (
     <span

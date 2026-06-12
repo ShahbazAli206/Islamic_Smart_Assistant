@@ -1,5 +1,9 @@
 'use client';
 
+// Quran reader page: curated quick-pick surahs, the audio/translation player,
+// and a searchable index of all 114 surahs. Selected surah + reciter +
+// translation are held in local state and handed down to <QuranPlayer />.
+
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Sparkles, BookOpenCheck } from 'lucide-react';
@@ -8,6 +12,8 @@ import { QuranPlayer } from '@/components/QuranPlayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
 
+// Hand-picked popular surahs surfaced as shortcut cards above the full index.
+// `tag` is the contextual reason it's a common pick (e.g. recited on Friday).
 const QUICK_PICKS = [
   { number: 1,  label: 'Al-Fatihah', tag: 'The Opening' },
   { number: 36, label: 'Yaseen',     tag: 'Heart of the Quran' },
@@ -17,19 +23,24 @@ const QUICK_PICKS = [
   { number: 18, label: 'Al-Kahf',    tag: 'Friday' },
 ];
 
+/** Quran reader: quick picks, player, and a searchable full surah index. */
 export default function QuranPage() {
-  const [query, setQuery] = useState('');
-  const [surah, setSurah] = useState(1);
+  const [query, setQuery] = useState('');                       // search box text for the surah index
+  const [surah, setSurah] = useState(1);                        // currently selected surah number (drives the player)
   const [reciter, setReciter] = useState<ReciterId>('ar.abdulbasitmurattal');
   const [translation, setTranslation] = useState<TranslationId>('ur.jalandhry');
   const [translationMode, setTranslationMode] = useState(true);
 
-  // Apply the user's preferred language once it loads from localStorage
+  // Apply the user's preferred language once it loads from localStorage.
+  // useLocalStorage returns its default ('ur') on first render and reads the
+  // real value a tick later, so this effect re-runs to sync the translation.
   const [language] = useLocalStorage<string>('isa:language', 'ur');
   useEffect(() => {
     setTranslation(langToTranslation(language));
   }, [language]);
 
+  // Filter the full surah list by the search box. Matches English name,
+  // English meaning, the Arabic name, or an exact surah-number match.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SURAHS;
@@ -44,6 +55,7 @@ export default function QuranPage() {
 
   return (
     <div className="space-y-6">
+      {/* page header */}
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <p className="chip-gold mb-2"><Sparkles size={12}/> Holy Quran</p>

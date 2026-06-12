@@ -13,6 +13,8 @@ import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
+// Human-readable labels for the persisted `isa:sect` value, shown in the
+// profile panel. Falls back to the raw key if an unknown value is stored.
 const SECT_LABELS: Record<string, string> = {
   hanafi: 'Hanafi',
   shafii: "Shafi'i",
@@ -21,12 +23,16 @@ const SECT_LABELS: Record<string, string> = {
   shia: 'Shia (Jafari)',
 };
 
+// Human-readable labels for the persisted `isa:language` value (Quran
+// translation preference) shown in the profile panel.
 const LANG_LABELS: Record<string, string> = {
   ur: 'Urdu',
   en: 'English',
   none: 'Arabic only',
 };
 
+// Sidebar navigation, grouped into sections ('Worship', 'Account'). Each item
+// carries its route, label, icon, and an accent colour used when inactive.
 const NAV = [
   { group: 'Worship',
     items: [
@@ -48,13 +54,23 @@ const NAV = [
   },
 ];
 
+/**
+ * Shared shell for every /dashboard route: responsive sidebar navigation
+ * (off-canvas drawer on mobile, fixed rail from `lg` up), a mobile top bar with
+ * quick-access icons, and the profile panel summarising the user's stored
+ * preferences. Also mounts the always-on background workers — AutoAzanScheduler,
+ * SurahScheduleRunner — and the OnboardingSetup modal used to edit preferences.
+ */
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // Controls the OnboardingSetup modal when launched via the profile "edit" pencil.
   const [editPrefs, setEditPrefs] = useState(false);
   // Off-canvas sidebar for mobile; always visible from `lg` up.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
+  // Profile summary values, read from the same localStorage keys the
+  // onboarding wizard writes — keeps the panel in sync with the user's setup.
   const [name]     = useLocalStorage<string>('isa:name',     '');
   const [city]     = useLocalStorage<string>('isa:city',     'Karachi');
   const [country]  = useLocalStorage<string>('isa:country',  'Pakistan');
@@ -63,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen lg:flex">
+      {/* ── Mobile top bar: hamburger + brand + quick-access (hidden on lg+) ── */}
       {/* mobile top bar with menu button (hidden on lg+) */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-mosque-gradient text-parchment px-4 py-3 shadow-md">
         <button
@@ -106,6 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
+      {/* Dimming backdrop behind the drawer (mobile only); tap to dismiss */}
       {/* backdrop (mobile only, when drawer open) */}
       {sidebarOpen && (
         <div
@@ -115,11 +133,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       )}
 
+      {/* ── Sidebar: off-canvas drawer on mobile, fixed rail from lg up ── */}
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-5 flex flex-col gap-4 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
+        {/* Decorative geometric pattern + emerald glow (non-interactive) */}
         <div className="absolute inset-0 pattern-bg opacity-25 pointer-events-none" />
         <div className="absolute -top-32 -left-24 w-72 h-72 rounded-full bg-glow-emerald pointer-events-none" />
 
@@ -155,6 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </p>
               <div className="space-y-0.5">
                 {group.items.map((n) => {
+                  // Exact-match highlight for the current route.
                   const active = pathname === n.href;
                   return (
                     <Link
@@ -167,6 +188,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'
                       }`}
                     >
+                      {/* Shared layoutId lets framer-motion slide one gold pill
+                          between items as the active route changes. */}
                       {active && (
                         <motion.span
                           layoutId="active-pill"
@@ -183,9 +206,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
+        {/* ── Profile panel: greeting + stored location / sect / language,
+               with a pencil to reopen onboarding and edit them ── */}
         {/* profile panel */}
         <div className="relative rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-4">
           <div className="flex items-start justify-between gap-2 mb-3">
+            {/* Personalised greeting; falls back to a generic salam if no name set. */}
             <p className="text-xs font-semibold text-white/90 leading-snug">
               {name ? `As-salamu alaykum, ${name}` : 'As-salamu alaykum'}
             </p>
@@ -215,8 +241,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
+      {/* ── Routed page content ── */}
       <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">{children}</main>
 
+      {/* Always-on background workers, mounted once for the whole dashboard:
+          fire the Azan / run scheduled Surahs regardless of the active route.
+          OnboardingSetup is the shared preferences modal (opened via the pencil). */}
       <AutoAzanScheduler />
       <SurahScheduleRunner />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />

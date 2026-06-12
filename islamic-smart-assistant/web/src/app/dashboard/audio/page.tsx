@@ -5,12 +5,15 @@ import { motion } from 'framer-motion';
 import { UploadCloud, Music2, FileAudio, Sparkles } from 'lucide-react';
 import { Admin } from '@/lib/api';
 
+/** Audio assets page — drag-and-drop upload of custom Azan packs plus the bundled defaults. */
 export default function AudioPage() {
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
+  const [busy, setBusy] = useState(false);          // an upload is in flight (disables the input)
+  const [msg, setMsg] = useState<string | null>(null); // success/failure banner text
+  const [dragOver, setDragOver] = useState(false);  // drives the dropzone highlight styling
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Shared upload handler for both the file picker and drag-drop. Surfaces the
+  // outcome via `msg` and always clears `busy` so the dropzone re-enables.
   const upload = async (file: File) => {
     setBusy(true); setMsg(null);
     try { await Admin.uploadAzanPack(file); setMsg(`Uploaded ${file.name}`); }
@@ -20,18 +23,20 @@ export default function AudioPage() {
 
   return (
     <div className="space-y-6">
+      {/* page header */}
       <div>
         <p className="chip-gold mb-2"><Sparkles size={12}/> Library</p>
         <h1 className="h-display text-4xl font-bold">Audio assets</h1>
         <p className="text-ink/60 mt-1">Upload custom Azan packs. Files are stored on cloud storage and pushed to devices instantly.</p>
       </div>
 
+      {/* drag-and-drop upload zone — the whole label is clickable to open the hidden file input */}
       <motion.label
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => {
           e.preventDefault(); setDragOver(false);
-          const f = e.dataTransfer.files?.[0]; if (f) upload(f);
+          const f = e.dataTransfer.files?.[0]; if (f) upload(f);   // only the first dropped file is uploaded
         }}
         whileHover={{ y: -2 }}
         className={`relative block rounded-3xl p-14 cursor-pointer text-center transition overflow-hidden
@@ -54,6 +59,7 @@ export default function AudioPage() {
         </div>
       </motion.label>
 
+      {/* upload result banner */}
       {msg && (
         <motion.p
           initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
@@ -63,6 +69,7 @@ export default function AudioPage() {
         </motion.p>
       )}
 
+      {/* bundled defaults grid — static, ships with the app */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { name: 'Default Makkah pack',  size: '4.2 MB', icon: Music2 },

@@ -13,17 +13,28 @@ import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import Link from 'next/link';
 
+// Placeholder 14-day engagement series for the area chart. Randomized on each
+// render — purely cosmetic until a real time-series endpoint is wired up.
 const sample = Array.from({ length: 14 }, (_, i) => ({
   day: `D${i + 1}`,
   azan:  Math.round(800 + Math.random() * 400),
   quran: Math.round(220 + Math.random() * 220),
 }));
 
+/**
+ * Dashboard home/overview page: greeting, the live prayer-countdown hero,
+ * headline stat cards (live numbers from the analytics endpoint), and the
+ * engagement charts. The hero reads the user's stored location so it stays in
+ * sync with the rest of the app.
+ */
 export default function Overview() {
   const { data } = useQuery({ queryKey: ['analytics'], queryFn: Admin.analytics });
+  // Zero-fill until the analytics query resolves so cards render numbers, not NaN.
   const stats = data ?? { users: 0, devicesOnline: 0, azanFiredToday: 0, quranFiredToday: 0 };
   const loc = useStoredLocation();
 
+  // Stat-card config: live `value` from analytics, gradient accent, and a
+  // (currently static) delta badge. Driven by data so the JSX stays a map.
   const cards = [
     { label: 'Total users',     value: stats.users,           icon: Users,      grad: 'from-emerald-500 to-emerald-700', delta: '+12.4%' },
     { label: 'Devices online',  value: stats.devicesOnline,   icon: Smartphone, grad: 'from-cyan-500 to-emerald-600',    delta: '+3.2%'  },

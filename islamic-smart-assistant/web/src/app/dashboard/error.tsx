@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, RotateCw, MapPin, Settings } from 'lucide-react';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 
+/**
+ * Error boundary for the /dashboard segment (Next.js `error.tsx`). Catches
+ * render-time errors in any dashboard page and offers two recoveries: retry
+ * (`reset`) or fix the most common root cause — a bad location — by reopening
+ * onboarding. Tailors its copy when the failure looks location-related.
+ */
 export default function DashboardError({
   error,
   reset,
@@ -13,10 +19,13 @@ export default function DashboardError({
 }) {
   const [showSetup, setShowSetup] = useState(false);
 
+  // Surface the error to the console for debugging; re-runs if a new error arrives.
   useEffect(() => {
     console.error('Dashboard error:', error);
   }, [error]);
 
+  // Heuristic: many dashboard failures stem from an unresolvable city/country.
+  // Match on error type or keywords so we can show targeted "update location" copy.
   const isLocationRelated =
     error.name === 'LocationError' ||
     error.message.toLowerCase().includes('location') ||
@@ -38,6 +47,7 @@ export default function DashboardError({
             : 'An unexpected error occurred in the dashboard. You can try again or update your settings.'
           }
         </p>
+        {/* Raw error message — dev only, hidden from end users in production */}
         {process.env.NODE_ENV === 'development' && (
           <pre className="mt-2 text-xs text-left text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-3 max-h-32 overflow-auto whitespace-pre-wrap">
             {error.message}
@@ -59,6 +69,8 @@ export default function DashboardError({
         </div>
       </div>
 
+      {/* Onboarding modal launched by "Update location"; closing it also
+          retries the boundary so the fixed location takes effect immediately. */}
       {showSetup && (
         <OnboardingSetup
           forceOpen

@@ -7,6 +7,9 @@ import {
 } from 'recharts';
 import { Sparkles, TrendingUp } from 'lucide-react';
 
+// NOTE: all three datasets below are mocked demo data for the charts — the real
+// dashboard wires these to Admin.analytics(). `usage` is 14 days of randomised
+// engagement counts (regenerated on each render).
 const usage = Array.from({ length: 14 }, (_, i) => ({
   day: `D${i + 1}`,
   azan:  Math.round(800  + Math.random() * 400),
@@ -14,6 +17,7 @@ const usage = Array.from({ length: 14 }, (_, i) => ({
   schedules: Math.round(60 + Math.random() * 90),
 }));
 
+// Reciter popularity slices for the pie chart; `color` is the per-slice fill.
 const reciterMix = [
   { name: 'Abdul Basit',   value: 38, color: '#059669' },
   { name: 'Sudais',        value: 24, color: '#C9A227' },
@@ -22,6 +26,7 @@ const reciterMix = [
   { name: 'Other',         value:  8, color: '#6366F1' },
 ];
 
+// Top regions by user count for the bar chart.
 const geo = [
   { region: 'Pakistan',     users: 14820 },
   { region: 'Saudi Arabia', users:  9210 },
@@ -33,15 +38,18 @@ const geo = [
   { region: 'USA',          users:  2710 },
 ];
 
+/** Usage analytics dashboard — engagement trend, reciter mix and top regions. */
 export default function Analytics() {
   return (
     <div className="space-y-6">
+      {/* page header */}
       <div>
         <p className="chip-gold mb-2"><Sparkles size={12}/> Insights</p>
         <h1 className="h-display text-4xl font-bold">Analytics</h1>
         <p className="text-ink/60 mt-1">Engagement, retention and reciter mix at a glance.</p>
       </div>
 
+      {/* engagement area chart — three stacked metrics over 14 days */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="card card-pad h-96">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -75,7 +83,9 @@ export default function Analytics() {
         </ResponsiveContainer>
       </motion.div>
 
+      {/* bottom row: reciter pie + regions bar chart */}
       <div className="grid lg:grid-cols-3 gap-5">
+        {/* reciter mix donut */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card card-pad h-80">
           <h3 className="font-bold mb-3">Reciter mix</h3>
           <ResponsiveContainer width="100%" height="80%">
@@ -88,6 +98,7 @@ export default function Analytics() {
           </ResponsiveContainer>
         </motion.div>
 
+        {/* top regions bar chart (spans two columns) */}
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card card-pad h-80 lg:col-span-2">
           <h3 className="font-bold mb-3">Top regions</h3>
           <ResponsiveContainer width="100%" height="85%">
