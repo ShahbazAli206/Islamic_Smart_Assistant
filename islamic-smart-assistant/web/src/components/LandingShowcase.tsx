@@ -244,17 +244,19 @@ export function AzanShowcase() {
    ════════════════════════════════════════════════════════════════════════ */
 
 // Languages with native script, derived from the real TRANSLATIONS catalogue.
+// (Flag emoji render as plain letters on Windows, so we use coloured code
+// badges instead — works identically on every platform.)
 const LANGS = [
-  { code: 'en', label: 'English',  native: 'English',  flag: '🇬🇧' },
-  { code: 'ur', label: 'Urdu',     native: 'اردو',      flag: '🇵🇰' },
-  { code: 'ar', label: 'Arabic',   native: 'العربية',   flag: '🇸🇦' },
-  { code: 'tr', label: 'Turkish',  native: 'Türkçe',    flag: '🇹🇷' },
-  { code: 'zh', label: 'Chinese',  native: '中文',       flag: '🇨🇳' },
-  { code: 'fr', label: 'French',   native: 'Français',  flag: '🇫🇷' },
-  { code: 'bn', label: 'Bengali',  native: 'বাংলা',     flag: '🇧🇩' },
-  { code: 'hi', label: 'Hindi',    native: 'हिन्दी',     flag: '🇮🇳' },
-  { code: 'id', label: 'Indonesian', native: 'Bahasa', flag: '🇮🇩' },
-  { code: 'ja', label: 'Japanese', native: '日本語',     flag: '🇯🇵' },
+  { code: 'EN', label: 'English',    native: 'English',  accent: 'from-sky-500 to-indigo-600' },
+  { code: 'UR', label: 'Urdu',       native: 'اردو',      accent: 'from-emerald-500 to-teal-600' },
+  { code: 'AR', label: 'Arabic',     native: 'العربية',   accent: 'from-amber-500 to-orange-600' },
+  { code: 'TR', label: 'Turkish',    native: 'Türkçe',    accent: 'from-red-500 to-rose-600' },
+  { code: 'ZH', label: 'Chinese',    native: '中文',       accent: 'from-rose-500 to-pink-600' },
+  { code: 'FR', label: 'French',     native: 'Français',  accent: 'from-blue-500 to-violet-600' },
+  { code: 'BN', label: 'Bengali',    native: 'বাংলা',     accent: 'from-green-500 to-emerald-600' },
+  { code: 'HI', label: 'Hindi',      native: 'हिन्दी',     accent: 'from-orange-500 to-amber-600' },
+  { code: 'ID', label: 'Indonesian', native: 'Bahasa',   accent: 'from-red-500 to-rose-500' },
+  { code: 'JA', label: 'Japanese',   native: '日本語',     accent: 'from-fuchsia-500 to-rose-500' },
 ];
 
 // Friendly sample schedules shown when the user hasn't made any yet.
@@ -292,22 +294,26 @@ export function QuranShowcase() {
           viewport={{ once: true }} transition={{ duration: 0.6 }}
           className="relative mt-12 overflow-hidden rounded-2xl border border-emerald-100/70 bg-white/60 backdrop-blur py-5"
         >
-          <div className="flex items-center gap-2 px-5 mb-3 text-sm font-semibold text-emerald-800">
-            <Languages size={16} /> Translations & UI in {LANGS.length}+ languages
+          <div className="flex items-center gap-2 px-5 mb-4 text-base font-bold text-emerald-800">
+            <Languages size={18} /> Translations &amp; UI in {LANGS.length}+ languages
           </div>
           <div className="relative flex">
             {/* fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white/80 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white/80 to-transparent z-10 pointer-events-none" />
-            <div className="flex gap-3 animate-marquee whitespace-nowrap pr-3">
+            <div className="flex gap-4 animate-marquee whitespace-nowrap pr-4">
               {[...LANGS, ...LANGS].map((l, i) => (
                 <span
                   key={`${l.code}-${i}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-2.5 shadow-sm shrink-0"
+                  className="group inline-flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white px-5 py-3.5 shadow-md hover:shadow-lg transition shrink-0"
                 >
-                  <span className="text-lg leading-none">{l.flag}</span>
-                  <span className="font-arabic text-lg text-emerald-900" style={{ direction: 'ltr' }}>{l.native}</span>
-                  <span className="text-xs text-ink/50">{l.label}</span>
+                  <span className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${l.accent} text-white text-sm font-extrabold tracking-wide shadow-md shrink-0`}>
+                    {l.code}
+                  </span>
+                  <span className="flex flex-col leading-tight">
+                    <span className="font-arabic text-2xl font-semibold text-emerald-900" style={{ direction: 'ltr' }}>{l.native}</span>
+                    <span className="text-sm font-semibold text-ink/55">{l.label}</span>
+                  </span>
                 </span>
               ))}
             </div>

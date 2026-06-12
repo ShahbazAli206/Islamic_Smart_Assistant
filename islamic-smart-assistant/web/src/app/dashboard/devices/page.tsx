@@ -4,11 +4,21 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Smartphone, Tablet, Monitor, Speaker, Headphones, Sparkles, Radio, Wifi, Globe2,
-  Bluetooth, RefreshCw, Volume2, CheckCircle2, AlertTriangle, ExternalLink, Info,
+  Bluetooth, RefreshCw, Volume2, CheckCircle2, AlertTriangle, Info, Cast, Tv, Loader2,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useGoogleCast } from '@/lib/useGoogleCast';
 
 type AudioOut = { deviceId: string; label: string };
+
+// Keep the Rescan spinner visible long enough to read as "scanning" — device
+// enumeration itself resolves in milliseconds, so without this the icon just blinks.
+const MIN_SPIN_MS = 900;
+
+// A public, CORS-friendly MP3 the Cast device can fetch directly (Surah Al-Fatihah,
+// ayah 1, Mishary Alafasy) — used to prove casting works end-to-end. A localhost
+// dev URL wouldn't be reachable by the device; this CDN URL always is.
+const CAST_TEST_URL = 'https://cdn.islamic.network/quran/audio/192/ar.alafasy/1.mp3';
 
 const FALLBACK_LINKED = [
   { id: '1', user_name: 'Aisha Khan',   platform: 'iPhone 15',     sync_group: 'Home',   kind: 'mobile',  status: 'playing' },
@@ -65,6 +75,11 @@ export default function DevicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [diag, setDiag] = useState<DiagInfo | null>(null);
   const [showDiag, setShowDiag] = useState(false);
+
+  // Google Cast (Chromecast / Google Home / Nest) — live device availability.
+  const cast = useGoogleCast();
+  const [castBusy, setCastBusy] = useState(false);
+  const [castError, setCastError] = useState<string | null>(null);
 
   // Detect picker support on mount + auto-refresh when devices connect/disconnect.
   useEffect(() => {
@@ -128,6 +143,7 @@ export default function DevicesPage() {
   const refreshList = async () => {
     setError(null);
     setScanning(true);
+    const startedAt = Date.now();
     try {
       if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
         setError("This browser doesn't support audio-device enumeration. Open the site in Chrome or Edge.");
@@ -167,7 +183,25 @@ export default function DevicesPage() {
       setError(`Couldn't list audio devices: ${e?.message ?? e}`);
       await captureDiag();
     } finally {
+      // Hold the spinner for a beat so the rescan reads as deliberate, not a blink.
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_SPIN_MS) {
+        await new Promise((r) => setTimeout(r, MIN_SPIN_MS - elapsed));
+      }
       setScanning(false);
+    }
+  };
+
+  // Cast a short test recitation to the connected (or just-picked) Cast device.
+  const testCast = async () => {
+    setCastError(null);
+    setCastBusy(true);
+    try {
+      await cast.castAudio(CAST_TEST_URL, 'Test — Surah Al-Fatihah');
+    } catch (e: any) {
+      setCastError(e?.message ?? 'Casting failed.');
+    } finally {
+      setCastBusy(false);
     }
   };
 
@@ -231,8 +265,8 @@ export default function DevicesPage() {
           <button onClick={testOutput} className="btn-ghost text-sm py-2 px-4" title="Play a test beep on the selected output">
             <Volume2 size={16}/> Test sound
           </button>
-          <button onClick={refreshList} className="btn-ghost text-sm py-2 px-4">
-            <RefreshCw size={16} className={scanning ? 'animate-spin' : ''}/> Rescan
+          <button onClick={refreshList} disabled={scanning} className="btn-ghost text-sm py-2 px-4 disabled:opacity-70">
+            <RefreshCw size={16} className={scanning ? 'animate-spin' : ''}/> {scanning ? 'Scanning…' : 'Rescan'}
           </button>
           <button onClick={openWindowsBluetooth} className="btn-ghost text-sm py-2 px-4">
             <Bluetooth size={16}/> Pair Bluetooth…
@@ -333,37 +367,80 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map(d => `  - ${d.
         </pre>
       )}
 
-      {/* Smart-speaker integrations — honest about backend dependency */}
+      {/* ── Cast to Chromecast / Google Home / Nest (live, browser-native) ── */}
       <div className="card card-pad space-y-4">
-        <div className="flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white flex items-center justify-center shrink-0">
-            <Radio size={18}/>
-          </span>
-          <div>
-            <h3 className="font-bold">Smart-speaker integrations</h3>
-            <p className="text-sm text-ink/60">
-              Browsers can't discover Alexa or Google Home devices on your network — those clouds are walled off. Real integration goes through a custom Alexa Skill and a Google Smart Home Action that talk to our backend.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-3 gap-3 text-sm">
-          {[
-            { label: 'Amazon Alexa / Echo', tag: 'Requires Alexa Skill', color: 'from-cyan-500 to-indigo-600' },
-            { label: 'Google Home / Nest',  tag: 'Requires Smart Home Action', color: 'from-rose-500 to-amber-500' },
-            { label: 'Google Cast / Chromecast', tag: 'Browser-native (coming soon)', color: 'from-emerald-500 to-emerald-700' },
-          ].map((s) => (
-            <div key={s.label} className={`rounded-xl border border-emerald-100 bg-white p-3`}>
-              <p className="font-semibold">{s.label}</p>
-              <p className="text-xs text-ink/55 mt-1">{s.tag}</p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-start gap-3">
+            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white flex items-center justify-center shrink-0">
+              <Cast size={18}/>
+            </span>
+            <div>
+              <h3 className="font-bold">Cast to Chromecast, Google Home &amp; Nest</h3>
+              <p className="text-sm text-ink/60">
+                Chrome finds Cast devices on your Wi-Fi automatically — pick one and Azan/Quran audio streams straight to it.
+              </p>
             </div>
-          ))}
+          </div>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0
+            ${cast.state === 'connected'      ? 'bg-emerald-100 text-emerald-800'
+            : cast.state === 'not_connected'  ? 'bg-cyan-50 text-cyan-700'
+            : cast.state === 'connecting'     ? 'bg-amber-50 text-amber-700'
+            :                                   'bg-slate-100 text-slate-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${cast.state === 'connected' || cast.state === 'not_connected' ? 'bg-emerald-500 animate-pulse-soft' : 'bg-slate-400'}`}/>
+            {cast.state === 'connected'     ? 'Connected'
+            : cast.state === 'not_connected' ? 'Devices available'
+            : cast.state === 'connecting'    ? 'Connecting'
+            : cast.state === 'no_devices'    ? 'No devices found'
+            :                                  'Not supported here'}
+          </span>
         </div>
 
-        <div className="flex items-start gap-2 text-xs text-ink/55 bg-emerald-50/50 border border-emerald-100 rounded-xl p-3">
-          <Info size={14} className="shrink-0 mt-0.5 text-emerald-700"/>
+        {cast.state === 'no_sdk' && (
+          <div className="flex items-start gap-2 text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5"/>
+            <p>Casting needs <strong>Chrome</strong> or <strong>Edge</strong>. Open this page there to cast to Chromecast, Google Home, or Nest. (Safari and Firefox have no Cast support.)</p>
+          </div>
+        )}
+
+        {cast.state === 'no_devices' && (
+          <div className="flex items-start gap-2 text-sm text-ink/70 bg-emerald-50/50 border border-emerald-100 rounded-xl p-3">
+            <Wifi size={16} className="shrink-0 mt-0.5 text-emerald-700"/>
+            <p>No Cast devices found yet. Power on your Chromecast / Google Home / Nest and make sure it's on the <strong>same Wi-Fi</strong> as this computer — it appears here automatically, no rescan needed.</p>
+          </div>
+        )}
+
+        {(cast.state === 'not_connected' || cast.state === 'connecting') && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={cast.selectDevice} disabled={cast.state === 'connecting'} className="btn-primary text-sm py-2 px-4 disabled:opacity-70">
+              {cast.state === 'connecting' ? <Loader2 size={16} className="animate-spin"/> : <Cast size={16}/>}
+              {cast.state === 'connecting' ? 'Connecting…' : 'Connect a Cast device'}
+            </button>
+            <button onClick={testCast} disabled={castBusy} className="btn-ghost text-sm py-2 px-4 disabled:opacity-70">
+              {castBusy ? <Loader2 size={16} className="animate-spin"/> : <Volume2 size={16}/>} Test recitation
+            </button>
+          </div>
+        )}
+
+        {cast.state === 'connected' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5">
+              <Tv size={15}/> Casting to {cast.deviceName || 'your Cast device'}
+            </span>
+            <button onClick={testCast} disabled={castBusy} className="btn-ghost text-sm py-2 px-4 disabled:opacity-70">
+              {castBusy ? <Loader2 size={16} className="animate-spin"/> : <Volume2 size={16}/>} Play test recitation
+            </button>
+            <button onClick={cast.stopCasting} className="btn-ghost text-sm py-2 px-4">Stop casting</button>
+          </div>
+        )}
+
+        {castError && (
+          <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3">{castError}</div>
+        )}
+
+        <div className="flex items-start gap-2 text-xs text-ink/55 bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <Info size={14} className="shrink-0 mt-0.5 text-slate-500"/>
           <p>
-            For now, the cleanest way to broadcast Azan to a smart speaker is: pair it as a regular Bluetooth speaker with this PC, then pick it as the output above. Alexa/Google Home support will arrive when the backend Skills are published.
+            <strong>Other device types:</strong> Bluetooth speakers &amp; earbuds work through the list above — pair them in Windows first, then pick them. Amazon Alexa/Echo needs a published Alexa Skill, and finding other PCs or phones on your Wi-Fi needs our companion app running on each device — browsers aren't allowed to scan the network directly.
           </p>
         </div>
       </div>
