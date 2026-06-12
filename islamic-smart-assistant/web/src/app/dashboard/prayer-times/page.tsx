@@ -414,39 +414,41 @@ export default function PrayerTimesPage() {
                 {/* body */}
                 <div className="px-6 py-5 space-y-3">
                   {/* Selected location */}
-                  <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4">
-                    <p className="text-xs font-medium text-emerald-700/70 uppercase tracking-wide mb-1.5">Selected on map</p>
+                  <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 p-4">
+                    <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1.5">Selected on map</p>
                     <div className="flex items-start gap-2">
                       <MapPin size={16} className="text-emerald-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-semibold text-emerald-900">
+                        <p className="font-bold text-emerald-900 text-base">
                           {updateLocPrompt.city || updateLocPrompt.label.split(',')[0]}
                         </p>
                         {updateLocPrompt.country && (
-                          <p className="text-sm text-emerald-700/70">{updateLocPrompt.country}</p>
+                          <p className="text-sm font-medium text-emerald-700">{updateLocPrompt.country}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {/* Current saved location */}
-                  <div className="rounded-xl border border-ink/10 bg-ink/[0.03] p-4">
-                    <p className="text-xs font-medium text-ink/45 uppercase tracking-wide mb-1.5">Your saved location</p>
+                  <div className="rounded-xl border border-ink/20 bg-ink/[0.04] p-4">
+                    <p className="text-xs font-bold text-ink/55 uppercase tracking-widest mb-1.5">Your saved location</p>
                     <div className="flex items-start gap-2">
-                      <MapPin size={16} className="text-ink/35 shrink-0 mt-0.5" />
+                      <MapPin size={16} className="text-ink/50 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-ink/80">{loc.city}</p>
-                        <p className="text-sm text-ink/50">{loc.country}</p>
+                        <p className="font-bold text-ink text-base">{loc.city}</p>
+                        <p className="text-sm font-medium text-ink/65">{loc.country}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex gap-2 pt-1">
+                    {/* "Just previewing" — keeps saved location unchanged; map selection
+                        is already shown on this page for checking times only */}
                     <button
                       onClick={() => setUpdateLocPrompt(null)}
-                      className="flex-1 py-2.5 rounded-xl border border-ink/15 text-ink/60 text-sm font-medium hover:bg-ink/5 transition"
+                      className="flex-1 py-2.5 rounded-xl border-2 border-ink/20 text-ink/80 text-sm font-semibold hover:bg-ink/5 hover:border-ink/35 transition"
                     >
-                      Keep as is
+                      Just previewing
                     </button>
                     <button
                       disabled={savingLoc}
@@ -466,7 +468,7 @@ export default function PrayerTimesPage() {
                     </button>
                   </div>
 
-                  <p className="text-center text-xs text-ink/40 pt-1">
+                  <p className="text-center text-xs text-ink/55 font-medium pt-1">
                     Prayer times on this page will continue to use the map selection either way
                   </p>
                 </div>
