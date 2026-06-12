@@ -230,10 +230,23 @@ export default function PrayerTimesPage() {
     try {
       const hits = await geocodePlace(q, 1);
       if (hits[0]) {
-        const c = { lat: hits[0].lat, lng: hits[0].lng };
-        setCenter(c);
-        setClickedPin(null);
-        loadMosques(c.lat, c.lng);
+        const { lat, lng, label } = hits[0];
+        setCenter({ lat, lng });
+        // Drop a pin at the geocoded location (same behaviour as a map click).
+        setClickedPin({ lat, lng, label });
+        setSelected(null);
+        loadMosques(lat, lng);
+        // Reverse-geocode for city/country, then show the update-location prompt.
+        reverseGeocodeDetails(lat, lng).then((detail) => {
+          setClickedPin((prev) =>
+            prev?.lat === lat && prev?.lng === lng ? { lat, lng, label: detail.label } : prev,
+          );
+          setUpdateLocPrompt({ lat, lng, ...detail });
+        }).catch(() => {
+          // Fallback: parse Nominatim display_name for city/country
+          const parts = label.split(',').map((s) => s.trim());
+          setUpdateLocPrompt({ lat, lng, label, city: parts[0] ?? q.trim(), country: parts[parts.length - 1] ?? '' });
+        });
       } else {
         setMosqueErr(`No place found for "${q}".`);
       }
