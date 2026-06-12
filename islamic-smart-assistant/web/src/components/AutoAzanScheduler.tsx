@@ -108,17 +108,56 @@ export function AutoAzanScheduler() {
         }
       }
     } catch {
-      // Autoplay blocked by browser — remember the prayer and ask for a gesture.
+      // Blocked because no user gesture has happened yet on THIS page load.
+      // Keep the saved "enabled" state intact — just show a one-tap prompt for
+      // this single prayer; the global re-arm listener below unlocks the rest.
       setPendingPrayer(prayer);
-      setUnlocked(false);
       setNeedsGesture(true);
     }
-  }, [setAudioOutput, setUnlocked]);
+  }, [setAudioOutput]);
 
-  // Show the Enable banner whenever the user hasn't yet unlocked autoplay.
+  // Show the Enable banner only on the first visit of this browser-tab session.
+  // sessionStorage (not localStorage) is the right fit: it survives reloads and
+  // in-app navigation, but clears when the tab closes — so a genuinely new visit
+  // sees it once more, while a reload doesn't nag the user.
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
-    if (!unlocked) setNeedsGesture(true);
+    if (unlocked) return;
+    if (typeof window !== 'undefined' &&
+        window.sessionStorage.getItem('isa:azanPromptDismissed') === '1') return;
+    setNeedsGesture(true);
+  }, [enabled, unlocked]);
+
+  // Once auto-Azan has ever been enabled, browsers still won't autoplay audio
+  // after a reload without a fresh user gesture. So we silently RE-ARM on the
+  // first interaction of each page load — any click, tap, or keypress unlocks
+  // the <audio> element for the rest of the session. The user is bound to touch
+  // the page before the next prayer, so the Azan plays on time with no extra
+  // "Enable" click. (If a prayer somehow arrives before ANY interaction, the
+  // one-tap fallback prompt in fire()'s catch still covers that rare case.)
+  useEffect(() => {
+    if (!enabled || !unlocked) return;
+    let done = false;
+    const arm = async () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      const el = audioRef.current;
+      if (!el) return;
+      el.muted = true;
+      el.src = `/audio/azan/${voiceRef.current}.mp3`;
+      try { await el.play(); el.pause(); el.currentTime = 0; } catch {}
+      el.muted = false;
+    };
+    const cleanup = () => {
+      window.removeEventListener('pointerdown', arm);
+      window.removeEventListener('keydown', arm);
+      window.removeEventListener('touchstart', arm);
+    };
+    window.addEventListener('pointerdown', arm);
+    window.addEventListener('keydown', arm);
+    window.addEventListener('touchstart', arm);
+    return cleanup;
   }, [enabled, unlocked]);
 
   // ── Core: poll every second, fire when a prayer time arrives ──
@@ -198,6 +237,13 @@ export function AutoAzanScheduler() {
     setFiring(null);
   };
 
+  // Hide the Enable banner for the rest of this tab session (survives reloads,
+  // clears on tab close). Does NOT disable azan — just stops the prompt nagging.
+  const dismissPrompt = () => {
+    setNeedsGesture(false);
+    try { window.sessionStorage.setItem('isa:azanPromptDismissed', '1'); } catch {}
+  };
+
   const unlock = async () => {
     const el = audioRef.current;
     if (!el) return;
@@ -233,8 +279,8 @@ export function AutoAzanScheduler() {
       <AnimatePresence>
         {needsGesture && enabled && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-4 right-4 z-50 max-w-sm card card-pad shadow-glow-emerald flex items-start gap-3"
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-4 lg:top-4 z-50 max-w-sm card card-pad shadow-glow-emerald flex items-start gap-3"
           >
             <BellRing className="text-emerald-700 shrink-0" />
             <div className="flex-1">
@@ -247,7 +293,7 @@ export function AutoAzanScheduler() {
               <button onClick={unlock} className="btn-primary text-sm py-2 px-4 mt-3">Enable</button>
             </div>
             {/* X dismisses the banner only — does NOT disable azan */}
-            <button onClick={() => setNeedsGesture(false)} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>
+            <button onClick={dismissPrompt} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>
           </motion.div>
         )}
 
