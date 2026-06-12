@@ -230,23 +230,20 @@ export default function PrayerTimesPage() {
     try {
       const hits = await geocodePlace(q, 1);
       if (hits[0]) {
-        const { lat, lng, label } = hits[0];
+        const { lat, lng, label, name, city, country } = hits[0];
+        // Trust the forward-geocode match for naming — the user searched for this
+        // exact place. We deliberately do NOT reverse-geocode the centroid here:
+        // adjacent municipalities share borders, so reversing e.g. Taxila's coords
+        // drifts to neighbouring "Wah Cantonment".
+        const placeCity = name || city || label.split(',')[0].trim();
+        const placeCountry = country || label.split(',').slice(-1)[0].trim();
+        const pinLabel = placeCity + (placeCountry ? `, ${placeCountry}` : '');
         setCenter({ lat, lng });
         // Drop a pin at the geocoded location (same behaviour as a map click).
-        setClickedPin({ lat, lng, label });
+        setClickedPin({ lat, lng, label: pinLabel });
         setSelected(null);
         loadMosques(lat, lng);
-        // Reverse-geocode for city/country, then show the update-location prompt.
-        reverseGeocodeDetails(lat, lng).then((detail) => {
-          setClickedPin((prev) =>
-            prev?.lat === lat && prev?.lng === lng ? { lat, lng, label: detail.label } : prev,
-          );
-          setUpdateLocPrompt({ lat, lng, ...detail });
-        }).catch(() => {
-          // Fallback: parse Nominatim display_name for city/country
-          const parts = label.split(',').map((s) => s.trim());
-          setUpdateLocPrompt({ lat, lng, label, city: parts[0] ?? q.trim(), country: parts[parts.length - 1] ?? '' });
-        });
+        setUpdateLocPrompt({ lat, lng, label, city: placeCity, country: placeCountry });
       } else {
         setMosqueErr(`No place found for "${q}".`);
       }

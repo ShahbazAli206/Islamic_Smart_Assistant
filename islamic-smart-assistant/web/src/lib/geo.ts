@@ -2,22 +2,36 @@
 // Used for the "jump to a city" search box and map-click reverse lookup.
 // Usage policy: light, user-initiated queries only. Docs: https://nominatim.org/
 
-export type GeoHit = { label: string; lat: number; lng: number };
+// `name`/`city`/`country` come straight from the matched record so callers can
+// label a search result by what the user actually searched for. They must NOT
+// re-derive the place by reverse-geocoding the centroid: adjacent municipalities
+// share borders, so reversing e.g. Taxila's coords drifts to "Wah Cantonment".
+export type GeoHit = { label: string; lat: number; lng: number; name: string; city: string; country: string };
 
 export async function geocodePlace(query: string, limit = 5): Promise<GeoHit[]> {
   const q = query.trim();
   if (!q) return [];
   const url =
-    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=${limit}` +
+    `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&accept-language=en&limit=${limit}` +
     `&q=${encodeURIComponent(q)}`;
   const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
   if (!res.ok) throw new Error('Geocoding failed');
   const arr = await res.json();
-  return (arr ?? []).map((r: any) => ({
-    label: r.display_name as string,
-    lat: parseFloat(r.lat),
-    lng: parseFloat(r.lon),
-  }));
+  return (arr ?? []).map((r: any) => {
+    const addr = r.address ?? {};
+    // Prefer the matched object's own name (what the user searched), then fall
+    // back through the address hierarchy.
+    const city =
+      r.name || addr.city || addr.town || addr.village || addr.municipality || addr.county || addr.state || '';
+    return {
+      label: r.display_name as string,
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lon),
+      name: (r.name as string) || '',
+      city,
+      country: addr.country || '',
+    };
+  });
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {

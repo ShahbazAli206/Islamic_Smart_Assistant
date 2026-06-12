@@ -116,15 +116,18 @@ export function AutoAzanScheduler() {
     }
   }, [setAudioOutput]);
 
-  // Show the Enable banner only on the first visit of this browser-tab session.
-  // sessionStorage (not localStorage) is the right fit: it survives reloads and
-  // in-app navigation, but clears when the tab closes — so a genuinely new visit
-  // sees it once more, while a reload doesn't nag the user.
+  // Show the Enable banner only ONCE per browser-tab session — the first time
+  // the user lands while auto-Azan is enabled but not yet unlocked. We flag it
+  // as "seen" the instant it shows (not only on dismiss), so reloads and in-app
+  // navigation never re-show it. sessionStorage (not localStorage) is the right
+  // fit: it survives reloads but clears when the tab closes, so a genuinely new
+  // visit gets one fresh chance to enable.
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
     if (unlocked) return;
-    if (typeof window !== 'undefined' &&
-        window.sessionStorage.getItem('isa:azanPromptDismissed') === '1') return;
+    if (typeof window === 'undefined') return;
+    if (window.sessionStorage.getItem('isa:azanPromptSeen') === '1') return;
+    try { window.sessionStorage.setItem('isa:azanPromptSeen', '1'); } catch {}
     setNeedsGesture(true);
   }, [enabled, unlocked]);
 
@@ -237,12 +240,9 @@ export function AutoAzanScheduler() {
     setFiring(null);
   };
 
-  // Hide the Enable banner for the rest of this tab session (survives reloads,
-  // clears on tab close). Does NOT disable azan — just stops the prompt nagging.
-  const dismissPrompt = () => {
-    setNeedsGesture(false);
-    try { window.sessionStorage.setItem('isa:azanPromptDismissed', '1'); } catch {}
-  };
+  // X just hides the banner — the "seen" flag is already set when it showed, so
+  // it won't return this session. Does NOT disable azan, only stops the prompt.
+  const dismissPrompt = () => setNeedsGesture(false);
 
   const unlock = async () => {
     const el = audioRef.current;
