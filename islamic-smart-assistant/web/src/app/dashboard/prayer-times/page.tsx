@@ -401,17 +401,17 @@ export default function PrayerTimesPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 16, scale: 0.97 }}
                 transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-                className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
               >
                 {/* header */}
-                <div className="bg-mosque-gradient text-parchment px-6 py-5 relative overflow-hidden">
+                <div className="bg-mosque-gradient text-parchment px-7 py-6 relative overflow-hidden">
                   <div className="absolute inset-0 pattern-bg opacity-30 pointer-events-none" />
                   <div className="relative flex items-start justify-between">
                     <div>
-                      <h3 className="font-display text-lg font-bold flex items-center gap-2">
-                        <MapPin size={18} className="text-gold-300" /> Update your location?
+                      <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                        <MapPin size={20} className="text-gold-300" /> Update your location?
                       </h3>
-                      <p className="text-emerald-100/75 text-sm mt-1">
+                      <p className="text-emerald-100/75 text-[15px] mt-1.5">
                         Save this spot as your default prayer location
                       </p>
                     </div>
@@ -425,41 +425,41 @@ export default function PrayerTimesPage() {
                 </div>
 
                 {/* body */}
-                <div className="px-6 py-5 space-y-3">
+                <div className="px-7 py-6 space-y-4">
                   {/* Selected location */}
-                  <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4">
-                    <p className="text-[11px] font-extrabold text-emerald-600 uppercase tracking-widest mb-2">Selected on map</p>
-                    <div className="flex items-start gap-2">
-                      <MapPin size={17} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-5">
+                    <p className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest mb-2.5">Selected on map</p>
+                    <div className="flex items-start gap-2.5">
+                      <MapPin size={19} className="text-emerald-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[17px] font-extrabold text-emerald-900 leading-tight">
+                        <p className="text-[20px] font-extrabold text-emerald-900 leading-tight">
                           {updateLocPrompt.city || updateLocPrompt.label.split(',')[0]}
                         </p>
                         {updateLocPrompt.country && (
-                          <p className="text-sm font-semibold text-emerald-700 mt-0.5">{updateLocPrompt.country}</p>
+                          <p className="text-[15px] font-semibold text-emerald-700 mt-0.5">{updateLocPrompt.country}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {/* Current saved location */}
-                  <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4">
-                    <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2">Your saved location</p>
-                    <div className="flex items-start gap-2">
-                      <MapPin size={17} className="text-gray-500 shrink-0 mt-0.5" />
+                  <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-5">
+                    <p className="text-xs font-extrabold text-gray-500 uppercase tracking-widest mb-2.5">Your saved location</p>
+                    <div className="flex items-start gap-2.5">
+                      <MapPin size={19} className="text-gray-500 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[17px] font-extrabold text-gray-900 leading-tight">{loc.city}</p>
-                        <p className="text-sm font-semibold text-gray-600 mt-0.5">{loc.country}</p>
+                        <p className="text-[20px] font-extrabold text-gray-900 leading-tight">{loc.city}</p>
+                        <p className="text-[15px] font-semibold text-gray-600 mt-0.5">{loc.country}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2.5 pt-1">
                     {/* Dismisses popup — keeps saved location unchanged; map selection
                         remains active on this page for checking times only */}
                     <button
                       onClick={() => setUpdateLocPrompt(null)}
-                      className="flex-1 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-800 text-sm font-bold hover:bg-gray-100 hover:border-gray-400 transition"
+                      className="flex-1 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-800 text-[15px] font-bold hover:bg-gray-100 hover:border-gray-400 transition"
                     >
                       Just previewing
                     </button>
@@ -474,14 +474,14 @@ export default function PrayerTimesPage() {
                         setLocationByCoords(p.lat, p.lng, city, country, { clearMosque: true });
                         setSavingLoc(false);
                       }}
-                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-60 transition flex items-center justify-center gap-1.5"
+                      className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-[15px] font-bold hover:bg-emerald-700 disabled:opacity-60 transition flex items-center justify-center gap-1.5"
                     >
-                      {savingLoc ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                      {savingLoc ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                       Set as my location
                     </button>
                   </div>
 
-                  <p className="text-center text-xs text-gray-500 font-semibold pt-1">
+                  <p className="text-center text-[13px] text-gray-500 font-semibold pt-1">
                     Prayer times on this page will continue to use the map selection either way
                   </p>
                 </div>
