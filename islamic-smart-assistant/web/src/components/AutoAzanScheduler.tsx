@@ -122,10 +122,17 @@ export function AutoAzanScheduler() {
   // navigation never re-show it. sessionStorage (not localStorage) is the right
   // fit: it survives reloads but clears when the tab closes, so a genuinely new
   // visit gets one fresh chance to enable.
+  //
+  // We read both flags straight from storage rather than trusting `unlocked`,
+  // because useLocalStorage returns its default (false) on the very first render
+  // and only reads localStorage one tick later — without this, an already-unlocked
+  // user would see a one-frame flash of the banner on every reload.
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
-    if (unlocked) return;
     if (typeof window === 'undefined') return;
+    let alreadyUnlocked = unlocked;
+    try { alreadyUnlocked = alreadyUnlocked || window.localStorage.getItem('isa:azanUnlocked') === 'true'; } catch {}
+    if (alreadyUnlocked) return;
     if (window.sessionStorage.getItem('isa:azanPromptSeen') === '1') return;
     try { window.sessionStorage.setItem('isa:azanPromptSeen', '1'); } catch {}
     setNeedsGesture(true);
