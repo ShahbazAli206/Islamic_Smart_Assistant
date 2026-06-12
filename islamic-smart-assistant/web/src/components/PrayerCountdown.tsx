@@ -10,6 +10,14 @@ import {
 } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords } from '@/lib/location';
 
+function to12h(time: string): string {
+  const [hStr, mStr] = time.split(':');
+  const h = parseInt(hStr, 10);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${mStr} ${period}`;
+}
+
 const ICONS: Record<keyof PrayerTimes, any> = {
   Fajr: Star, Sunrise: Sunrise, Dhuhr: Sun, Asr: Compass, Maghrib: Sunset, Isha: Moon,
 };
@@ -218,7 +226,7 @@ export function PrayerCountdownHero({
                   {next ? formatCountdown(next.inMs) : '--:--:--'}
                 </p>
                 <p className="text-emerald-100/80">
-                  {next ? `at ${next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                  {next ? `at ${next.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}` : ''}
                 </p>
               </>
             )}
@@ -247,7 +255,7 @@ export function PrayerCountdownHero({
                     </div>
                     <p className={`mt-2 text-sm font-medium ${isNext ? 'text-midnight-900/80' : 'text-emerald-100/80'}`}>{name}</p>
                     <p className={`text-xl font-bold tabular-nums ${isNext ? '' : 'text-white'}`}>
-                      {data.timings[name]}
+                      {to12h(data.timings[name])}
                     </p>
                   </motion.div>
                 );
