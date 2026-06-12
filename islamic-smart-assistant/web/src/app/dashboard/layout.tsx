@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, BarChart3, Settings,
-  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X,
+  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
+import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
@@ -32,6 +33,7 @@ const NAV = [
       { href: '/dashboard/prayer-times', label: 'Prayer Times', icon: Clock,    color: 'text-emerald-600' },
       { href: '/dashboard/quran',        label: 'Holy Quran',   icon: BookOpen, color: 'text-gold-600' },
       { href: '/dashboard/azan',         label: 'Azan Voices',  icon: Bell,     color: 'text-rose-500' },
+      { href: '/dashboard/recitation',   label: 'Recitation Alarm', icon: AlarmClock, color: 'text-violet-600' },
     ],
   },
   { group: 'Account',
@@ -216,6 +218,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">{children}</main>
 
       <AutoAzanScheduler />
+      <SurahScheduleRunner />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />
     </div>
   );

@@ -18,7 +18,7 @@ export type ReciterId = (typeof RECITERS)[number]['id'];
 
 // Whether a translation has spoken ayah-by-ayah audio is decided at runtime by
 // hasTranslationAudio() — human editions on the islamic.network CDN are always
-// available; Bengali/Hindi audio is self-generated (TTS) and only "on" once the
+// available; Bengali audio is self-generated (TTS) and only "on" once the
 // files have been uploaded (see the audio section below). Don't bake an audio
 // flag into this list — it would go stale.
 export const TRANSLATIONS = [
@@ -40,12 +40,27 @@ export const TRANSLATIONS = [
   // Bengali — spoken audio is self-generated (TTS) and hosted on Supabase
   { id: 'bn.bengali',     name: 'Bengali — Muhiuddin Khan',      short: 'বাংলা' },
   { id: 'bn.hoque',       name: 'Bengali — Zohurul Hoque',       short: 'বাংলা' },
-  // Hindi — spoken audio is self-generated (TTS) and hosted on Supabase
-  { id: 'hi.hindi',       name: 'Hindi — Suhel Farooq Khan',     short: 'हिन्दी' },
-  { id: 'hi.farooq',      name: 'Hindi — M. Farooq Khan',        short: 'हिन्दी' },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
+
+/**
+ * Maps a profile language code (isa:language — 'en', 'ur', …) to the default
+ * translation edition. Shared by the Quran player and the recitation scheduler
+ * so both honour the same preference.
+ */
+export function langToTranslation(lang: string): TranslationId {
+  const map: Record<string, TranslationId> = {
+    en:   'en.sahih',
+    ur:   'ur.jalandhry',
+    tr:   'tr.vakfi',      // Diyanet Vakfı — text matches its spoken audio exactly
+    bn:   'bn.bengali',
+    zh:   'zh.majian',
+    fr:   'fr.hamidullah',
+    none: 'none',
+  };
+  return map[lang] ?? 'en.sahih';
+}
 
 // 128 kbps tier returns 403 on the public CDN — use 192 (or 64) which are open.
 export function surahAudioUrl(surahNumber: number, reciter: ReciterId, bitrate: 64 | 192 = 192): string {
@@ -63,7 +78,7 @@ export function ayahAudioUrl(globalAyahNumber: number, reciter: ReciterId, bitra
 //  (1) Pre-recorded HUMAN editions on the islamic.network CDN (same CDN as the
 //      Arabic recitation). Each edition is hosted at exactly ONE bitrate; the
 //      others 403. All five were verified to cover the full Quran.
-//  (2) Self-generated TTS audio for Bengali & Hindi (no free human ayah-by-ayah
+//  (2) Self-generated TTS audio for Bengali (no free human ayah-by-ayah
 //      recording exists) — produced once by scripts/generate_translation_audio.py
 //      and uploaded to a public Supabase Storage bucket.
 
@@ -81,16 +96,15 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 1
 
 // Translation editions for which we generate TTS audio. The generator reads the
 // text of EXACTLY these editions, so the spoken words match the on-screen text;
-// the sibling editions (bn.hoque, hi.farooq) stay text-only. Value = the folder
-// the files live under in the bucket (translations/<folder>/<globalAyah>.mp3).
+// the sibling edition (bn.hoque) stays text-only. Value = the folder the files
+// live under in the bucket (translations/<folder>/<globalAyah>.mp3).
 const TTS_EDITIONS: Record<string, string> = {
   'bn.bengali': 'bn',
-  'hi.hindi':   'hi',
 };
 
 // A TTS language only becomes "available" once its files have been uploaded.
 // Flip it on by listing the folder(s) in NEXT_PUBLIC_TTS_TRANSLATION_LANGS
-// (e.g. "bn,hi"); until then Bengali/Hindi gracefully fall back to text-only.
+// (e.g. "bn"); until then Bengali gracefully falls back to text-only.
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '');
 const TTS_BUCKET = process.env.NEXT_PUBLIC_TTS_BUCKET || 'quran-audio';
 const TTS_LANGS = new Set(
@@ -113,7 +127,7 @@ export function hasTranslationAudio(translation: TranslationId): boolean {
 
 /**
  * Spoken translation audio for one ayah, by GLOBAL ayah number. Human editions
- * stream from the islamic.network CDN; Bengali/Hindi stream self-generated TTS
+ * stream from the islamic.network CDN; Bengali streams self-generated TTS
  * from Supabase Storage. Returns null when no audio exists — the player then
  * shows the translation text only.
  */

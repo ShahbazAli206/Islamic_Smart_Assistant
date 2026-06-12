@@ -6,21 +6,7 @@ import { Search, Sparkles, BookOpenCheck } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { QuranPlayer } from '@/components/QuranPlayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import type { ReciterId, TranslationId } from '@/lib/quran';
-
-function langToTranslation(lang: string): TranslationId {
-  const map: Record<string, TranslationId> = {
-    en:   'en.sahih',
-    ur:   'ur.jalandhry',
-    tr:   'tr.vakfi',      // Diyanet Vakfı — text matches its spoken audio exactly
-    bn:   'bn.bengali',
-    zh:   'zh.majian',
-    fr:   'fr.hamidullah',
-    hi:   'hi.hindi',
-    none: 'none',
-  };
-  return map[lang] ?? 'en.sahih';
-}
+import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
 
 const QUICK_PICKS = [
   { number: 1,  label: 'Al-Fatihah', tag: 'The Opening' },

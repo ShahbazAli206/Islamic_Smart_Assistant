@@ -7,6 +7,7 @@ import {
   ShieldCheck, Languages, Bell, CalendarClock,
 } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
+import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 
 const FEATURES = [
@@ -20,30 +21,49 @@ const FEATURES = [
   { icon: ShieldCheck,  title: 'Privacy first',     desc: 'No tracking. Your location stays on-device; only your settings sync across login.', color: 'from-slate-500 to-emerald-700' },
 ];
 
+const NAV_LINKS = [
+  { href: '#prayer',  label: 'Prayer' },
+  { href: '#azan',    label: 'Azan' },
+  { href: '#quran',   label: 'Quran' },
+  { href: '#devices', label: 'Devices' },
+];
+
 export default function HomePage() {
   const loc = useStoredLocation();
   return (
-    <main className="relative">
-      {/* nav */}
-      <header className="relative z-10">
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-5">
-          <Link href="/" className="flex items-center gap-2">
-            <NoorMark />
-            <span className="text-xl font-display font-bold tracking-tight">Noor</span>
-            <span className="chip-gold ml-2 hidden sm:inline-flex"><Sparkles size={12}/> Islamic Smart Assistant</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard/quran" className="hidden sm:inline text-sm font-semibold text-emerald-800 hover:text-emerald-900">Quran</Link>
-            <Link href="/dashboard/azan"  className="hidden sm:inline text-sm font-semibold text-emerald-800 hover:text-emerald-900">Azan</Link>
-            <Link href="/dashboard/prayer-times" className="hidden sm:inline text-sm font-semibold text-emerald-800 hover:text-emerald-900">Prayer Times</Link>
-            <Link href="/dashboard" className="btn-primary text-sm py-2 px-4">Open Dashboard <ArrowRight size={16}/></Link>
-          </div>
-        </nav>
+    <main className="relative overflow-x-hidden">
+      {/* ── nav ── */}
+      <header className="sticky top-0 z-40">
+        <div className="bg-parchment/70 backdrop-blur-xl border-b border-emerald-900/5">
+          <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+            <Link href="/" className="flex items-center gap-2">
+              <NoorMark />
+              <span className="text-xl font-display font-bold tracking-tight">Noor</span>
+              <span className="chip-gold ml-2 hidden sm:inline-flex"><Sparkles size={12}/> Islamic Smart Assistant</span>
+            </Link>
+            <div className="flex items-center gap-1 sm:gap-2">
+              {NAV_LINKS.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="hidden md:inline-flex px-3 py-1.5 rounded-full text-sm font-semibold text-emerald-800 hover:bg-emerald-50 transition"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <Link href="/dashboard" className="btn-primary text-sm py-2 px-4 ml-1">Open Dashboard <ArrowRight size={16}/></Link>
+            </div>
+          </nav>
+        </div>
       </header>
 
-      {/* hero */}
-      <section className="relative max-w-7xl mx-auto px-6 pt-6 pb-16">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
+      {/* ── hero ── */}
+      <section id="prayer" className="relative max-w-7xl mx-auto px-6 pt-10 pb-20">
+        {/* animated background orbs */}
+        <div aria-hidden className="absolute -top-20 -left-24 w-[28rem] h-[28rem] rounded-full bg-emerald-300/25 blur-3xl animate-aurora pointer-events-none" />
+        <div aria-hidden className="absolute top-10 right-0 w-[24rem] h-[24rem] rounded-full bg-gold-300/25 blur-3xl animate-aurora pointer-events-none" style={{ animationDelay: '5s' }} />
+
+        <div className="relative grid lg:grid-cols-2 gap-10 items-center">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,8 +113,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* feature grid */}
-      <section className="relative max-w-7xl mx-auto px-6 pb-24">
+      {/* ── feature showcases ── */}
+      <AzanShowcase />
+      <QuranShowcase />
+      <DevicesShowcase />
+
+      {/* ── feature grid (everything in one place) ── */}
+      <section className="relative max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
           <span className="chip-gold"><Sparkles size={12}/> Everything in one place</span>
           <h2 className="h-display text-4xl md:text-5xl font-bold mt-4">A complete Islamic lifestyle, beautifully orchestrated</h2>
@@ -122,7 +147,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* footer */}
+      {/* ── closing CTA ── */}
+      <section className="relative max-w-7xl mx-auto px-6 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl bg-mosque-gradient text-parchment px-8 py-14 md:px-16 md:py-20 text-center shadow-glow-emerald"
+        >
+          <div className="absolute inset-0 pattern-bg opacity-20 pointer-events-none" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-glow-emerald pointer-events-none" />
+          <div className="relative">
+            <span className="chip-gold"><Sparkles size={12}/> Begin your journey</span>
+            <h2 className="h-display text-4xl md:text-5xl font-bold mt-5 leading-tight">
+              Let every prayer find you,<br/>
+              <span className="bg-clip-text text-transparent bg-gold-gradient">wherever you are.</span>
+            </h2>
+            <p className="mt-4 text-emerald-100/80 max-w-xl mx-auto">
+              Set your location once. Noor handles the Azan, your Quran wird, and keeps every device in your home in rhythm with the salah.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link href="/dashboard" className="btn-primary">
+                <Headphones size={18}/> Launch the Dashboard <ArrowRight size={18}/>
+              </Link>
+              <Link href="/dashboard/prayer-times" className="inline-flex items-center gap-2 rounded-full border border-white/25 text-parchment px-6 py-3 font-semibold hover:bg-white/10 transition">
+                <Compass size={18}/> Set my location
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── footer ── */}
       <footer className="relative border-t border-emerald-900/10">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-ink/60">
           <div className="flex items-center gap-2"><NoorMark size={20}/> <span className="font-semibold text-ink">Noor</span> • Islamic Smart Assistant Ecosystem</div>

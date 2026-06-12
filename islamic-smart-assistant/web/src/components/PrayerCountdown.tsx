@@ -197,10 +197,10 @@ export function PrayerCountdownHero({
 
         <div className="relative grid md:grid-cols-2 gap-8 items-center">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-emerald-100/80 text-sm">
-              <MapPin size={16} /> {label ?? `${city}, ${country}`}
+            <div className="flex items-center gap-2 text-emerald-100/85 text-base md:text-lg font-medium">
+              <MapPin size={18} className="shrink-0" /> {label ?? `${city}, ${country}`}
             </div>
-            <p className="text-gold-300 text-sm tracking-widest uppercase">{data?.hijriDate ?? '—'}</p>
+            <p className="text-gold-300 text-base md:text-lg font-semibold tracking-widest uppercase">{data?.hijriDate ?? '—'}</p>
 
             {isError ? (
               <>
