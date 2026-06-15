@@ -9,9 +9,15 @@ import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTim
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { defaultParams, normalizeFiqh } from '@/lib/sect';
+import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+// A guaranteed-present built-in file used only for the MUTED autoplay-unlock
+// plays — a `custom:` voice id isn't a valid path, and content is irrelevant
+// when muted, so we always unlock with this.
+const UNLOCK_SRC = '/audio/azan/makkah.mp3';
 
 /**
  * Polls every second and plays the user's chosen Azan the moment a prayer
@@ -55,6 +61,11 @@ export function AutoAzanScheduler() {
   const audioRef = useRef<HTMLAudioElement>(null);
   /** Key = "YYYY-M-D:Prayer" — never double-play. */
   const firedRef = useRef<Set<string>>(new Set());
+  // Object URL for a custom clip currently loaded into the element (revoked when done).
+  const customUrlRef = useRef<string | null>(null);
+  const revokeCustomUrl = () => {
+    if (customUrlRef.current) { URL.revokeObjectURL(customUrlRef.current); customUrlRef.current = null; }
+  };
 
   const voiceRef = useRef(voice);
   voiceRef.current = voice;
@@ -97,14 +108,27 @@ export function AutoAzanScheduler() {
     const el = audioRef.current;
     if (!el) return;
     el.muted = false;
-    el.src = `/audio/azan/${voiceRef.current}.mp3`;
+
+    // Resolve the audio source. Built-in voices map to a bundled file; a custom
+    // voice loads its trimmed clip from IndexedDB as an object URL (falling back
+    // to a built-in if the clip is missing, e.g. cleared site data).
+    revokeCustomUrl();
+    const v = voiceRef.current;
+    const voiceLabel = isCustomAzan(v) ? 'Custom Azan' : v;
+    let src = `/audio/azan/${v}.mp3`;
+    if (isCustomAzan(v)) {
+      const url = await customAzanUrl(v);
+      if (url) { customUrlRef.current = url; src = url; }
+      else src = UNLOCK_SRC;
+    }
+    el.src = src;
     await setAudioOutput(el);
     try {
       await el.play();
-      setFiring({ prayer, voice: voiceRef.current });
+      setFiring({ prayer, voice: voiceLabel });
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
-          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceRef.current} Azan`, silent: true });
+          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel}`, silent: true });
         }
       }
     } catch {
@@ -155,7 +179,7 @@ export function AutoAzanScheduler() {
       const el = audioRef.current;
       if (!el) return;
       el.muted = true;
-      el.src = `/audio/azan/${voiceRef.current}.mp3`;
+      el.src = UNLOCK_SRC;
       try { await el.play(); el.pause(); el.currentTime = 0; } catch {}
       el.muted = false;
     };
@@ -244,6 +268,7 @@ export function AutoAzanScheduler() {
   const stop = () => {
     const el = audioRef.current;
     if (el) { el.pause(); el.currentTime = 0; }
+    revokeCustomUrl();
     setFiring(null);
   };
 
@@ -256,7 +281,7 @@ export function AutoAzanScheduler() {
     if (!el) return;
     // A muted play registers a user gesture with the browser, unlocking future autoplay.
     el.muted = true;
-    el.src = `/audio/azan/${voice}.mp3`;
+    el.src = UNLOCK_SRC;
     try {
       await el.play();
       el.pause();
@@ -281,7 +306,7 @@ export function AutoAzanScheduler() {
 
   return (
     <>
-      <audio ref={audioRef} onEnded={() => setFiring(null)} preload="auto" />
+      <audio ref={audioRef} onEnded={() => { setFiring(null); revokeCustomUrl(); }} preload="auto" />
 
       <AnimatePresence>
         {needsGesture && enabled && (
