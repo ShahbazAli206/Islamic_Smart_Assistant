@@ -43,6 +43,7 @@ export default function PrayerTimesPage() {
 
   // --- map + mosques ---
   const [center, setCenter] = useState(FALLBACK_CENTER);
+  const [mapZoom, setMapZoom] = useState(13); // zoom floor for the next recenter
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loadingMosques, setLoadingMosques] = useState(false);
   const [mosqueErr, setMosqueErr] = useState<string | null>(null);
@@ -209,16 +210,34 @@ export default function PrayerTimesPage() {
   }, [loadMosques]);
 
   const useMyLocation = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setMosqueErr('This browser does not support geolocation.');
+      return;
+    }
+    setMosqueErr(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCenter(c);
-        setClickedPin(null);
-        loadMosques(c.lat, c.lng);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCenter({ lat, lng });
+        setMapZoom(15);              // pull the view in so the exact spot is clear
+        setSelected(null);
+        setClickedPin({ lat, lng, label: 'My location' });
+        loadMosques(lat, lng);
+        // Reverse-geocode the GPS point for city/country, then offer to save it
+        // as the default — same "Update your location?" prompt as a map click.
+        // Show the prompt even if the lookup fails, so the action always confirms.
+        reverseGeocodeDetails(lat, lng)
+          .then((detail) => {
+            setClickedPin((prev) => prev?.lat === lat && prev?.lng === lng ? { lat, lng, label: detail.label } : prev);
+            setUpdateLocPrompt({ lat, lng, ...detail });
+          })
+          .catch(() => {
+            setUpdateLocPrompt({ lat, lng, label: 'My location', city: '', country: '' });
+          });
       },
       (err) => setMosqueErr(err.message),
-      { enableHighAccuracy: true, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
     );
   };
 
@@ -239,6 +258,7 @@ export default function PrayerTimesPage() {
         const placeCountry = country || label.split(',').slice(-1)[0].trim();
         const pinLabel = placeCity + (placeCountry ? `, ${placeCountry}` : '');
         setCenter({ lat, lng });
+        setMapZoom(13);
         // Drop a pin at the geocoded location (same behaviour as a map click).
         setClickedPin({ lat, lng, label: pinLabel });
         setSelected(null);
@@ -256,6 +276,7 @@ export default function PrayerTimesPage() {
 
   const handleMapClick = useCallback(async ({ lat, lng }: { lat: number; lng: number }) => {
     setCenter({ lat, lng });
+    setMapZoom(13);
     setSelected(null);
     setClickedPin({ lat, lng, label: 'Selected location' });
     loadMosques(lat, lng);
@@ -369,6 +390,7 @@ export default function PrayerTimesPage() {
 
           <MosqueMap
             center={center}
+            zoom={mapZoom}
             mosques={mosques}
             selectedId={selected?.id ?? null}
             clickPin={clickedPin}

@@ -74,9 +74,11 @@ export default function MosqueMap({
     if (!map) return;
     const c = map.getCenter();
     const moved = Math.abs(c.lat - center.lat) > 1e-4 || Math.abs(c.lng - center.lng) > 1e-4;
-    if (moved) map.easeTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 12) });
+    // Use the requested zoom as a floor so explicit actions (e.g. "My Location")
+    // can pull the view in close, without ever zooming further out than the user is.
+    if (moved) map.easeTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), zoom) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [center.lat, center.lng]);
+  }, [center.lat, center.lng, zoom]);
 
   // Render mosque markers whenever the list or selection changes.
   useEffect(() => {
@@ -122,14 +124,21 @@ export default function MosqueMap({
     if (clickPinMarkerRef.current) {
       clickPinMarkerRef.current.setLngLat([clickPin.lng, clickPin.lat]);
     } else {
+      // A prominent teardrop "location" pin whose tip sits exactly on the point —
+      // unmistakable next to the green mosque markers (which are a different shape
+      // and colour). Blue keeps the existing "selected spot is blue" convention.
       const el = document.createElement('div');
+      el.title = 'Selected location';
       el.style.cssText = `
-        width:18px;height:18px;border-radius:50%;
-        background:#0ea5e9;border:3px solid #fff;
-        box-shadow:0 0 0 3px rgba(14,165,233,0.35),0 2px 6px rgba(0,0,0,.35);
-        cursor:default;`;
-      el.title = 'Clicked location';
-      clickPinMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
+        width:30px;height:30px;border:2px solid #fff;cursor:default;
+        background:#2563eb;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        box-shadow:0 3px 9px rgba(0,0,0,.45);
+        display:flex;align-items:center;justify-content:center;`;
+      const inner = document.createElement('span');
+      inner.style.cssText = 'width:10px;height:10px;background:#fff;border-radius:50%;transform:rotate(45deg);';
+      el.appendChild(inner);
+      clickPinMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([clickPin.lng, clickPin.lat])
         .addTo(map);
     }
