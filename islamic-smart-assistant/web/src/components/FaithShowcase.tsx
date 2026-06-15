@@ -181,31 +181,6 @@ function Waveform({ className = '' }: { className?: string }) {
   );
 }
 
-/** Hanging branch of leaves — drapes the top corners (mosque-at-dawn vibe). */
-function LeafBranch({ className = '', flip = false }: { className?: string; flip?: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 220 200" fill="none" aria-hidden
-      className={className}
-      style={flip ? { transform: 'scaleX(-1)' } : undefined}
-    >
-      <g fill="currentColor">
-        <path d="M10 0 C40 40 70 70 120 100" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.5" />
-        {[
-          [30, 26, -30], [54, 46, -20], [80, 64, -10], [108, 86, 0],
-          [22, 48, -60], [46, 70, -50], [72, 92, -40], [98, 116, -30],
-          [60, 18, 10], [92, 40, 20], [126, 70, 30],
-        ].map(([x, y, r], i) => (
-          <g key={i} transform={`translate(${x} ${y}) rotate(${r})`}>
-            <path d="M0 0 C10 -14 26 -14 36 0 C26 14 10 14 0 0 Z" />
-            <path d="M4 0 H32" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" />
-          </g>
-        ))}
-      </g>
-    </svg>
-  );
-}
-
 /** Mosque skyline silhouette — dome flanked by two minarets. */
 function MosqueSilhouette({ className = '' }: { className?: string }) {
   return (
@@ -348,17 +323,14 @@ function WorldArcArt({ className = '' }: { className?: string }) {
 export default function FaithShowcase() {
   return (
     <section className="relative overflow-hidden">
-      {/* ── mosque-at-dawn backdrop ── */}
+      {/* ── photographic mosque-at-dawn backdrop ── */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        {/* warm sky wash */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,rgba(255,249,233,0.9),transparent_60%)]" />
-        {/* blurred green dome (left) + minarets (right) */}
-        <div className="absolute -left-10 top-24 w-72 h-72 rounded-full bg-emerald-700/20 blur-2xl" />
-        <div className="absolute right-6 top-10 w-40 h-[28rem] bg-gradient-to-b from-gold-200/30 to-transparent blur-2xl" />
-        <MosqueSilhouette className="absolute left-2 top-40 w-72 text-emerald-800/15 hidden md:block" />
-        {/* draping leaves */}
-        <LeafBranch className="absolute -top-2 -left-4 w-56 h-52 text-emerald-700/40" />
-        <LeafBranch className="absolute -top-2 -right-4 w-56 h-52 text-emerald-700/40" flip />
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/features-bg.jpg')" }}
+        />
+        {/* soft light wash so the heading + card text stay crisp over the photo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/55 via-white/35 to-white/20" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16">
