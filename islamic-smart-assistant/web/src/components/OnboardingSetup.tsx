@@ -337,10 +337,10 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         initial={{ opacity: 0, y: 32, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', damping: 22, stiffness: 200 }}
-        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]"
       >
         {/* header */}
-        <div className="relative bg-mosque-gradient text-parchment px-8 pt-8 pb-6 overflow-hidden">
+        <div className="relative bg-mosque-gradient text-parchment px-8 pt-8 pb-6 overflow-hidden shrink-0">
           <div className="absolute inset-0 pattern-bg opacity-30 pointer-events-none" />
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-glow-emerald pointer-events-none" />
           <button
@@ -380,8 +380,10 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
           </div>
         </div>
 
-        {/* body */}
-        <div className="px-8 py-6 min-h-[280px] flex flex-col">
+        {/* body — scrolls vertically when a step's content is taller than the
+            available space (e.g. the language list on a short phone screen) so
+            the fixed footer / Next button always stays visible */}
+        <div className="px-8 py-6 flex flex-col flex-1 min-h-0 overflow-y-auto">
           <AnimatePresence mode="wait">
             {/* ── Step 0 : Location ── */}
             {step === 0 && (
@@ -641,8 +643,8 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* footer */}
-        <div className="px-8 pb-7 flex items-center justify-between">
+        {/* footer — pinned below the scrollable body so Next/Done is always reachable */}
+        <div className="px-8 pt-4 pb-7 flex items-center justify-between shrink-0 border-t border-emerald-900/5 bg-white">
           {/* Left action */}
           {step === 3 ? (
             azanStatus !== 'done'
