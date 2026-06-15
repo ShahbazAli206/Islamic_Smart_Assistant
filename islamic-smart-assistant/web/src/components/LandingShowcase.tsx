@@ -9,19 +9,17 @@
  * rescan) so the page demonstrates the product rather than just describing it.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Bell, BellRing, Play, Pause, Star, MapPin, ArrowRight, Sparkles,
-  BookOpen, Languages, Mic2, AlarmClock, CalendarClock, Plus, Volume2,
+  Bell, BellRing, Play, Pause, MapPin, ArrowRight, Sparkles,
+  BookOpen, Languages, Plus, Volume2,
   Headphones, Speaker, Bluetooth, RefreshCw, Smartphone, Tablet, Monitor,
-  Radio, Wifi, CheckCircle2, Moon, Sunrise,
+  Radio, Wifi, CheckCircle2, Moon,
+  Globe2, BellPlus, Users, Bookmark, Sun,
 } from 'lucide-react';
-import { RECITERS, TRANSLATIONS } from '@/lib/quran';
-import { SURAHS } from '@/lib/surahs';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { summarize, type RecitationSchedule } from '@/lib/recitationSchedule';
 
 /* ════════════════════════════════════════════════════════════════════════
    Shared decorative primitives
@@ -240,207 +238,442 @@ export function AzanShowcase() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   2 · QURAN · TRANSLATION · SCHEDULES
+   2 · QURAN EXPERIENCE — recite · reflect · transform
+   ──────────────────────────────────────────────────────────────────────
+   Hero (illustrated Quran-on-rehal scene + a floating ayah card) → the
+   translation-languages bar → the World-Class Qaris and Recitation Alarms
+   panels → a closing feature strip. The hero artwork is pure CSS + SVG so it
+   stays razor-sharp, works offline, and a real photo can later drop straight
+   into <RehalScene/> without disturbing the surrounding layout.
    ════════════════════════════════════════════════════════════════════════ */
 
-// Languages with native script, derived from the real TRANSLATIONS catalogue.
-// (Flag emoji render as plain letters on Windows, so we use coloured code
-// badges instead — works identically on every platform.)
-const LANGS = [
-  { code: 'EN', label: 'English',    native: 'English',  accent: 'from-sky-500 to-indigo-600' },
-  { code: 'UR', label: 'Urdu',       native: 'اردو',      accent: 'from-emerald-500 to-teal-600' },
-  { code: 'AR', label: 'Arabic',     native: 'العربية',   accent: 'from-amber-500 to-orange-600' },
-  { code: 'TR', label: 'Turkish',    native: 'Türkçe',    accent: 'from-red-500 to-rose-600' },
-  { code: 'ZH', label: 'Chinese',    native: '中文',       accent: 'from-rose-500 to-pink-600' },
-  { code: 'FR', label: 'French',     native: 'Français',  accent: 'from-blue-500 to-violet-600' },
-  { code: 'BN', label: 'Bengali',    native: 'বাংলা',     accent: 'from-green-500 to-emerald-600' },
-  { code: 'HI', label: 'Hindi',      native: 'हिन्दी',     accent: 'from-orange-500 to-amber-600' },
-  { code: 'ID', label: 'Indonesian', native: 'Bahasa',   accent: 'from-red-500 to-rose-500' },
-  { code: 'JA', label: 'Japanese',   native: '日本語',     accent: 'from-fuchsia-500 to-rose-500' },
+// Headline stats beneath the hero copy (icon · value · caption).
+const HERO_STATS = [
+  { icon: BookOpen, value: '114 Surahs',    caption: 'Complete Quran' },
+  { icon: Globe2,   value: '10+ Languages', caption: 'Translations & UI' },
+  { icon: BellPlus, value: 'Smart Alarms',  caption: 'Never Miss a Word' },
 ];
 
-// Friendly sample schedules shown when the user hasn't made any yet.
-const SAMPLE_SCHEDULES = [
-  { title: 'Surah Yaseen', when: 'Every day · after Fajr', icon: Sunrise, accent: 'from-amber-400 to-gold-500' },
-  { title: 'Surah Al-Mulk', when: 'Every night · before sleep', icon: Moon, accent: 'from-indigo-400 to-violet-500' },
-  { title: 'Surah Al-Kahf', when: 'Every Friday · morning', icon: BookOpen, accent: 'from-emerald-400 to-teal-500' },
+// Translation / UI languages — 2-letter code, native script, English label and
+// a Tailwind gradient for the code badge. (Flag emoji render as plain letters
+// on Windows, so coloured code badges are used instead — identical everywhere.)
+const LANGUAGES = [
+  { code: 'EN', native: 'English',  label: 'English', rtl: false, accent: 'from-blue-500 to-indigo-600' },
+  { code: 'AR', native: 'العربية',  label: 'Arabic',  rtl: true,  accent: 'from-emerald-500 to-teal-600' },
+  { code: 'UR', native: 'اردو',     label: 'Urdu',    rtl: true,  accent: 'from-green-500 to-emerald-600' },
+  { code: 'TR', native: 'Türkçe',   label: 'Turkish', rtl: false, accent: 'from-red-500 to-rose-600' },
+  { code: 'ZH', native: '中文',      label: 'Chinese', rtl: false, accent: 'from-rose-600 to-red-700' },
+  { code: 'FR', native: 'Français', label: 'French',  rtl: false, accent: 'from-indigo-500 to-violet-600' },
+  { code: 'BN', native: 'বাংলা',    label: 'Bengali', rtl: false, accent: 'from-orange-500 to-amber-600' },
+  { code: 'FA', native: 'فارسی',    label: 'Persian', rtl: true,  accent: 'from-teal-500 to-emerald-600' },
+  { code: 'MS', native: 'Melayu',   label: 'Malay',   rtl: false, accent: 'from-lime-600 to-yellow-600' },
 ];
+
+// Featured reciters (English + Arabic name). `edition` is the islamic.network
+// CDN identifier used to stream a short Surah Al-Fatiha preview; unknown
+// editions simply fail silently (the button resets) so a row never plays the
+// wrong voice. `accent` themes the avatar tile.
+const QARIS = [
+  { name: 'Abdul Basit Abdul Samad',  arabic: 'عبد الباسط عبد الصمد', edition: 'ar.abdulbasitmurattal', accent: 'from-emerald-500 to-emerald-700' },
+  { name: 'Mishary Rashid Alafasy',   arabic: 'مشاري بن راشد العفاسي', edition: 'ar.alafasy',           accent: 'from-gold-400 to-gold-600' },
+  { name: 'Mahmoud Khalil Al Husary', arabic: 'محمود خليل الحصري',    edition: 'ar.husary',            accent: 'from-cyan-500 to-emerald-600' },
+  { name: 'Saad Al-Ghamdi',           arabic: 'سعد الغامدي',          edition: 'ar.saadalghamadi',     accent: 'from-amber-500 to-rose-500' },
+  { name: 'Ahmed Al Ajmi',            arabic: 'أحمد العجمي',          edition: 'ar.ahmedajamy',        accent: 'from-violet-500 to-indigo-600' },
+];
+
+// Sample recitation alarms — `tint` colours the glyph on its dark glass tile.
+const ALARMS = [
+  { icon: Sun,      time: '05:30 AM', surah: 'Surah Yaseen',  when: 'Every day after Fajr',    tint: 'text-amber-300' },
+  { icon: Moon,     time: '09:00 PM', surah: 'Surah Al-Mulk', when: 'Every night before sleep', tint: 'text-indigo-300' },
+  { icon: BookOpen, time: '06:00 AM', surah: 'Surah Al-Kahf', when: 'Every Friday morning',    tint: 'text-emerald-300' },
+];
+
+// Closing feature strip.
+const QURAN_FEATURES = [
+  { icon: BookOpen,   title: 'Authentic Recitations', desc: 'By world-renowned Qaris' },
+  { icon: Languages,  title: 'Accurate Translations', desc: 'In 10+ global languages' },
+  { icon: Headphones, title: 'Crystal-Clear Audio',   desc: 'High quality & offline ready' },
+  { icon: Bookmark,   title: 'Smart Bookmarks',       desc: 'Save, continue, reflect' },
+  { icon: Moon,       title: 'Dark & Light Mode',     desc: 'Comfort for every reader' },
+];
+
+// 192 kbps surah recitations on the public islamic.network CDN (open tier).
+const QURAN_AUDIO_CDN = 'https://cdn.islamic.network/quran/audio-surah/192';
+
+/**
+ * Warm, softly-lit scene of an open Quran on a wooden rehal (X-stand), built
+ * entirely from CSS gradients + SVG so it stays razor-sharp and works offline.
+ */
+function RehalScene({ className = '' }: { className?: string }) {
+  return (
+    <div className={`relative aspect-[4/3] w-full overflow-hidden rounded-[1.75rem] border border-white/10 shadow-2xl ${className}`}>
+      {/* deep interior + a warm pool of light */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 90% at 50% 28%, #1c3d30 0%, #0f2920 46%, #08160f 100%)' }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(46% 42% at 52% 44%, rgba(233,207,122,0.45) 0%, rgba(221,185,75,0.12) 45%, transparent 72%)' }} />
+
+      {/* pointed mosque arch + hanging lantern behind */}
+      <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden className="absolute inset-0 h-full w-full">
+        <defs>
+          <linearGradient id="archStroke" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#E9CF7A" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#C9A227" stopOpacity="0.06" />
+          </linearGradient>
+        </defs>
+        <path d="M118 300 V120 Q118 58 200 38 Q282 58 282 120 V300" fill="none" stroke="url(#archStroke)" strokeWidth="2.5" />
+        <path d="M150 300 V126 Q150 84 200 70 Q250 84 250 126 V300" fill="none" stroke="url(#archStroke)" strokeWidth="1.4" opacity="0.6" />
+        <g stroke="#E9CF7A" strokeOpacity="0.5" strokeWidth="1.3" fill="none">
+          <line x1="200" y1="0" x2="200" y2="28" />
+          <path d="M189 28 h22 l-4 24 h-14 z" fill="rgba(233,207,122,0.18)" />
+          <circle cx="200" cy="54" r="2.6" fill="#E9CF7A" fillOpacity="0.65" stroke="none" />
+        </g>
+      </svg>
+
+      {/* soft light shafts */}
+      <div aria-hidden className="absolute -top-10 left-1/4 h-[150%] w-24 rotate-[14deg] bg-gradient-to-b from-gold-200/25 to-transparent blur-md" />
+      <div aria-hidden className="absolute -top-10 right-1/3 h-[150%] w-16 -rotate-[12deg] bg-gradient-to-b from-gold-100/20 to-transparent blur-md" />
+
+      {/* the open Quran resting on a rehal */}
+      <svg viewBox="0 0 420 320" aria-hidden className="absolute inset-x-0 bottom-0 mx-auto h-[80%]">
+        <defs>
+          <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8A5A22" />
+            <stop offset="100%" stopColor="#4A2F12" />
+          </linearGradient>
+          <linearGradient id="pageL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#FBF3D9" />
+            <stop offset="100%" stopColor="#E6D199" />
+          </linearGradient>
+          <linearGradient id="pageR" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0%" stopColor="#FBF3D9" />
+            <stop offset="100%" stopColor="#E6D199" />
+          </linearGradient>
+          <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0B5A3F" />
+            <stop offset="100%" stopColor="#063826" />
+          </linearGradient>
+          <radialGradient id="bookGlow" cx="50%" cy="42%" r="55%">
+            <stop offset="0%" stopColor="#E9CF7A" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#E9CF7A" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* glow behind the book */}
+        <ellipse cx="210" cy="150" rx="185" ry="120" fill="url(#bookGlow)" />
+
+        {/* rehal X-stand */}
+        <g strokeLinecap="round">
+          <line x1="155" y1="160" x2="300" y2="300" stroke="url(#wood)" strokeWidth="17" />
+          <line x1="265" y1="160" x2="120" y2="300" stroke="url(#wood)" strokeWidth="17" />
+          <line x1="150" y1="248" x2="270" y2="248" stroke="#3A2410" strokeWidth="9" strokeLinecap="round" />
+          <circle cx="155" cy="160" r="6" fill="#E9CF7A" />
+          <circle cx="265" cy="160" r="6" fill="#E9CF7A" />
+        </g>
+
+        {/* cover peeking below the pages + gold fore-edge */}
+        <path d="M78 170 L210 184 L342 170 L330 198 L210 188 L90 198 Z" fill="url(#cover)" stroke="#E9CF7A" strokeOpacity="0.45" strokeWidth="1.4" />
+        <path d="M90 198 L210 188 L330 198 L330 203 L210 193 L90 203 Z" fill="#DDB94B" />
+
+        {/* the two open pages */}
+        <path d="M75 128 L210 150 L210 178 L98 165 Z" fill="url(#pageL)" stroke="#C9A227" strokeOpacity="0.4" strokeWidth="1" />
+        <path d="M345 128 L210 150 L210 178 L322 165 Z" fill="url(#pageR)" stroke="#C9A227" strokeOpacity="0.4" strokeWidth="1" />
+        <line x1="210" y1="150" x2="210" y2="178" stroke="#B08A2E" strokeWidth="1.4" strokeOpacity="0.6" />
+
+        {/* faint lines of script (RTL hint) */}
+        <g stroke="#9A7B33" strokeOpacity="0.45" strokeWidth="2" strokeLinecap="round">
+          <line x1="112" y1="142" x2="198" y2="151" />
+          <line x1="108" y1="150" x2="198" y2="158" />
+          <line x1="112" y1="158" x2="198" y2="165" />
+          <line x1="222" y1="151" x2="308" y2="142" />
+          <line x1="222" y1="158" x2="312" y2="150" />
+          <line x1="222" y1="165" x2="308" y2="158" />
+        </g>
+
+        {/* bookmark ribbon */}
+        <path d="M205 150 L215 150 L215 200 L210 191 L205 200 Z" fill="#C0392B" opacity="0.85" />
+      </svg>
+    </div>
+  );
+}
+
+/** Floating glassmorphic ayah card overlaid on the hero scene. */
+function AyahGlassCard({ className = '' }: { className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className={`w-[19rem] max-w-[86%] rounded-2xl border border-gold-300/30 bg-emerald-950/55 p-6 pt-8 text-center shadow-2xl backdrop-blur-xl ${className}`}
+    >
+      <Sparkles size={12} className="absolute left-3 top-3 text-gold-300/60" />
+      <Sparkles size={12} className="absolute right-3 top-3 text-gold-300/60" />
+      <span className="absolute -top-6 left-1/2 inline-flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-emerald-800 shadow-lg ring-4 ring-emerald-950/40">
+        <BookOpen size={22} />
+      </span>
+      <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
+        إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-emerald-50/90">
+        Indeed, this Qur’an guides to that which is most upright.
+      </p>
+      <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">Surah Al-Isra 17:9</p>
+    </motion.div>
+  );
+}
+
+/** Interactive on/off pill used by the recitation alarms. */
+function ToggleSwitch({ defaultOn = true }: { defaultOn?: boolean }) {
+  const [on, setOn] = useState(defaultOn);
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => setOn((v) => !v)}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-white/15'}`}
+    >
+      <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-6' : 'left-1'}`} />
+    </button>
+  );
+}
+
+/** Circular reciter avatar — gradient tile with initials (photo-free). */
+function QariAvatar({ name, accent }: { name: string; accent: string }) {
+  const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('');
+  return (
+    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} text-sm font-bold text-white shadow-md ring-2 ring-white/10`}>
+      {initials}
+    </span>
+  );
+}
 
 export function QuranShowcase() {
-  const [schedules] = useLocalStorage<RecitationSchedule[]>('isa:recitationSchedules', []);
-  const userSchedules = schedules.slice(0, 3);
-  const hasUserSchedules = userSchedules.length > 0;
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playingQari, setPlayingQari] = useState<string | null>(null);
+
+  const toggleQari = (q: (typeof QARIS)[number]) => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (playingQari === q.name) { el.pause(); setPlayingQari(null); return; }
+    el.src = `${QURAN_AUDIO_CDN}/${q.edition}/1.mp3`; // Surah Al-Fatiha preview
+    el.play().then(() => setPlayingQari(q.name)).catch(() => setPlayingQari(null));
+  };
 
   return (
-    <section id="quran" className="relative overflow-hidden">
+    <section id="quran" className="relative overflow-hidden bg-mosque-gradient text-parchment">
       {/* moving background */}
-      <Aurora className="w-[30rem] h-[30rem] bg-emerald-300/30 top-0 -left-40" />
-      <Aurora className="w-[28rem] h-[28rem] bg-gold-300/25 bottom-0 -right-32" delay={5} />
-      <KhatamStar className="absolute top-24 right-10 w-64 h-64 text-emerald-500/10 animate-spin-slow hidden lg:block" />
-      <KhatamStar className="absolute -bottom-10 left-6 w-44 h-44 text-gold-500/10 animate-spin-rev hidden lg:block" />
+      <div className="absolute inset-0 pattern-bg opacity-[0.15] pointer-events-none" />
+      <Aurora className="w-[34rem] h-[34rem] bg-emerald-400/20 -top-40 -left-32" />
+      <Aurora className="w-[30rem] h-[30rem] bg-gold-400/15 top-32 -right-40" delay={5} />
+      <KhatamStar className="absolute top-24 right-10 w-64 h-64 text-gold-300/10 animate-spin-slow hidden lg:block" />
 
       <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-        <SectionHead
-          center
-          chip="Holy Quran"
-          icon={BookOpen}
-          title={<>Recite, translate &<br /><span className="bg-clip-text text-transparent bg-gold-gradient">schedule your daily wird.</span></>}
-          subtitle="All 114 Surahs by seven world-renowned Qaris, spoken translations in many languages, and gentle recurring recitation alarms — set once, hear them forever."
-        />
-
-        {/* translation languages — marquee ribbon */}
-        <motion.div
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-          viewport={{ once: true }} transition={{ duration: 0.6 }}
-          className="relative mt-12 overflow-hidden rounded-2xl border border-emerald-100/70 bg-white/60 backdrop-blur py-5"
-        >
-          <div className="flex items-center gap-2 px-5 mb-4 text-base font-bold text-emerald-800">
-            <Languages size={18} /> Translations &amp; UI in {LANGS.length}+ languages
-          </div>
-          <div className="relative flex">
-            {/* fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white/80 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white/80 to-transparent z-10 pointer-events-none" />
-            <div className="flex gap-4 animate-marquee whitespace-nowrap pr-4">
-              {[...LANGS, ...LANGS].map((l, i) => (
-                <span
-                  key={`${l.code}-${i}`}
-                  className="group inline-flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white px-5 py-3.5 shadow-md hover:shadow-lg transition shrink-0"
-                >
-                  <span className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${l.accent} text-white text-sm font-extrabold tracking-wide shadow-md shrink-0`}>
-                    {l.code}
+        {/* ── hero ── */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-10 items-center">
+          {/* left: copy + stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
+            className="space-y-6"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
+              <Sparkles size={13} /> Quran Experience
+            </span>
+            <h2 className="h-display text-5xl md:text-6xl font-bold leading-[1.02]">
+              Recite. Reflect.<br />
+              <span className="bg-clip-text text-transparent bg-gold-gradient">Transform.</span>
+            </h2>
+            <p className="max-w-xl text-base md:text-lg leading-relaxed text-emerald-100/75">
+              Explore the beauty of the Quran with crystal-clear recitations, authentic
+              translations, and smart scheduling to keep you connected every day.
+            </p>
+            <div className="flex flex-wrap gap-x-8 gap-y-5 pt-2">
+              {HERO_STATS.map((s) => (
+                <div key={s.value} className="flex items-center gap-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.07] text-gold-300 backdrop-blur">
+                    <s.icon size={20} />
                   </span>
-                  <span className="flex flex-col leading-tight">
-                    <span className="font-arabic text-2xl font-semibold text-emerald-900" style={{ direction: 'ltr' }}>{l.native}</span>
-                    <span className="text-sm font-semibold text-ink/55">{l.label}</span>
-                  </span>
-                </span>
+                  <div className="leading-tight">
+                    <div className="font-bold text-gold-200">{s.value}</div>
+                    <div className="text-sm text-emerald-100/60">{s.caption}</div>
+                  </div>
+                </div>
               ))}
             </div>
+          </motion.div>
+
+          {/* right: illustrated scene + floating ayah card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.7 }}
+            className="relative"
+          >
+            <RehalScene />
+            <AyahGlassCard className="absolute right-2 top-6 sm:right-4 lg:-right-6 lg:top-8" />
+          </motion.div>
+        </div>
+
+        {/* ── translation languages bar ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
+          className="mt-16 rounded-3xl border border-emerald-100/70 bg-parchment/95 p-6 md:p-7 shadow-2xl"
+        >
+          <div className="mb-5 flex items-center gap-2 text-emerald-800">
+            <Globe2 size={20} />
+            <h3 className="text-lg font-bold">Translations &amp; UI in 10+ Languages</h3>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
+            {LANGUAGES.map((l, i) => (
+              <motion.div
+                key={l.code}
+                initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.04, duration: 0.4 }}
+                className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-white px-2.5 py-2 shadow-sm"
+              >
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${l.accent} text-[10px] font-extrabold tracking-wide text-white shadow`}>
+                  {l.code}
+                </span>
+                <span className="flex min-w-0 flex-col leading-tight">
+                  <span
+                    className={`truncate text-[13px] font-bold text-emerald-900 ${l.rtl ? 'font-arabic' : ''}`}
+                    style={l.rtl ? { direction: 'rtl' } : undefined}
+                  >
+                    {l.native}
+                  </span>
+                  <span className="truncate text-[10px] font-medium text-ink/50">{l.label}</span>
+                </span>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 
-        <div className="mt-10 grid lg:grid-cols-5 gap-6">
-          {/* Reciters panel */}
+        {/* ── qaris + alarms ── */}
+        <div className="mt-8 grid lg:grid-cols-2 gap-6">
+          {/* World-Class Qaris */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-            className="lg:col-span-2 card card-pad relative overflow-hidden"
+            className="relative overflow-hidden rounded-3xl border border-gold-300/25 bg-white/[0.05] p-6 backdrop-blur-md"
           >
-            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 opacity-15" />
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center shadow-md">
-                <Mic2 size={18} />
+            <div className="mb-5 flex items-center gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gold-300/40 bg-white/[0.06] text-gold-300">
+                <Headphones size={20} />
               </span>
               <div>
-                <h3 className="font-bold leading-tight">{RECITERS.length} world-class Qaris</h3>
-                <p className="text-xs text-ink/55">Murattal, ayah-by-ayah, full surah</p>
+                <h3 className="text-lg font-bold leading-tight">World-Class Qaris</h3>
+                <p className="text-sm text-emerald-100/60">Listen to the voices of the Quran</p>
               </div>
             </div>
-            <ul className="space-y-1.5">
-              {RECITERS.map((r, i) => (
-                <motion.li
-                  key={r.id}
-                  initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-emerald-50/70 transition"
-                >
-                  <span className="text-sm font-medium text-ink">{r.name}</span>
-                  <span className="font-arabic text-lg text-emerald-700">{r.arabic}</span>
-                </motion.li>
-              ))}
+
+            <ul className="space-y-2.5">
+              {QARIS.map((q, i) => {
+                const playing = playingQari === q.name;
+                return (
+                  <motion.li
+                    key={q.name}
+                    initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                    className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition
+                      ${playing ? 'border-gold-300/50 bg-white/[0.1]' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07]'}`}
+                  >
+                    <QariAvatar name={q.name} accent={q.accent} />
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-parchment">{q.name}</span>
+                    <span className="font-arabic shrink-0 text-lg text-gold-200/90" style={{ direction: 'rtl' }}>{q.arabic}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleQari(q)}
+                      aria-label={playing ? `Pause ${q.name}` : `Play ${q.name}`}
+                      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition
+                        ${playing ? 'border-gold-300 bg-gold-300 text-emerald-900' : 'border-gold-300/50 text-gold-200 hover:bg-gold-300/15'}`}
+                    >
+                      {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                    </button>
+                  </motion.li>
+                );
+              })}
             </ul>
+
+            <Link
+              href="/dashboard/quran"
+              className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-gold-300/40 bg-gradient-to-r from-emerald-700/40 to-emerald-800/40 py-3 text-sm font-semibold text-gold-100 transition hover:from-emerald-700/60 hover:to-emerald-800/60"
+            >
+              View All Qaris <Users size={16} />
+            </Link>
           </motion.div>
 
-          {/* Schedules panel */}
+          {/* Recitation Alarms */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-3 card card-pad relative overflow-hidden"
+            className="relative overflow-hidden rounded-3xl border border-gold-300/25 bg-white/[0.05] p-6 backdrop-blur-md"
           >
-            <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-gradient-to-br from-gold-300 to-gold-600 opacity-15" />
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-midnight-900 flex items-center justify-center shadow-md">
-                  <AlarmClock size={18} />
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gold-300/40 bg-white/[0.06] text-gold-300">
+                  <BellRing size={20} />
                 </span>
                 <div>
-                  <h3 className="font-bold leading-tight">
-                    {hasUserSchedules ? 'Your recitation schedule' : 'Recitation alarms'}
-                  </h3>
-                  <p className="text-xs text-ink/55">
-                    {hasUserSchedules
-                      ? `${schedules.length} active · plays automatically`
-                      : 'Auto-recite Surahs at the times you choose'}
-                  </p>
+                  <h3 className="text-lg font-bold leading-tight">Recitation Alarms</h3>
+                  <p className="text-sm text-emerald-100/60">Auto-recite Surahs at the times you choose</p>
                 </div>
               </div>
               <Link
                 href="/dashboard/recitation"
-                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white text-sm font-semibold px-4 py-2 shadow-glow-emerald hover:bg-emerald-700 transition shrink-0"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-parchment px-4 py-2 text-sm font-bold text-emerald-900 shadow transition hover:bg-white"
               >
-                <Plus size={15} /> New schedule
+                <Plus size={15} /> <span className="hidden sm:inline">New Schedule</span><span className="sm:hidden">New</span>
               </Link>
             </div>
 
-            <div className="space-y-2.5">
-              {hasUserSchedules
-                ? userSchedules.map((s, i) => (
-                    <motion.div
-                      key={s.id}
-                      initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white/70 p-3.5"
-                    >
-                      <span className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <CalendarClock size={17} />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-ink truncate">{summarize(s)}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {s.surahs.slice(0, 4).map((n) => (
-                            <span key={n} className="text-[11px] bg-emerald-50 text-emerald-800 rounded-full px-2 py-0.5 border border-emerald-100">
-                              {SURAHS.find((x) => x.number === n)?.englishName ?? `Surah ${n}`}
-                            </span>
-                          ))}
-                          {s.surahs.length > 4 && (
-                            <span className="text-[11px] text-ink/50">+{s.surahs.length - 4} more</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.enabled ? 'bg-emerald-500 animate-pulse-soft' : 'bg-slate-300'}`} />
-                    </motion.div>
-                  ))
-                : SAMPLE_SCHEDULES.map((s, i) => (
-                    <motion.div
-                      key={s.title}
-                      initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 rounded-xl border border-dashed border-emerald-200 bg-white/50 p-3.5"
-                    >
-                      <span className={`w-9 h-9 rounded-lg bg-gradient-to-br ${s.accent} text-white flex items-center justify-center shrink-0 shadow`}>
-                        <s.icon size={17} />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-ink">{s.title}</p>
-                        <p className="text-xs text-ink/55">{s.when}</p>
-                      </div>
-                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-1 border border-emerald-100">
-                        Suggested
-                      </span>
-                    </motion.div>
-                  ))}
+            <div className="space-y-3">
+              {ALARMS.map((a, i) => (
+                <motion.div
+                  key={a.surah}
+                  initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3"
+                >
+                  <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] ${a.tint}`}>
+                    <a.icon size={20} />
+                  </span>
+                  <span className="shrink-0 font-bold tabular-nums text-parchment">{a.time}</span>
+                  <span aria-hidden className="h-8 w-px bg-white/15" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-parchment">{a.surah}</p>
+                    <p className="truncate text-xs text-emerald-100/55">{a.when}</p>
+                  </div>
+                  <ToggleSwitch />
+                </motion.div>
+              ))}
             </div>
-
-            {!hasUserSchedules && (
-              <p className="mt-3 text-xs text-ink/50 flex items-center gap-1.5">
-                <Sparkles size={12} className="text-gold-500" />
-                Tap “New schedule” to set your own — these are just ideas to start with.
-              </p>
-            )}
           </motion.div>
         </div>
       </div>
+
+      {/* ── closing feature strip ── (full-bleed darker band) */}
+      <div className="relative border-t border-white/10 bg-emerald-950/50 backdrop-blur">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-6 px-6 py-8 sm:grid-cols-3 lg:grid-cols-5">
+          {QURAN_FEATURES.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4 }}
+              className="flex items-center gap-3"
+            >
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold-300/30 bg-white/[0.05] text-gold-300">
+                <f.icon size={18} />
+              </span>
+              <div className="leading-tight">
+                <p className="text-sm font-bold text-parchment">{f.title}</p>
+                <p className="text-xs text-emerald-100/55">{f.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <audio ref={audioRef} onEnded={() => setPlayingQari(null)} hidden />
     </section>
   );
 }

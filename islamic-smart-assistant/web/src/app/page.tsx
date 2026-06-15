@@ -3,133 +3,191 @@
 /**
  * Public marketing landing page for Noor (the "/" route).
  *
- * Layout, top to bottom: sticky nav → hero (with the live PrayerCountdown card) →
- * Azan/Quran/Devices feature showcases → the feature grid → closing CTA → footer.
- * Animations are powered by framer-motion (entrance + scroll-into-view reveals).
- * The only live data here is the visitor's stored location, fed into the hero
- * countdown so it shows real prayer times on first paint.
+ * Layout, top to bottom: scroll-aware nav → dark hero (background photo + headline,
+ * CTAs, social proof on the left; the live prayer card on the right; a feature strip
+ * underneath) → Azan/Quran/Devices showcases → feature grid → closing CTA → footer.
+ * The hero's right-hand card shows the visitor's real prayer times (falling back to
+ * a London mockup until a location is set). Animations are framer-motion.
+ *
+ * The hero background expects an image at /hero-bg.jpg (web/public/hero-bg.jpg). Until
+ * it's added, the emerald-950 base + gradient overlays keep the section on-theme.
  */
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight, BookOpen, Compass, Radio, Smartphone, Globe2, Sparkles, Headphones,
-  ShieldCheck, Languages, Bell, CalendarClock,
+  ArrowRight, BookOpen, Compass, Sparkles, Headphones,
+  ShieldCheck, User, Sun, CalendarDays,
 } from 'lucide-react';
-import { PrayerCountdownHero } from '@/components/PrayerCountdown';
+import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
+import FaithShowcase from '@/components/FaithShowcase';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 
-// Cards rendered in the feature grid. `icon` is a lucide component and `color`
-// is a Tailwind gradient stop pair used for the icon chip + the corner glow.
-const FEATURES = [
-  { icon: Bell,         title: 'Auto Azan',         desc: 'Triggers Makkah, Madinah, Pakistani, Turkish & Egyptian Azan on every linked device — in sync.', color: 'from-emerald-500 to-emerald-700' },
-  { icon: BookOpen,     title: 'Full Quran',        desc: 'All 114 Surahs by Abdul Basit, Sudais, Alafasy & more — with Urdu and English translation.', color: 'from-gold-400 to-gold-600' },
-  { icon: Compass,      title: 'Qibla & Times',     desc: 'Pinpoint Qibla direction. Live prayer times by city, fiqh and DST-aware.', color: 'from-cyan-500 to-emerald-600' },
-  { icon: Radio,        title: 'Ayah-by-Ayah Tilawat', desc: 'Arabic recitation followed by its translation, ayah by ayah — each verse recited, then its meaning.', color: 'from-rose-500 to-amber-500' },
-  { icon: Smartphone,   title: 'Multi-device sync', desc: 'Phones, tablets, desktops, Alexa & Google Home. Group as Home, Office, Mosque.', color: 'from-indigo-500 to-violet-600' },
-  { icon: CalendarClock, title: 'Smart Scheduler',  desc: 'Yaseen after Fajr, Waqiah after Maghrib, Mulk before sleep — set it once.', color: 'from-emerald-600 to-teal-500' },
-  { icon: Languages,    title: '10+ Languages',     desc: 'UI in English, اردو, العربية, Türkçe, 中文, 日本語, हिन्दी, বাংলা, and more.', color: 'from-fuchsia-500 to-pink-500' },
-  { icon: ShieldCheck,  title: 'Privacy first',     desc: 'No tracking. Your location stays on-device; only your settings sync across login.', color: 'from-slate-500 to-emerald-700' },
+// Top-nav links (match the reference design).
+const NAV_LINKS = [
+  { href: '/dashboard/prayer-times', label: 'Prayer Times' },
+  { href: '/dashboard/quran',        label: 'Quran' },
+  { href: '/dashboard/qibla',        label: 'Qibla' },
+  { href: '/dashboard/recitation',   label: 'Learn' },
+  { href: '#features',               label: 'Features' },
 ];
 
-// In-page anchor links shown in the nav; each href targets a section `id` below.
-const NAV_LINKS = [
-  { href: '#prayer',  label: 'Prayer' },
-  { href: '#azan',    label: 'Azan' },
-  { href: '#quran',   label: 'Quran' },
-  { href: '#devices', label: 'Devices' },
+// Four overlapping "user" avatars for the social-proof row (gradient placeholders —
+// swap for real photos by dropping them in and mapping over <img> instead).
+const AVATARS = ['from-rose-400 to-orange-400', 'from-emerald-400 to-teal-500', 'from-indigo-400 to-violet-500', 'from-amber-400 to-rose-500'];
+
+// The trust strip beneath the hero.
+const STRIP = [
+  { icon: Sun,          title: 'Accurate Prayer Times', sub: 'Worldwide Coverage' },
+  { icon: BookOpen,     title: 'Quran with Translation', sub: '50+ Languages' },
+  { icon: Compass,      title: 'Qibla Direction',        sub: 'Anywhere Anytime' },
+  { icon: CalendarDays, title: 'Islamic Calendar',       sub: 'Hijri & Gregorian' },
+  { icon: ShieldCheck,  title: '100% Private & Secure',  sub: 'Your data, your trust' },
 ];
 
 /** Renders the full marketing landing page. */
 export default function HomePage() {
-  // Visitor's saved location (if any) — passed to the hero countdown so it can
-  // show real prayer times immediately instead of a placeholder.
+  // Visitor's saved location (if any) — passed to the hero card so it can show
+  // real prayer times immediately instead of the placeholder.
   const loc = useStoredLocation();
+
+  // Nav is transparent over the hero photo at the top, then gains a dark blurred
+  // bar once the user scrolls past the fold.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <main className="relative overflow-x-hidden">
-      {/* ── nav ── */}
-      <header className="sticky top-0 z-40">
-        <div className="bg-parchment/70 backdrop-blur-xl border-b border-emerald-900/5">
-          <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center gap-2">
-              <NoorMark />
-              <span className="text-xl font-display font-bold tracking-tight">Noor</span>
-              <span className="chip-gold ml-2 hidden sm:inline-flex"><Sparkles size={12}/> Islamic Smart Assistant</span>
-            </Link>
-            <div className="flex items-center gap-1 sm:gap-2">
-              {NAV_LINKS.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  className="hidden md:inline-flex px-3 py-1.5 rounded-full text-sm font-semibold text-emerald-800 hover:bg-emerald-50 transition"
-                >
-                  {l.label}
-                </a>
-              ))}
-              <Link href="/dashboard" className="btn-primary text-sm py-2 px-4 ml-1">Open Dashboard <ArrowRight size={16}/></Link>
-            </div>
-          </nav>
-        </div>
+      {/* ── nav (fixed, scroll-aware) ── */}
+      <header className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight-900/85 backdrop-blur-xl border-b border-white/10' : 'bg-transparent'}`}>
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-2.5">
+            <NoorMark size={34} bare />
+            <span className="text-2xl font-display font-bold tracking-tight text-parchment">Noor</span>
+            <span className="ml-2 hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 text-xs font-semibold px-3 py-1">
+              <Sparkles size={12} /> AI-Powered Islamic Assistant
+            </span>
+          </Link>
+          <div className="hidden md:flex items-center gap-7">
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="text-sm font-semibold text-parchment/85 hover:text-gold-300 transition">
+                {l.label}
+              </Link>
+            ))}
+          </div>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-xl border border-gold-300/40 bg-gold-300/5 text-gold-100 px-4 py-2.5 font-semibold text-sm hover:bg-gold-300/15 transition"
+          >
+            Open Dashboard <ArrowRight size={16} />
+          </Link>
+        </nav>
       </header>
 
-      {/* ── hero ── (headline + CTAs on the left, live prayer countdown on the right) */}
-      <section id="prayer" className="relative max-w-7xl mx-auto px-6 pt-10 pb-20">
-        {/* Decorative blurred gradient orbs that drift via the `animate-aurora`
-            keyframes; the second is offset by 5s so the two never pulse in unison. */}
-        <div aria-hidden className="absolute -top-20 -left-24 w-[28rem] h-[28rem] rounded-full bg-emerald-300/25 blur-3xl animate-aurora pointer-events-none" />
-        <div aria-hidden className="absolute top-10 right-0 w-[24rem] h-[24rem] rounded-full bg-gold-300/25 blur-3xl animate-aurora pointer-events-none" style={{ animationDelay: '5s' }} />
+      {/* ── hero ── (dark photographic section: copy + CTAs left, live prayer card right) */}
+      <section id="prayer" className="relative isolate overflow-hidden bg-emerald-950 text-parchment">
+        {/* background photo + legibility overlays (heavier on the left where the text sits) */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/hero-bg.jpg')" }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/75 to-emerald-900/25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/80 via-transparent to-emerald-950/70" />
+          <div className="absolute inset-0 pattern-bg opacity-[0.06]" />
+        </div>
 
-        <div className="relative grid lg:grid-cols-2 gap-10 items-center">
-          {/* Left column: headline copy + primary/secondary CTAs, fading up on load. */}
+        <div className="max-w-7xl mx-auto px-6 pt-28 lg:pt-32 pb-10">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center">
+            {/* LEFT: badge, headline, copy, CTAs, social proof */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-6"
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-300/40 bg-gold-300/10 text-gold-300 text-xs font-semibold px-3 py-1">
+                <Sparkles size={12} /> New &amp; Improved
+              </span>
+              <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl leading-[1.04] text-parchment">
+                Your Faith,<br />
+                Your Journey,<br />
+                <span className="bg-clip-text text-transparent bg-gold-gradient">Our Guidance.</span>
+              </h1>
+              <p className="text-lg text-parchment/75 max-w-xl leading-relaxed">
+                Noor unites Prayer, Quran, and daily Islamic tools in one intelligent assistant —
+                beautifully designed to elevate your connection with Allah.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient text-midnight-900 px-6 py-3.5 font-bold shadow-glow-gold hover:brightness-105 transition"
+                >
+                  <Headphones size={18} /> Launch Dashboard <ArrowRight size={18} />
+                </Link>
+                <Link
+                  href="/dashboard/quran"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/25 text-parchment px-6 py-3.5 font-semibold hover:bg-white/10 transition"
+                >
+                  <BookOpen size={18} /> Explore Quran
+                </Link>
+              </div>
+              <div className="flex items-center gap-3 pt-3">
+                <div className="flex -space-x-3">
+                  {AVATARS.map((g, i) => (
+                    <span key={i} className={`w-10 h-10 rounded-full border-2 border-emerald-950 bg-gradient-to-br ${g} flex items-center justify-center`}>
+                      <User size={16} className="text-white/90" />
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm leading-tight">
+                  <span className="text-gold-300 font-bold">Trusted by 1M+ Muslims</span><br />
+                  <span className="text-parchment/70">in 200+ countries worldwide</span>
+                </p>
+              </div>
+            </motion.div>
+
+            {/* RIGHT: live prayer card (design styling, real data, London mockup fallback) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7 }}
+              className="lg:pl-4"
+            >
+              <HeroPrayerCard
+                lat={loc.lat ?? undefined}
+                lng={loc.lng ?? undefined}
+                city={loc.city}
+                country={loc.country}
+                method={loc.method}
+              />
+            </motion.div>
+          </div>
+
+          {/* feature / trust strip */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mt-12 glass-dark rounded-2xl px-5 py-5"
           >
-            <span className="chip"><Sparkles size={12}/> New • Powered by AI</span>
-            <h1 className="h-display text-5xl md:text-6xl font-bold leading-[1.05]">
-              Your home,<br/>
-              your masjid,<br/>
-              <span className="bg-clip-text text-transparent bg-gold-gradient">your assistant.</span>
-            </h1>
-            <p className="text-lg text-ink/70 max-w-xl">
-              Noor brings the Azan, the Quran, and your prayer routine into one beautifully crafted
-              experience — synced across every screen and speaker in your life.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/dashboard" className="btn-primary">
-                <Headphones size={18}/> Launch the Dashboard <ArrowRight size={18}/>
-              </Link>
-              <Link href="/dashboard/quran" className="btn-ghost">
-                <BookOpen size={18}/> Open the Quran
-              </Link>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-5">
+              {STRIP.map((s) => (
+                <div key={s.title} className="flex items-center gap-3">
+                  <span className="w-10 h-10 rounded-full border border-gold-300/30 bg-gold-300/10 text-gold-300 flex items-center justify-center shrink-0">
+                    <s.icon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold leading-tight">{s.title}</p>
+                    <p className="text-xs text-parchment/55 leading-tight">{s.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <div className="flex flex-wrap items-center gap-6 pt-2 text-sm text-ink/60">
-              <span className="flex items-center gap-2"><Globe2 size={14}/> 200+ countries</span>
-              <span className="flex items-center gap-2"><Smartphone size={14}/> iOS, Android, Web, Desktop</span>
-              <span className="flex items-center gap-2"><ShieldCheck size={14}/> Verified recitations</span>
-            </div>
-          </motion.div>
-
-          {/* Right column: the live prayer countdown card, scaling in on load. */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7 }}
-          >
-            {/* Coords are preferred; fall back to city/country. `label` is only
-                passed once we actually have coordinates to show. */}
-            <PrayerCountdownHero
-              lat={loc.lat ?? undefined}
-              lng={loc.lng ?? undefined}
-              city={loc.city}
-              country={loc.country}
-              method={loc.method}
-              label={loc.hasCoords ? loc.label : undefined}
-            />
           </motion.div>
         </div>
       </section>
@@ -139,74 +197,15 @@ export default function HomePage() {
       <QuranShowcase />
       <DevicesShowcase />
 
-      {/* ── feature grid ── (the FEATURES array rendered as a responsive card grid) */}
-      <section className="relative max-w-7xl mx-auto px-6 py-24">
-        <div className="text-center mb-12">
-          <span className="chip-gold"><Sparkles size={12}/> Everything in one place</span>
-          <h2 className="h-display text-4xl md:text-5xl font-bold mt-4">A complete Islamic lifestyle, beautifully orchestrated</h2>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {FEATURES.map((f, i) => (
-            // Cards reveal as they scroll into view (`once` = animate a single time).
-            // `delay: i * 0.04` staggers them so they cascade rather than pop in together.
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ delay: i * 0.04, duration: 0.5 }}
-              whileHover={{ y: -4 }}
-              className="group card card-pad relative overflow-hidden"
-            >
-              <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-br ${f.color} opacity-20 group-hover:opacity-40 transition`} />
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-white bg-gradient-to-br ${f.color} shadow-lg`}>
-                <f.icon size={22} />
-              </div>
-              <h3 className="mt-4 text-lg font-bold">{f.title}</h3>
-              <p className="mt-1 text-sm text-ink/70 leading-relaxed">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── closing CTA ── (final reveal-on-scroll banner driving users to the dashboard) */}
-      <section className="relative max-w-7xl mx-auto px-6 pb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl bg-mosque-gradient text-parchment px-8 py-14 md:px-16 md:py-20 text-center shadow-glow-emerald"
-        >
-          {/* Layered decoration: faint Islamic pattern overlay + a soft emerald glow. */}
-          <div className="absolute inset-0 pattern-bg opacity-20 pointer-events-none" />
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-glow-emerald pointer-events-none" />
-          <div className="relative">
-            <span className="chip-gold"><Sparkles size={12}/> Begin your journey</span>
-            <h2 className="h-display text-4xl md:text-5xl font-bold mt-5 leading-tight">
-              Let every prayer find you,<br/>
-              <span className="bg-clip-text text-transparent bg-gold-gradient">wherever you are.</span>
-            </h2>
-            <p className="mt-4 text-emerald-100/80 max-w-xl mx-auto">
-              Set your location once. Noor handles the Azan, your Quran wird, and keeps every device in your home in rhythm with the salah.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/dashboard" className="btn-primary">
-                <Headphones size={18}/> Launch the Dashboard <ArrowRight size={18}/>
-              </Link>
-              <Link href="/dashboard/prayer-times" className="inline-flex items-center gap-2 rounded-full border border-white/25 text-parchment px-6 py-3 font-semibold hover:bg-white/10 transition">
-                <Compass size={18}/> Set my location
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-      </section>
+      {/* ── feature grid + closing CTA ── (matches the approved design; #features backs the nav anchor) */}
+      <div id="features">
+        <FaithShowcase />
+      </div>
 
       {/* ── footer ── */}
       <footer className="relative border-t border-emerald-900/10">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-ink/60">
-          <div className="flex items-center gap-2"><NoorMark size={20}/> <span className="font-semibold text-ink">Noor</span> • Islamic Smart Assistant Ecosystem</div>
+          <div className="flex items-center gap-2"><NoorMark size={20} /> <span className="font-semibold text-ink">Noor</span> • Islamic Smart Assistant Ecosystem</div>
           <p>Built with ihsaan • Recitations sourced from islamic.network (verified)</p>
         </div>
       </footer>
@@ -214,19 +213,28 @@ export default function HomePage() {
   );
 }
 
-/** The Noor brand mark: a crescent-and-star glyph in a gradient rounded tile. */
-function NoorMark({ size = 28 }: { size?: number }) {
+/**
+ * The Noor brand mark: a crescent-and-star glyph. `bare` renders just the gold
+ * glyph (for the dark nav); otherwise it sits in a gradient rounded tile.
+ */
+function NoorMark({ size = 28, bare = false }: { size?: number; bare?: boolean }) {
+  const glyph = (
+    <svg viewBox="0 0 24 24" width={bare ? size : size * 0.65} height={bare ? size : size * 0.65} fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
+      {/* crescent + star */}
+      <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
+      <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
+    </svg>
+  );
+  if (bare) {
+    return <span className="inline-flex text-gold-300" aria-hidden>{glyph}</span>;
+  }
   return (
     <span
       className="inline-flex items-center justify-center rounded-xl bg-mosque-gradient shadow-glow-emerald"
       style={{ width: size, height: size }}
       aria-hidden
     >
-      <svg viewBox="0 0 24 24" width={size * 0.65} height={size * 0.65} fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
-        {/* crescent + star */}
-        <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-        <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
-      </svg>
+      {glyph}
     </span>
   );
 }
