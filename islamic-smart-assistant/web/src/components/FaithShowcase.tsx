@@ -113,7 +113,7 @@ function HexIcon({ grad, delay = 0, children }: { grad: string; delay?: number; 
   return (
     <span
       className="relative inline-flex items-center justify-center animate-float"
-      style={{ width: 56, height: 62, animationDelay: `${delay}s` }}
+      style={{ width: 56, height: 62, animationDelay: `${delay}s`, animationDuration: '2s' }}
     >
       <span
         aria-hidden
@@ -364,7 +364,7 @@ export default function FaithShowcase() {
             <br />
             <span className="text-emerald-800">Beautifully Orchestrated</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-ink/60 leading-relaxed">
+          <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-ink/80 leading-relaxed">
             All the essential Islamic tools in one place to strengthen your faith,
             simplify your worship, and connect you with what matters most.
           </p>
@@ -373,47 +373,52 @@ export default function FaithShowcase() {
         {/* ── feature grid ── */}
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {FEATURES.map((f, i) => (
-            <motion.div
+            <div
               key={f.title}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ delay: i * 0.05, duration: 0.5 }}
-              whileHover={{ y: -5 }}
-              className={`group relative overflow-hidden rounded-3xl border border-white/80 bg-gradient-to-b from-white via-white ${f.tint} p-6 pb-16 transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]`}
+              className="animate-float"
+              style={{ animationDelay: `${i * 0.25}s`, animationDuration: '2.8s' }}
             >
-              {/* soft corner glow */}
-              <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.12] group-hover:opacity-25 blur-xl transition`} />
-
-              {/* top row: hexagon icon + decoration */}
-              <div className="relative flex items-start justify-between">
-                <HexIcon grad={f.grad} delay={i * 0.35}>
-                  <f.icon size={24} />
-                </HexIcon>
-                {f.deco === 'wave'
-                  ? <Waveform className={`mt-2 ${f.text} opacity-50`} />
-                  : <CornerMotif className={`-mt-2 -mr-2 w-20 h-20 ${f.text} opacity-[0.12]`} />}
-              </div>
-
-              <h3 className={`relative mt-5 text-lg font-extrabold ${f.text}`}>{f.title}</h3>
-              <p className="relative mt-2 text-sm text-ink/60 leading-relaxed">{f.desc}</p>
-
-              {/* watermark for waveform cards too — keep all cards balanced */}
-              <f.icon
-                size={92}
-                aria-hidden
-                className={`pointer-events-none absolute -bottom-4 right-3 ${f.text} opacity-[0.06]`}
-              />
-
-              {/* arrow button */}
-              <Link
-                href={f.href}
-                aria-label={`Open ${f.title}`}
-                className={`absolute bottom-5 right-5 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.05, duration: 0.5 }}
+                whileHover={{ y: -5 }}
+                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-6 pb-16 transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
               >
-                <ArrowRight size={17} />
-              </Link>
-            </motion.div>
+                {/* soft corner glow */}
+                <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.18] group-hover:opacity-35 blur-xl transition`} />
+
+                {/* top row: hexagon icon + decoration */}
+                <div className="relative flex items-start justify-between">
+                  <HexIcon grad={f.grad} delay={i * 0.35}>
+                    <f.icon size={24} />
+                  </HexIcon>
+                  {f.deco === 'wave'
+                    ? <Waveform className={`mt-2 ${f.text} opacity-60`} />
+                    : <CornerMotif className={`-mt-2 -mr-2 w-20 h-20 ${f.text} opacity-[0.18]`} />}
+                </div>
+
+                <h3 className={`relative mt-5 text-lg font-extrabold ${f.text}`}>{f.title}</h3>
+                <p className="relative mt-2 text-sm text-ink/80 leading-relaxed">{f.desc}</p>
+
+                {/* watermark for waveform cards too — keep all cards balanced */}
+                <f.icon
+                  size={92}
+                  aria-hidden
+                  className={`pointer-events-none absolute -bottom-4 right-3 ${f.text} opacity-[0.08]`}
+                />
+
+                {/* arrow button */}
+                <Link
+                  href={f.href}
+                  aria-label={`Open ${f.title}`}
+                  className={`absolute bottom-5 right-5 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
+                >
+                  <ArrowRight size={17} />
+                </Link>
+              </motion.div>
+            </div>
           ))}
         </div>
 
