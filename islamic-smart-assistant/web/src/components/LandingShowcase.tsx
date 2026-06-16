@@ -840,40 +840,74 @@ function DevLantern({ className = '' }: { className?: string }) {
 }
 
 /**
- * Ornate Mughal/Islamic pointed arch that frames the current-output speaker.
- * Multiple concentric arches + column dot ornaments, all in faint gold.
+ * Ornate Mughal/Islamic mihrab arch that frames the current-output speaker.
+ * A scalloped (cusped) ogee arch with a warm radial glow filling the niche,
+ * concentric gold profiles, a layered finial at the apex and slender column
+ * ornaments — designed to read as an elegant prayer-niche behind the speaker.
  */
 function MughalArch({ className = '' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 280 380" fill="none" aria-hidden className={className}>
-      {/* outer ogee arch */}
-      <path d="M12 380V178C12 66 60 12 140 5 220 12 268 66 268 178V380"
-        stroke="#E9CF7A" strokeOpacity="0.38" strokeWidth="2.5" fill="rgba(233,207,122,0.025)" />
-      {/* mid arch */}
-      <path d="M38 380V188C38 88 78 46 140 32 202 46 242 88 242 188V380"
-        stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1.6" fill="none" />
-      {/* inner arch */}
-      <path d="M64 380V198C64 110 96 74 140 60 184 74 216 110 216 198V380"
-        stroke="#E9CF7A" strokeOpacity="0.13" strokeWidth="1" fill="none" />
-      {/* apex ornament */}
-      <circle cx="140" cy="18" r="11" stroke="#E9CF7A" strokeOpacity="0.5" strokeWidth="1.6" fill="none" />
-      <circle cx="140" cy="18" r="5.5" fill="#E9CF7A" fillOpacity="0.45" />
-      <circle cx="140" cy="18" r="2.2" fill="#E9CF7A" fillOpacity="0.9" />
-      <path d="M140 5V1M132 10L128 7M148 10L152 7" stroke="#E9CF7A" strokeOpacity="0.4" strokeWidth="1.2" strokeLinecap="round" />
-      {/* column dot ornaments */}
-      {[178,198,218,238,258,278,298,318,338,358].map((y) => (
+    <svg viewBox="0 0 280 380" fill="none" aria-hidden className={className} preserveAspectRatio="xMidYMax meet">
+      <defs>
+        {/* warm glow that fills the niche, brightest just behind the speaker */}
+        <radialGradient id="mihrabGlow" cx="50%" cy="40%" r="62%">
+          <stop offset="0%"  stopColor="#E9CF7A" stopOpacity="0.20" />
+          <stop offset="45%" stopColor="#C9A227" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#0B1D14" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="mihrabStroke" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="#F6D67A" />
+          <stop offset="55%" stopColor="#C9A227" />
+          <stop offset="100%" stopColor="#8A6B16" />
+        </linearGradient>
+      </defs>
+
+      {/* niche fill — soft golden glow inside the cusped outline */}
+      <path d="M30 380V176C30 96 64 44 140 22 216 44 250 96 250 176V380Z" fill="url(#mihrabGlow)" />
+
+      {/* outer cusped (scalloped) ogee arch */}
+      <path d="M22 380V178
+               C22 150 26 128 36 110
+               Q44 122 56 116 Q50 100 62 92
+               Q72 104 84 96  Q80 78 94 72
+               Q104 84 116 74 Q116 56 132 52
+               L140 40 L148 52 Q164 56 164 74
+               Q176 84 186 72 Q200 78 196 96
+               Q208 104 218 92 Q230 100 224 116
+               Q236 122 244 110 C254 128 258 150 258 178 V380"
+            stroke="url(#mihrabStroke)" strokeOpacity="0.55" strokeWidth="2.2"
+            strokeLinejoin="round" fill="none" />
+
+      {/* mid profile arch */}
+      <path d="M48 380V190C48 116 80 74 140 56 200 74 232 116 232 190V380"
+        stroke="#E9CF7A" strokeOpacity="0.30" strokeWidth="1.5" fill="none" />
+      {/* inner keyline arch */}
+      <path d="M72 380V202C72 138 102 100 140 86 178 100 208 138 208 202V380"
+        stroke="#E9CF7A" strokeOpacity="0.16" strokeWidth="1" fill="none" />
+
+      {/* layered apex finial */}
+      <path d="M140 40C140 28 134 24 134 16 134 9 140 2 140 2 140 2 146 9 146 16 146 24 140 28 140 40Z"
+        fill="url(#mihrabStroke)" fillOpacity="0.55" />
+      <circle cx="140" cy="20" r="11" stroke="#E9CF7A" strokeOpacity="0.55" strokeWidth="1.5" fill="none" />
+      <circle cx="140" cy="20" r="5.5" fill="#E9CF7A" fillOpacity="0.5" />
+      <circle cx="140" cy="20" r="2.2" fill="#F6D67A" fillOpacity="0.95" />
+      <path d="M126 12L122 8M154 12L158 8M140 2V-3"
+        stroke="#E9CF7A" strokeOpacity="0.45" strokeWidth="1.2" strokeLinecap="round" />
+
+      {/* slender column ornaments down each jamb */}
+      {[206,230,254,278,302,326,350].map((y) => (
         <g key={y}>
-          <circle cx="27"  cy={y} r="2.8" fill="#E9CF7A" fillOpacity="0.18" />
-          <circle cx="253" cy={y} r="2.8" fill="#E9CF7A" fillOpacity="0.18" />
-          <circle cx="17"  cy={y + 10} r="1.8" fill="#E9CF7A" fillOpacity="0.1" />
-          <circle cx="263" cy={y + 10} r="1.8" fill="#E9CF7A" fillOpacity="0.1" />
+          <circle cx="38"  cy={y} r="2.6" fill="#E9CF7A" fillOpacity="0.22" />
+          <circle cx="242" cy={y} r="2.6" fill="#E9CF7A" fillOpacity="0.22" />
+          <circle cx="27"  cy={y + 12} r="1.6" fill="#E9CF7A" fillOpacity="0.12" />
+          <circle cx="253" cy={y + 12} r="1.6" fill="#E9CF7A" fillOpacity="0.12" />
         </g>
       ))}
-      {/* horizontal frame accents */}
-      <line x1="12" y1="228" x2="38" y2="228" stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1" />
-      <line x1="242" y1="228" x2="268" y2="228" stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1" />
-      <line x1="12" y1="288" x2="38" y2="288" stroke="#E9CF7A" strokeOpacity="0.15" strokeWidth="1" />
-      <line x1="242" y1="288" x2="268" y2="288" stroke="#E9CF7A" strokeOpacity="0.15" strokeWidth="1" />
+      {/* jamb base mouldings */}
+      <line x1="22" y1="236" x2="48" y2="236" stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1" />
+      <line x1="232" y1="236" x2="258" y2="236" stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1" />
+      <line x1="22" y1="300" x2="48" y2="300" stroke="#E9CF7A" strokeOpacity="0.16" strokeWidth="1" />
+      <line x1="232" y1="300" x2="258" y2="300" stroke="#E9CF7A" strokeOpacity="0.16" strokeWidth="1" />
     </svg>
   );
 }
@@ -915,6 +949,75 @@ function DevBroadcastRings() {
         />
       ))}
     </span>
+  );
+}
+
+/**
+ * Animated "now playing" speaker orb for the Current-Output niche.
+ * Layers: outward broadcast rings, a slow-rotating dashed halo, a breathing
+ * gold orb, a speaker cone and three sound-wave arcs that pulse outward in
+ * sequence — together they read as audio actively playing (video-like motion).
+ */
+function DevSpeakerOrb() {
+  return (
+    <div className="relative flex items-center justify-center w-40 h-40">
+      {/* outward broadcast rings */}
+      <DevBroadcastRings />
+
+      {/* slow-rotating dashed halo */}
+      <motion.span
+        aria-hidden
+        className="absolute rounded-full border border-dashed border-gold-300/30"
+        style={{ width: 134, height: 134 }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+      />
+      {/* counter-rotating inner halo */}
+      <motion.span
+        aria-hidden
+        className="absolute rounded-full border border-gold-300/15"
+        style={{ width: 108, height: 108 }}
+        animate={{ rotate: -360 }}
+        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+      />
+
+      {/* breathing gold orb */}
+      <motion.div
+        className="relative z-10 w-24 h-24 rounded-full flex items-center justify-center"
+        style={{ background: 'radial-gradient(circle at 32% 26%, #F8DD8C 0%, #DDB94B 38%, #C9A227 64%, #A6831A 100%)' }}
+        animate={{
+          scale: [1, 1.06, 1],
+          boxShadow: [
+            '0 0 18px 2px rgba(233,207,122,0.35)',
+            '0 0 34px 8px rgba(233,207,122,0.55)',
+            '0 0 18px 2px rgba(233,207,122,0.35)',
+          ],
+        }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <svg viewBox="0 0 48 48" width="46" height="46" fill="none" aria-hidden>
+          {/* speaker cone */}
+          <path d="M7 19h7l9-7v24l-9-7H7z" fill="#0B1D14" />
+          {/* three sound-wave arcs — pulse outward in sequence */}
+          {[
+            { d: 'M27 18c3.4 3.4 3.4 8.6 0 12',     dur: 1.3, delay: 0    },
+            { d: 'M31.5 13.5c6 6 6 15 0 21',         dur: 1.3, delay: 0.18 },
+            { d: 'M36 9c8.6 8.6 8.6 21.4 0 30',      dur: 1.3, delay: 0.36 },
+          ].map((a, i) => (
+            <motion.path
+              key={i}
+              d={a.d}
+              stroke="#0B1D14"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              fill="none"
+              animate={{ opacity: [0.15, 1, 0.15] }}
+              transition={{ duration: a.dur, repeat: Infinity, delay: a.delay, ease: 'easeInOut' }}
+            />
+          ))}
+        </svg>
+      </motion.div>
+    </div>
   );
 }
 
@@ -969,19 +1072,24 @@ export function DevicesShowcase() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* ══ legibility overlays (layered on top of the photo) ══ */}
+      {/* ══ legibility overlays (layered on top of the photo) ══
+           Tuned light so the photographic night scene — lit mosque dome,
+           crescent moon, hanging lantern and lattice arches — reads clearly
+           through the glass, while the left column stays dark enough for the
+           heading copy to remain crisp. */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        {/* base dark wash — tames the overall brightness */}
-        <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.60)' }} />
-        {/* heavier dark on the left half where the heading / cards sit */}
+        {/* very light base wash — just knocks back raw brightness */}
+        <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.28)' }} />
+        {/* directional dark on the left where the heading sits; fades away
+            quickly so the mosque + lantern on the right stay vivid */}
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.80) 0%, rgba(4,10,7,0.42) 55%, rgba(4,10,7,0.28) 100%)' }} />
-        {/* top-edge darkening so the header text is crisp */}
+          style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.78) 0%, rgba(4,10,7,0.34) 42%, rgba(4,10,7,0.04) 72%, rgba(4,10,7,0) 100%)' }} />
+        {/* gentle top + bottom anchoring for header / banner legibility */}
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.68) 0%, rgba(4,10,7,0.10) 38%, rgba(4,10,7,0.45) 100%)' }} />
-        {/* extra vignette around all edges for depth */}
+          style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.42) 0%, rgba(4,10,7,0) 30%, rgba(4,10,7,0) 70%, rgba(4,10,7,0.40) 100%)' }} />
+        {/* soft edge vignette for depth — kept subtle */}
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 110% 110% at 50% 50%, transparent 45%, rgba(2,6,4,0.55) 100%)' }} />
+          style={{ background: 'radial-gradient(ellipse 120% 120% at 55% 45%, transparent 58%, rgba(2,6,4,0.42) 100%)' }} />
 
         {/* subtle twinkling star enhancements over the photo stars */}
         {[
@@ -1053,20 +1161,10 @@ export function DevicesShowcase() {
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
             <div className="relative flex flex-col flex-1 items-center justify-center px-6 pt-10 pb-6">
-              {/* Speaker icon + animated broadcast rings */}
-              <div className="relative flex items-center justify-center w-36 h-36">
-                <DevBroadcastRings />
-                <motion.div
-                  className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center shadow-glow-gold"
-                  style={{ background: 'linear-gradient(135deg,#DDB94B 0%,#C9A227 50%,#A6831A 100%)' }}
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <Volume2 size={34} className="text-midnight-900" />
-                </motion.div>
-              </div>
+              {/* Animated "now playing" speaker orb (rings + halos + sound arcs) */}
+              <DevSpeakerOrb />
 
-              <p className="mt-5 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
+              <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
               <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
 
               {/* Action rows */}
