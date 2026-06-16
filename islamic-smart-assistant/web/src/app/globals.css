@@ -18,7 +18,7 @@ body {
   color: theme('colors.ink');
   font-family: theme('fontFamily.sans');
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(16,185,129,0.10), transparent 60%),
+    radial-gradient(1200px 600px at 10% -10%, rgba(201,162,39,0.07), transparent 60%),
     radial-gradient(900px 500px at 110% 10%, rgba(201,162,39,0.10), transparent 60%),
     linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 60%, var(--bg-grad-3) 100%);
   background-attachment: fixed;
@@ -35,24 +35,24 @@ body {
     @apply bg-midnight-800/70 backdrop-blur-xl border border-white/10 text-parchment;
   }
   .card {
-    @apply rounded-2xl bg-white/80 backdrop-blur-md border border-emerald-100/70 shadow-card-soft;
+    @apply rounded-2xl bg-white/80 backdrop-blur-md border border-gold-300/30 shadow-card-soft;
   }
   .card-pad   { @apply p-6; }
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white px-6 py-3 font-semibold
-           shadow-glow-emerald hover:bg-emerald-700 transition;
+    @apply inline-flex items-center gap-2 rounded-full bg-gold-600 text-midnight-900 px-6 py-3 font-semibold
+           shadow-glow-gold hover:bg-gold-700 transition;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-full border border-emerald-700/20 text-emerald-800
-           px-6 py-3 font-semibold hover:bg-emerald-50 transition;
+    @apply inline-flex items-center gap-2 rounded-full border border-gold-600/30 text-ink
+           px-6 py-3 font-semibold hover:bg-gold-50 transition;
   }
   .profile-input {
-    @apply w-full rounded-lg border border-emerald-100 bg-white px-3 py-2 text-sm
-           focus:outline-none focus:ring-2 focus:ring-emerald-300;
+    @apply w-full rounded-lg border border-gold-200 bg-white px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-gold-300;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800
-           text-xs font-semibold px-3 py-1 border border-emerald-100;
+    @apply inline-flex items-center gap-1 rounded-full bg-gold-50 text-gold-700
+           text-xs font-semibold px-3 py-1 border border-gold-200;
   }
   .chip-gold {
     @apply inline-flex items-center gap-1 rounded-full bg-gold-100 text-gold-700
@@ -60,6 +60,10 @@ body {
   }
   .h-display {
     @apply font-display tracking-tight;
+  }
+  /* Standardized section heading: consistent size across all sections */
+  .section-heading {
+    @apply h-display font-bold leading-tight text-4xl md:text-5xl lg:text-6xl;
   }
   .pattern-bg {
     background-image: theme('backgroundImage.islamic-pattern');
@@ -74,6 +78,6 @@ body {
 
 /* Scrollbar polish */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(6,95,70,0.25); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(6,95,70,0.45); }
+::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.30); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.50); }
 ::-webkit-scrollbar-track { background: transparent; }

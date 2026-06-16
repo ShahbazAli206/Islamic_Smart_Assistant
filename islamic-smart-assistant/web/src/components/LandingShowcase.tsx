@@ -61,12 +61,11 @@ function SectionHead({
       >
         <Icon size={13} /> {chip}
       </span>
-      <h2 className={`h-display text-4xl md:text-5xl font-bold mt-4 leading-[1.08]
-        ${light ? 'text-parchment' : 'text-ink'}`}>
+      <h2 className={`section-heading mt-4 ${light ? 'text-parchment' : 'text-ink'}`}>
         {title}
       </h2>
       <p className={`mt-3 text-base md:text-lg leading-relaxed
-        ${light ? 'text-emerald-100/80' : 'text-ink/65'}`}>
+        ${light ? 'text-parchment/70' : 'text-ink/65'}`}>
         {subtitle}
       </p>
     </motion.div>
@@ -134,54 +133,54 @@ const AZAN_CARDS: AzanCard[] = [
     desc: 'Automatically play Adhan at every prayer time on all your devices.',
     href: '/dashboard/azan',         btn: 'Manage',
     image: '/card_images/Auto_Azan_card_image.png',
-    bg: 'bg-emerald-50', iconBg: 'bg-emerald-500', titleColor: 'text-emerald-600', btnBg: 'bg-emerald-500',
+    bg: 'bg-gold-50', iconBg: 'bg-gold-600', titleColor: 'text-gold-700', btnBg: 'bg-gold-600',
   },
   {
     icon: Clock,      title: 'Prayer Times',
     desc: 'Accurate prayer times based on your location with multiple methods.',
     href: '/dashboard/prayer-times', btn: 'View Times',
     image: '/card_images/prayers_times_card_image.png',
-    bg: 'bg-amber-50', iconBg: 'bg-amber-400', titleColor: 'text-amber-500', btnBg: 'bg-amber-400',
+    bg: 'bg-parchment', iconBg: 'bg-gold-500', titleColor: 'text-gold-600', btnBg: 'bg-gold-500',
   },
   {
     icon: BookOpen,   title: 'Quran & Translation',
     desc: 'Read and listen to the Quran with beautiful translations in your language.',
     href: '/dashboard/quran',        btn: 'Open Quran',
     image: '/card_images/Quran_Translation_Card_image.png',
-    bg: 'bg-blue-50', iconBg: 'bg-blue-500', titleColor: 'text-blue-600', btnBg: 'bg-blue-500',
+    bg: 'bg-gold-100', iconBg: 'bg-midnight-700', titleColor: 'text-midnight-700', btnBg: 'bg-midnight-700',
   },
   {
     icon: Compass,    title: 'Qibla Finder',
     desc: 'Find the exact direction of Qibla from your current location.',
     href: '/dashboard/qibla',        btn: 'Find Qibla',
     image: '/card_images/Qibla_finder_card_image.png',
-    bg: 'bg-purple-50', iconBg: 'bg-purple-500', titleColor: 'text-purple-600', btnBg: 'bg-purple-500',
+    bg: 'bg-gold-50', iconBg: 'bg-gold-700', titleColor: 'text-gold-700', btnBg: 'bg-gold-700',
   },
   {
     icon: Headphones, title: 'Islamic Voices',
     desc: "Choose from world's best reciters and muezzins voices.",
     href: '/dashboard/azan',         btn: 'Explore',
     image: '/card_images/Islamic_Voices_card_image.png',
-    bg: 'bg-rose-50', iconBg: 'bg-rose-400', titleColor: 'text-rose-500', btnBg: 'bg-rose-400',
+    bg: 'bg-parchment', iconBg: 'bg-midnight-800', titleColor: 'text-midnight-700', btnBg: 'bg-midnight-800',
   },
 ];
 
 const AZAN_STATS = [
-  { icon: Bell,     label: 'Next Prayer',     value: 'Dhuhr',            sub: '12:32 PM · 01:15:44', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-  { icon: Volume2,  label: 'Auto-Azan',       value: 'Enabled',          sub: 'All devices synced',  iconBg: 'bg-amber-100',   iconColor: 'text-amber-500' },
-  { icon: Compass,  label: 'Qibla Direction', value: '292° NW',          sub: 'From your location',  iconBg: 'bg-blue-100',    iconColor: 'text-blue-500' },
-  { icon: BookOpen, label: "Today's Verse",   value: 'Al-Baqarah 2:186', sub: 'Tap to read',         iconBg: 'bg-purple-100',  iconColor: 'text-purple-500' },
+  { icon: Bell,     label: 'Next Prayer',     value: 'Dhuhr',            sub: '12:32 PM · 01:15:44', iconBg: 'bg-gold-100', iconColor: 'text-gold-700' },
+  { icon: Volume2,  label: 'Auto-Azan',       value: 'Enabled',          sub: 'All devices synced',  iconBg: 'bg-gold-50',  iconColor: 'text-gold-600' },
+  { icon: Compass,  label: 'Qibla Direction', value: '292° NW',          sub: 'From your location',  iconBg: 'bg-gold-100', iconColor: 'text-gold-600' },
+  { icon: BookOpen, label: "Today's Verse",   value: 'Al-Baqarah 2:186', sub: 'Tap to read',         iconBg: 'bg-gold-50',  iconColor: 'text-gold-500' },
 ];
 
 export function AzanShowcase() {
   return (
     <section id="azan" className="relative overflow-hidden bg-white text-ink">
-      {/* Islamic geometric pattern — far left, emerald tint, very faint */}
+      {/* Islamic geometric pattern — far left, gold tint, very faint */}
       <div
         aria-hidden
         className="absolute inset-y-0 left-0 w-80 pointer-events-none"
         style={{
-          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='rgba(16,185,129,0.28)' stroke-width='1'><path d='M40 4 L74 24 L74 56 L40 76 L6 56 L6 24 Z'/><path d='M40 16 L62 28 L62 52 L40 64 L18 52 L18 28 Z'/><circle cx='40' cy='40' r='10'/></g></svg>")`,
+          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='rgba(201,162,39,0.20)' stroke-width='1'><path d='M40 4 L74 24 L74 56 L40 76 L6 56 L6 24 Z'/><path d='M40 16 L62 28 L62 52 L40 64 L18 52 L18 28 Z'/><circle cx='40' cy='40' r='10'/></g></svg>")`,
           backgroundSize: '80px 80px',
           opacity: 0.7,
         }}
@@ -205,19 +204,19 @@ export function AzanShowcase() {
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
             className="space-y-5 pb-10"
           >
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-sm font-semibold text-emerald-700">
+            <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
             </span>
-            <h2 className="h-display text-5xl md:text-[3.35rem] font-bold leading-[1.05]">
+            <h2 className="section-heading">
               The call to prayer,<br />
-              <span className="text-emerald-600">in every voice you love.</span>
+              <span className="text-gold-600">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
             <p className="max-w-lg text-base leading-relaxed text-ink/60">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
-            <p className="text-base font-bold text-emerald-600">
+            <p className="text-base font-bold text-gold-600">
               Stay connected. Stay mindful. Stay blessed.
             </p>
           </motion.div>
@@ -230,7 +229,7 @@ export function AzanShowcase() {
           >
             <Link
               href="/dashboard/azan"
-              className="inline-flex items-center gap-2.5 rounded-full bg-emerald-800 hover:bg-emerald-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
+              className="inline-flex items-center gap-2.5 rounded-full bg-midnight-800 hover:bg-midnight-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
             >
               <Headphones size={18} /> Explore Voices <ArrowRight size={16} />
             </Link>
@@ -293,13 +292,13 @@ export function AzanShowcase() {
           className="mt-5 mb-10 rounded-2xl border border-stone-100 bg-white shadow-sm px-7 py-5 flex flex-col lg:flex-row items-center gap-6"
         >
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <span className="text-4xl font-serif text-emerald-500 leading-none mt-0.5 shrink-0">&ldquo;</span>
+            <span className="text-4xl font-serif text-gold-500 leading-none mt-0.5 shrink-0">&ldquo;</span>
             <p className="text-sm text-ink/65 leading-relaxed">
               And We have certainly made the Qur'an easy for remembrance, so is there any who will remember?
             </p>
           </div>
           <div className="flex-1 text-center">
-            <p className="font-arabic text-xl text-emerald-900 leading-[2.2]" style={{ direction: 'rtl' }}>
+            <p className="font-arabic text-xl text-ink leading-[2.2]" style={{ direction: 'rtl' }}>
               وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ
             </p>
           </div>
@@ -307,7 +306,7 @@ export function AzanShowcase() {
             <p className="text-sm font-semibold text-ink/55">Al-Qamar 54:17</p>
             <Link
               href="/dashboard/quran"
-              className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm hover:bg-emerald-700 transition"
+              className="w-10 h-10 rounded-xl bg-gold-600 flex items-center justify-center text-white shadow-sm hover:bg-gold-700 transition"
             >
               <ArrowRight size={17} />
             </Link>
@@ -320,56 +319,40 @@ export function AzanShowcase() {
 
 /* ════════════════════════════════════════════════════════════════════════
    2 · QURAN EXPERIENCE — recite · reflect · transform
-   ──────────────────────────────────────────────────────────────────────
-   Hero (illustrated Quran-on-rehal scene + a floating ayah card) → the
-   translation-languages bar → the World-Class Qaris and Recitation Alarms
-   panels → a closing feature strip. The hero artwork is pure CSS + SVG so it
-   stays razor-sharp, works offline, and a real photo can later drop straight
-   into <RehalScene/> without disturbing the surrounding layout.
    ════════════════════════════════════════════════════════════════════════ */
 
-// Headline stats beneath the hero copy (icon · value · caption).
 const HERO_STATS = [
   { icon: BookOpen, value: '114 Surahs',    caption: 'Complete Quran' },
   { icon: Globe2,   value: '10+ Languages', caption: 'Translations & UI' },
   { icon: BellPlus, value: 'Smart Alarms',  caption: 'Never Miss a Word' },
 ];
 
-// Translation / UI languages — 2-letter code, native script, English label and
-// a Tailwind gradient for the code badge. (Flag emoji render as plain letters
-// on Windows, so coloured code badges are used instead — identical everywhere.)
 const LANGUAGES = [
-  { code: 'EN', native: 'English',  label: 'English', rtl: false, accent: 'from-blue-500 to-indigo-600' },
-  { code: 'AR', native: 'العربية',  label: 'Arabic',  rtl: true,  accent: 'from-emerald-500 to-teal-600' },
-  { code: 'UR', native: 'اردو',     label: 'Urdu',    rtl: true,  accent: 'from-green-500 to-emerald-600' },
-  { code: 'TR', native: 'Türkçe',   label: 'Turkish', rtl: false, accent: 'from-red-500 to-rose-600' },
-  { code: 'ZH', native: '中文',      label: 'Chinese', rtl: false, accent: 'from-rose-600 to-red-700' },
-  { code: 'FR', native: 'Français', label: 'French',  rtl: false, accent: 'from-indigo-500 to-violet-600' },
-  { code: 'BN', native: 'বাংলা',    label: 'Bengali', rtl: false, accent: 'from-orange-500 to-amber-600' },
-  { code: 'FA', native: 'فارسی',    label: 'Persian', rtl: true,  accent: 'from-teal-500 to-emerald-600' },
-  { code: 'MS', native: 'Melayu',   label: 'Malay',   rtl: false, accent: 'from-lime-600 to-yellow-600' },
+  { code: 'EN', native: 'English',  label: 'English', rtl: false, accent: 'from-gold-600 to-gold-900' },
+  { code: 'AR', native: 'العربية',  label: 'Arabic',  rtl: true,  accent: 'from-gold-500 to-gold-700' },
+  { code: 'UR', native: 'اردو',     label: 'Urdu',    rtl: true,  accent: 'from-gold-400 to-gold-600' },
+  { code: 'TR', native: 'Türkçe',   label: 'Turkish', rtl: false, accent: 'from-midnight-600 to-midnight-800' },
+  { code: 'ZH', native: '中文',      label: 'Chinese', rtl: false, accent: 'from-midnight-700 to-midnight-900' },
+  { code: 'FR', native: 'Français', label: 'French',  rtl: false, accent: 'from-gold-700 to-midnight-700' },
+  { code: 'BN', native: 'বাংলা',    label: 'Bengali', rtl: false, accent: 'from-gold-500 to-midnight-800' },
+  { code: 'FA', native: 'فارسی',    label: 'Persian', rtl: true,  accent: 'from-midnight-600 to-gold-700' },
+  { code: 'MS', native: 'Melayu',   label: 'Malay',   rtl: false, accent: 'from-gold-600 to-midnight-700' },
 ];
 
-// Featured reciters (English + Arabic name). `edition` is the islamic.network
-// CDN identifier used to stream a short Surah Al-Fatiha preview; unknown
-// editions simply fail silently (the button resets) so a row never plays the
-// wrong voice. `accent` themes the avatar tile.
 const QARIS = [
-  { name: 'Abdul Basit Abdul Samad',  arabic: 'عبد الباسط عبد الصمد', edition: 'ar.abdulbasitmurattal', accent: 'from-emerald-500 to-emerald-700' },
+  { name: 'Abdul Basit Abdul Samad',  arabic: 'عبد الباسط عبد الصمد', edition: 'ar.abdulbasitmurattal', accent: 'from-gold-500 to-gold-700' },
   { name: 'Mishary Rashid Alafasy',   arabic: 'مشاري بن راشد العفاسي', edition: 'ar.alafasy',           accent: 'from-gold-400 to-gold-600' },
-  { name: 'Mahmoud Khalil Al Husary', arabic: 'محمود خليل الحصري',    edition: 'ar.husary',            accent: 'from-cyan-500 to-emerald-600' },
-  { name: 'Saad Al-Ghamdi',           arabic: 'سعد الغامدي',          edition: 'ar.saadalghamadi',     accent: 'from-amber-500 to-rose-500' },
-  { name: 'Ahmed Al Ajmi',            arabic: 'أحمد العجمي',          edition: 'ar.ahmedajamy',        accent: 'from-violet-500 to-indigo-600' },
+  { name: 'Mahmoud Khalil Al Husary', arabic: 'محمود خليل الحصري',    edition: 'ar.husary',            accent: 'from-midnight-600 to-midnight-800' },
+  { name: 'Saad Al-Ghamdi',           arabic: 'سعد الغامدي',          edition: 'ar.saadalghamadi',     accent: 'from-gold-600 to-midnight-700' },
+  { name: 'Ahmed Al Ajmi',            arabic: 'أحمد العجمي',          edition: 'ar.ahmedajamy',        accent: 'from-midnight-700 to-midnight-900' },
 ];
 
-// Sample recitation alarms — `tint` colours the glyph on its dark glass tile.
 const ALARMS = [
-  { icon: Sun,      time: '05:30 AM', surah: 'Surah Yaseen',  when: 'Every day after Fajr',    tint: 'bg-amber-500 text-white' },
-  { icon: Moon,     time: '09:00 PM', surah: 'Surah Al-Mulk', when: 'Every night before sleep', tint: 'bg-indigo-600 text-white' },
-  { icon: BookOpen, time: '06:00 AM', surah: 'Surah Al-Kahf', when: 'Every Friday morning',    tint: 'bg-emerald-600 text-white' },
+  { icon: Sun,      time: '05:30 AM', surah: 'Surah Yaseen',  when: 'Every day after Fajr',    tint: 'bg-gold-500 text-white' },
+  { icon: Moon,     time: '09:00 PM', surah: 'Surah Al-Mulk', when: 'Every night before sleep', tint: 'bg-midnight-700 text-white' },
+  { icon: BookOpen, time: '06:00 AM', surah: 'Surah Al-Kahf', when: 'Every Friday morning',    tint: 'bg-gold-600 text-white' },
 ];
 
-// Closing feature strip.
 const QURAN_FEATURES = [
   { icon: BookOpen,   title: 'Authentic Recitations', desc: 'By world-renowned Qaris' },
   { icon: Languages,  title: 'Accurate Translations', desc: 'In 10+ global languages' },
@@ -378,21 +361,13 @@ const QURAN_FEATURES = [
   { icon: Moon,       title: 'Dark & Light Mode',     desc: 'Comfort for every reader' },
 ];
 
-// 192 kbps surah recitations on the public islamic.network CDN (open tier).
 const QURAN_AUDIO_CDN = 'https://cdn.islamic.network/quran/audio-surah/192';
 
-/**
- * Warm, softly-lit scene of an open Quran on a wooden rehal (X-stand), built
- * entirely from CSS gradients + SVG so it stays razor-sharp and works offline.
- */
 function RehalScene({ className = '' }: { className?: string }) {
   return (
     <div className={`relative aspect-[4/3] w-full overflow-hidden rounded-[1.75rem] border border-white/10 shadow-2xl ${className}`}>
-      {/* deep interior + a warm pool of light */}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 90% at 50% 28%, #1c3d30 0%, #0f2920 46%, #08160f 100%)' }} />
       <div className="absolute inset-0" style={{ background: 'radial-gradient(46% 42% at 52% 44%, rgba(233,207,122,0.45) 0%, rgba(221,185,75,0.12) 45%, transparent 72%)' }} />
-
-      {/* pointed mosque arch + hanging lantern behind */}
       <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden className="absolute inset-0 h-full w-full">
         <defs>
           <linearGradient id="archStroke" x1="0" y1="0" x2="0" y2="1">
@@ -408,12 +383,8 @@ function RehalScene({ className = '' }: { className?: string }) {
           <circle cx="200" cy="54" r="2.6" fill="#E9CF7A" fillOpacity="0.65" stroke="none" />
         </g>
       </svg>
-
-      {/* soft light shafts */}
       <div aria-hidden className="absolute -top-10 left-1/4 h-[150%] w-24 rotate-[14deg] bg-gradient-to-b from-gold-200/25 to-transparent blur-md" />
       <div aria-hidden className="absolute -top-10 right-1/3 h-[150%] w-16 -rotate-[12deg] bg-gradient-to-b from-gold-100/20 to-transparent blur-md" />
-
-      {/* the open Quran resting on a rehal */}
       <svg viewBox="0 0 420 320" aria-hidden className="absolute inset-x-0 bottom-0 mx-auto h-[80%]">
         <defs>
           <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
@@ -437,11 +408,7 @@ function RehalScene({ className = '' }: { className?: string }) {
             <stop offset="100%" stopColor="#E9CF7A" stopOpacity="0" />
           </radialGradient>
         </defs>
-
-        {/* glow behind the book */}
         <ellipse cx="210" cy="150" rx="185" ry="120" fill="url(#bookGlow)" />
-
-        {/* rehal X-stand */}
         <g strokeLinecap="round">
           <line x1="155" y1="160" x2="300" y2="300" stroke="url(#wood)" strokeWidth="17" />
           <line x1="265" y1="160" x2="120" y2="300" stroke="url(#wood)" strokeWidth="17" />
@@ -449,17 +416,11 @@ function RehalScene({ className = '' }: { className?: string }) {
           <circle cx="155" cy="160" r="6" fill="#E9CF7A" />
           <circle cx="265" cy="160" r="6" fill="#E9CF7A" />
         </g>
-
-        {/* cover peeking below the pages + gold fore-edge */}
         <path d="M78 170 L210 184 L342 170 L330 198 L210 188 L90 198 Z" fill="url(#cover)" stroke="#E9CF7A" strokeOpacity="0.45" strokeWidth="1.4" />
         <path d="M90 198 L210 188 L330 198 L330 203 L210 193 L90 203 Z" fill="#DDB94B" />
-
-        {/* the two open pages */}
         <path d="M75 128 L210 150 L210 178 L98 165 Z" fill="url(#pageL)" stroke="#C9A227" strokeOpacity="0.4" strokeWidth="1" />
         <path d="M345 128 L210 150 L210 178 L322 165 Z" fill="url(#pageR)" stroke="#C9A227" strokeOpacity="0.4" strokeWidth="1" />
         <line x1="210" y1="150" x2="210" y2="178" stroke="#B08A2E" strokeWidth="1.4" strokeOpacity="0.6" />
-
-        {/* faint lines of script (RTL hint) */}
         <g stroke="#9A7B33" strokeOpacity="0.45" strokeWidth="2" strokeLinecap="round">
           <line x1="112" y1="142" x2="198" y2="151" />
           <line x1="108" y1="150" x2="198" y2="158" />
@@ -468,8 +429,6 @@ function RehalScene({ className = '' }: { className?: string }) {
           <line x1="222" y1="158" x2="312" y2="150" />
           <line x1="222" y1="165" x2="308" y2="158" />
         </g>
-
-        {/* bookmark ribbon */}
         <path d="M205 150 L215 150 L215 200 L210 191 L205 200 Z" fill="#C0392B" opacity="0.85" />
       </svg>
     </div>
@@ -484,18 +443,18 @@ function AyahGlassCard({ className = '' }: { className?: string }) {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className={`w-[19rem] max-w-[86%] rounded-2xl border border-gold-300/30 bg-emerald-950/55 p-6 pt-8 text-center shadow-2xl backdrop-blur-xl ${className}`}
+      className={`w-[19rem] max-w-[86%] rounded-2xl border border-gold-300/30 bg-midnight-900/55 p-6 pt-8 text-center shadow-2xl backdrop-blur-xl ${className}`}
     >
       <Sparkles size={12} className="absolute left-3 top-3 text-gold-300/60" />
       <Sparkles size={12} className="absolute right-3 top-3 text-gold-300/60" />
-      <span className="absolute -top-6 left-1/2 inline-flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-emerald-800 shadow-lg ring-4 ring-emerald-950/40">
+      <span className="absolute -top-6 left-1/2 inline-flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-gold-700 shadow-lg ring-4 ring-midnight-900/40">
         <BookOpen size={22} />
       </span>
       <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
         إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-emerald-50/90">
-        Indeed, this Qur’an guides to that which is most upright.
+      <p className="mt-3 text-sm leading-relaxed text-parchment/80">
+        Indeed, this Qur'an guides to that which is most upright.
       </p>
       <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">Surah Al-Isra 17:9</p>
     </motion.div>
@@ -511,7 +470,7 @@ function ToggleSwitch({ defaultOn = true }: { defaultOn?: boolean }) {
       role="switch"
       aria-checked={on}
       onClick={() => setOn((v) => !v)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-stone-200'}`}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-gold-600' : 'bg-stone-200'}`}
     >
       <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-6' : 'left-1'}`} />
     </button>
@@ -542,27 +501,28 @@ export function QuranShowcase() {
 
   return (
     <section id="quran" className="relative overflow-hidden bg-mosque-gradient text-parchment">
-      {/* ── full-section background image: backgound-image2.png ── */}
+      {/* ── full-section background image ── */}
       <div className="absolute inset-0 pointer-events-none">
         <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
         {/* dark overlay so text and UI elements remain readable */}
-        <div className="absolute inset-0 bg-emerald-950/80" />
+        <div className="absolute inset-0 bg-midnight-900/80" />
       </div>
       {/* pattern + aurora */}
       <div className="absolute inset-0 pattern-bg opacity-[0.15] pointer-events-none" />
-      <Aurora className="w-[34rem] h-[34rem] bg-emerald-400/20 -top-40 -left-32" />
+      <Aurora className="w-[34rem] h-[34rem] bg-gold-400/10 -top-40 -left-32" />
       <KhatamStar className="absolute top-16 left-[34%] w-52 h-52 text-gold-300/[0.07] animate-spin-slow hidden lg:block" />
 
       <div className="relative max-w-7xl mx-auto px-6 pt-12 pb-0">
-        {/* quran-bg.png — right-half photo, contained within the max-w-7xl boundary */}
+        {/* quran-bg.png — right-half photo */}
         <div
           aria-hidden
           className="absolute top-0 right-0 w-1/2 h-[340px] hidden lg:block overflow-hidden pointer-events-none"
         >
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/55 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-950" />
+          <div className="absolute inset-0 bg-gradient-to-r from-midnight-900 via-midnight-900/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-midnight-900" />
         </div>
+
         {/* ── hero ── */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* left: copy + stats */}
@@ -574,11 +534,11 @@ export function QuranShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
               <Sparkles size={13} /> Quran Experience
             </span>
-            <h2 className="h-display text-5xl md:text-6xl font-bold leading-[1.02]">
+            <h2 className="section-heading">
               Recite. Reflect.<br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">Transform.</span>
             </h2>
-            <p className="max-w-md text-base leading-relaxed text-emerald-100/75">
+            <p className="max-w-md text-base leading-relaxed text-parchment/70">
               Explore the beauty of the Quran with crystal-clear recitations, authentic
               translations, and smart scheduling to keep you connected every day.
             </p>
@@ -590,14 +550,14 @@ export function QuranShowcase() {
                   </span>
                   <div className="leading-tight">
                     <div className="text-sm font-bold text-gold-200">{s.value}</div>
-                    <div className="text-xs text-emerald-100/55">{s.caption}</div>
+                    <div className="text-xs text-parchment/50">{s.caption}</div>
                   </div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* right: ayah card floats over the photo background */}
+          {/* right: ayah card */}
           <motion.div
             initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.2 }}
@@ -611,9 +571,9 @@ export function QuranShowcase() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-          className="mt-6 rounded-2xl border border-emerald-100/60 bg-parchment/95 px-5 py-4 shadow-xl"
+          className="mt-6 rounded-2xl border border-gold-300/40 bg-parchment/95 px-5 py-4 shadow-xl"
         >
-          <div className="mb-3 flex items-center gap-2 text-emerald-800">
+          <div className="mb-3 flex items-center gap-2 text-gold-700">
             <Globe2 size={17} />
             <h3 className="text-sm font-bold">Translations &amp; UI in 10+ Languages</h3>
           </div>
@@ -623,14 +583,14 @@ export function QuranShowcase() {
                 key={l.code}
                 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.03, duration: 0.35 }}
-                className="flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-white px-2 py-1.5 shadow-sm"
+                className="flex items-center gap-1.5 rounded-xl border border-gold-200/50 bg-white px-2 py-1.5 shadow-sm"
               >
                 <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${l.accent} text-[9px] font-extrabold tracking-wide text-white`}>
                   {l.code}
                 </span>
                 <span className="flex min-w-0 flex-col leading-tight">
                   <span
-                    className={`truncate text-[11px] font-bold text-emerald-900 ${l.rtl ? 'font-arabic' : ''}`}
+                    className={`truncate text-[11px] font-bold text-ink ${l.rtl ? 'font-arabic' : ''}`}
                     style={l.rtl ? { direction: 'rtl' } : undefined}
                   >
                     {l.native}
@@ -644,14 +604,14 @@ export function QuranShowcase() {
 
         {/* ── qaris + alarms ── */}
         <div className="mt-4 grid lg:grid-cols-2 gap-4">
-          {/* World-Class Qaris — light cream panel */}
+          {/* World-Class Qaris */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
             className="relative overflow-hidden rounded-2xl border border-stone-200 bg-parchment/95 p-5 shadow-xl"
           >
             <div className="mb-3.5 flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gold-200 bg-gold-50 text-gold-700">
                 <Headphones size={18} />
               </span>
               <div>
@@ -668,7 +628,7 @@ export function QuranShowcase() {
                     initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                     className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 transition
-                      ${playing ? 'border-emerald-200 bg-emerald-50' : 'border-stone-100 bg-white hover:bg-stone-50'}`}
+                      ${playing ? 'border-gold-200 bg-gold-50' : 'border-stone-100 bg-white hover:bg-stone-50'}`}
                   >
                     <QariAvatar name={q.name} accent={q.accent} />
                     <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">{q.name}</span>
@@ -678,7 +638,7 @@ export function QuranShowcase() {
                       onClick={() => toggleQari(q)}
                       aria-label={playing ? `Pause ${q.name}` : `Play ${q.name}`}
                       className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition
-                        ${playing ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'}`}
+                        ${playing ? 'border-gold-500 bg-gold-500 text-white' : 'border-gold-300 text-gold-700 hover:bg-gold-50'}`}
                     >
                       {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                     </button>
@@ -694,7 +654,7 @@ export function QuranShowcase() {
             </Link>
           </motion.div>
 
-          {/* Recitation Alarms — light cream panel */}
+          {/* Recitation Alarms */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}
@@ -702,7 +662,7 @@ export function QuranShowcase() {
           >
             <div className="mb-3.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gold-200 bg-gold-50 text-gold-700">
                   <BellRing size={18} />
                 </span>
                 <div>
@@ -712,7 +672,7 @@ export function QuranShowcase() {
               </div>
               <Link
                 href="/dashboard/recitation"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-900 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-800"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-700 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-gold-600"
               >
                 <Plus size={13} /> New Schedule
               </Link>
@@ -743,7 +703,7 @@ export function QuranShowcase() {
       </div>
 
       {/* ── closing feature strip ── */}
-      <div className="relative mt-5 border-t border-white/10 bg-emerald-950/50 backdrop-blur">
+      <div className="relative mt-5 border-t border-white/10 bg-midnight-900/50 backdrop-blur">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-4 px-6 py-5 sm:grid-cols-3 lg:grid-cols-5">
           {QURAN_FEATURES.map((f, i) => (
             <motion.div
@@ -757,7 +717,7 @@ export function QuranShowcase() {
               </span>
               <div className="leading-tight">
                 <p className="text-xs font-bold text-parchment">{f.title}</p>
-                <p className="text-[10px] text-emerald-100/55">{f.desc}</p>
+                <p className="text-[10px] text-parchment/50">{f.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -773,19 +733,17 @@ export function QuranShowcase() {
    3 · DEVICES & OUTPUTS — cinematic Islamic night scene
    ════════════════════════════════════════════════════════════════════════ */
 
-/* ── device catalogue ────────────────────────────────────────────────── */
-
 const DEVICES = [
-  { name: 'iPhone 15',   owner: 'Home',    Icon: Smartphone, status: 'playing' as const, accent: 'from-emerald-400 to-emerald-600',  fill: 'bg-emerald-400',  vol: 65 },
-  { name: 'iPad Pro',    owner: 'Home',    Icon: Tablet,     status: 'online'  as const, accent: 'from-cyan-400 to-teal-500',        fill: 'bg-cyan-400',     vol: 38 },
-  { name: 'MacBook Pro', owner: 'Office',  Icon: Monitor,    status: 'online'  as const, accent: 'from-violet-500 to-purple-600',    fill: 'bg-violet-400',   vol: 55 },
-  { name: 'Echo Dot',    owner: 'Kitchen', Icon: Speaker,    status: 'idle'    as const, accent: 'from-slate-500 to-slate-600',      fill: 'bg-slate-400',    vol: 28 },
+  { name: 'iPhone 15',   owner: 'Home',    Icon: Smartphone, status: 'playing' as const, accent: 'from-gold-400 to-gold-600',         fill: 'bg-gold-400',    vol: 65 },
+  { name: 'iPad Pro',    owner: 'Home',    Icon: Tablet,     status: 'online'  as const, accent: 'from-midnight-400 to-midnight-600',  fill: 'bg-midnight-400', vol: 38 },
+  { name: 'MacBook Pro', owner: 'Office',  Icon: Monitor,    status: 'online'  as const, accent: 'from-gold-600 to-midnight-700',      fill: 'bg-gold-600',    vol: 55 },
+  { name: 'Echo Dot',    owner: 'Kitchen', Icon: Speaker,    status: 'idle'    as const, accent: 'from-midnight-600 to-midnight-800',  fill: 'bg-midnight-600', vol: 28 },
 ];
 
 const BADGE = {
-  playing: { ring: 'bg-emerald-400',  cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' },
-  online:  { ring: 'bg-emerald-400',  cls: 'bg-emerald-500/10 text-emerald-200/80 border border-emerald-500/20' },
-  idle:    { ring: 'bg-slate-400',    cls: 'bg-slate-500/20 text-slate-300 border border-slate-500/20' },
+  playing: { ring: 'bg-gold-400',  cls: 'bg-gold-400/20 text-gold-300 border border-gold-400/30' },
+  online:  { ring: 'bg-gold-400',  cls: 'bg-gold-400/10 text-gold-300/80 border border-gold-400/20' },
+  idle:    { ring: 'bg-slate-400', cls: 'bg-slate-500/20 text-slate-300 border border-slate-500/20' },
 };
 
 const PLATFORMS = [
@@ -794,8 +752,6 @@ const PLATFORMS = [
   { label: 'Chromecast',   Icon: Cast   },
   { label: 'AirPlay',      Icon: Airplay },
 ];
-
-/* ── background artwork helpers ─────────────────────────────────────── */
 
 /** Crescent moon — top-right of the section. */
 function DevCrescent({ className = '' }: { className?: string }) {
@@ -818,38 +774,25 @@ function DevLantern({ className = '' }: { className?: string }) {
           <stop offset="0%" stopColor="#FCE7A6" stopOpacity="0.9" /><stop offset="100%" stopColor="#F2C94C" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {/* chain */}
       <path d="M27 0V22" stroke="url(#dlBrass)" strokeWidth="2.5" />
       <circle cx="27" cy="4" r="4" fill="url(#dlBrass)" />
-      {/* cap */}
       <path d="M16 24c0-10 5-16 11-16s11 6 11 16z" fill="url(#dlBrass)" />
-      {/* body */}
       <path d="M13 32h28l6 64c0 12-12 20-20 20s-20-8-20-20z" fill="url(#dlBrass)" fillOpacity="0.75" />
-      {/* glass + flame glow */}
       <path d="M20 36h14l3 58c0 7-7 11-10 11s-10-4-10-11z" fill="#FCE7A6" fillOpacity="0.2" />
       <circle cx="27" cy="62" r="20" fill="url(#dlFlame)" />
       <path d="M27 50c6 6 7 12 3 19-1 3 0 5 2 6-8 0-13-7-10-16 1-4 3-7 5-9z" fill="#F2994A" opacity="0.85" />
-      {/* lattice */}
       <line x1="27" y1="34" x2="27" y2="94" stroke="#A6791E" strokeWidth="1.6" opacity="0.5" />
       <line x1="17" y1="60" x2="37" y2="60" stroke="#A6791E" strokeWidth="1.6" opacity="0.5" />
-      {/* base */}
       <path d="M19 98h18l-3 16H22z" fill="url(#dlBrass)" />
       <rect x="21" y="114" width="12" height="6" rx="2" fill="url(#dlBrass)" />
     </svg>
   );
 }
 
-/**
- * Ornate Mughal/Islamic mihrab arch that frames the current-output speaker.
- * A scalloped (cusped) ogee arch with a warm radial glow filling the niche,
- * concentric gold profiles, a layered finial at the apex and slender column
- * ornaments — designed to read as an elegant prayer-niche behind the speaker.
- */
 function MughalArch({ className = '' }: { className?: string }) {
   return (
     <svg viewBox="0 0 280 380" fill="none" aria-hidden className={className} preserveAspectRatio="xMidYMax meet">
       <defs>
-        {/* warm glow that fills the niche, brightest just behind the speaker */}
         <radialGradient id="mihrabGlow" cx="50%" cy="40%" r="62%">
           <stop offset="0%"  stopColor="#E9CF7A" stopOpacity="0.20" />
           <stop offset="45%" stopColor="#C9A227" stopOpacity="0.08" />
@@ -861,11 +804,7 @@ function MughalArch({ className = '' }: { className?: string }) {
           <stop offset="100%" stopColor="#8A6B16" />
         </linearGradient>
       </defs>
-
-      {/* niche fill — soft golden glow inside the cusped outline */}
       <path d="M30 380V176C30 96 64 44 140 22 216 44 250 96 250 176V380Z" fill="url(#mihrabGlow)" />
-
-      {/* outer cusped (scalloped) ogee arch */}
       <path d="M22 380V178
                C22 150 26 128 36 110
                Q44 122 56 116 Q50 100 62 92
@@ -877,15 +816,10 @@ function MughalArch({ className = '' }: { className?: string }) {
                Q236 122 244 110 C254 128 258 150 258 178 V380"
             stroke="url(#mihrabStroke)" strokeOpacity="0.55" strokeWidth="2.2"
             strokeLinejoin="round" fill="none" />
-
-      {/* mid profile arch */}
       <path d="M48 380V190C48 116 80 74 140 56 200 74 232 116 232 190V380"
         stroke="#E9CF7A" strokeOpacity="0.30" strokeWidth="1.5" fill="none" />
-      {/* inner keyline arch */}
       <path d="M72 380V202C72 138 102 100 140 86 178 100 208 138 208 202V380"
         stroke="#E9CF7A" strokeOpacity="0.16" strokeWidth="1" fill="none" />
-
-      {/* layered apex finial */}
       <path d="M140 40C140 28 134 24 134 16 134 9 140 2 140 2 140 2 146 9 146 16 146 24 140 28 140 40Z"
         fill="url(#mihrabStroke)" fillOpacity="0.55" />
       <circle cx="140" cy="20" r="11" stroke="#E9CF7A" strokeOpacity="0.55" strokeWidth="1.5" fill="none" />
@@ -893,8 +827,6 @@ function MughalArch({ className = '' }: { className?: string }) {
       <circle cx="140" cy="20" r="2.2" fill="#F6D67A" fillOpacity="0.95" />
       <path d="M126 12L122 8M154 12L158 8M140 2V-3"
         stroke="#E9CF7A" strokeOpacity="0.45" strokeWidth="1.2" strokeLinecap="round" />
-
-      {/* slender column ornaments down each jamb */}
       {[206,230,254,278,302,326,350].map((y) => (
         <g key={y}>
           <circle cx="38"  cy={y} r="2.6" fill="#E9CF7A" fillOpacity="0.22" />
@@ -903,7 +835,6 @@ function MughalArch({ className = '' }: { className?: string }) {
           <circle cx="253" cy={y + 12} r="1.6" fill="#E9CF7A" fillOpacity="0.12" />
         </g>
       ))}
-      {/* jamb base mouldings */}
       <line x1="22" y1="236" x2="48" y2="236" stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1" />
       <line x1="232" y1="236" x2="258" y2="236" stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1" />
       <line x1="22" y1="300" x2="48" y2="300" stroke="#E9CF7A" strokeOpacity="0.16" strokeWidth="1" />
@@ -935,7 +866,7 @@ function BannerWaveform() {
   );
 }
 
-/** Outward-pulsing broadcast rings (framer-motion, runs always). */
+/** Outward-pulsing broadcast rings. */
 function DevBroadcastRings() {
   return (
     <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -952,19 +883,10 @@ function DevBroadcastRings() {
   );
 }
 
-/**
- * Animated "now playing" speaker orb for the Current-Output niche.
- * Layers: outward broadcast rings, a slow-rotating dashed halo, a breathing
- * gold orb, a speaker cone and three sound-wave arcs that pulse outward in
- * sequence — together they read as audio actively playing (video-like motion).
- */
 function DevSpeakerOrb() {
   return (
     <div className="relative flex items-center justify-center w-40 h-40">
-      {/* outward broadcast rings */}
       <DevBroadcastRings />
-
-      {/* slow-rotating dashed halo */}
       <motion.span
         aria-hidden
         className="absolute rounded-full border border-dashed border-gold-300/30"
@@ -972,7 +894,6 @@ function DevSpeakerOrb() {
         animate={{ rotate: 360 }}
         transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
       />
-      {/* counter-rotating inner halo */}
       <motion.span
         aria-hidden
         className="absolute rounded-full border border-gold-300/15"
@@ -980,8 +901,6 @@ function DevSpeakerOrb() {
         animate={{ rotate: -360 }}
         transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
       />
-
-      {/* breathing gold orb */}
       <motion.div
         className="relative z-10 w-24 h-24 rounded-full flex items-center justify-center"
         style={{ background: 'radial-gradient(circle at 32% 26%, #F8DD8C 0%, #DDB94B 38%, #C9A227 64%, #A6831A 100%)' }}
@@ -996,9 +915,7 @@ function DevSpeakerOrb() {
         transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
       >
         <svg viewBox="0 0 48 48" width="46" height="46" fill="none" aria-hidden>
-          {/* speaker cone */}
           <path d="M7 19h7l9-7v24l-9-7H7z" fill="#0B1D14" />
-          {/* three sound-wave arcs — pulse outward in sequence */}
           {[
             { d: 'M27 18c3.4 3.4 3.4 8.6 0 12',     dur: 1.3, delay: 0    },
             { d: 'M31.5 13.5c6 6 6 15 0 21',         dur: 1.3, delay: 0.18 },
@@ -1025,7 +942,7 @@ function DevSpeakerOrb() {
 function VolumeBar({ pct, fill, idle }: { pct: number; fill: string; idle: boolean }) {
   return (
     <div className="flex items-center gap-2 mt-4">
-      <Volume2 size={13} className="text-emerald-100/35 shrink-0" />
+      <Volume2 size={13} className="text-parchment/35 shrink-0" />
       <div className="relative flex-1 h-[5px] rounded-full bg-white/10 overflow-visible">
         <div className={`absolute inset-y-0 left-0 rounded-full ${idle ? 'bg-slate-500/50' : fill}`}
              style={{ width: `${pct}%` }} />
@@ -1036,8 +953,6 @@ function VolumeBar({ pct, fill, idle }: { pct: number; fill: string; idle: boole
     </div>
   );
 }
-
-/* ── main component ──────────────────────────────────────────────────── */
 
 export function DevicesShowcase() {
   const [outputLabel] = useLocalStorage<string>('isa:audioOutputLabel', 'System default');
@@ -1056,12 +971,6 @@ export function DevicesShowcase() {
   };
 
   return (
-    /*
-     * Background: /public/devices-bg.png — a photographic Islamic night scene
-     * (mosque across a lake, ornate arch panels, hanging lanterns, crescent
-     * moon, tropical plants). Layered dark + directional gradient overlays
-     * ensure all foreground text and cards remain legible.
-     */
     <section
       id="devices"
       className="relative overflow-hidden text-parchment"
@@ -1072,26 +981,15 @@ export function DevicesShowcase() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* ══ legibility overlays (layered on top of the photo) ══
-           Tuned light so the photographic night scene — lit mosque dome,
-           crescent moon, hanging lantern and lattice arches — reads clearly
-           through the glass, while the left column stays dark enough for the
-           heading copy to remain crisp. */}
+      {/* ══ legibility overlays ══ */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        {/* very light base wash — just knocks back raw brightness */}
         <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.28)' }} />
-        {/* directional dark on the left where the heading sits; fades away
-            quickly so the mosque + lantern on the right stay vivid */}
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.78) 0%, rgba(4,10,7,0.34) 42%, rgba(4,10,7,0.04) 72%, rgba(4,10,7,0) 100%)' }} />
-        {/* gentle top + bottom anchoring for header / banner legibility */}
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.42) 0%, rgba(4,10,7,0) 30%, rgba(4,10,7,0) 70%, rgba(4,10,7,0.40) 100%)' }} />
-        {/* soft edge vignette for depth — kept subtle */}
         <div className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse 120% 120% at 55% 45%, transparent 58%, rgba(2,6,4,0.42) 100%)' }} />
-
-        {/* subtle twinkling star enhancements over the photo stars */}
         {[
           { r: 310, t: 38,  s: 2.2 },
           { r: 238, t: 18,  s: 1.6 },
@@ -1106,8 +1004,6 @@ export function DevicesShowcase() {
             transition={{ duration: 2 + i * 0.38, repeat: Infinity, delay: i * 0.52, ease: 'easeInOut' }}
           />
         ))}
-
-        {/* Islamic geometric pattern — very faint, adds texture without obscuring the photo */}
         <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
       </div>
 
@@ -1121,14 +1017,14 @@ export function DevicesShowcase() {
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
             className="max-w-xl"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-emerald-200 backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
               <Radio size={12} className="rotate-90" /> Connected everywhere
             </span>
-            <h2 className="mt-4 font-display font-bold leading-[1.06] text-4xl md:text-5xl">
+            <h2 className="mt-4 section-heading">
               <span className="text-parchment">One tap, every speaker</span><br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span>
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-emerald-100/70 max-w-md">
+            <p className="mt-4 text-base leading-relaxed text-parchment/70 max-w-md">
               Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house —
               phones, tablets, desktops and smart speakers, kept in sync.
             </p>
@@ -1154,53 +1050,49 @@ export function DevicesShowcase() {
           <motion.div
             initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl border border-emerald-800/50 flex flex-col min-h-[360px]"
+            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col min-h-[360px]"
             style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
           >
-            {/* Mughal arch spans the full card */}
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
             <div className="relative flex flex-col flex-1 items-center justify-center px-6 pt-10 pb-6">
-              {/* Animated "now playing" speaker orb (rings + halos + sound arcs) */}
               <DevSpeakerOrb />
 
               <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
               <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
 
-              {/* Action rows */}
               <div className="mt-6 w-full space-y-2.5">
                 <button
                   onClick={rescan}
-                  className="flex items-center justify-between w-full rounded-2xl border border-emerald-800/55 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-emerald-100/90 hover:bg-white/10 transition"
+                  className="flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
                 >
                   <span className="flex items-center gap-3">
                     <RefreshCw size={15} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
                     {scanning ? 'Scanning…' : 'Rescan outputs'}
                   </span>
-                  <ArrowRight size={13} className="text-emerald-100/35" />
+                  <ArrowRight size={13} className="text-parchment/35" />
                 </button>
                 <Link
                   href="/dashboard/devices"
-                  className="flex items-center justify-between w-full rounded-2xl border border-emerald-800/55 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-emerald-100/90 hover:bg-white/10 transition"
+                  className="flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
                 >
                   <span className="flex items-center gap-3">
                     <Bluetooth size={15} className="text-gold-300" /> Pair Bluetooth device
                   </span>
-                  <ArrowRight size={13} className="text-emerald-100/35" />
+                  <ArrowRight size={13} className="text-parchment/35" />
                 </Link>
               </div>
 
               {outCount !== null && !scanning && (
-                <p className="mt-3 text-xs text-emerald-100/50 text-center">
+                <p className="mt-3 text-xs text-parchment/50 text-center">
                   {outCount > 0
-                    ? <><CheckCircle2 size={11} className="inline mr-1 text-emerald-400" />{outCount} output{outCount !== 1 ? 's' : ''} detected</>
+                    ? <><CheckCircle2 size={11} className="inline mr-1 text-gold-400" />{outCount} output{outCount !== 1 ? 's' : ''} detected</>
                     : 'Connect a device to detect outputs'}
                 </p>
               )}
             </div>
 
-            {/* mosque silhouette at card base */}
-            <MosqueSilhouette className="shrink-0 w-full text-emerald-900/50" />
+            <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
           </motion.div>
 
           {/* RIGHT: 2×2 device cards + platform pills */}
@@ -1218,25 +1110,23 @@ export function DevicesShowcase() {
                     key={d.name}
                     initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.45 }}
-                    className="relative overflow-hidden rounded-2xl border border-emerald-900/45 p-5"
+                    className="relative overflow-hidden rounded-2xl border border-white/10 p-5"
                     style={{ background: 'linear-gradient(145deg,#0F2A1C 0%,#0B1A12 100%)' }}
                   >
                     {/* subtle corner accent glow */}
                     <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${d.accent} opacity-20 blur-xl`} />
 
                     <div className="relative flex items-start justify-between">
-                      {/* large gradient icon tile */}
                       <span className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${d.accent} text-white shadow-lg`}>
                         <d.Icon size={26} />
                       </span>
 
-                      {/* status badge */}
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${badge.cls}`}>
                         {d.status === 'playing'
                           ? <span className="flex items-end gap-[2.5px] h-3.5">
                               {[0, 1, 2].map((b) => (
                                 <motion.span key={b}
-                                  className="w-[3px] rounded-full bg-emerald-400"
+                                  className="w-[3px] rounded-full bg-gold-400"
                                   animate={{ height: ['3px', '11px', '4px', '10px', '3px'] }}
                                   transition={{ duration: 0.85, repeat: Infinity, delay: b * 0.11, ease: 'easeInOut' }}
                                   style={{ height: '3px' }}
@@ -1254,7 +1144,7 @@ export function DevicesShowcase() {
                     </div>
 
                     <h3 className="relative mt-3.5 text-[15px] font-bold text-parchment leading-tight">{d.name}</h3>
-                    <p className="relative mt-1 flex items-center gap-1 text-xs text-emerald-100/50">
+                    <p className="relative mt-1 flex items-center gap-1 text-xs text-parchment/50">
                       <MapPin size={10} /> {d.owner}
                     </p>
 
@@ -1268,8 +1158,8 @@ export function DevicesShowcase() {
             <div className="flex flex-wrap gap-2.5">
               {PLATFORMS.map(({ label, Icon }) => (
                 <span key={label}
-                  className="inline-flex items-center gap-2 rounded-full border border-emerald-800/55 bg-white/[0.04] px-4 py-2 text-sm font-medium text-emerald-100/70 backdrop-blur">
-                  <Icon size={14} className="text-emerald-300/55" /> {label}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-parchment/60 backdrop-blur">
+                  <Icon size={14} className="text-gold-300/55" /> {label}
                 </span>
               ))}
             </div>
@@ -1280,7 +1170,7 @@ export function DevicesShowcase() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.5, delay: 0.1 }}
-          className="relative mt-5 overflow-hidden rounded-2xl border border-emerald-800/50 flex items-center gap-5 px-5 py-4"
+          className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 flex items-center gap-5 px-5 py-4"
           style={{ background: 'linear-gradient(135deg,#0F2A1C 0%,#0D2217 55%,#0B1D14 100%)' }}
         >
           {/* Left: animated mosque icon + text */}
@@ -1302,18 +1192,17 @@ export function DevicesShowcase() {
                 <circle cx="27" cy="0" r="2.5" fill="#E9CF7A" />
                 <path d="M10 64V46Q10 38 17 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
                 <path d="M44 64V46Q44 38 37 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
-                {/* sparkles */}
                 <path d="M4 22L5.4 18 6.8 22 10 23 6.8 24 5.4 28 4 24 0 23z" fill="#E9CF7A" opacity="0.82" />
                 <path d="M44 14L45 11 46 14 49 15 46 16 45 19 44 16 41 15z" fill="#E9CF7A" opacity="0.7" />
               </svg>
             </motion.div>
             <div className="leading-tight">
               <p className="text-sm font-bold text-gold-300">Everything in harmony</p>
-              <p className="text-xs text-emerald-100/60 mt-0.5">Azan. Quran. Wherever you are.</p>
+              <p className="text-xs text-parchment/60 mt-0.5">Azan. Quran. Wherever you are.</p>
             </div>
           </div>
 
-          {/* Center: animated waveform — fills available space */}
+          {/* Center: animated waveform */}
           <div className="flex-1 min-w-0">
             <BannerWaveform />
           </div>
@@ -1334,7 +1223,6 @@ export function DevicesShowcase() {
             >
               <DevLantern className="w-7 h-auto" />
             </motion.div>
-            {/* sparkle stars near lanterns */}
             <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none"
               style={{ fontSize: 14 }}
               animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }}

@@ -49,8 +49,8 @@ const FEATURES: Feature[] = [
     icon: Bell, title: 'Auto Azan',
     desc: 'Accurate prayer times with beautiful Azan reminders worldwide.',
     href: '/dashboard/azan',
-    grad: 'from-emerald-500 to-emerald-700', text: 'text-emerald-700',
-    arrow: 'bg-emerald-600', tint: 'to-emerald-50', glow: 'bg-emerald-400', deco: 'wave',
+    grad: 'from-gold-500 to-gold-700', text: 'text-gold-700',
+    arrow: 'bg-gold-600', tint: 'to-gold-50', glow: 'bg-gold-400', deco: 'wave',
   },
   {
     icon: BookOpen, title: 'Full Quran',
@@ -63,43 +63,43 @@ const FEATURES: Feature[] = [
     icon: Compass, title: 'Qibla & Times',
     desc: 'Precise Qibla direction and prayer times for your location.',
     href: '/dashboard/qibla',
-    grad: 'from-cyan-500 to-teal-600', text: 'text-cyan-700',
-    arrow: 'bg-teal-500', tint: 'to-cyan-50', glow: 'bg-cyan-400', deco: 'motif',
+    grad: 'from-midnight-600 to-midnight-800', text: 'text-midnight-700',
+    arrow: 'bg-midnight-700', tint: 'to-parchment', glow: 'bg-midnight-400', deco: 'motif',
   },
   {
     icon: Volume2, title: 'Ayah-by-Ayah Tilawat',
     desc: 'Audio recitation with translation in multiple languages.',
     href: '/dashboard/recitation',
-    grad: 'from-orange-400 to-orange-600', text: 'text-orange-600',
-    arrow: 'bg-orange-500', tint: 'to-orange-50', glow: 'bg-orange-400', deco: 'wave',
+    grad: 'from-gold-600 to-gold-900', text: 'text-gold-700',
+    arrow: 'bg-gold-700', tint: 'to-gold-50', glow: 'bg-gold-500', deco: 'wave',
   },
   {
     icon: Smartphone, title: 'Multi-device Sync',
     desc: 'Sync across all your devices. Your data, always with you.',
     href: '/dashboard/devices',
-    grad: 'from-violet-500 to-purple-600', text: 'text-violet-600',
-    arrow: 'bg-violet-600', tint: 'to-violet-50', glow: 'bg-violet-400', deco: 'motif',
+    grad: 'from-midnight-700 to-midnight-900', text: 'text-midnight-700',
+    arrow: 'bg-midnight-800', tint: 'to-parchment', glow: 'bg-midnight-600', deco: 'motif',
   },
   {
     icon: CalendarDays, title: 'Smart Scheduler',
     desc: 'Personalized plans, reminders, and Islamic events tracking.',
     href: '/dashboard/recitation',
-    grad: 'from-emerald-500 to-green-600', text: 'text-emerald-700',
-    arrow: 'bg-emerald-600', tint: 'to-green-50', glow: 'bg-green-400', deco: 'motif',
+    grad: 'from-gold-400 to-gold-600', text: 'text-gold-600',
+    arrow: 'bg-gold-500', tint: 'to-gold-50', glow: 'bg-gold-300', deco: 'motif',
   },
   {
     icon: Globe2, title: '10+ Languages',
     desc: 'Understand the Quran in 10+ global languages seamlessly.',
     href: '/dashboard/settings',
-    grad: 'from-pink-500 to-fuchsia-600', text: 'text-pink-600',
-    arrow: 'bg-pink-500', tint: 'to-pink-50', glow: 'bg-pink-400', deco: 'motif',
+    grad: 'from-gold-500 to-midnight-700', text: 'text-gold-700',
+    arrow: 'bg-gold-600', tint: 'to-gold-50', glow: 'bg-gold-400', deco: 'motif',
   },
   {
     icon: ShieldCheck, title: 'Privacy First',
     desc: 'Your worship is private. Your data is secure and protected.',
     href: '/dashboard/settings',
-    grad: 'from-indigo-700 to-midnight-800', text: 'text-indigo-800',
-    arrow: 'bg-indigo-700', tint: 'to-indigo-50', glow: 'bg-indigo-400', deco: 'motif',
+    grad: 'from-midnight-700 to-midnight-900', text: 'text-midnight-700',
+    arrow: 'bg-midnight-800', tint: 'to-parchment', glow: 'bg-midnight-600', deco: 'motif',
   },
 ];
 
@@ -321,7 +321,7 @@ export default function FaithShowcase() {
             heading crisp without washing the photo out */}
         <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
         {/* ambient drifting glow for subtle background motion */}
-        <div className="absolute -top-8 left-[12%] w-[30rem] h-[30rem] rounded-full bg-emerald-300/15 blur-3xl animate-aurora" />
+        <div className="absolute -top-8 left-[12%] w-[30rem] h-[30rem] rounded-full bg-gold-300/10 blur-3xl animate-aurora" />
         <div className="absolute top-28 right-[8%] w-[24rem] h-[24rem] rounded-full bg-gold-300/15 blur-3xl animate-aurora" style={{ animationDelay: '6s' }} />
       </div>
 
@@ -337,10 +337,10 @@ export default function FaithShowcase() {
           <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur border border-gold-300/50 px-4 py-1.5 text-sm font-semibold text-gold-700 shadow-sm">
             <Moon size={15} className="fill-gold-400 text-gold-500" /> Blessed by Faith, Guided by Allah
           </span>
-          <h2 className="h-display font-bold mt-6 leading-[1.08] text-4xl md:text-6xl">
+          <h2 className="section-heading mt-6">
             <span className="text-ink">A Complete Islamic Lifestyle,</span>
             <br />
-            <span className="text-emerald-800">Beautifully Orchestrated</span>
+            <span className="text-gold-700">Beautifully Orchestrated</span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-ink/80 leading-relaxed">
             All the essential Islamic tools in one place to strengthen your faith,
@@ -406,7 +406,7 @@ export default function FaithShowcase() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="relative mt-14 overflow-hidden rounded-3xl bg-mosque-gradient text-parchment shadow-glow-emerald"
+          className="relative mt-14 overflow-hidden rounded-3xl bg-mosque-gradient text-parchment shadow-glow-gold"
         >
           <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
           {/* left + right artwork */}
@@ -415,7 +415,7 @@ export default function FaithShowcase() {
 
           {/* center content */}
           <div className="relative px-6 py-12 md:px-10 md:py-16 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-1 text-xs font-bold text-gold-700 shadow-sm">
               <Heart size={13} className="fill-rose-500 text-rose-500" /> You&apos;re never alone
             </span>
             <h3 className="h-display font-bold mt-4 leading-tight text-3xl md:text-5xl">
@@ -423,14 +423,14 @@ export default function FaithShowcase() {
               <br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">wherever you are.</span>
             </h3>
-            <p className="mx-auto mt-4 max-w-xl text-sm md:text-base text-emerald-100/80 leading-relaxed">
+            <p className="mx-auto mt-4 max-w-xl text-sm md:text-base text-parchment/70 leading-relaxed">
               So your location, time, no matter where you are in the world,
               and keep every divine appointment right on time.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-midnight-900 px-6 py-3 font-bold shadow-glow-emerald transition"
+                className="inline-flex items-center gap-2 rounded-full bg-gold-gradient hover:brightness-105 text-midnight-900 px-6 py-3 font-bold shadow-glow-gold transition"
               >
                 <LayoutGrid size={18} /> Launch Dashboard <ArrowRight size={18} />
               </Link>

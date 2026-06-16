@@ -35,7 +35,7 @@ export default {
           800: '#0E1B2A',
           900: '#080F19',
         },
-        accent: { DEFAULT: '#059669', soft: '#D1FAE5' },
+        accent: { DEFAULT: '#C9A227', soft: '#F6EED0' },
       },
       fontFamily: {
         sans:    ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
@@ -44,7 +44,7 @@ export default {
       },
       backgroundImage: {
         'mosque-gradient':
-          'linear-gradient(135deg, #064E3B 0%, #065F46 35%, #0E1B2A 100%)',
+          'linear-gradient(135deg, #162639 0%, #0E1B2A 50%, #080F19 100%)',
         'gold-gradient':
           'linear-gradient(135deg, #DDB94B 0%, #C9A227 50%, #A6831A 100%)',
         'parchment-soft':

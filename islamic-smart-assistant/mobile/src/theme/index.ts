@@ -15,25 +15,25 @@ export interface Theme {
 
 const light: Theme = {
   scheme: 'light',
-  bg: '#F7F5EE',
+  bg: '#FAF7EE',       // parchment
   card: '#FFFFFF',
-  text: '#1A2E1A',
-  subText: '#5C6B5C',
-  accent: '#1F7A3A',
-  accentSoft: '#D8EAD9',
+  text: '#0B1410',     // ink — no green tint
+  subText: '#5C5A50',  // warm neutral gray
+  accent: '#C9A227',   // gold-500
+  accentSoft: '#F6EED0', // gold-100
   divider: '#E5E4DA',
   shadow: 'rgba(0,0,0,0.06)',
 };
 
 const dark: Theme = {
   scheme: 'dark',
-  bg: '#0F1611',
-  card: '#16221A',
-  text: '#E8EFE8',
-  subText: '#9AA8A0',
-  accent: '#3FA563',
-  accentSoft: '#1E3A28',
-  divider: '#22302A',
+  bg: '#0E1118',       // deep dark, neutral
+  card: '#1A1812',     // dark warm card
+  text: '#FAF7EE',     // parchment — no green tint
+  subText: '#C8C4B0',  // warm muted text
+  accent: '#DDB94B',   // gold-400
+  accentSoft: '#3F320A', // gold-900 dark
+  divider: '#2A2820',  // dark warm border
   shadow: 'rgba(0,0,0,0.4)',
 };
 

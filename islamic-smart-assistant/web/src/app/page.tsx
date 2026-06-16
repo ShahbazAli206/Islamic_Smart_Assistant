@@ -36,7 +36,7 @@ const NAV_LINKS = [
 
 // Four overlapping "user" avatars for the social-proof row (gradient placeholders —
 // swap for real photos by dropping them in and mapping over <img> instead).
-const AVATARS = ['from-rose-400 to-orange-400', 'from-emerald-400 to-teal-500', 'from-indigo-400 to-violet-500', 'from-amber-400 to-rose-500'];
+const AVATARS = ['from-gold-400 to-gold-600', 'from-gold-500 to-gold-700', 'from-midnight-600 to-midnight-800', 'from-gold-600 to-midnight-700'];
 
 // The trust strip beneath the hero.
 const STRIP = [
@@ -71,7 +71,7 @@ export default function HomePage() {
           <Link href="/" className="flex items-center gap-2.5">
             <NoorMark size={34} bare />
             <span className="text-2xl font-display font-bold tracking-tight text-parchment">Noor</span>
-            <span className="ml-2 hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 text-xs font-semibold px-3 py-1">
+            <span className="ml-2 hidden sm:inline-flex items-center gap-1.5 rounded-full border border-gold-300/30 bg-gold-300/10 text-gold-200 text-xs font-semibold px-3 py-1">
               <Sparkles size={12} /> AI-Powered Islamic Assistant
             </span>
           </Link>
@@ -92,12 +92,12 @@ export default function HomePage() {
       </header>
 
       {/* ── hero ── (dark photographic section: copy + CTAs left, live prayer card right) */}
-      <section id="prayer" className="relative isolate overflow-hidden bg-emerald-950 text-parchment">
+      <section id="prayer" className="relative isolate overflow-hidden bg-midnight-900 text-parchment">
         {/* background photo + legibility overlays (heavier on the left where the text sits) */}
         <div aria-hidden className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/hero-bg.jpg')" }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/75 to-emerald-900/25" />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/80 via-transparent to-emerald-950/70" />
+          <div className="absolute inset-0 bg-gradient-to-r from-midnight-900/95 via-midnight-900/75 to-midnight-700/25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/80 via-transparent to-midnight-900/70" />
           <div className="absolute inset-0 pattern-bg opacity-[0.06]" />
         </div>
 
@@ -139,7 +139,7 @@ export default function HomePage() {
               <div className="flex items-center gap-3 pt-3">
                 <div className="flex -space-x-3">
                   {AVATARS.map((g, i) => (
-                    <span key={i} className={`w-10 h-10 rounded-full border-2 border-emerald-950 bg-gradient-to-br ${g} flex items-center justify-center`}>
+                    <span key={i} className={`w-10 h-10 rounded-full border-2 border-midnight-900 bg-gradient-to-br ${g} flex items-center justify-center`}>
                       <User size={16} className="text-white/90" />
                     </span>
                   ))}
@@ -203,7 +203,7 @@ export default function HomePage() {
       </div>
 
       {/* ── footer ── */}
-      <footer className="relative border-t border-emerald-900/10">
+      <footer className="relative border-t border-gold-300/15">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-ink/60">
           <div className="flex items-center gap-2"><NoorMark size={20} /> <span className="font-semibold text-ink">Noor</span> • Islamic Smart Assistant Ecosystem</div>
           <p>Built with ihsaan • Recitations sourced from islamic.network (verified)</p>
@@ -230,7 +230,7 @@ function NoorMark({ size = 28, bare = false }: { size?: number; bare?: boolean }
   }
   return (
     <span
-      className="inline-flex items-center justify-center rounded-xl bg-mosque-gradient shadow-glow-emerald"
+      className="inline-flex items-center justify-center rounded-xl bg-mosque-gradient shadow-glow-gold"
       style={{ width: size, height: size }}
       aria-hidden
     >
