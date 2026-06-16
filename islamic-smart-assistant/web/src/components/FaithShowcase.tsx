@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Bell, BookOpen, Compass, Volume2, Smartphone, Languages, ShieldCheck,
-  ArrowRight, Moon, Heart, MapPin, LayoutGrid,
+  ArrowRight, Moon, Heart, MapPin, LayoutGrid, CalendarDays, Globe2,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -81,14 +81,14 @@ const FEATURES: Feature[] = [
     arrow: 'bg-violet-600', tint: 'to-violet-50', glow: 'bg-violet-400', deco: 'motif',
   },
   {
-    icon: CalendarGlyph, title: 'Smart Scheduler',
+    icon: CalendarDays, title: 'Smart Scheduler',
     desc: 'Personalized plans, reminders, and Islamic events tracking.',
     href: '/dashboard/recitation',
     grad: 'from-emerald-500 to-green-600', text: 'text-emerald-700',
     arrow: 'bg-emerald-600', tint: 'to-green-50', glow: 'bg-green-400', deco: 'motif',
   },
   {
-    icon: TranslateGlyph, title: '10+ Languages',
+    icon: Globe2, title: '10+ Languages',
     desc: 'Understand the Quran in 10+ global languages seamlessly.',
     href: '/dashboard/settings',
     grad: 'from-pink-500 to-fuchsia-600', text: 'text-pink-600',
@@ -128,28 +128,6 @@ function HexIcon({ grad, delay = 0, children }: { grad: string; delay?: number; 
   );
 }
 
-/** Calendar glyph showing "16" — used for Smart Scheduler. */
-function CalendarGlyph({ size = 24 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden>
-      <rect x="3" y="4.5" width="18" height="16" rx="2.5" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3 9h18" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 2.5v4M16 2.5v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <text x="12" y="17.5" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="currentColor">16</text>
-    </svg>
-  );
-}
-
-/** Translation glyph (文 + A) — used for 10+ Languages. */
-function TranslateGlyph({ size = 24 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden>
-      <text x="3" y="13" fontSize="11" fontWeight="700" fill="currentColor" fontFamily="serif">文</text>
-      <text x="12.5" y="21" fontSize="11" fontWeight="800" fill="currentColor">A</text>
-      <path d="M4 16h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 /** A faint eight-point geometric corner motif (top-right of a card). */
 function CornerMotif({ className = '' }: { className?: string }) {
