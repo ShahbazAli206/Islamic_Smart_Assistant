@@ -187,12 +187,13 @@ export function AzanShowcase() {
         }}
       />
 
-      {/* hero-bg.jpg mosque photo — top right, lightly washed */}
-      <div aria-hidden className="absolute top-0 right-0 w-[56%] h-[520px] hidden lg:block overflow-hidden pointer-events-none">
+      {/* hero-bg.jpg mosque photo — full section background */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/72 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white" />
-        <div className="absolute inset-0 bg-white/28" />
+        {/* left gradient keeps dark text readable; right side shows the photo clearly */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/50 to-white/8" />
+        {/* top + bottom subtle fades */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/50" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
