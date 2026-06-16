@@ -186,13 +186,15 @@ export function AzanShowcase() {
         }}
       />
 
-      {/* hero-bg.jpg mosque photo — full section background */}
+      {/* hero-bg.jpg mosque photo — full section background.
+          Lighter washes so the photo stays clearly visible (light theme),
+          while the left column keeps just enough lift for the gold heading. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
-        {/* left gradient keeps dark text readable; right side shows the photo clearly */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/50 to-white/8" />
+        {/* left gradient — softer, fades fully away so the mosque shows through */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/72 via-white/28 to-transparent" />
         {/* top + bottom subtle fades */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-white/35" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
@@ -207,16 +209,18 @@ export function AzanShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
             </span>
+            {/* Golden heading — both lines use the gold gradient */}
             <h2 className="section-heading">
-              The call to prayer,<br />
-              <span className="text-gold-600">in every voice you love.</span>
+              <span className="bg-clip-text text-transparent bg-gold-gradient">The call to prayer,</span><br />
+              <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
-            <p className="max-w-lg text-base leading-relaxed text-ink/60">
+            {/* Larger supporting copy, gold-tinted */}
+            <p className="max-w-xl text-lg md:text-xl leading-relaxed text-gold-700/90">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
-            <p className="text-base font-bold text-gold-600">
+            <p className="text-lg md:text-xl font-bold text-gold-600">
               Stay connected. Stay mindful. Stay blessed.
             </p>
           </motion.div>
@@ -264,17 +268,32 @@ export function AzanShowcase() {
               initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.06, duration: 0.5 }}
               whileHover={{ y: -4 }}
-              className={`relative overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
+              className={`group relative overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
             >
-              <span className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}>
+              {/* continuously sweeping shimmer sheen */}
+              <motion.div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)' }}
+                animate={{ x: ['-120%', '120%'] }}
+                transition={{ duration: 3.6, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut', delay: i * 0.4 }}
+              />
+              <motion.span
+                className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.25 }}
+              >
                 <card.icon size={22} />
-              </span>
-              <img
+              </motion.span>
+              {/* decorative card art — floats up and down continuously */}
+              <motion.img
                 src={card.image} alt="" aria-hidden
                 className="absolute right-0 top-0 h-[78%] w-[55%] object-contain object-right-top pointer-events-none"
+                animate={{ y: [0, -9, 0] }}
+                transition={{ duration: 4 + i * 0.3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.35 }}
               />
-              <h3 className={`mt-4 font-bold text-base ${card.titleColor}`}>{card.title}</h3>
-              <p className="mt-1.5 text-[13px] text-ink/60 leading-relaxed flex-1">{card.desc}</p>
+              <h3 className={`relative mt-4 font-bold text-lg ${card.titleColor}`}>{card.title}</h3>
+              <p className="relative mt-1.5 text-sm text-ink/70 leading-relaxed flex-1">{card.desc}</p>
               <Link
                 href={card.href}
                 className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${card.btnBg} text-white shadow-sm w-fit transition hover:opacity-90`}
