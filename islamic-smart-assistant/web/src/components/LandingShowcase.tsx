@@ -19,6 +19,7 @@ import {
   Radio, Wifi, CheckCircle2, Moon,
   Globe2, BellPlus, Users, Bookmark, Sun,
   Settings, Home, Cast, Airplay,
+  Clock, Compass,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
@@ -118,122 +119,200 @@ function KhatamStar({ className = '' }: { className?: string }) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   1 · AZAN SHOWCASE
+   1 · AZAN SHOWCASE  (light theme)
    ════════════════════════════════════════════════════════════════════════ */
 
-type Voice = {
-  id: string; name: string; subtitle: string; region: string;
-  duration: string; src: string; accent: string;
+type AzanCard = {
+  icon: React.ElementType; title: string; desc: string;
+  href: string; btn: string; image: string;
+  bg: string; iconBg: string; titleColor: string; btnBg: string;
 };
 
-const VOICES: Voice[] = [
-  { id: 'makkah',   name: 'Makkah — Haramain',     subtitle: 'Sheikh Ali Mulla',     region: 'Saudi Arabia', duration: '4:38', src: '/audio/azan/makkah.mp3',   accent: 'from-emerald-400 to-emerald-600' },
-  { id: 'madinah',  name: 'Madinah — Nabawi',      subtitle: 'Sheikh Essam Bukhari', region: 'Saudi Arabia', duration: '4:12', src: '/audio/azan/madinah.mp3',  accent: 'from-gold-300 to-gold-500' },
-  { id: 'pakistan', name: 'Pakistan — Lahore',     subtitle: 'Classical style',      region: 'Pakistan',     duration: '3:58', src: '/audio/azan/pakistan.mp3', accent: 'from-rose-400 to-amber-400' },
-  { id: 'turkey',   name: 'Türkiye — Istanbul',    subtitle: 'Hafiz Mustafa Özcan',  region: 'Türkiye',      duration: '4:21', src: '/audio/azan/turkey.mp3',   accent: 'from-cyan-400 to-indigo-500' },
-  { id: 'egypt',    name: 'Egypt — Cairo',         subtitle: 'Maqam style',          region: 'Egypt',        duration: '4:46', src: '/audio/azan/egypt.mp3',    accent: 'from-fuchsia-400 to-rose-400' },
+const AZAN_CARDS: AzanCard[] = [
+  {
+    icon: Bell,       title: 'Auto Azan',
+    desc: 'Automatically play Adhan at every prayer time on all your devices.',
+    href: '/dashboard/azan',         btn: 'Manage',
+    image: '/card_images/Auto_Azan_card_image.png',
+    bg: 'bg-emerald-50', iconBg: 'bg-emerald-500', titleColor: 'text-emerald-600', btnBg: 'bg-emerald-500',
+  },
+  {
+    icon: Clock,      title: 'Prayer Times',
+    desc: 'Accurate prayer times based on your location with multiple methods.',
+    href: '/dashboard/prayer-times', btn: 'View Times',
+    image: '/card_images/prayers_times_card_image.png',
+    bg: 'bg-amber-50', iconBg: 'bg-amber-400', titleColor: 'text-amber-500', btnBg: 'bg-amber-400',
+  },
+  {
+    icon: BookOpen,   title: 'Quran & Translation',
+    desc: 'Read and listen to the Quran with beautiful translations in your language.',
+    href: '/dashboard/quran',        btn: 'Open Quran',
+    image: '/card_images/Quran_Translation_Card_image.png',
+    bg: 'bg-blue-50', iconBg: 'bg-blue-500', titleColor: 'text-blue-600', btnBg: 'bg-blue-500',
+  },
+  {
+    icon: Compass,    title: 'Qibla Finder',
+    desc: 'Find the exact direction of Qibla from your current location.',
+    href: '/dashboard/qibla',        btn: 'Find Qibla',
+    image: '/card_images/Qibla_finder_card_image.png',
+    bg: 'bg-purple-50', iconBg: 'bg-purple-500', titleColor: 'text-purple-600', btnBg: 'bg-purple-500',
+  },
+  {
+    icon: Headphones, title: 'Islamic Voices',
+    desc: "Choose from world's best reciters and muezzins voices.",
+    href: '/dashboard/azan',         btn: 'Explore',
+    image: '/card_images/Islamic_Voices_card_image.png',
+    bg: 'bg-rose-50', iconBg: 'bg-rose-400', titleColor: 'text-rose-500', btnBg: 'bg-rose-400',
+  },
+];
+
+const AZAN_STATS = [
+  { icon: Bell,     label: 'Next Prayer',     value: 'Dhuhr',            sub: '12:32 PM · 01:15:44', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+  { icon: Volume2,  label: 'Auto-Azan',       value: 'Enabled',          sub: 'All devices synced',  iconBg: 'bg-amber-100',   iconColor: 'text-amber-500' },
+  { icon: Compass,  label: 'Qibla Direction', value: '292° NW',          sub: 'From your location',  iconBg: 'bg-blue-100',    iconColor: 'text-blue-500' },
+  { icon: BookOpen, label: "Today's Verse",   value: 'Al-Baqarah 2:186', sub: 'Tap to read',         iconBg: 'bg-purple-100',  iconColor: 'text-purple-500' },
 ];
 
 export function AzanShowcase() {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const toggle = (v: Voice) => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (activeId === v.id) { el.pause(); setActiveId(null); return; }
-    el.src = v.src;
-    el.play().then(() => setActiveId(v.id)).catch(() => setActiveId(null));
-  };
-
   return (
-    <section id="azan" className="relative overflow-hidden bg-mosque-gradient text-parchment">
-      {/* moving background layers */}
-      <div className="absolute inset-0 pattern-bg opacity-[0.18] pointer-events-none" />
-      <Aurora className="w-[34rem] h-[34rem] bg-emerald-400/25 -top-40 -left-32" />
-      <Aurora className="w-[30rem] h-[30rem] bg-gold-400/20 top-20 -right-32" delay={4} />
-      <MosqueSilhouette className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[min(900px,95%)] text-gold-200/70 animate-float-y" />
+    <section id="azan" className="relative overflow-hidden bg-white text-ink">
+      {/* Islamic geometric pattern — far left, emerald tint, very faint */}
+      <div
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-80 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='rgba(16,185,129,0.28)' stroke-width='1'><path d='M40 4 L74 24 L74 56 L40 76 L6 56 L6 24 Z'/><path d='M40 16 L62 28 L62 52 L40 64 L18 52 L18 28 Z'/><circle cx='40' cy='40' r='10'/></g></svg>")`,
+          backgroundSize: '80px 80px',
+          opacity: 0.7,
+        }}
+      />
 
-      <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <SectionHead
-            light
-            chip="Azan Library"
-            icon={BellRing}
-            title={<>The call to prayer,<br /><span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span></>}
-            subtitle="Authentic Adhan from the world's great mosques — auto-played on every linked device the moment a prayer time arrives."
-          />
-          <Link href="/dashboard/azan" className="btn-primary shrink-0">
-            <Bell size={18} /> Explore voices <ArrowRight size={16} />
-          </Link>
+      {/* hero-bg.jpg mosque photo — top right, lightly washed */}
+      <div aria-hidden className="absolute top-0 right-0 w-[56%] h-[520px] hidden lg:block overflow-hidden pointer-events-none">
+        <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/72 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white" />
+        <div className="absolute inset-0 bg-white/28" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
+        {/* ── hero ── */}
+        <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[340px]">
+          {/* left: copy */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
+            className="space-y-5 pb-10"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-sm font-semibold text-emerald-700">
+              <Sparkles size={14} /> Auto-Azan Enabled
+            </span>
+            <h2 className="h-display text-5xl md:text-[3.35rem] font-bold leading-[1.05]">
+              The call to prayer,<br />
+              <span className="text-emerald-600">in every voice you love.</span>
+              <span className="ml-2 text-gold-400" aria-hidden>✦</span>
+            </h2>
+            <p className="max-w-lg text-base leading-relaxed text-ink/60">
+              Authentic Adhan from the world's great mosques, automatically
+              played on every linked device the moment a prayer time arrives.
+            </p>
+            <p className="text-base font-bold text-emerald-600">
+              Stay connected. Stay mindful. Stay blessed.
+            </p>
+          </motion.div>
+
+          {/* right: explore button floated over the photo */}
+          <motion.div
+            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.15 }}
+            className="hidden lg:flex items-end justify-end pb-10"
+          >
+            <Link
+              href="/dashboard/azan"
+              className="inline-flex items-center gap-2.5 rounded-full bg-emerald-800 hover:bg-emerald-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
+            >
+              <Headphones size={18} /> Explore Voices <ArrowRight size={16} />
+            </Link>
+          </motion.div>
         </div>
 
-        {/* live "Auto-Azan ON" pill */}
+        {/* ── stats bar ── */}
         <motion.div
-          initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-8 inline-flex items-center gap-3 rounded-full bg-white/10 border border-white/15 backdrop-blur px-4 py-2 text-sm"
+          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
+          className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-stone-100 rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden"
         >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-300" />
-          </span>
-          Auto-Azan synced & ready — next at <strong className="text-gold-200">Maghrib</strong>
+          {AZAN_STATS.map((s) => (
+            <div key={s.label} className="flex items-center gap-3.5 px-5 py-4">
+              <span className={`w-11 h-11 rounded-full ${s.iconBg} flex items-center justify-center shrink-0`}>
+                <s.icon size={18} className={s.iconColor} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-ink/45 uppercase tracking-wide">{s.label}</p>
+                <p className="text-sm font-bold text-ink leading-tight truncate">{s.value}</p>
+                <p className="text-[11px] text-ink/45 truncate">{s.sub}</p>
+              </div>
+            </div>
+          ))}
         </motion.div>
 
-        {/* voice cards */}
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {VOICES.map((v, i) => {
-            const playing = activeId === v.id;
-            return (
-              <motion.button
-                key={v.id}
-                onClick={() => toggle(v)}
-                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ delay: i * 0.06, duration: 0.5 }}
-                whileHover={{ y: -6 }}
-                className={`group relative overflow-hidden rounded-2xl p-5 text-left border transition
-                  ${playing
-                    ? 'bg-white/15 border-gold-300/60 shadow-glow-gold'
-                    : 'bg-white/[0.07] border-white/12 hover:bg-white/[0.12] hover:border-white/25 backdrop-blur'}`}
+        {/* ── feature cards ── */}
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {AZAN_CARDS.map((card, i) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.06, duration: 0.5 }}
+              whileHover={{ y: -4 }}
+              className={`relative overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
+            >
+              <span className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}>
+                <card.icon size={22} />
+              </span>
+              <img
+                src={card.image} alt="" aria-hidden
+                className="absolute right-0 top-0 h-[78%] w-[55%] object-contain object-right-top pointer-events-none"
+              />
+              <h3 className={`mt-4 font-bold text-base ${card.titleColor}`}>{card.title}</h3>
+              <p className="mt-1.5 text-[13px] text-ink/60 leading-relaxed flex-1">{card.desc}</p>
+              <Link
+                href={card.href}
+                className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${card.btnBg} text-white shadow-sm w-fit transition hover:opacity-90`}
               >
-                <div className={`absolute -top-10 -right-10 w-28 h-28 rounded-full bg-gradient-to-br ${v.accent} opacity-25 group-hover:opacity-45 transition`} />
-                {/* equalizer / icon */}
-                <div className={`relative inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${v.accent} text-midnight-900 shadow-lg`}>
-                  {playing ? (
-                    <span className="flex items-end gap-[3px] h-5">
-                      {[0, 1, 2, 3].map((b) => (
-                        <motion.span
-                          key={b}
-                          className="w-[3px] rounded-full bg-midnight-900"
-                          animate={{ height: ['30%', '100%', '45%', '90%', '30%'] }}
-                          transition={{ duration: 0.9, repeat: Infinity, delay: b * 0.12, ease: 'easeInOut' }}
-                          style={{ height: '30%' }}
-                        />
-                      ))}
-                    </span>
-                  ) : (
-                    <Bell size={22} />
-                  )}
-                </div>
-
-                <h3 className="relative mt-4 font-bold text-[15px] leading-tight">{v.name}</h3>
-                <p className="relative text-sm text-emerald-100/70">{v.subtitle}</p>
-                <p className="relative mt-1 text-xs text-emerald-100/50 flex items-center gap-1">
-                  <MapPin size={11} /> {v.region} · {v.duration}
-                </p>
-
-                <span className={`relative mt-4 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition
-                  ${playing ? 'bg-gold-300 text-midnight-900' : 'bg-white/12 text-parchment group-hover:bg-white/20'}`}>
-                  {playing ? <><Pause size={13} /> Playing…</> : <><Play size={13} /> Preview</>}
-                </span>
-              </motion.button>
-            );
-          })}
+                {card.btn} <ArrowRight size={13} />
+              </Link>
+            </motion.div>
+          ))}
         </div>
+
+        {/* ── verse bar ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.5 }}
+          className="mt-5 mb-10 rounded-2xl border border-stone-100 bg-white shadow-sm px-7 py-5 flex flex-col lg:flex-row items-center gap-6"
+        >
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <span className="text-4xl font-serif text-emerald-500 leading-none mt-0.5 shrink-0">&ldquo;</span>
+            <p className="text-sm text-ink/65 leading-relaxed">
+              And We have certainly made the Qur'an easy for remembrance, so is there any who will remember?
+            </p>
+          </div>
+          <div className="flex-1 text-center">
+            <p className="font-arabic text-xl text-emerald-900 leading-[2.2]" style={{ direction: 'rtl' }}>
+              وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <p className="text-sm font-semibold text-ink/55">Al-Qamar 54:17</p>
+            <Link
+              href="/dashboard/quran"
+              className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm hover:bg-emerald-700 transition"
+            >
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+        </motion.div>
       </div>
-      <audio ref={audioRef} onEnded={() => setActiveId(null)} hidden />
     </section>
   );
 }
