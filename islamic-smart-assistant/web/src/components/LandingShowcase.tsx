@@ -1017,13 +1017,13 @@ export function DevicesShowcase() {
     >
       {/* ══ legibility overlays ══ */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.28)' }} />
+        <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.12)' }} />
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.78) 0%, rgba(4,10,7,0.34) 42%, rgba(4,10,7,0.04) 72%, rgba(4,10,7,0) 100%)' }} />
+          style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.62) 0%, rgba(4,10,7,0.22) 42%, rgba(4,10,7,0.02) 72%, rgba(4,10,7,0) 100%)' }} />
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.42) 0%, rgba(4,10,7,0) 30%, rgba(4,10,7,0) 70%, rgba(4,10,7,0.40) 100%)' }} />
+          style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.30) 0%, rgba(4,10,7,0) 25%, rgba(4,10,7,0) 70%, rgba(4,10,7,0.32) 100%)' }} />
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 120% 120% at 55% 45%, transparent 58%, rgba(2,6,4,0.42) 100%)' }} />
+          style={{ background: 'radial-gradient(ellipse 120% 120% at 55% 45%, transparent 58%, rgba(2,6,4,0.28) 100%)' }} />
         {[
           { r: 310, t: 38,  s: 2.2 },
           { r: 238, t: 18,  s: 1.6 },
@@ -1078,36 +1078,36 @@ export function DevicesShowcase() {
         </div>
 
         {/* ── main panel grid ── */}
-        <div className="grid lg:grid-cols-[2fr_3fr] gap-5 items-stretch">
+        <div className="grid lg:grid-cols-[2fr_3fr] gap-5 items-start">
 
           {/* LEFT: Current Output card with Mughal arch */}
           <motion.div
             initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col min-h-[360px]"
+            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col"
             style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
           >
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
-            <div className="relative flex flex-col flex-1 items-center justify-center px-6 pt-10 pb-6">
+            <div className="relative flex flex-col items-center px-6 pt-8 pb-5">
               <DevSpeakerOrb />
 
               <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
               <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
 
-              <div className="mt-6 w-full flex gap-2">
+              <div className="mt-5 flex gap-2 justify-center">
                 <button
                   onClick={rescan}
-                  className="flex items-center justify-center gap-2 flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
                 >
-                  <RefreshCw size={14} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
+                  <RefreshCw size={11} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
                   {scanning ? 'Scanning…' : 'Rescan'}
                 </button>
                 <Link
                   href="/dashboard/devices"
-                  className="flex items-center justify-center gap-2 flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
                 >
-                  <Bluetooth size={14} className="text-gold-300" /> Pair
+                  <Bluetooth size={11} className="text-gold-300" /> Pair
                 </Link>
               </div>
 
@@ -1127,9 +1127,9 @@ export function DevicesShowcase() {
           <motion.div
             initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
           >
-            <div className="grid sm:grid-cols-2 gap-3 flex-1">
+            <div className="grid sm:grid-cols-2 gap-3">
               {DEVICES.map((d, i) => {
                 const status = getDeviceStatus(d.name);
                 const badge = BADGE[status];
