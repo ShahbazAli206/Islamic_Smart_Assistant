@@ -375,7 +375,7 @@ export default function FaithShowcase() {
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className="animate-float"
+              className="animate-float h-full"
               style={{ animationDelay: `${i * 0.25}s`, animationDuration: '2.8s' }}
             >
               <motion.div
@@ -384,7 +384,7 @@ export default function FaithShowcase() {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ delay: i * 0.05, duration: 0.5 }}
                 whileHover={{ y: -5 }}
-                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-6 pb-16 transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
+                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-6 pb-16 h-full min-h-[260px] transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
               >
                 {/* soft corner glow */}
                 <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.18] group-hover:opacity-35 blur-xl transition`} />
