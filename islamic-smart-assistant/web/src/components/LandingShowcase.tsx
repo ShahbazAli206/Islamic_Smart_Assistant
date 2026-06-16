@@ -870,90 +870,54 @@ export function DevicesShowcase() {
   };
 
   return (
-    <section id="devices" className="relative overflow-hidden text-parchment" style={{ background: '#0A1410' }}>
-
-      {/* ══ cinematic night-scene background ══ */}
+    /*
+     * Background: /public/devices-bg.png — a photographic Islamic night scene
+     * (mosque across a lake, ornate arch panels, hanging lanterns, crescent
+     * moon, tropical plants). Layered dark + directional gradient overlays
+     * ensure all foreground text and cards remain legible.
+     */
+    <section
+      id="devices"
+      className="relative overflow-hidden text-parchment"
+      style={{
+        backgroundImage: "url('/devices-bg.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* ══ legibility overlays (layered on top of the photo) ══ */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        {/* mosque dome green glow */}
+        {/* base dark wash — tames the overall brightness */}
+        <div className="absolute inset-0" style={{ background: 'rgba(6,14,10,0.60)' }} />
+        {/* heavier dark on the left half where the heading / cards sit */}
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 65% 50% at 50% -5%, #163C22 0%, transparent 68%)' }} />
-        {/* warm lantern glow — right edge */}
+          style={{ background: 'linear-gradient(to right, rgba(4,10,7,0.80) 0%, rgba(4,10,7,0.42) 55%, rgba(4,10,7,0.28) 100%)' }} />
+        {/* top-edge darkening so the header text is crisp */}
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 38% 55% at 98% 35%, rgba(180,126,18,0.18) 0%, transparent 65%)' }} />
+          style={{ background: 'linear-gradient(to bottom, rgba(4,10,7,0.68) 0%, rgba(4,10,7,0.10) 38%, rgba(4,10,7,0.45) 100%)' }} />
+        {/* extra vignette around all edges for depth */}
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 110% 110% at 50% 50%, transparent 45%, rgba(2,6,4,0.55) 100%)' }} />
 
-        {/* Glowing mosque silhouette — centre bottom */}
-        <svg viewBox="0 0 900 380" preserveAspectRatio="xMidYMax slice" aria-hidden
-          className="absolute bottom-0 inset-x-0 w-full opacity-55">
-          <defs>
-            <radialGradient id="domeHalo" cx="50%" cy="75%" r="38%">
-              <stop offset="0%" stopColor="#1F5E35" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#1F5E35" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-          <ellipse cx="450" cy="340" rx="230" ry="100" fill="url(#domeHalo)" />
-          {/* dome */}
-          <path d="M330 380V260C330 185 375 140 450 126 525 140 570 185 570 260V380z" fill="#0D2016" />
-          {/* finial */}
-          <path d="M450 126C450 96 441 84 441 64 441 44 450 38 450 20 450 38 459 44 459 64 459 84 450 96 450 126z" fill="#0D2016" />
-          <circle cx="450" cy="18" r="6" fill="#142D1C" />
-          {/* left minaret */}
-          <path d="M210 380V215Q210 182 222 177Q234 182 234 215V380z" fill="#0D2016" />
-          <path d="M222 177C222 162 215 156 215 143 215 130 222 126 222 114 222 126 229 130 229 143 229 156 222 162 222 177z" fill="#0D2016" />
-          {/* right minaret */}
-          <path d="M666 380V215Q666 182 678 177Q690 182 690 215V380z" fill="#0D2016" />
-          <path d="M678 177C678 162 671 156 671 143 671 130 678 126 678 114 678 126 685 130 685 143 685 156 678 162 678 177z" fill="#0D2016" />
-        </svg>
-
-        {/* Islamic arch window panels — right edge */}
-        <svg viewBox="0 0 180 600" fill="none" aria-hidden
-          className="absolute right-0 top-0 h-full w-36 opacity-35">
-          {[50, 230, 420].map((y, i) => (
-            <g key={i} transform={`translate(76,${y})`}>
-              <path d="M-56 154V76C-56 24-28 2 0 0 28 2 56 24 56 76V154z"
-                stroke="#E9CF7A" strokeOpacity="0.42" strokeWidth="1.8" fill="rgba(233,207,122,0.025)" />
-              <path d="M-38 154V82C-38 40-19 22 0 18 19 22 38 40 38 82V154z"
-                stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1.2" fill="none" />
-              <circle cx="0" cy="6" r="7" stroke="#E9CF7A" strokeOpacity="0.42" strokeWidth="1.2" fill="none" />
-              <circle cx="0" cy="6" r="3" fill="#E9CF7A" fillOpacity="0.38" />
-            </g>
-          ))}
-        </svg>
-
-        {/* Crescent moon */}
-        <DevCrescent className="absolute top-7 right-32 w-11 h-13 opacity-95" />
-
-        {/* Twinkling stars */}
+        {/* subtle twinkling star enhancements over the photo stars */}
         {[
-          { r: 176, t: 44,  s: 2   },
-          { r: 108, t: 78,  s: 1.5 },
-          { r: 236, t: 22,  s: 1.3 },
-          { r: 316, t: 60,  s: 2.2 },
-          { r: 62,  t: 108, s: 1.7 },
-          { r: 148, t: 14,  s: 1.4 },
-        ].map((s, i) => (
+          { r: 310, t: 38,  s: 2.2 },
+          { r: 238, t: 18,  s: 1.6 },
+          { r: 192, t: 54,  s: 1.4 },
+          { r: 270, t: 72,  s: 1.8 },
+          { r: 160, t: 28,  s: 1.3 },
+          { r: 340, t: 58,  s: 2   },
+        ].map((st, i) => (
           <motion.span key={i} className="absolute rounded-full"
-            style={{ right: s.r, top: s.t, width: s.s, height: s.s, background: '#E9CF7A' }}
-            animate={{ opacity: [0.25, 1, 0.25] }}
-            transition={{ duration: 1.8 + i * 0.35, repeat: Infinity, delay: i * 0.48, ease: 'easeInOut' }}
+            style={{ right: st.r, top: st.t, width: st.s, height: st.s, background: '#E9CF7A' }}
+            animate={{ opacity: [0.2, 0.9, 0.2] }}
+            transition={{ duration: 2 + i * 0.38, repeat: Infinity, delay: i * 0.52, ease: 'easeInOut' }}
           />
         ))}
 
-        {/* Hanging lanterns — far right */}
-        <motion.div className="absolute right-5 top-0"
-          animate={{ rotate: [-3, 3, -3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: 'top center' }}>
-          <DevLantern className="w-12 opacity-80" />
-        </motion.div>
-        <motion.div className="absolute right-16 top-4"
-          animate={{ rotate: [2.5, -2.5, 2.5] }}
-          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-          style={{ transformOrigin: 'top center' }}>
-          <DevLantern className="w-9 opacity-55" />
-        </motion.div>
-
-        {/* Islamic geometric pattern overlay */}
-        <div className="absolute inset-0 pattern-bg opacity-[0.055]" />
+        {/* Islamic geometric pattern — very faint, adds texture without obscuring the photo */}
+        <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
       </div>
 
       {/* ══ content ══ */}
