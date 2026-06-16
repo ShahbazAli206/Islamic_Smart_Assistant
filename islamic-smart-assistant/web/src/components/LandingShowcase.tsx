@@ -542,6 +542,12 @@ export function QuranShowcase() {
 
   return (
     <section id="quran" className="relative overflow-hidden bg-mosque-gradient text-parchment">
+      {/* ── full-section background image: backgound-image2.png ── */}
+      <div className="absolute inset-0 pointer-events-none">
+        <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
+        {/* dark overlay so text and UI elements remain readable */}
+        <div className="absolute inset-0 bg-emerald-950/80" />
+      </div>
       {/* pattern + aurora */}
       <div className="absolute inset-0 pattern-bg opacity-[0.15] pointer-events-none" />
       <Aurora className="w-[34rem] h-[34rem] bg-emerald-400/20 -top-40 -left-32" />
