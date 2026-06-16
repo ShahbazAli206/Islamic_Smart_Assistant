@@ -96,8 +96,7 @@ export default function HomePage() {
         {/* background photo + legibility overlays (heavier on the left where the text sits) */}
         <div aria-hidden className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/hero-bg.jpg')" }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-midnight-900/95 via-midnight-900/75 to-midnight-700/25" />
-          <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/80 via-transparent to-midnight-900/70" />
+          <div className="absolute inset-0 bg-midnight-900/30" />
           <div className="absolute inset-0 pattern-bg opacity-[0.06]" />
         </div>
 
@@ -113,7 +112,7 @@ export default function HomePage() {
               <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-300/40 bg-gold-300/10 text-gold-300 text-xs font-semibold px-3 py-1">
                 <Sparkles size={12} /> New &amp; Improved
               </span>
-              <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl leading-[1.04] text-parchment">
+              <h1 className="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.04] text-parchment">
                 Your Faith,<br />
                 Your Journey,<br />
                 <span className="bg-clip-text text-transparent bg-gold-gradient">Our Guidance.</span>
