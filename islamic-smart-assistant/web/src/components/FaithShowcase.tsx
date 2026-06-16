@@ -107,10 +107,14 @@ const FEATURES: Feature[] = [
    Small decorative primitives
    ════════════════════════════════════════════════════════════════════════ */
 
-/** A pointy-top hexagon icon chip with a gradient fill and soft drop-shadow. */
-function HexIcon({ grad, children }: { grad: string; children: React.ReactNode }) {
+/** A pointy-top hexagon icon chip with a gradient fill and soft drop-shadow.
+ *  Gently floats (staggered per card via `delay`) for a touch of life. */
+function HexIcon({ grad, delay = 0, children }: { grad: string; delay?: number; children: React.ReactNode }) {
   return (
-    <span className="relative inline-flex items-center justify-center" style={{ width: 56, height: 62 }}>
+    <span
+      className="relative inline-flex items-center justify-center animate-float"
+      style={{ width: 56, height: 62, animationDelay: `${delay}s` }}
+    >
       <span
         aria-hidden
         className={`absolute inset-0 bg-gradient-to-br ${grad}`}
@@ -161,23 +165,22 @@ function CornerMotif({ className = '' }: { className?: string }) {
   );
 }
 
-/** A small audio waveform / equalizer strip (top-right of Azan & Tilawat). */
+/** A small live audio waveform / equalizer strip (top-right of Azan & Tilawat).
+ *  Each bar pulses continuously so the card feels alive. */
 function Waveform({ className = '' }: { className?: string }) {
   const bars = [6, 12, 20, 9, 16, 24, 11, 18, 7, 14, 22, 8];
   return (
-    <svg viewBox="0 0 96 28" width="96" height="28" aria-hidden className={className}>
+    <span className={`inline-flex items-center gap-[3px] h-7 ${className}`} aria-hidden>
       {bars.map((h, i) => (
-        <rect
+        <motion.span
           key={i}
-          x={i * 8}
-          y={(28 - h) / 2}
-          width="3.5"
-          height={h}
-          rx="1.75"
-          fill="currentColor"
+          className="w-[3.5px] rounded-full bg-current"
+          animate={{ height: [h, Math.min(28, h + 9), Math.max(4, h - 6), h] }}
+          transition={{ duration: 1.3 + (i % 5) * 0.18, repeat: Infinity, ease: 'easeInOut', delay: i * 0.06 }}
+          style={{ height: h }}
         />
       ))}
-    </svg>
+    </span>
   );
 }
 
@@ -323,14 +326,25 @@ function WorldArcArt({ className = '' }: { className?: string }) {
 export default function FaithShowcase() {
   return (
     <section className="relative overflow-hidden">
-      {/* ── photographic mosque-at-dawn backdrop ── */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none">
+      {/* ── photographic mosque-at-dawn backdrop ── (shown full-width & clear,
+          its true landscape aspect preserved so neither mosque is cropped, then
+          softly melted into the page along its lower edge) */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/features-bg.jpg')" }}
+          className="absolute inset-x-0 top-0 w-full min-h-[26rem] bg-cover bg-top"
+          style={{
+            aspectRatio: '1536 / 1024',
+            backgroundImage: "url('/features-bg.jpg')",
+            WebkitMaskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
+            maskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
+          }}
         />
-        {/* soft light wash so the heading + card text stay crisp over the photo */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/55 via-white/35 to-white/20" />
+        {/* gentle clarity wash — only at the very top, just enough to keep the
+            heading crisp without washing the photo out */}
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+        {/* ambient drifting glow for subtle background motion */}
+        <div className="absolute -top-8 left-[12%] w-[30rem] h-[30rem] rounded-full bg-emerald-300/15 blur-3xl animate-aurora" />
+        <div className="absolute top-28 right-[8%] w-[24rem] h-[24rem] rounded-full bg-gold-300/15 blur-3xl animate-aurora" style={{ animationDelay: '6s' }} />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16">
@@ -366,14 +380,14 @@ export default function FaithShowcase() {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ delay: i * 0.05, duration: 0.5 }}
               whileHover={{ y: -5 }}
-              className={`group relative overflow-hidden rounded-3xl border border-white/70 bg-gradient-to-b from-white via-white ${f.tint} p-6 pb-16 shadow-[0_1px_2px_rgba(11,20,16,0.05),0_18px_40px_-16px_rgba(11,20,16,0.18)]`}
+              className={`group relative overflow-hidden rounded-3xl border border-white/80 bg-gradient-to-b from-white via-white ${f.tint} p-6 pb-16 transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]`}
             >
               {/* soft corner glow */}
               <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.12] group-hover:opacity-25 blur-xl transition`} />
 
               {/* top row: hexagon icon + decoration */}
               <div className="relative flex items-start justify-between">
-                <HexIcon grad={f.grad}>
+                <HexIcon grad={f.grad} delay={i * 0.35}>
                   <f.icon size={24} />
                 </HexIcon>
                 {f.deco === 'wave'
