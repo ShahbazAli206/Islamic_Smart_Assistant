@@ -9,14 +9,14 @@
  * rescan) so the page demonstrates the product rather than just describing it.
  */
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Bell, BellRing, Play, Pause, MapPin, ArrowRight, Sparkles,
   BookOpen, Languages, Plus, Volume2,
-  Headphones, Speaker, Bluetooth, RefreshCw, Smartphone, Tablet, Monitor,
-  Radio, Wifi, CheckCircle2, Moon,
+  Headphones, Bluetooth, RefreshCw, Smartphone, Tablet, Laptop, Mic2,
+  Radio, CheckCircle2, Moon,
   Globe2, BellPlus, Users, Bookmark, Sun,
   Settings, Home, Cast, Airplay,
   Clock, Compass,
@@ -538,8 +538,6 @@ export function QuranShowcase() {
           className="absolute top-0 right-0 w-1/2 h-[340px] hidden lg:block overflow-hidden pointer-events-none"
         >
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-midnight-900 via-midnight-900/55 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-midnight-900" />
         </div>
 
         {/* ── hero ── */}
@@ -753,10 +751,10 @@ export function QuranShowcase() {
    ════════════════════════════════════════════════════════════════════════ */
 
 const DEVICES = [
-  { name: 'iPhone 15',   owner: 'Home',    Icon: Smartphone, status: 'playing' as const, accent: 'from-gold-400 to-gold-600',         fill: 'bg-gold-400',    vol: 65 },
-  { name: 'iPad Pro',    owner: 'Home',    Icon: Tablet,     status: 'online'  as const, accent: 'from-midnight-400 to-midnight-600',  fill: 'bg-midnight-400', vol: 38 },
-  { name: 'MacBook Pro', owner: 'Office',  Icon: Monitor,    status: 'online'  as const, accent: 'from-gold-600 to-midnight-700',      fill: 'bg-gold-600',    vol: 55 },
-  { name: 'Echo Dot',    owner: 'Kitchen', Icon: Speaker,    status: 'idle'    as const, accent: 'from-midnight-600 to-midnight-800',  fill: 'bg-midnight-600', vol: 28 },
+  { name: 'iPhone 15',   owner: 'Home',    Icon: Smartphone, accent: 'from-gold-400 to-gold-600',        fill: 'bg-gold-400',     vol: 65 },
+  { name: 'iPad Pro',    owner: 'Home',    Icon: Tablet,     accent: 'from-midnight-400 to-midnight-600', fill: 'bg-midnight-400', vol: 38 },
+  { name: 'MacBook Pro', owner: 'Office',  Icon: Laptop,     accent: 'from-gold-600 to-midnight-700',    fill: 'bg-gold-600',     vol: 55 },
+  { name: 'Echo Dot',    owner: 'Kitchen', Icon: Mic2,       accent: 'from-midnight-600 to-midnight-800', fill: 'bg-midnight-600', vol: 28 },
 ];
 
 const BADGE = {
@@ -960,7 +958,7 @@ function DevSpeakerOrb() {
 /** Thin horizontal volume bar with accent fill + circular thumb. */
 function VolumeBar({ pct, fill, idle }: { pct: number; fill: string; idle: boolean }) {
   return (
-    <div className="flex items-center gap-2 mt-4">
+    <div className="flex items-center gap-2 mt-2.5">
       <Volume2 size={13} className="text-parchment/35 shrink-0" />
       <div className="relative flex-1 h-[5px] rounded-full bg-white/10 overflow-visible">
         <div className={`absolute inset-y-0 left-0 rounded-full ${idle ? 'bg-slate-500/50' : fill}`}
@@ -977,6 +975,23 @@ export function DevicesShowcase() {
   const [outputLabel] = useLocalStorage<string>('isa:audioOutputLabel', 'System default');
   const [scanning, setScanning] = useState(false);
   const [outCount, setOutCount] = useState<number | null>(null);
+  const [liveDevices, setLiveDevices] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then((devs) => {
+        setLiveDevices(devs.filter((d) => d.kind === 'audiooutput').map((d) => d.label.toLowerCase()));
+      }).catch(() => {});
+    }
+  }, []);
+
+  const getDeviceStatus = (deviceName: string): 'playing' | 'online' | 'idle' => {
+    const name = deviceName.toLowerCase().split(' ')[0];
+    const label = outputLabel.toLowerCase();
+    if (label !== 'system default' && (label.includes(name) || name.includes(label.split(' ')[0]))) return 'playing';
+    if (liveDevices.some((l) => l.length > 0 && (l.includes(name) || name.includes(l.split(' ')[0])))) return 'online';
+    return 'idle';
+  };
 
   const rescan = async () => {
     setScanning(true);
@@ -1027,10 +1042,10 @@ export function DevicesShowcase() {
       </div>
 
       {/* ══ content ══ */}
-      <div className="relative max-w-7xl mx-auto px-6 py-14 md:py-20">
+      <div className="relative max-w-7xl mx-auto px-6 py-10 md:py-14">
 
         {/* ── header row ── */}
-        <div className="flex flex-wrap items-start justify-between gap-6 mb-10">
+        <div className="flex flex-wrap items-start justify-between gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
@@ -1080,25 +1095,19 @@ export function DevicesShowcase() {
               <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
               <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
 
-              <div className="mt-6 w-full space-y-2.5">
+              <div className="mt-6 w-full flex gap-2">
                 <button
                   onClick={rescan}
-                  className="flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
+                  className="flex items-center justify-center gap-2 flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
                 >
-                  <span className="flex items-center gap-3">
-                    <RefreshCw size={15} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
-                    {scanning ? 'Scanning…' : 'Rescan outputs'}
-                  </span>
-                  <ArrowRight size={13} className="text-parchment/35" />
+                  <RefreshCw size={14} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
+                  {scanning ? 'Scanning…' : 'Rescan'}
                 </button>
                 <Link
                   href="/dashboard/devices"
-                  className="flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
+                  className="flex items-center justify-center gap-2 flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-sm font-medium text-parchment/80 hover:bg-white/10 transition"
                 >
-                  <span className="flex items-center gap-3">
-                    <Bluetooth size={15} className="text-gold-300" /> Pair Bluetooth device
-                  </span>
-                  <ArrowRight size={13} className="text-parchment/35" />
+                  <Bluetooth size={14} className="text-gold-300" /> Pair
                 </Link>
               </div>
 
@@ -1120,52 +1129,54 @@ export function DevicesShowcase() {
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
             className="flex flex-col gap-4"
           >
-            <div className="grid sm:grid-cols-2 gap-4 flex-1">
+            <div className="grid sm:grid-cols-2 gap-3 flex-1">
               {DEVICES.map((d, i) => {
-                const badge = BADGE[d.status];
-                const idle = d.status === 'idle';
+                const status = getDeviceStatus(d.name);
+                const badge = BADGE[status];
+                const idle = status === 'idle';
                 return (
                   <motion.div
                     key={d.name}
                     initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.45 }}
-                    className="relative overflow-hidden rounded-2xl border border-white/10 p-5"
+                    className="relative overflow-hidden rounded-2xl border border-white/10 p-3.5"
                     style={{ background: 'linear-gradient(145deg,#0F2A1C 0%,#0B1A12 100%)' }}
                   >
-                    {/* subtle corner accent glow */}
-                    <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${d.accent} opacity-20 blur-xl`} />
+                    <div className={`absolute -top-6 -right-6 w-16 h-16 rounded-full bg-gradient-to-br ${d.accent} opacity-20 blur-xl`} />
 
-                    <div className="relative flex items-start justify-between">
-                      <span className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${d.accent} text-white shadow-lg`}>
-                        <d.Icon size={26} />
+                    <div className="relative flex items-center gap-3">
+                      <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br ${d.accent} text-white shadow-md shrink-0`}>
+                        <d.Icon size={20} />
                       </span>
-
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${badge.cls}`}>
-                        {d.status === 'playing'
-                          ? <span className="flex items-end gap-[2.5px] h-3.5">
-                              {[0, 1, 2].map((b) => (
-                                <motion.span key={b}
-                                  className="w-[3px] rounded-full bg-gold-400"
-                                  animate={{ height: ['3px', '11px', '4px', '10px', '3px'] }}
-                                  transition={{ duration: 0.85, repeat: Infinity, delay: b * 0.11, ease: 'easeInOut' }}
-                                  style={{ height: '3px' }}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <h3 className="text-[13px] font-bold text-parchment leading-tight truncate">{d.name}</h3>
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${badge.cls}`}>
+                            {status === 'playing'
+                              ? <span className="flex items-end gap-[2px] h-3">
+                                  {[0, 1, 2].map((b) => (
+                                    <motion.span key={b}
+                                      className="w-[2.5px] rounded-full bg-gold-400"
+                                      animate={{ height: ['2px', '9px', '3px', '8px', '2px'] }}
+                                      transition={{ duration: 0.85, repeat: Infinity, delay: b * 0.11, ease: 'easeInOut' }}
+                                      style={{ height: '2px' }}
+                                    />
+                                  ))}
+                                </span>
+                              : <motion.span
+                                  className={`w-1.5 h-1.5 rounded-full ${badge.ring}`}
+                                  animate={idle ? {} : { opacity: [1, 0.35, 1] }}
+                                  transition={{ duration: 1.6, repeat: Infinity }}
                                 />
-                              ))}
-                            </span>
-                          : <motion.span
-                              className={`w-2 h-2 rounded-full ${badge.ring}`}
-                              animate={idle ? {} : { opacity: [1, 0.35, 1] }}
-                              transition={{ duration: 1.6, repeat: Infinity }}
-                            />
-                        }
-                        {d.status === 'playing' ? 'Playing' : d.status === 'online' ? 'Online' : 'Idle'}
-                      </span>
+                            }
+                            {status === 'playing' ? 'Playing' : status === 'online' ? 'Online' : 'Idle'}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-parchment/50">
+                          <MapPin size={9} /> {d.owner}
+                        </p>
+                      </div>
                     </div>
-
-                    <h3 className="relative mt-3.5 text-[15px] font-bold text-parchment leading-tight">{d.name}</h3>
-                    <p className="relative mt-1 flex items-center gap-1 text-xs text-parchment/50">
-                      <MapPin size={10} /> {d.owner}
-                    </p>
 
                     <VolumeBar pct={d.vol} fill={d.fill} idle={idle} />
                   </motion.div>

@@ -195,12 +195,12 @@ export default function HomePage() {
       {/* ── feature showcases ── (self-contained marketing sections; their #ids back the nav anchors) */}
       <AzanShowcase />
       <QuranShowcase />
-      <DevicesShowcase />
 
       {/* ── feature grid + closing CTA ── (matches the approved design; #features backs the nav anchor) */}
       <div id="features">
         <FaithShowcase />
       </div>
+      <DevicesShowcase />
 
       {/* ── footer ── */}
       <footer className="relative border-t border-gold-300/15">
