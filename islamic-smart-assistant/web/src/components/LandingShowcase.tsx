@@ -18,6 +18,7 @@ import {
   Headphones, Speaker, Bluetooth, RefreshCw, Smartphone, Tablet, Monitor,
   Radio, Wifi, CheckCircle2, Moon,
   Globe2, BellPlus, Users, Bookmark, Sun,
+  Settings, Home, Cast, Airplay,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
@@ -686,30 +687,171 @@ export function QuranShowcase() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   3 · DEVICES & OUTPUTS
+   3 · DEVICES & OUTPUTS — cinematic Islamic night scene
    ════════════════════════════════════════════════════════════════════════ */
 
-const SAMPLE_DEVICES = [
-  { name: 'iPhone 15',    owner: 'Home',   icon: Smartphone, status: 'playing', accent: 'from-emerald-400 to-emerald-600' },
-  { name: 'iPad Pro',     owner: 'Home',   icon: Tablet,     status: 'online',  accent: 'from-cyan-400 to-emerald-500' },
-  { name: 'Macbook Pro',  owner: 'Office', icon: Monitor,    status: 'online',  accent: 'from-indigo-400 to-violet-500' },
-  { name: 'Echo Dot',     owner: 'Kitchen',icon: Speaker,    status: 'idle',    accent: 'from-slate-400 to-slate-600' },
+/* ── device catalogue ────────────────────────────────────────────────── */
+
+const DEVICES = [
+  { name: 'iPhone 15',   owner: 'Home',    Icon: Smartphone, status: 'playing' as const, accent: 'from-emerald-400 to-emerald-600',  fill: 'bg-emerald-400',  vol: 65 },
+  { name: 'iPad Pro',    owner: 'Home',    Icon: Tablet,     status: 'online'  as const, accent: 'from-cyan-400 to-teal-500',        fill: 'bg-cyan-400',     vol: 38 },
+  { name: 'MacBook Pro', owner: 'Office',  Icon: Monitor,    status: 'online'  as const, accent: 'from-violet-500 to-purple-600',    fill: 'bg-violet-400',   vol: 55 },
+  { name: 'Echo Dot',    owner: 'Kitchen', Icon: Speaker,    status: 'idle'    as const, accent: 'from-slate-500 to-slate-600',      fill: 'bg-slate-400',    vol: 28 },
 ];
 
-/** Concentric broadcast rings that pulse outward. */
-function BroadcastRings() {
+const BADGE = {
+  playing: { ring: 'bg-emerald-400',  cls: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' },
+  online:  { ring: 'bg-emerald-400',  cls: 'bg-emerald-500/10 text-emerald-200/80 border border-emerald-500/20' },
+  idle:    { ring: 'bg-slate-400',    cls: 'bg-slate-500/20 text-slate-300 border border-slate-500/20' },
+};
+
+const PLATFORMS = [
+  { label: 'Amazon Alexa', Icon: Radio  },
+  { label: 'Google Home',  Icon: Home   },
+  { label: 'Chromecast',   Icon: Cast   },
+  { label: 'AirPlay',      Icon: Airplay },
+];
+
+/* ── background artwork helpers ─────────────────────────────────────── */
+
+/** Crescent moon — top-right of the section. */
+function DevCrescent({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 56 66" fill="none" aria-hidden className={className}>
+      <path d="M40 6A28 28 0 1 0 48 52 22 22 0 1 1 40 6Z" fill="#E9CF7A" />
+    </svg>
+  );
+}
+
+/** One ornate hanging lantern — glows warm gold. */
+function DevLantern({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 54 136" fill="none" aria-hidden className={className}>
+      <defs>
+        <linearGradient id="dlBrass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#F6D67A" /><stop offset="100%" stopColor="#A6791E" />
+        </linearGradient>
+        <radialGradient id="dlFlame" cx="50%" cy="38%" r="55%">
+          <stop offset="0%" stopColor="#FCE7A6" stopOpacity="0.9" /><stop offset="100%" stopColor="#F2C94C" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* chain */}
+      <path d="M27 0V22" stroke="url(#dlBrass)" strokeWidth="2.5" />
+      <circle cx="27" cy="4" r="4" fill="url(#dlBrass)" />
+      {/* cap */}
+      <path d="M16 24c0-10 5-16 11-16s11 6 11 16z" fill="url(#dlBrass)" />
+      {/* body */}
+      <path d="M13 32h28l6 64c0 12-12 20-20 20s-20-8-20-20z" fill="url(#dlBrass)" fillOpacity="0.75" />
+      {/* glass + flame glow */}
+      <path d="M20 36h14l3 58c0 7-7 11-10 11s-10-4-10-11z" fill="#FCE7A6" fillOpacity="0.2" />
+      <circle cx="27" cy="62" r="20" fill="url(#dlFlame)" />
+      <path d="M27 50c6 6 7 12 3 19-1 3 0 5 2 6-8 0-13-7-10-16 1-4 3-7 5-9z" fill="#F2994A" opacity="0.85" />
+      {/* lattice */}
+      <line x1="27" y1="34" x2="27" y2="94" stroke="#A6791E" strokeWidth="1.6" opacity="0.5" />
+      <line x1="17" y1="60" x2="37" y2="60" stroke="#A6791E" strokeWidth="1.6" opacity="0.5" />
+      {/* base */}
+      <path d="M19 98h18l-3 16H22z" fill="url(#dlBrass)" />
+      <rect x="21" y="114" width="12" height="6" rx="2" fill="url(#dlBrass)" />
+    </svg>
+  );
+}
+
+/**
+ * Ornate Mughal/Islamic pointed arch that frames the current-output speaker.
+ * Multiple concentric arches + column dot ornaments, all in faint gold.
+ */
+function MughalArch({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 280 380" fill="none" aria-hidden className={className}>
+      {/* outer ogee arch */}
+      <path d="M12 380V178C12 66 60 12 140 5 220 12 268 66 268 178V380"
+        stroke="#E9CF7A" strokeOpacity="0.38" strokeWidth="2.5" fill="rgba(233,207,122,0.025)" />
+      {/* mid arch */}
+      <path d="M38 380V188C38 88 78 46 140 32 202 46 242 88 242 188V380"
+        stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1.6" fill="none" />
+      {/* inner arch */}
+      <path d="M64 380V198C64 110 96 74 140 60 184 74 216 110 216 198V380"
+        stroke="#E9CF7A" strokeOpacity="0.13" strokeWidth="1" fill="none" />
+      {/* apex ornament */}
+      <circle cx="140" cy="18" r="11" stroke="#E9CF7A" strokeOpacity="0.5" strokeWidth="1.6" fill="none" />
+      <circle cx="140" cy="18" r="5.5" fill="#E9CF7A" fillOpacity="0.45" />
+      <circle cx="140" cy="18" r="2.2" fill="#E9CF7A" fillOpacity="0.9" />
+      <path d="M140 5V1M132 10L128 7M148 10L152 7" stroke="#E9CF7A" strokeOpacity="0.4" strokeWidth="1.2" strokeLinecap="round" />
+      {/* column dot ornaments */}
+      {[178,198,218,238,258,278,298,318,338,358].map((y) => (
+        <g key={y}>
+          <circle cx="27"  cy={y} r="2.8" fill="#E9CF7A" fillOpacity="0.18" />
+          <circle cx="253" cy={y} r="2.8" fill="#E9CF7A" fillOpacity="0.18" />
+          <circle cx="17"  cy={y + 10} r="1.8" fill="#E9CF7A" fillOpacity="0.1" />
+          <circle cx="263" cy={y + 10} r="1.8" fill="#E9CF7A" fillOpacity="0.1" />
+        </g>
+      ))}
+      {/* horizontal frame accents */}
+      <line x1="12" y1="228" x2="38" y2="228" stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1" />
+      <line x1="242" y1="228" x2="268" y2="228" stroke="#E9CF7A" strokeOpacity="0.22" strokeWidth="1" />
+      <line x1="12" y1="288" x2="38" y2="288" stroke="#E9CF7A" strokeOpacity="0.15" strokeWidth="1" />
+      <line x1="242" y1="288" x2="268" y2="288" stroke="#E9CF7A" strokeOpacity="0.15" strokeWidth="1" />
+    </svg>
+  );
+}
+
+/** Continuously animated audio waveform for the bottom banner. */
+function BannerWaveform() {
+  const HEIGHTS = [8,14,22,32,20,28,36,22,14,30,38,24,16,32,22,10,18,28,36,26,18,12,32,24,16,28,20,10,24,34,18,26,12,8,22,30,24,36,16,24];
+  return (
+    <div className="flex items-center justify-center gap-[3px] h-10 overflow-hidden" aria-hidden>
+      {HEIGHTS.map((h, i) => (
+        <motion.span
+          key={i}
+          className="inline-block rounded-full"
+          style={{
+            width: 3.5,
+            height: h,
+            background: 'linear-gradient(to top, #C9A227, #F6D67A)',
+            transformOrigin: 'bottom',
+          }}
+          animate={{ scaleY: [0.2, 1, 0.3, 0.85, 0.15, 0.95, 0.2] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.045, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Outward-pulsing broadcast rings (framer-motion, runs always). */
+function DevBroadcastRings() {
   return (
     <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
       {[0, 1, 2].map((i) => (
-        <span
+        <motion.span
           key={i}
-          className="absolute w-24 h-24 rounded-full border border-cyan-300/40 animate-ring"
-          style={{ animationDelay: `${i * 1.1}s` }}
+          className="absolute rounded-full border border-gold-300/35"
+          style={{ width: 80, height: 80 }}
+          animate={{ scale: [1, 3], opacity: [0.65, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, delay: i * 0.92, ease: 'easeOut' }}
         />
       ))}
     </span>
   );
 }
+
+/** Thin horizontal volume bar with accent fill + circular thumb. */
+function VolumeBar({ pct, fill, idle }: { pct: number; fill: string; idle: boolean }) {
+  return (
+    <div className="flex items-center gap-2 mt-4">
+      <Volume2 size={13} className="text-emerald-100/35 shrink-0" />
+      <div className="relative flex-1 h-[5px] rounded-full bg-white/10 overflow-visible">
+        <div className={`absolute inset-y-0 left-0 rounded-full ${idle ? 'bg-slate-500/50' : fill}`}
+             style={{ width: `${pct}%` }} />
+        <div className={`absolute top-1/2 -translate-y-1/2 w-[13px] h-[13px] rounded-full shadow-md
+                         ${idle ? 'bg-slate-400' : fill}`}
+             style={{ left: `calc(${pct}% - 6.5px)` }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── main component ──────────────────────────────────────────────────── */
 
 export function DevicesShowcase() {
   const [outputLabel] = useLocalStorage<string>('isa:audioOutputLabel', 'System default');
@@ -722,123 +864,342 @@ export function DevicesShowcase() {
       if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
         const devs = await navigator.mediaDevices.enumerateDevices();
         setOutCount(devs.filter((d) => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications').length);
-      } else {
-        setOutCount(0);
-      }
-    } catch {
-      setOutCount(0);
-    } finally {
-      // brief spin so the gesture reads as a real action
-      setTimeout(() => setScanning(false), 600);
-    }
+      } else { setOutCount(0); }
+    } catch { setOutCount(0); }
+    finally { setTimeout(() => setScanning(false), 600); }
   };
 
   return (
-    <section id="devices" className="relative overflow-hidden bg-gradient-to-b from-midnight-800 to-midnight-900 text-parchment">
-      <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
-      <Aurora className="w-[32rem] h-[32rem] bg-cyan-400/20 -top-32 right-0" />
-      <Aurora className="w-[28rem] h-[28rem] bg-indigo-500/20 bottom-0 -left-24" delay={6} />
+    <section id="devices" className="relative overflow-hidden text-parchment" style={{ background: '#0A1410' }}>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <SectionHead
-            light
-            chip="Connected everywhere"
-            icon={Radio}
-            title={<>One tap, every speaker<br /><span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span></>}
-            subtitle="Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house — phones, tablets, desktops and smart speakers, kept in sync."
+      {/* ══ cinematic night-scene background ══ */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        {/* mosque dome green glow */}
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 65% 50% at 50% -5%, #163C22 0%, transparent 68%)' }} />
+        {/* warm lantern glow — right edge */}
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 38% 55% at 98% 35%, rgba(180,126,18,0.18) 0%, transparent 65%)' }} />
+
+        {/* Glowing mosque silhouette — centre bottom */}
+        <svg viewBox="0 0 900 380" preserveAspectRatio="xMidYMax slice" aria-hidden
+          className="absolute bottom-0 inset-x-0 w-full opacity-55">
+          <defs>
+            <radialGradient id="domeHalo" cx="50%" cy="75%" r="38%">
+              <stop offset="0%" stopColor="#1F5E35" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#1F5E35" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <ellipse cx="450" cy="340" rx="230" ry="100" fill="url(#domeHalo)" />
+          {/* dome */}
+          <path d="M330 380V260C330 185 375 140 450 126 525 140 570 185 570 260V380z" fill="#0D2016" />
+          {/* finial */}
+          <path d="M450 126C450 96 441 84 441 64 441 44 450 38 450 20 450 38 459 44 459 64 459 84 450 96 450 126z" fill="#0D2016" />
+          <circle cx="450" cy="18" r="6" fill="#142D1C" />
+          {/* left minaret */}
+          <path d="M210 380V215Q210 182 222 177Q234 182 234 215V380z" fill="#0D2016" />
+          <path d="M222 177C222 162 215 156 215 143 215 130 222 126 222 114 222 126 229 130 229 143 229 156 222 162 222 177z" fill="#0D2016" />
+          {/* right minaret */}
+          <path d="M666 380V215Q666 182 678 177Q690 182 690 215V380z" fill="#0D2016" />
+          <path d="M678 177C678 162 671 156 671 143 671 130 678 126 678 114 678 126 685 130 685 143 685 156 678 162 678 177z" fill="#0D2016" />
+        </svg>
+
+        {/* Islamic arch window panels — right edge */}
+        <svg viewBox="0 0 180 600" fill="none" aria-hidden
+          className="absolute right-0 top-0 h-full w-36 opacity-35">
+          {[50, 230, 420].map((y, i) => (
+            <g key={i} transform={`translate(76,${y})`}>
+              <path d="M-56 154V76C-56 24-28 2 0 0 28 2 56 24 56 76V154z"
+                stroke="#E9CF7A" strokeOpacity="0.42" strokeWidth="1.8" fill="rgba(233,207,122,0.025)" />
+              <path d="M-38 154V82C-38 40-19 22 0 18 19 22 38 40 38 82V154z"
+                stroke="#E9CF7A" strokeOpacity="0.25" strokeWidth="1.2" fill="none" />
+              <circle cx="0" cy="6" r="7" stroke="#E9CF7A" strokeOpacity="0.42" strokeWidth="1.2" fill="none" />
+              <circle cx="0" cy="6" r="3" fill="#E9CF7A" fillOpacity="0.38" />
+            </g>
+          ))}
+        </svg>
+
+        {/* Crescent moon */}
+        <DevCrescent className="absolute top-7 right-32 w-11 h-13 opacity-95" />
+
+        {/* Twinkling stars */}
+        {[
+          { r: 176, t: 44,  s: 2   },
+          { r: 108, t: 78,  s: 1.5 },
+          { r: 236, t: 22,  s: 1.3 },
+          { r: 316, t: 60,  s: 2.2 },
+          { r: 62,  t: 108, s: 1.7 },
+          { r: 148, t: 14,  s: 1.4 },
+        ].map((s, i) => (
+          <motion.span key={i} className="absolute rounded-full"
+            style={{ right: s.r, top: s.t, width: s.s, height: s.s, background: '#E9CF7A' }}
+            animate={{ opacity: [0.25, 1, 0.25] }}
+            transition={{ duration: 1.8 + i * 0.35, repeat: Infinity, delay: i * 0.48, ease: 'easeInOut' }}
           />
-          <Link href="/dashboard/devices" className="btn-primary shrink-0">
-            <Speaker size={18} /> Manage devices <ArrowRight size={16} />
-          </Link>
-        </div>
+        ))}
 
-        <div className="mt-10 grid lg:grid-cols-5 gap-6">
-          {/* Audio output control */}
+        {/* Hanging lanterns — far right */}
+        <motion.div className="absolute right-5 top-0"
+          animate={{ rotate: [-3, 3, -3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ transformOrigin: 'top center' }}>
+          <DevLantern className="w-12 opacity-80" />
+        </motion.div>
+        <motion.div className="absolute right-16 top-4"
+          animate={{ rotate: [2.5, -2.5, 2.5] }}
+          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+          style={{ transformOrigin: 'top center' }}>
+          <DevLantern className="w-9 opacity-55" />
+        </motion.div>
+
+        {/* Islamic geometric pattern overlay */}
+        <div className="absolute inset-0 pattern-bg opacity-[0.055]" />
+      </div>
+
+      {/* ══ content ══ */}
+      <div className="relative max-w-7xl mx-auto px-6 py-14 md:py-20">
+
+        {/* ── header row ── */}
+        <div className="flex flex-wrap items-start justify-between gap-6 mb-10">
           <motion.div
-            initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-            className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-white/[0.07] border border-white/12 backdrop-blur p-6"
+            initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
+            className="max-w-xl"
           >
-            <div className="relative h-24 mb-2">
-              <BroadcastRings />
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span className="w-16 h-16 rounded-2xl bg-gold-gradient text-midnight-900 flex items-center justify-center shadow-glow-gold">
-                  <Volume2 size={28} />
-                </span>
-              </span>
-            </div>
-            <p className="text-xs text-emerald-100/60 uppercase tracking-widest text-center">Current output</p>
-            <p className="font-bold text-lg text-center mt-0.5">{outputLabel}</p>
-
-            <div className="mt-4 flex flex-col gap-2">
-              <button
-                onClick={rescan}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 text-sm font-semibold py-2.5 transition"
-              >
-                <RefreshCw size={15} className={scanning ? 'animate-spin' : ''} />
-                {scanning ? 'Scanning…' : 'Rescan outputs'}
-              </button>
-              {outCount !== null && !scanning && (
-                <p className="text-center text-xs text-emerald-100/70">
-                  {outCount > 0
-                    ? <><CheckCircle2 size={12} className="inline mr-1 text-emerald-300" />{outCount} audio output{outCount === 1 ? '' : 's'} detected</>
-                    : 'Open in Chrome/Edge & connect a device to detect outputs'}
-                </p>
-              )}
-              <Link
-                href="/dashboard/devices"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-medium py-2.5 transition text-emerald-100/80"
-              >
-                <Bluetooth size={15} /> Pair Bluetooth…
-              </Link>
-            </div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-emerald-200 backdrop-blur">
+              <Radio size={12} className="rotate-90" /> Connected everywhere
+            </span>
+            <h2 className="mt-4 font-display font-bold leading-[1.06] text-4xl md:text-5xl">
+              <span className="text-parchment">One tap, every speaker</span><br />
+              <span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span>
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-emerald-100/70 max-w-md">
+              Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house —
+              phones, tablets, desktops and smart speakers, kept in sync.
+            </p>
           </motion.div>
 
-          {/* Devices grid */}
           <motion.div
-            initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-3 grid sm:grid-cols-2 gap-4 content-start"
+            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, delay: 0.15 }}
           >
-            {SAMPLE_DEVICES.map((d, i) => (
-              <motion.div
-                key={d.name}
-                initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.07, duration: 0.4 }}
-                whileHover={{ y: -4 }}
-                className="relative overflow-hidden rounded-2xl bg-white/[0.07] border border-white/12 backdrop-blur p-5"
-              >
-                <div className={`absolute -top-10 -right-10 w-28 h-28 rounded-full bg-gradient-to-br ${d.accent} opacity-25`} />
-                <div className="relative flex items-start justify-between">
-                  <span className={`inline-flex items-center justify-center w-11 h-11 rounded-xl text-white bg-gradient-to-br ${d.accent} shadow-md`}>
-                    <d.icon size={20} />
-                  </span>
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full
-                    ${d.status === 'playing' ? 'bg-emerald-400/20 text-emerald-200'
-                      : d.status === 'online' ? 'bg-cyan-400/15 text-cyan-200'
-                      : 'bg-white/10 text-emerald-100/60'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${d.status === 'idle' ? 'bg-slate-300' : 'bg-emerald-300 animate-pulse-soft'}`} />
-                    {d.status}
-                  </span>
-                </div>
-                <h3 className="relative mt-4 font-bold">{d.name}</h3>
-                <p className="relative text-sm text-emerald-100/60 flex items-center gap-1.5 mt-0.5">
-                  <Wifi size={12} /> {d.owner}
-                </p>
-              </motion.div>
-            ))}
+            <Link
+              href="/dashboard/devices"
+              className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-gold-200 backdrop-blur hover:bg-white/[0.12] transition"
+            >
+              <Settings size={15} /> Manage devices <ArrowRight size={14} />
+            </Link>
+          </motion.div>
+        </div>
 
-            {/* smart-speaker integrations strip */}
-            <div className="sm:col-span-2 flex flex-wrap gap-2 pt-1">
-              {['Amazon Alexa', 'Google Home', 'Chromecast', 'AirPlay'].map((s) => (
-                <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-3.5 py-1.5 text-xs font-medium text-emerald-100/75">
-                  <Headphones size={12} /> {s}
+        {/* ── main panel grid ── */}
+        <div className="grid lg:grid-cols-[2fr_3fr] gap-5 items-stretch">
+
+          {/* LEFT: Current Output card with Mughal arch */}
+          <motion.div
+            initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-3xl border border-emerald-800/50 flex flex-col min-h-[360px]"
+            style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
+          >
+            {/* Mughal arch spans the full card */}
+            <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
+
+            <div className="relative flex flex-col flex-1 items-center justify-center px-6 pt-10 pb-6">
+              {/* Speaker icon + animated broadcast rings */}
+              <div className="relative flex items-center justify-center w-36 h-36">
+                <DevBroadcastRings />
+                <motion.div
+                  className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center shadow-glow-gold"
+                  style={{ background: 'linear-gradient(135deg,#DDB94B 0%,#C9A227 50%,#A6831A 100%)' }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Volume2 size={34} className="text-midnight-900" />
+                </motion.div>
+              </div>
+
+              <p className="mt-5 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
+              <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
+
+              {/* Action rows */}
+              <div className="mt-6 w-full space-y-2.5">
+                <button
+                  onClick={rescan}
+                  className="flex items-center justify-between w-full rounded-2xl border border-emerald-800/55 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-emerald-100/90 hover:bg-white/10 transition"
+                >
+                  <span className="flex items-center gap-3">
+                    <RefreshCw size={15} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
+                    {scanning ? 'Scanning…' : 'Rescan outputs'}
+                  </span>
+                  <ArrowRight size={13} className="text-emerald-100/35" />
+                </button>
+                <Link
+                  href="/dashboard/devices"
+                  className="flex items-center justify-between w-full rounded-2xl border border-emerald-800/55 bg-white/[0.05] px-4 py-3.5 text-sm font-medium text-emerald-100/90 hover:bg-white/10 transition"
+                >
+                  <span className="flex items-center gap-3">
+                    <Bluetooth size={15} className="text-gold-300" /> Pair Bluetooth device
+                  </span>
+                  <ArrowRight size={13} className="text-emerald-100/35" />
+                </Link>
+              </div>
+
+              {outCount !== null && !scanning && (
+                <p className="mt-3 text-xs text-emerald-100/50 text-center">
+                  {outCount > 0
+                    ? <><CheckCircle2 size={11} className="inline mr-1 text-emerald-400" />{outCount} output{outCount !== 1 ? 's' : ''} detected</>
+                    : 'Connect a device to detect outputs'}
+                </p>
+              )}
+            </div>
+
+            {/* mosque silhouette at card base */}
+            <MosqueSilhouette className="shrink-0 w-full text-emerald-900/50" />
+          </motion.div>
+
+          {/* RIGHT: 2×2 device cards + platform pills */}
+          <motion.div
+            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
+            className="flex flex-col gap-4"
+          >
+            <div className="grid sm:grid-cols-2 gap-4 flex-1">
+              {DEVICES.map((d, i) => {
+                const badge = BADGE[d.status];
+                const idle = d.status === 'idle';
+                return (
+                  <motion.div
+                    key={d.name}
+                    initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.45 }}
+                    className="relative overflow-hidden rounded-2xl border border-emerald-900/45 p-5"
+                    style={{ background: 'linear-gradient(145deg,#0F2A1C 0%,#0B1A12 100%)' }}
+                  >
+                    {/* subtle corner accent glow */}
+                    <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${d.accent} opacity-20 blur-xl`} />
+
+                    <div className="relative flex items-start justify-between">
+                      {/* large gradient icon tile */}
+                      <span className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${d.accent} text-white shadow-lg`}>
+                        <d.Icon size={26} />
+                      </span>
+
+                      {/* status badge */}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${badge.cls}`}>
+                        {d.status === 'playing'
+                          ? <span className="flex items-end gap-[2.5px] h-3.5">
+                              {[0, 1, 2].map((b) => (
+                                <motion.span key={b}
+                                  className="w-[3px] rounded-full bg-emerald-400"
+                                  animate={{ height: ['3px', '11px', '4px', '10px', '3px'] }}
+                                  transition={{ duration: 0.85, repeat: Infinity, delay: b * 0.11, ease: 'easeInOut' }}
+                                  style={{ height: '3px' }}
+                                />
+                              ))}
+                            </span>
+                          : <motion.span
+                              className={`w-2 h-2 rounded-full ${badge.ring}`}
+                              animate={idle ? {} : { opacity: [1, 0.35, 1] }}
+                              transition={{ duration: 1.6, repeat: Infinity }}
+                            />
+                        }
+                        {d.status === 'playing' ? 'Playing' : d.status === 'online' ? 'Online' : 'Idle'}
+                      </span>
+                    </div>
+
+                    <h3 className="relative mt-3.5 text-[15px] font-bold text-parchment leading-tight">{d.name}</h3>
+                    <p className="relative mt-1 flex items-center gap-1 text-xs text-emerald-100/50">
+                      <MapPin size={10} /> {d.owner}
+                    </p>
+
+                    <VolumeBar pct={d.vol} fill={d.fill} idle={idle} />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Platform integration pills */}
+            <div className="flex flex-wrap gap-2.5">
+              {PLATFORMS.map(({ label, Icon }) => (
+                <span key={label}
+                  className="inline-flex items-center gap-2 rounded-full border border-emerald-800/55 bg-white/[0.04] px-4 py-2 text-sm font-medium text-emerald-100/70 backdrop-blur">
+                  <Icon size={14} className="text-emerald-300/55" /> {label}
                 </span>
               ))}
             </div>
           </motion.div>
         </div>
+
+        {/* ── bottom "Everything in harmony" banner ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative mt-5 overflow-hidden rounded-2xl border border-emerald-800/50 flex items-center gap-5 px-5 py-4"
+          style={{ background: 'linear-gradient(135deg,#0F2A1C 0%,#0D2217 55%,#0B1D14 100%)' }}
+        >
+          {/* Left: animated mosque icon + text */}
+          <div className="flex items-center gap-3.5 shrink-0">
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <svg viewBox="0 0 54 64" width="44" height="50" fill="none" aria-hidden>
+                <defs>
+                  <radialGradient id="bhGlow" cx="50%" cy="65%" r="58%">
+                    <stop offset="0%" stopColor="#E9CF7A" stopOpacity="0.75" />
+                    <stop offset="100%" stopColor="#E9CF7A" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                <ellipse cx="27" cy="56" rx="24" ry="10" fill="url(#bhGlow)" />
+                <path d="M17 64V38C17 22 23 12 27 9 31 12 37 22 37 38V64z" fill="#E9CF7A" opacity="0.9" />
+                <path d="M27 9C27 2 23 0 23 0 23 0 20 4 20 9 22.5 7 25 6.5 27 9z" fill="#E9CF7A" />
+                <circle cx="27" cy="0" r="2.5" fill="#E9CF7A" />
+                <path d="M10 64V46Q10 38 17 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
+                <path d="M44 64V46Q44 38 37 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
+                {/* sparkles */}
+                <path d="M4 22L5.4 18 6.8 22 10 23 6.8 24 5.4 28 4 24 0 23z" fill="#E9CF7A" opacity="0.82" />
+                <path d="M44 14L45 11 46 14 49 15 46 16 45 19 44 16 41 15z" fill="#E9CF7A" opacity="0.7" />
+              </svg>
+            </motion.div>
+            <div className="leading-tight">
+              <p className="text-sm font-bold text-gold-300">Everything in harmony</p>
+              <p className="text-xs text-emerald-100/60 mt-0.5">Azan. Quran. Wherever you are.</p>
+            </div>
+          </div>
+
+          {/* Center: animated waveform — fills available space */}
+          <div className="flex-1 min-w-0">
+            <BannerWaveform />
+          </div>
+
+          {/* Right: two swinging lanterns + stars */}
+          <div className="relative flex items-end gap-3 shrink-0 pb-1">
+            <motion.div
+              animate={{ rotate: [-4, 4, -4] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: 'top center' }}
+            >
+              <DevLantern className="w-9 h-auto" />
+            </motion.div>
+            <motion.div
+              animate={{ rotate: [3.5, -3.5, 3.5] }}
+              transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.55 }}
+              style={{ transformOrigin: 'top center' }}
+            >
+              <DevLantern className="w-7 h-auto" />
+            </motion.div>
+            {/* sparkle stars near lanterns */}
+            <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none"
+              style={{ fontSize: 14 }}
+              animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }}
+              transition={{ duration: 2.1, repeat: Infinity }}>✦</motion.span>
+            <motion.span className="absolute -top-2 right-0 text-gold-200 select-none"
+              style={{ fontSize: 11 }}
+              animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.2, 0.9] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 }}>✦</motion.span>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
