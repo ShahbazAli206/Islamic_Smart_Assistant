@@ -215,8 +215,8 @@ export function AzanShowcase() {
               <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
-            {/* Larger supporting copy, gold-tinted */}
-            <p className="max-w-xl text-lg md:text-xl leading-relaxed text-gold-700/90">
+            {/* Larger supporting copy — keep the original dark body color */}
+            <p className="max-w-xl text-lg md:text-xl leading-relaxed text-ink/60">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
