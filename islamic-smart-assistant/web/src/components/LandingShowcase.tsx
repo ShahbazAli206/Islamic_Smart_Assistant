@@ -547,19 +547,16 @@ export function QuranShowcase() {
       <Aurora className="w-[34rem] h-[34rem] bg-emerald-400/20 -top-40 -left-32" />
       <KhatamStar className="absolute top-16 left-[34%] w-52 h-52 text-gold-300/[0.07] animate-spin-slow hidden lg:block" />
 
-      {/* quran-bg.png — top-right photo, bleeds to section edge */}
-      <div
-        aria-hidden
-        className="absolute top-0 right-0 w-[58%] h-[340px] hidden lg:block overflow-hidden pointer-events-none"
-      >
-        <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
-        {/* blend left edge into the dark emerald background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/55 to-transparent" />
-        {/* melt bottom edge into the section */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-950" />
-      </div>
-
       <div className="relative max-w-7xl mx-auto px-6 pt-12 pb-0">
+        {/* quran-bg.png — right-half photo, contained within the max-w-7xl boundary */}
+        <div
+          aria-hidden
+          className="absolute top-0 right-0 w-1/2 h-[340px] hidden lg:block overflow-hidden pointer-events-none"
+        >
+          <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-950" />
+        </div>
         {/* ── hero ── */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* left: copy + stats */}
