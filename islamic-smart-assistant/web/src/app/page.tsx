@@ -194,14 +194,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── feature showcases ── (self-contained marketing sections; their #ids back the nav anchors) */}
-      <AzanShowcase />
-      <QuranShowcase />
-
-      {/* ── feature grid + closing CTA ── (matches the approved design; #features backs the nav anchor) */}
+      {/* ── feature showcases ── (self-contained marketing sections; their #ids back the nav anchors)
+          FaithShowcase and AzanShowcase are swapped: Faith sits in 2nd position,
+          Azan in 4th. #features still wraps FaithShowcase for the nav anchor. */}
       <div id="features">
         <FaithShowcase />
       </div>
+      <QuranShowcase />
+      <AzanShowcase />
       <DevicesShowcase />
 
       {/* ── footer ── */}
