@@ -209,14 +209,15 @@ export function AzanShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
             </span>
-            {/* Golden heading — both lines use the gold gradient */}
-            <h2 className="section-heading">
-              <span className="bg-clip-text text-transparent bg-gold-gradient">The call to prayer,</span><br />
+            {/* Heading matched to the hero (first section) format: base-color first
+                line + gold-gradient last line. Base is ink here (light section). */}
+            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-ink">
+              The call to prayer,<br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
-            {/* Larger supporting copy — keep the original dark body color */}
-            <p className="max-w-xl text-lg md:text-xl leading-relaxed text-ink/60">
+            {/* Body matched to the hero format (text-lg, muted base color, max-w-xl) */}
+            <p className="text-lg text-ink/70 max-w-xl leading-relaxed">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
@@ -1064,11 +1065,13 @@ export function DevicesShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
               <Radio size={12} className="rotate-90" /> Connected everywhere
             </span>
-            <h2 className="mt-4 section-heading">
+            {/* Heading + body matched to the hero (first section) format: parchment
+                first line + gold-gradient last line (dark section), text-lg body. */}
+            <h2 className="mt-4 font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04]">
               <span className="text-parchment">One tap, every speaker</span><br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span>
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-parchment/70 max-w-md">
+            <p className="mt-4 text-lg text-parchment/75 max-w-xl leading-relaxed">
               Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house —
               phones, tablets, desktops and smart speakers, kept in sync.
             </p>
