@@ -1083,10 +1083,10 @@ export function DevicesShowcase() {
       </div>
 
       {/* ══ content ══ */}
-      <div className="relative max-w-7xl mx-auto px-6 py-10 md:py-14">
+      <div className="relative max-w-7xl mx-auto px-6 py-6 md:py-8">
 
         {/* ── header row ── */}
-        <div className="flex flex-wrap items-start justify-between gap-6 mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-6 mb-5">
           <motion.div
             initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
