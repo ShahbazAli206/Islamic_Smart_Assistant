@@ -191,7 +191,13 @@ export function AzanShowcase() {
           whole section (left and right). The copy sits on its own dark panel,
           so no heavy left-side wash is needed for legibility. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
+        {/* The photo's detail sits on one side, so a single full-width copy left
+            the other side plain. Duplicate it across two halves — left half
+            mirrored — so the mosque scene is visible on BOTH sides. */}
+        <div className="absolute inset-0 flex">
+          <img src="/hero-bg.jpg" alt="" className="h-full w-1/2 object-cover object-center -scale-x-100" />
+          <img src="/hero-bg.jpg" alt="" className="h-full w-1/2 object-cover object-center" />
+        </div>
         <div className="absolute inset-0 bg-white/15" />
       </div>
 
@@ -631,28 +637,28 @@ export function QuranShowcase() {
           className="mt-6 glass-dark rounded-2xl px-5 py-4 shadow-2xl shadow-emerald-950/40"
         >
           <div className="mb-3 flex items-center gap-2 text-gold-300">
-            <Globe2 size={19} />
-            <h3 className="text-base font-bold">Translations &amp; UI in 10+ Languages</h3>
+            <Globe2 size={21} />
+            <h3 className="text-lg font-bold">Translations &amp; UI in 10+ Languages</h3>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2.5">
+          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
             {LANGUAGES.map((l, i) => (
               <motion.div
                 key={l.code}
                 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.03, duration: 0.35 }}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5"
               >
-                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${l.accent} text-[11px] font-extrabold tracking-wide text-white`}>
+                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${l.accent} text-[13px] font-extrabold tracking-wide text-white`}>
                   {l.code}
                 </span>
                 <span className="flex min-w-0 flex-col leading-tight">
                   <span
-                    className={`truncate text-[13px] font-bold text-parchment ${l.rtl ? 'font-arabic' : ''}`}
+                    className={`truncate text-[15px] font-bold text-parchment ${l.rtl ? 'font-arabic' : ''}`}
                     style={l.rtl ? { direction: 'rtl' } : undefined}
                   >
                     {l.native}
                   </span>
-                  <span className="truncate text-[11px] font-medium text-parchment/45">{l.label}</span>
+                  <span className="truncate text-[12px] font-medium text-parchment/45">{l.label}</span>
                 </span>
               </motion.div>
             ))}
