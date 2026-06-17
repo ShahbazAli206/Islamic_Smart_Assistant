@@ -198,29 +198,28 @@ export function AzanShowcase() {
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
         {/* ── hero ── */}
         <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[340px]">
-          {/* left: copy — sits on a frosted translucent panel so it stands out
-              against the light photo background */}
+          {/* left: copy — sits on a dark frosted (translucent) panel so it stands
+              out against the light photo background */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
-            className="space-y-5 rounded-3xl border border-gold-200/50 bg-white/45 backdrop-blur-md p-6 sm:p-8 shadow-xl"
+            className="space-y-5 rounded-3xl border border-white/15 bg-midnight-900/55 backdrop-blur-md p-6 sm:p-8 shadow-2xl"
           >
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
             </span>
-            {/* Light theme: dark first line + gold-gradient last line (the hero
-                two-tone format, base colour ink so it reads on the clear light bg). */}
+            {/* White first line + gold-gradient last line — reads on the dark panel */}
             <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04]">
               <span className="text-white">The call to prayer,</span><br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
-            {/* Body — dark muted colour for the light theme */}
-            <p className="text-lg text-ink/70 max-w-xl leading-relaxed">
+            {/* Body — light muted colour to read on the dark panel */}
+            <p className="text-lg text-parchment/80 max-w-xl leading-relaxed">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
-            <p className="text-lg md:text-xl font-bold text-gold-600">
+            <p className="text-lg md:text-xl font-bold text-gold-300">
               Stay connected. Stay mindful. Stay blessed.
             </p>
             {/* CTA moved into the copy column so the right side can host the ayah card */}
