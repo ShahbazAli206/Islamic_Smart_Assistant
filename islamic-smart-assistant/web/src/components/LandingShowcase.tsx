@@ -198,11 +198,12 @@ export function AzanShowcase() {
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
         {/* ── hero ── */}
         <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[340px]">
-          {/* left: copy */}
+          {/* left: copy — sits on a frosted translucent panel so it stands out
+              against the light photo background */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
-            className="space-y-5 pb-10"
+            className="space-y-5 rounded-3xl border border-gold-200/50 bg-white/45 backdrop-blur-md p-6 sm:p-8 shadow-xl"
           >
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
