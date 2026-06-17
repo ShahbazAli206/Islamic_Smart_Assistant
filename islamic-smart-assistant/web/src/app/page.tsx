@@ -114,8 +114,8 @@ export default function HomePage() {
               </span>
               {/* hero heading — reduced one step smaller (3xl/4xl/5xl) per request */}
               <h1 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-parchment">
-                Your Faith,<br />
-                Your Journey,<br />
+                {/* Faith + Journey share one row when space allows, wrap otherwise; Guidance stays on its own line */}
+                Your Faith, Your Journey,<br />
                 <span className="bg-clip-text text-transparent bg-gold-gradient">Our Guidance.</span>
               </h1>
               <p className="text-lg text-parchment/75 max-w-xl leading-relaxed">
