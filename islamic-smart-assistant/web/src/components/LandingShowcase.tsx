@@ -205,7 +205,7 @@ export function AzanShowcase() {
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
         {/* ── hero ── */}
-        <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[340px]">
+        <div className="grid lg:grid-cols-2 gap-8 items-start min-h-[340px]">
           {/* left: copy — sits on a dark frosted (translucent) panel so it stands
               out against the light photo background */}
           <motion.div
