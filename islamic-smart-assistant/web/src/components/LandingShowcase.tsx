@@ -1121,13 +1121,13 @@ export function DevicesShowcase() {
         </div>
 
         {/* ── main panel grid ── */}
-        <div className="grid lg:grid-cols-[2fr_3fr] gap-5 items-start">
+        <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-start">
 
-          {/* LEFT: Current Output card with Mughal arch */}
+          {/* RIGHT (lg): Current Output card with Mughal arch — moved to the right via order-2 */}
           <motion.div
-            initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col"
+            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col lg:order-2"
             style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
           >
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
@@ -1166,11 +1166,11 @@ export function DevicesShowcase() {
             <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
           </motion.div>
 
-          {/* RIGHT: 2×2 device cards + platform pills */}
+          {/* LEFT (lg): 2×2 device cards + platform pills — moved to the left via order-1 */}
           <motion.div
-            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-3 lg:order-1"
           >
             <div className="grid sm:grid-cols-2 gap-3">
               {DEVICES.map((d, i) => {
