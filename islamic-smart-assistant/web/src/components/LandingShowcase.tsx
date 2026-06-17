@@ -549,11 +549,13 @@ export function QuranShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
               <Sparkles size={13} /> Quran Experience
             </span>
-            <h2 className="section-heading">
+            {/* Heading + body matched to the first section (hero) format:
+                same font/size/leading and gold-gradient last word, same body size. */}
+            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-parchment">
               Recite. Reflect.<br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">Transform.</span>
             </h2>
-            <p className="max-w-md text-base leading-relaxed text-parchment/70">
+            <p className="text-lg text-parchment/75 max-w-xl leading-relaxed">
               Explore the beauty of the Quran with crystal-clear recitations, authentic
               translations, and smart scheduling to keep you connected every day.
             </p>
