@@ -362,7 +362,7 @@ export default function FaithShowcase() {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ delay: i * 0.05, duration: 0.5 }}
                 whileHover={{ y: -5 }}
-                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-6 pb-16 h-full min-h-[260px] transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
+                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-5 pb-12 h-full min-h-[196px] transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
               >
                 {/* soft corner glow */}
                 <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.18] group-hover:opacity-35 blur-xl transition`} />
@@ -377,8 +377,8 @@ export default function FaithShowcase() {
                     : <CornerMotif className={`-mt-2 -mr-2 w-20 h-20 ${f.text} opacity-[0.18]`} />}
                 </div>
 
-                <h3 className={`relative mt-5 text-lg font-extrabold ${f.text}`}>{f.title}</h3>
-                <p className="relative mt-2 text-sm text-ink/80 leading-relaxed">{f.desc}</p>
+                <h3 className={`relative mt-4 text-lg font-extrabold ${f.text}`}>{f.title}</h3>
+                <p className="relative mt-1.5 text-sm text-ink/80 leading-relaxed">{f.desc}</p>
 
                 {/* watermark for waveform cards too — keep all cards balanced */}
                 <f.icon
@@ -391,7 +391,7 @@ export default function FaithShowcase() {
                 <Link
                   href={f.href}
                   aria-label={`Open ${f.title}`}
-                  className={`absolute bottom-5 right-5 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
+                  className={`absolute bottom-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
                 >
                   <ArrowRight size={17} />
                 </Link>
