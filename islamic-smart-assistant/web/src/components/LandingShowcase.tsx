@@ -487,25 +487,25 @@ function AzanAyahCard({ className = '' }: { className?: string }) {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className={`relative w-[19rem] max-w-[86%] rounded-2xl border border-gold-300/30 bg-midnight-900/55 p-6 pt-8 text-center shadow-2xl backdrop-blur-xl ${className}`}
+      className={`relative w-[25rem] max-w-[92%] rounded-2xl border border-gold-300/30 bg-midnight-900/55 p-8 pt-10 text-center shadow-2xl backdrop-blur-xl ${className}`}
     >
-      <Sparkles size={12} className="absolute left-3 top-3 text-gold-300/60" />
-      <Sparkles size={12} className="absolute right-3 top-3 text-gold-300/60" />
-      <span className="absolute -top-6 left-1/2 inline-flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-gold-700 shadow-lg ring-4 ring-midnight-900/40">
-        <BookOpen size={22} />
+      <Sparkles size={15} className="absolute left-4 top-4 text-gold-300/60" />
+      <Sparkles size={15} className="absolute right-4 top-4 text-gold-300/60" />
+      <span className="absolute -top-7 left-1/2 inline-flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-gold-700 shadow-lg ring-4 ring-midnight-900/40">
+        <BookOpen size={28} />
       </span>
-      <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
+      <p className="font-arabic text-3xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
         {AZAN_AYAH.arabic}
       </p>
       {translation && (
         <p
-          className={`mt-3 text-sm leading-relaxed text-parchment/80 ${rtl ? 'font-arabic' : ''}`}
+          className={`mt-4 text-base leading-relaxed text-parchment/80 ${rtl ? 'font-arabic' : ''}`}
           style={rtl ? { direction: 'rtl' } : undefined}
         >
           {translation}
         </p>
       )}
-      <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">{AZAN_AYAH.reference}</p>
+      <p className="mt-4 text-sm font-semibold tracking-wide text-gold-300/80">{AZAN_AYAH.reference}</p>
     </motion.div>
   );
 }
