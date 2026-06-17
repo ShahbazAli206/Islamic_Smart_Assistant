@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
@@ -25,24 +25,92 @@ import { SettingsScreen } from '../screens/settings/Settings';
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
+function TabIcon({ emoji, focused, color }: { emoji: string; focused: boolean; color: string }) {
+  return (
+    <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
+      <Text style={[styles.tabEmoji, { opacity: focused ? 1 : 0.55 }]}>{emoji}</Text>
+      {focused && <View style={[styles.tabDot, { backgroundColor: color }]} />}
+    </View>
+  );
+}
+
 function MainTabs() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isDark = theme.scheme === 'dark';
+
   return (
     <Tabs.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: theme.bg },
+        headerStyle: {
+          backgroundColor: isDark ? '#0E1B2A' : theme.card,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.divider,
+        } as any,
         headerTintColor: theme.text,
-        tabBarStyle: { backgroundColor: theme.card, borderTopColor: theme.divider },
+        headerTitleStyle: { fontWeight: '700', fontSize: 17 },
+        tabBarStyle: {
+          backgroundColor: isDark ? '#0E1B2A' : theme.card,
+          borderTopColor: theme.divider,
+          borderTopWidth: 1,
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
         tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.subText,
-      }}>
-      <Tabs.Screen name="Home" component={DashboardScreen} options={{ title: t('tabs.home'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🕌</Text> }} />
-      <Tabs.Screen name="Quran" component={QuranPlayerScreen} options={{ title: t('tabs.quran'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📖</Text> }} />
-      <Tabs.Screen name="Qibla" component={QiblaScreen} options={{ title: t('tabs.qibla'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🧭</Text> }} />
-      <Tabs.Screen name="Azan" component={AzanSettingsScreen} options={{ title: t('tabs.azan'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔔</Text> }} />
-      <Tabs.Screen name="Devices" component={DevicesScreen} options={{ title: t('tabs.devices'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📱</Text> }} />
-      <Tabs.Screen name="Settings" component={SettingsScreen} options={{ title: t('tabs.settings'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>⚙️</Text> }} />
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+      }}
+    >
+      <Tabs.Screen
+        name="Home"
+        component={DashboardScreen}
+        options={{
+          title: t('tabs.home'),
+          headerTitle: 'Islamic Smart Assistant',
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="🕌" focused={focused} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Quran"
+        component={QuranPlayerScreen}
+        options={{
+          title: t('tabs.quran'),
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="📖" focused={focused} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Qibla"
+        component={QiblaScreen}
+        options={{
+          title: t('tabs.qibla'),
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="🧭" focused={focused} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Azan"
+        component={AzanSettingsScreen}
+        options={{
+          title: t('tabs.azan'),
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="🔔" focused={focused} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Devices"
+        component={DevicesScreen}
+        options={{
+          title: t('tabs.devices'),
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="📱" focused={focused} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: t('tabs.settings'),
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="⚙️" focused={focused} color={color} />,
+        }}
+      />
     </Tabs.Navigator>
   );
 }
@@ -68,3 +136,10 @@ export function RootNavigator() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIcon: { alignItems: 'center', justifyContent: 'center', width: 32, height: 32 },
+  tabIconActive: {},
+  tabEmoji: { fontSize: 22 },
+  tabDot: { width: 4, height: 4, borderRadius: 2, marginTop: 2 },
+});
