@@ -158,7 +158,7 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7 }}
-              className="lg:pl-4"
+              className="lg:-mt-8 lg:-ml-6"
             >
               <HeroPrayerCard
                 lat={loc.lat ?? undefined}
