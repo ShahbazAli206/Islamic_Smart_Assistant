@@ -576,7 +576,7 @@ export function QuranShowcase() {
         {/* quran-bg.png — right-half photo */}
         <div
           aria-hidden
-          className="absolute top-[29px] right-0 w-[52%] h-[382px] hidden lg:block overflow-hidden rounded-l-2xl rounded-b-2xl rounded-tr-2xl pointer-events-none"
+          className="absolute top-[34px] right-0 w-[51%] h-[393px] hidden lg:block overflow-hidden rounded-l-2xl rounded-b-2xl rounded-tr-2xl pointer-events-none"
         >
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
         </div>
@@ -626,7 +626,7 @@ export function QuranShowcase() {
           <motion.div
             initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:flex items-start justify-end pt-[19px]"
+            className="hidden lg:flex items-start justify-end pt-[19px] pr-[5px]"
           >
             <AyahGlassCard />
           </motion.div>
