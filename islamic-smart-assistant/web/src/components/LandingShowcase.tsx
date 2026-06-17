@@ -236,7 +236,7 @@ export function AzanShowcase() {
           <motion.div
             initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.15 }}
-            className="hidden lg:flex items-center justify-center pb-10"
+            className="hidden lg:flex items-start justify-end pt-2"
           >
             <AzanAyahCard />
           </motion.div>
