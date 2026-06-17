@@ -22,7 +22,7 @@ export function LocationScreen({ navigation }: any) {
       const loc = await detectLocation();
       setResolved(loc);
       dispatch(setLocation(loc));
-      await Users.setLocation(loc);
+      Users.setLocation(loc).catch(() => {}); // non-fatal if backend is offline
       dispatch(completeOnboarding());
     } catch (err: any) {
       Alert.alert('Location error', err?.message ?? 'Failed to detect location');
