@@ -147,7 +147,7 @@ const AZAN_CARDS: AzanCard[] = [
     desc: 'Read and listen to the Quran with beautiful translations in your language.',
     href: '/dashboard/quran',        btn: 'Open Quran',
     image: '/card_images/Quran_Translation_Card_image.png',
-    bg: 'bg-gold-100', iconBg: 'bg-midnight-700', titleColor: 'text-midnight-700', btnBg: 'bg-midnight-700',
+    bg: 'bg-gold-100', iconBg: 'bg-gold-600', titleColor: 'text-gold-700', btnBg: 'bg-gold-600',
   },
   {
     icon: Compass,    title: 'Qibla Finder',
@@ -161,7 +161,7 @@ const AZAN_CARDS: AzanCard[] = [
     desc: "Choose from world's best reciters and muezzins voices.",
     href: '/dashboard/azan',         btn: 'Explore',
     image: '/card_images/Islamic_Voices_card_image.png',
-    bg: 'bg-parchment', iconBg: 'bg-midnight-800', titleColor: 'text-midnight-700', btnBg: 'bg-midnight-800',
+    bg: 'bg-parchment', iconBg: 'bg-gold-600', titleColor: 'text-gold-700', btnBg: 'bg-gold-600',
   },
 ];
 
@@ -280,7 +280,7 @@ export function AzanShowcase() {
                   <motion.div
                     aria-hidden
                     className="absolute inset-0 pointer-events-none"
-                    style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)' }}
+                    style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(212,160,23,0.35) 50%, transparent 65%)' }}
                     animate={{ x: ['-120%', '120%'] }}
                     transition={{ duration: 3.6, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut', delay: k * 0.4 }}
                   />
@@ -568,13 +568,13 @@ export function QuranShowcase() {
         {/* quran-bg.png — right-half photo */}
         <div
           aria-hidden
-          className="absolute top-0 right-0 w-1/2 h-[340px] hidden lg:block overflow-hidden pointer-events-none"
+          className="absolute top-6 right-0 w-[55%] h-[374px] hidden lg:block overflow-hidden rounded-l-2xl rounded-b-2xl pointer-events-none"
         >
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
         </div>
 
         {/* ── hero ── */}
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="grid lg:grid-cols-[45%_55%] gap-8 items-start">
           {/* left: copy + stats — on a dark frosted panel (matches the ayah card) */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
