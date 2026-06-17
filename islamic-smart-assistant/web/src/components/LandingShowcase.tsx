@@ -1108,12 +1108,6 @@ export function DevicesShowcase() {
                   phones, tablets, desktops and smart speakers, kept in sync.
                 </p>
               </div>
-              <Link
-                href="/dashboard/devices"
-                className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-gold-200 backdrop-blur hover:bg-white/[0.12] transition shrink-0"
-              >
-                <Settings size={15} /> Manage devices <ArrowRight size={14} />
-              </Link>
             </div>
 
             {/* ↓ device cards, pills and banner follow inside this same column ↓ */}
@@ -1227,14 +1221,26 @@ export function DevicesShowcase() {
             </motion.div>
           </motion.div>
 
-          {/* RIGHT column: Mihrab card — starts flush with the top of the grid */}
+          {/* RIGHT column: Manage-devices button (top-right) above the mihrab card */}
           <motion.div
             initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col"
-            style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
+            className="flex flex-col gap-4"
           >
-            <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
+            {/* Manage devices — sits at the top-right, above the mihrab */}
+            <Link
+              href="/dashboard/devices"
+              className="inline-flex items-center gap-2 self-end rounded-full border border-gold-300/30 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-gold-200 backdrop-blur hover:bg-white/[0.12] transition shrink-0"
+            >
+              <Settings size={15} /> Manage devices <ArrowRight size={14} />
+            </Link>
+
+            {/* mihrab card */}
+            <div
+              className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col"
+              style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
+            >
+              <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
             <div className="relative flex flex-col items-center px-6 pt-40 pb-6">
               <DevSpeakerOrb />
@@ -1267,7 +1273,8 @@ export function DevicesShowcase() {
               )}
             </div>
 
-            <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
+              <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
+            </div>
           </motion.div>
 
         </div>
