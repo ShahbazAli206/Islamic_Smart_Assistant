@@ -193,10 +193,12 @@ export function AzanShowcase() {
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* The photo's detail sits on one side, so a single full-width copy left
             the other side plain. Duplicate it across two halves — left half
-            mirrored — so the mosque scene is visible on BOTH sides. */}
-        <div className="absolute inset-0 flex">
-          <img src="/hero-bg.jpg" alt="" className="h-full w-1/2 object-cover object-center -scale-x-100" />
-          <img src="/hero-bg.jpg" alt="" className="h-full w-1/2 object-cover object-center" />
+            mirrored — so the mosque scene is visible on BOTH sides. Each half is
+            slightly wider than 50% and overlaps at the centre so no seam/white
+            line can show through (even when zoomed). */}
+        <div className="absolute inset-0">
+          <img src="/hero-bg.jpg" alt="" className="absolute inset-y-0 left-0 h-full w-[51%] object-cover object-center -scale-x-100" />
+          <img src="/hero-bg.jpg" alt="" className="absolute inset-y-0 right-0 h-full w-[51%] object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-white/15" />
       </div>
