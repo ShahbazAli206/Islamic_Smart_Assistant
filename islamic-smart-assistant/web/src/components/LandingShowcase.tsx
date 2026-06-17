@@ -246,7 +246,7 @@ export function AzanShowcase() {
         <motion.div
           initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-          className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-stone-100 rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden"
+          className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-white/10 rounded-2xl border border-white/15 bg-midnight-900/55 backdrop-blur-md shadow-2xl overflow-hidden"
         >
           {AZAN_STATS.map((s) => (
             <div key={s.label} className="flex items-center gap-3.5 px-5 py-4">
@@ -254,9 +254,9 @@ export function AzanShowcase() {
                 <s.icon size={18} className={s.iconColor} />
               </span>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-ink/45 uppercase tracking-wide">{s.label}</p>
-                <p className="text-sm font-bold text-ink leading-tight truncate">{s.value}</p>
-                <p className="text-[11px] text-ink/45 truncate">{s.sub}</p>
+                <p className="text-[10px] font-semibold text-parchment/50 uppercase tracking-wide">{s.label}</p>
+                <p className="text-sm font-bold text-parchment leading-tight truncate">{s.value}</p>
+                <p className="text-[11px] text-parchment/50 truncate">{s.sub}</p>
               </div>
             </div>
           ))}
@@ -274,7 +274,7 @@ export function AzanShowcase() {
                 <motion.div
                   key={`${card.title}-${i}`}
                   whileHover={{ y: -4 }}
-                  className={`group relative w-[260px] shrink-0 overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
+                  className="group relative w-[260px] shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-midnight-900/55 backdrop-blur-md p-5 min-h-[230px] flex flex-col"
                 >
                   {/* continuously sweeping shimmer sheen */}
                   <motion.div
@@ -285,7 +285,7 @@ export function AzanShowcase() {
                     transition={{ duration: 3.6, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut', delay: k * 0.4 }}
                   />
                   <motion.span
-                    className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}
+                    className="inline-flex w-12 h-12 rounded-2xl border border-white/15 bg-white/10 items-center justify-center text-gold-300 shadow-md shrink-0"
                     animate={{ scale: [1, 1.08, 1] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: k * 0.25 }}
                   >
@@ -298,11 +298,11 @@ export function AzanShowcase() {
                     animate={{ y: [0, -9, 0] }}
                     transition={{ duration: 4 + k * 0.3, repeat: Infinity, ease: 'easeInOut', delay: k * 0.35 }}
                   />
-                  <h3 className={`relative mt-4 font-bold text-lg ${card.titleColor}`}>{card.title}</h3>
-                  <p className="relative mt-1.5 text-sm text-ink/70 leading-relaxed flex-1">{card.desc}</p>
+                  <h3 className="relative mt-4 font-bold text-lg text-parchment">{card.title}</h3>
+                  <p className="relative mt-1.5 text-sm text-parchment/70 leading-relaxed flex-1">{card.desc}</p>
                   <Link
                     href={card.href}
-                    className={`relative mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${card.btnBg} text-white shadow-sm w-fit transition hover:opacity-90`}
+                    className="relative mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold bg-gold-gradient text-midnight-900 shadow-glow-gold w-fit transition hover:brightness-105"
                   >
                     {card.btn} <ArrowRight size={13} />
                   </Link>
