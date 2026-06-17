@@ -313,33 +313,7 @@ export function AzanShowcase() {
           </div>
         </div>
 
-        {/* ── verse bar ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.5 }}
-          className="mt-5 mb-10 rounded-2xl border border-stone-100 bg-white shadow-sm px-7 py-5 flex flex-col lg:flex-row items-center gap-6"
-        >
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <span className="text-4xl font-serif text-gold-500 leading-none mt-0.5 shrink-0">&ldquo;</span>
-            <p className="text-sm text-ink/65 leading-relaxed">
-              And We have certainly made the Qur'an easy for remembrance, so is there any who will remember?
-            </p>
-          </div>
-          <div className="flex-1 text-center">
-            <p className="font-arabic text-xl text-ink leading-[2.2]" style={{ direction: 'rtl' }}>
-              وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <p className="text-sm font-semibold text-ink/55">Al-Qamar 54:17</p>
-            <Link
-              href="/dashboard/quran"
-              className="w-10 h-10 rounded-xl bg-gold-600 flex items-center justify-center text-white shadow-sm hover:bg-gold-700 transition"
-            >
-              <ArrowRight size={17} />
-            </Link>
-          </div>
-        </motion.div>
+        <div className="pb-10" />
       </div>
     </section>
   );
