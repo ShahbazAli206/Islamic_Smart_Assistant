@@ -187,12 +187,12 @@ export function AzanShowcase() {
       />
 
       {/* hero-bg.jpg mosque photo — full section background (light theme).
-          Only a light white veil so the photo stays clearly visible across the
-          whole section — left and right alike — while dark text stays legible. */}
+          A single light, EVEN veil so the photo is equally visible across the
+          whole section (left and right). The copy sits on its own dark panel,
+          so no heavy left-side wash is needed for legibility. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/32 to-white/18" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-white/40" />
+        <div className="absolute inset-0 bg-white/15" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
@@ -568,7 +568,7 @@ export function QuranShowcase() {
         {/* quran-bg.png — right-half photo */}
         <div
           aria-hidden
-          className="absolute top-6 right-0 w-[55%] h-[374px] hidden lg:block overflow-hidden rounded-l-2xl rounded-b-2xl pointer-events-none"
+          className="absolute top-[29px] right-0 w-[52%] h-[382px] hidden lg:block overflow-hidden rounded-l-2xl rounded-b-2xl rounded-tr-2xl pointer-events-none"
         >
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
         </div>
@@ -618,7 +618,7 @@ export function QuranShowcase() {
           <motion.div
             initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:flex items-start justify-end pt-6"
+            className="hidden lg:flex items-start justify-end pt-[19px]"
           >
             <AyahGlassCard />
           </motion.div>
