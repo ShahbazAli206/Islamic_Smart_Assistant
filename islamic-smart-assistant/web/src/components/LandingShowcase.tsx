@@ -210,8 +210,8 @@ export function AzanShowcase() {
             </span>
             {/* Light theme: dark first line + gold-gradient last line (the hero
                 two-tone format, base colour ink so it reads on the clear light bg). */}
-            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-ink">
-              The call to prayer,<br />
+            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04]">
+              <span className="text-white">The call to prayer,</span><br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
@@ -226,7 +226,7 @@ export function AzanShowcase() {
             {/* CTA moved into the copy column so the right side can host the ayah card */}
             <Link
               href="/dashboard/azan"
-              className="inline-flex w-fit items-center gap-2.5 rounded-full bg-midnight-800 hover:bg-midnight-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
+              className="inline-flex w-fit items-center gap-2.5 rounded-full bg-gold-gradient hover:brightness-110 text-midnight-900 px-7 py-4 font-semibold text-sm shadow-glow-gold transition"
             >
               <Headphones size={18} /> Explore Voices <ArrowRight size={16} />
             </Link>
