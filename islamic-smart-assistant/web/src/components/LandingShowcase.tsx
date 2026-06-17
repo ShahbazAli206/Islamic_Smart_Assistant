@@ -523,6 +523,11 @@ export function QuranShowcase() {
       {/* ── full-section background image ── */}
       <div className="absolute inset-0 pointer-events-none">
         <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
+        {/* dark midnight wash so the parchment heading + gold stat pills pop
+            against the golden photo; darker on the left where the copy sits,
+            letting the image show through on the right as ambiance */}
+        <div className="absolute inset-0 bg-gradient-to-r from-midnight-900/88 via-midnight-900/62 to-midnight-900/38" />
+        <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/45 via-transparent to-midnight-900/55" />
       </div>
       {/* pattern + aurora */}
       <div className="absolute inset-0 pattern-bg opacity-[0.15] pointer-events-none" />
