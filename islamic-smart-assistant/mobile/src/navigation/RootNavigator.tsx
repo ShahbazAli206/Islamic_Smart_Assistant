@@ -8,27 +8,37 @@ import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { useTheme } from '../theme';
 
-import { WelcomeScreen } from '../screens/onboarding/Welcome';
+// Onboarding
+import { WelcomeScreen }  from '../screens/onboarding/Welcome';
 import { LanguageScreen } from '../screens/onboarding/Language';
-import { SectScreen } from '../screens/onboarding/Sect';
+import { SectScreen }     from '../screens/onboarding/Sect';
 import { LocationScreen } from '../screens/onboarding/Location';
-import { MosqueScreen } from '../screens/onboarding/Mosque';
+import { MosqueScreen }   from '../screens/onboarding/Mosque';
 
-import { DashboardScreen } from '../screens/dashboard/Dashboard';
+// Main tabs
+import { DashboardScreen }    from '../screens/dashboard/Dashboard';
+import { QuranPlayerScreen }  from '../screens/quran/QuranPlayer';
+import { QiblaScreen }        from '../screens/qibla/QiblaScreen';
 import { AzanSettingsScreen } from '../screens/azan/AzanSettings';
-import { QuranPlayerScreen } from '../screens/quran/QuranPlayer';
+import { MenuScreen }         from '../screens/menu/Menu';
+
+// Stack-only screens (accessible via Menu)
+import { PrayerTimesScreen }    from '../screens/prayer/PrayerTimesScreen';
+import { RecitationAlarmScreen } from '../screens/recitation/RecitationAlarm';
+import { ProfileScreen }        from '../screens/profile/Profile';
+import { DevicesScreen }        from '../screens/devices/Devices';
+import { AudioScreen }          from '../screens/audio/Audio';
+import { AnalyticsScreen }      from '../screens/analytics/Analytics';
+import { SettingsScreen }       from '../screens/settings/Settings';
 import { QuranSchedulerScreen } from '../screens/quran/QuranScheduler';
-import { QiblaScreen } from '../screens/qibla/QiblaScreen';
-import { DevicesScreen } from '../screens/devices/Devices';
-import { SettingsScreen } from '../screens/settings/Settings';
 
 const Stack = createNativeStackNavigator();
-const Tabs = createBottomTabNavigator();
+const Tabs  = createBottomTabNavigator();
 
 function TabIcon({ emoji, focused, color }: { emoji: string; focused: boolean; color: string }) {
   return (
-    <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-      <Text style={[styles.tabEmoji, { opacity: focused ? 1 : 0.55 }]}>{emoji}</Text>
+    <View style={[styles.tabIcon]}>
+      <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
       {focused && <View style={[styles.tabDot, { backgroundColor: color }]} />}
     </View>
   );
@@ -39,14 +49,16 @@ function MainTabs() {
   const theme = useTheme();
   const isDark = theme.scheme === 'dark';
 
+  const headerStyle: any = {
+    backgroundColor: isDark ? '#0E1B2A' : theme.card,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.divider,
+  };
+
   return (
     <Tabs.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: isDark ? '#0E1B2A' : theme.card,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.divider,
-        } as any,
+        headerStyle,
         headerTintColor: theme.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
         tabBarStyle: {
@@ -66,7 +78,7 @@ function MainTabs() {
         name="Home"
         component={DashboardScreen}
         options={{
-          title: t('tabs.home'),
+          title: 'Home',
           headerTitle: 'Islamic Smart Assistant',
           tabBarIcon: ({ focused, color }) => <TabIcon emoji="🕌" focused={focused} color={color} />,
         }}
@@ -75,7 +87,7 @@ function MainTabs() {
         name="Quran"
         component={QuranPlayerScreen}
         options={{
-          title: t('tabs.quran'),
+          title: 'Quran',
           tabBarIcon: ({ focused, color }) => <TabIcon emoji="📖" focused={focused} color={color} />,
         }}
       />
@@ -83,7 +95,7 @@ function MainTabs() {
         name="Qibla"
         component={QiblaScreen}
         options={{
-          title: t('tabs.qibla'),
+          title: 'Qibla',
           tabBarIcon: ({ focused, color }) => <TabIcon emoji="🧭" focused={focused} color={color} />,
         }}
       />
@@ -91,24 +103,16 @@ function MainTabs() {
         name="Azan"
         component={AzanSettingsScreen}
         options={{
-          title: t('tabs.azan'),
+          title: 'Azan',
           tabBarIcon: ({ focused, color }) => <TabIcon emoji="🔔" focused={focused} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="Devices"
-        component={DevicesScreen}
+        name="More"
+        component={MenuScreen}
         options={{
-          title: t('tabs.devices'),
-          tabBarIcon: ({ focused, color }) => <TabIcon emoji="📱" focused={focused} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: t('tabs.settings'),
-          tabBarIcon: ({ focused, color }) => <TabIcon emoji="⚙️" focused={focused} color={color} />,
+          title: 'More',
+          tabBarIcon: ({ focused, color }) => <TabIcon emoji="☰" focused={focused} color={color} />,
         }}
       />
     </Tabs.Navigator>
@@ -117,20 +121,109 @@ function MainTabs() {
 
 export function RootNavigator() {
   const onboardingComplete = useSelector((s: RootState) => s.user.onboardingComplete);
+  const theme = useTheme();
+  const isDark = theme.scheme === 'dark';
+
+  const stackHeaderStyle: any = {
+    backgroundColor: isDark ? '#0E1B2A' : theme.card,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.divider,
+  };
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!onboardingComplete ? (
         <>
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="Welcome"  component={WelcomeScreen} />
           <Stack.Screen name="Language" component={LanguageScreen} />
-          <Stack.Screen name="Sect" component={SectScreen} />
+          <Stack.Screen name="Sect"     component={SectScreen} />
           <Stack.Screen name="Location" component={LocationScreen} />
-          <Stack.Screen name="Mosque" component={MosqueScreen} />
+          <Stack.Screen name="Mosque"   component={MosqueScreen} />
         </>
       ) : (
         <>
           <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen name="QuranScheduler" component={QuranSchedulerScreen} />
+          {/* All pages reachable from Menu tab */}
+          <Stack.Screen
+            name="PrayerTimes"
+            component={PrayerTimesScreen}
+            options={{
+              headerShown: true, title: 'Prayer Times',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Recitation"
+            component={RecitationAlarmScreen}
+            options={{
+              headerShown: true, title: 'Recitation Alarm',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              headerShown: true, title: 'Profile',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Devices"
+            component={DevicesScreen}
+            options={{
+              headerShown: true, title: 'Devices',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Audio"
+            component={AudioScreen}
+            options={{
+              headerShown: true, title: 'Audio Library',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Analytics"
+            component={AnalyticsScreen}
+            options={{
+              headerShown: true, title: 'Analytics',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              headerShown: true, title: 'Settings',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
+          <Stack.Screen
+            name="QuranScheduler"
+            component={QuranSchedulerScreen}
+            options={{
+              headerShown: true, title: 'Quran Scheduler',
+              headerStyle: stackHeaderStyle,
+              headerTintColor: theme.text,
+              headerTitleStyle: { fontWeight: '700' },
+            }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -139,7 +232,5 @@ export function RootNavigator() {
 
 const styles = StyleSheet.create({
   tabIcon: { alignItems: 'center', justifyContent: 'center', width: 32, height: 32 },
-  tabIconActive: {},
-  tabEmoji: { fontSize: 22 },
-  tabDot: { width: 4, height: 4, borderRadius: 2, marginTop: 2 },
+  tabDot:  { width: 4, height: 4, borderRadius: 2, marginTop: 2 },
 });
