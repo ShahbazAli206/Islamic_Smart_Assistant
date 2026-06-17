@@ -112,7 +112,8 @@ export default function HomePage() {
               <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-300/40 bg-gold-300/10 text-gold-300 text-xs font-semibold px-3 py-1">
                 <Sparkles size={12} /> New &amp; Improved
               </span>
-              <h1 className="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.04] text-parchment">
+              {/* hero heading — reduced one step smaller (3xl/4xl/5xl) per request */}
+              <h1 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-parchment">
                 Your Faith,<br />
                 Your Journey,<br />
                 <span className="bg-clip-text text-transparent bg-gold-gradient">Our Guidance.</span>
