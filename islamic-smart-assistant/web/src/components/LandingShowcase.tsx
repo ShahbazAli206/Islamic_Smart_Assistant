@@ -1102,7 +1102,7 @@ export function DevicesShowcase() {
           >
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
-            <div className="relative flex flex-col items-center px-6 pt-8 pb-5">
+            <div className="relative flex flex-col items-center px-6 pt-20 pb-6">
               <DevSpeakerOrb />
 
               <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
