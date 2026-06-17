@@ -223,20 +223,23 @@ export function AzanShowcase() {
             <p className="text-lg md:text-xl font-bold text-gold-300">
               Stay connected. Stay mindful. Stay blessed.
             </p>
-          </motion.div>
-
-          {/* right: explore button floated over the photo */}
-          <motion.div
-            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.15 }}
-            className="hidden lg:flex items-end justify-end pb-10"
-          >
+            {/* CTA moved into the copy column so the right side can host the ayah card */}
             <Link
               href="/dashboard/azan"
-              className="inline-flex items-center gap-2.5 rounded-full bg-midnight-800 hover:bg-midnight-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
+              className="inline-flex w-fit items-center gap-2.5 rounded-full bg-midnight-800 hover:bg-midnight-700 text-white px-7 py-4 font-semibold text-sm shadow-lg transition"
             >
               <Headphones size={18} /> Explore Voices <ArrowRight size={16} />
             </Link>
+          </motion.div>
+
+          {/* right: floating ayah card — verse about praying at appointed times,
+              translation in the user's selected language (matches the hero card) */}
+          <motion.div
+            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6, delay: 0.15 }}
+            className="hidden lg:flex items-center justify-center pb-10"
+          >
+            <AzanAyahCard />
           </motion.div>
         </div>
 
@@ -260,48 +263,54 @@ export function AzanShowcase() {
           ))}
         </motion.div>
 
-        {/* ── feature cards ── */}
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {AZAN_CARDS.map((card, i) => (
-            <motion.div
-              key={card.title}
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.06, duration: 0.5 }}
-              whileHover={{ y: -4 }}
-              className={`group relative overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
-            >
-              {/* continuously sweeping shimmer sheen */}
-              <motion.div
-                aria-hidden
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)' }}
-                animate={{ x: ['-120%', '120%'] }}
-                transition={{ duration: 3.6, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut', delay: i * 0.4 }}
-              />
-              <motion.span
-                className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.25 }}
-              >
-                <card.icon size={22} />
-              </motion.span>
-              {/* decorative card art — floats up and down continuously */}
-              <motion.img
-                src={card.image} alt="" aria-hidden
-                className="absolute right-0 top-0 h-[78%] w-[55%] object-contain object-right-top pointer-events-none"
-                animate={{ y: [0, -9, 0] }}
-                transition={{ duration: 4 + i * 0.3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.35 }}
-              />
-              <h3 className={`relative mt-4 font-bold text-lg ${card.titleColor}`}>{card.title}</h3>
-              <p className="relative mt-1.5 text-sm text-ink/70 leading-relaxed flex-1">{card.desc}</p>
-              <Link
-                href={card.href}
-                className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${card.btnBg} text-white shadow-sm w-fit transition hover:opacity-90`}
-              >
-                {card.btn} <ArrowRight size={13} />
-              </Link>
-            </motion.div>
-          ))}
+        {/* ── feature cards — continuous left→right marquee ──
+            The five cards scroll horizontally; duplicated once for a seamless
+            loop, reversed direction so they travel left → right, and paused on
+            hover so the buttons stay clickable. Edges fade out via mask-image. */}
+        <div className="mt-5 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_5%,#000_95%,transparent)]">
+          <div className="flex w-max gap-4 animate-marquee [animation-direction:reverse] hover:[animation-play-state:paused]">
+            {[...AZAN_CARDS, ...AZAN_CARDS].map((card, i) => {
+              const k = i % AZAN_CARDS.length; // keep duplicated cards in sync
+              return (
+                <motion.div
+                  key={`${card.title}-${i}`}
+                  whileHover={{ y: -4 }}
+                  className={`group relative w-[260px] shrink-0 overflow-hidden rounded-2xl ${card.bg} p-5 min-h-[230px] flex flex-col`}
+                >
+                  {/* continuously sweeping shimmer sheen */}
+                  <motion.div
+                    aria-hidden
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)' }}
+                    animate={{ x: ['-120%', '120%'] }}
+                    transition={{ duration: 3.6, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut', delay: k * 0.4 }}
+                  />
+                  <motion.span
+                    className={`inline-flex w-12 h-12 rounded-2xl ${card.iconBg} items-center justify-center text-white shadow-md shrink-0`}
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: k * 0.25 }}
+                  >
+                    <card.icon size={22} />
+                  </motion.span>
+                  {/* decorative card art — floats up and down continuously */}
+                  <motion.img
+                    src={card.image} alt="" aria-hidden
+                    className="absolute right-0 top-0 h-[78%] w-[55%] object-contain object-right-top pointer-events-none"
+                    animate={{ y: [0, -9, 0] }}
+                    transition={{ duration: 4 + k * 0.3, repeat: Infinity, ease: 'easeInOut', delay: k * 0.35 }}
+                  />
+                  <h3 className={`relative mt-4 font-bold text-lg ${card.titleColor}`}>{card.title}</h3>
+                  <p className="relative mt-1.5 text-sm text-ink/70 leading-relaxed flex-1">{card.desc}</p>
+                  <Link
+                    href={card.href}
+                    className={`relative mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${card.btnBg} text-white shadow-sm w-fit transition hover:opacity-90`}
+                  >
+                    {card.btn} <ArrowRight size={13} />
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
         {/* ── verse bar ── */}
@@ -476,6 +485,54 @@ function AyahGlassCard({ className = '' }: { className?: string }) {
         Indeed, this Qur'an guides to that which is most upright.
       </p>
       <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">Surah Al-Isra 17:9</p>
+    </motion.div>
+  );
+}
+
+/* Verse about establishing prayer at its appointed times (An-Nisa 4:103) —
+   shown in the Azan hero. Translation rendered in the user's chosen language
+   (isa:language: 'ur' | 'en' | 'none' → Arabic only). */
+const AZAN_AYAH = {
+  arabic: 'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا',
+  reference: 'Surah An-Nisa 4:103',
+  translations: {
+    en: 'Indeed, prayer has been decreed upon the believers a decree of specified times.',
+    ur: 'بے شک نماز مومنوں پر مقررہ وقتوں میں فرض کی گئی ہے۔',
+  } as Record<string, string>,
+};
+
+/** Floating ayah card for the Azan hero — verse on praying at appointed times,
+ *  with the translation in the user's selected language (falls back to English;
+ *  'none' shows the Arabic only). Mirrors the AyahGlassCard styling. */
+function AzanAyahCard({ className = '' }: { className?: string }) {
+  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  const translation = language === 'none' ? null : (AZAN_AYAH.translations[language] ?? AZAN_AYAH.translations.en);
+  const rtl = language === 'ur';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className={`relative w-[19rem] max-w-[86%] rounded-2xl border border-gold-300/30 bg-midnight-900/55 p-6 pt-8 text-center shadow-2xl backdrop-blur-xl ${className}`}
+    >
+      <Sparkles size={12} className="absolute left-3 top-3 text-gold-300/60" />
+      <Sparkles size={12} className="absolute right-3 top-3 text-gold-300/60" />
+      <span className="absolute -top-6 left-1/2 inline-flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-parchment text-gold-700 shadow-lg ring-4 ring-midnight-900/40">
+        <BookOpen size={22} />
+      </span>
+      <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
+        {AZAN_AYAH.arabic}
+      </p>
+      {translation && (
+        <p
+          className={`mt-3 text-sm leading-relaxed text-parchment/80 ${rtl ? 'font-arabic' : ''}`}
+          style={rtl ? { direction: 'rtl' } : undefined}
+        >
+          {translation}
+        </p>
+      )}
+      <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">{AZAN_AYAH.reference}</p>
     </motion.div>
   );
 }
@@ -1205,76 +1262,76 @@ export function DevicesShowcase() {
                 </span>
               ))}
             </div>
+
+            {/* "Everything in harmony" banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.5, delay: 0.1 }}
+              className="relative overflow-hidden rounded-2xl border border-white/10 flex items-center gap-5 px-5 py-4"
+              style={{ background: 'linear-gradient(135deg,#0F2A1C 0%,#0D2217 55%,#0B1D14 100%)' }}
+            >
+              {/* Left: animated mosque icon + text */}
+              <div className="flex items-center gap-3.5 shrink-0">
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <svg viewBox="0 0 54 64" width="44" height="50" fill="none" aria-hidden>
+                    <defs>
+                      <radialGradient id="bhGlow" cx="50%" cy="65%" r="58%">
+                        <stop offset="0%" stopColor="#E9CF7A" stopOpacity="0.75" />
+                        <stop offset="100%" stopColor="#E9CF7A" stopOpacity="0" />
+                      </radialGradient>
+                    </defs>
+                    <ellipse cx="27" cy="56" rx="24" ry="10" fill="url(#bhGlow)" />
+                    <path d="M17 64V38C17 22 23 12 27 9 31 12 37 22 37 38V64z" fill="#E9CF7A" opacity="0.9" />
+                    <path d="M27 9C27 2 23 0 23 0 23 0 20 4 20 9 22.5 7 25 6.5 27 9z" fill="#E9CF7A" />
+                    <circle cx="27" cy="0" r="2.5" fill="#E9CF7A" />
+                    <path d="M10 64V46Q10 38 17 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
+                    <path d="M44 64V46Q44 38 37 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
+                    <path d="M4 22L5.4 18 6.8 22 10 23 6.8 24 5.4 28 4 24 0 23z" fill="#E9CF7A" opacity="0.82" />
+                    <path d="M44 14L45 11 46 14 49 15 46 16 45 19 44 16 41 15z" fill="#E9CF7A" opacity="0.7" />
+                  </svg>
+                </motion.div>
+                <div className="leading-tight">
+                  <p className="text-sm font-bold text-gold-300">Everything in harmony</p>
+                  <p className="text-xs text-parchment/60 mt-0.5">Azan. Quran. Wherever you are.</p>
+                </div>
+              </div>
+
+              {/* Center: animated waveform */}
+              <div className="flex-1 min-w-0">
+                <BannerWaveform />
+              </div>
+
+              {/* Right: two swinging lanterns + stars */}
+              <div className="relative flex items-end gap-3 shrink-0 pb-1">
+                <motion.div
+                  animate={{ rotate: [-4, 4, -4] }}
+                  transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ transformOrigin: 'top center' }}
+                >
+                  <DevLantern className="w-9 h-auto" />
+                </motion.div>
+                <motion.div
+                  animate={{ rotate: [3.5, -3.5, 3.5] }}
+                  transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.55 }}
+                  style={{ transformOrigin: 'top center' }}
+                >
+                  <DevLantern className="w-7 h-auto" />
+                </motion.div>
+                <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none"
+                  style={{ fontSize: 14 }}
+                  animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }}
+                  transition={{ duration: 2.1, repeat: Infinity }}>✦</motion.span>
+                <motion.span className="absolute -top-2 right-0 text-gold-200 select-none"
+                  style={{ fontSize: 11 }}
+                  animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.2, 0.9] }}
+                  transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 }}>✦</motion.span>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
-
-        {/* ── bottom "Everything in harmony" banner ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.5, delay: 0.1 }}
-          className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 flex items-center gap-5 px-5 py-4"
-          style={{ background: 'linear-gradient(135deg,#0F2A1C 0%,#0D2217 55%,#0B1D14 100%)' }}
-        >
-          {/* Left: animated mosque icon + text */}
-          <div className="flex items-center gap-3.5 shrink-0">
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <svg viewBox="0 0 54 64" width="44" height="50" fill="none" aria-hidden>
-                <defs>
-                  <radialGradient id="bhGlow" cx="50%" cy="65%" r="58%">
-                    <stop offset="0%" stopColor="#E9CF7A" stopOpacity="0.75" />
-                    <stop offset="100%" stopColor="#E9CF7A" stopOpacity="0" />
-                  </radialGradient>
-                </defs>
-                <ellipse cx="27" cy="56" rx="24" ry="10" fill="url(#bhGlow)" />
-                <path d="M17 64V38C17 22 23 12 27 9 31 12 37 22 37 38V64z" fill="#E9CF7A" opacity="0.9" />
-                <path d="M27 9C27 2 23 0 23 0 23 0 20 4 20 9 22.5 7 25 6.5 27 9z" fill="#E9CF7A" />
-                <circle cx="27" cy="0" r="2.5" fill="#E9CF7A" />
-                <path d="M10 64V46Q10 38 17 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
-                <path d="M44 64V46Q44 38 37 37" stroke="#E9CF7A" strokeOpacity="0.75" strokeWidth="3" strokeLinecap="round" fill="none" />
-                <path d="M4 22L5.4 18 6.8 22 10 23 6.8 24 5.4 28 4 24 0 23z" fill="#E9CF7A" opacity="0.82" />
-                <path d="M44 14L45 11 46 14 49 15 46 16 45 19 44 16 41 15z" fill="#E9CF7A" opacity="0.7" />
-              </svg>
-            </motion.div>
-            <div className="leading-tight">
-              <p className="text-sm font-bold text-gold-300">Everything in harmony</p>
-              <p className="text-xs text-parchment/60 mt-0.5">Azan. Quran. Wherever you are.</p>
-            </div>
-          </div>
-
-          {/* Center: animated waveform */}
-          <div className="flex-1 min-w-0">
-            <BannerWaveform />
-          </div>
-
-          {/* Right: two swinging lanterns + stars */}
-          <div className="relative flex items-end gap-3 shrink-0 pb-1">
-            <motion.div
-              animate={{ rotate: [-4, 4, -4] }}
-              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ transformOrigin: 'top center' }}
-            >
-              <DevLantern className="w-9 h-auto" />
-            </motion.div>
-            <motion.div
-              animate={{ rotate: [3.5, -3.5, 3.5] }}
-              transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.55 }}
-              style={{ transformOrigin: 'top center' }}
-            >
-              <DevLantern className="w-7 h-auto" />
-            </motion.div>
-            <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none"
-              style={{ fontSize: 14 }}
-              animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }}
-              transition={{ duration: 2.1, repeat: Infinity }}>✦</motion.span>
-            <motion.span className="absolute -top-2 right-0 text-gold-200 select-none"
-              style={{ fontSize: 11 }}
-              animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.2, 0.9] }}
-              transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 }}>✦</motion.span>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
