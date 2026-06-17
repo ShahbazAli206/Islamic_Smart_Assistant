@@ -187,14 +187,13 @@ export function AzanShowcase() {
       />
 
       {/* hero-bg.jpg mosque photo — full section background.
-          Lighter washes so the photo stays clearly visible (light theme),
-          while the left column keeps just enough lift for the gold heading. */}
+          Dark wash at the top (matching the first/hero section) so the white +
+          gold hero heading reads; eases to a lighter wash lower down where the
+          light stat / feature / verse cards sit, keeping them natural. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src="/hero-bg.jpg" alt="" className="w-full h-full object-cover object-center" />
-        {/* left gradient — softer, fades fully away so the mosque shows through */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/72 via-white/28 to-transparent" />
-        {/* top + bottom subtle fades */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-white/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-midnight-900/90 via-midnight-900/35 to-white/55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-midnight-900/65 via-midnight-900/15 to-transparent" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-0">
@@ -209,19 +208,19 @@ export function AzanShowcase() {
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
             </span>
-            {/* Heading matched to the hero (first section) format: base-color first
-                line + gold-gradient last line. Base is ink here (light section). */}
-            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-ink">
+            {/* Heading matched to the hero (first section) exactly: white first line
+                + gold-gradient last line (the section's hero area is now dark). */}
+            <h2 className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04] text-parchment">
               The call to prayer,<br />
               <span className="bg-clip-text text-transparent bg-gold-gradient">in every voice you love.</span>
               <span className="ml-2 text-gold-400" aria-hidden>✦</span>
             </h2>
-            {/* Body matched to the hero format (text-lg, muted base color, max-w-xl) */}
-            <p className="text-lg text-ink/70 max-w-xl leading-relaxed">
+            {/* Body matched to the hero format (text-lg, light muted color, max-w-xl) */}
+            <p className="text-lg text-parchment/75 max-w-xl leading-relaxed">
               Authentic Adhan from the world's great mosques, automatically
               played on every linked device the moment a prayer time arrives.
             </p>
-            <p className="text-lg md:text-xl font-bold text-gold-600">
+            <p className="text-lg md:text-xl font-bold text-gold-300">
               Stay connected. Stay mindful. Stay blessed.
             </p>
           </motion.div>
@@ -1102,7 +1101,7 @@ export function DevicesShowcase() {
           >
             <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
 
-            <div className="relative flex flex-col items-center px-6 pt-20 pb-6">
+            <div className="relative flex flex-col items-center px-6 pt-40 pb-6">
               <DevSpeakerOrb />
 
               <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
