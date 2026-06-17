@@ -1084,93 +1084,39 @@ export function DevicesShowcase() {
       {/* ══ content ══ */}
       <div className="relative max-w-7xl mx-auto px-6 py-6 md:py-8">
 
-        {/* ── header row ── */}
-        <div className="flex flex-wrap items-start justify-between gap-6 mb-5">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}
-            className="max-w-xl"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
-              <Radio size={12} className="rotate-90" /> Connected everywhere
-            </span>
-            {/* Heading + body matched to the hero (first section) format: parchment
-                first line + gold-gradient last line (dark section), text-lg body. */}
-            <h2 className="mt-4 font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04]">
-              <span className="text-parchment">One tap, every speaker</span><br />
-              <span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span>
-            </h2>
-            <p className="mt-4 text-lg text-parchment/75 max-w-xl leading-relaxed">
-              Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house —
-              phones, tablets, desktops and smart speakers, kept in sync.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, delay: 0.15 }}
-          >
-            <Link
-              href="/dashboard/devices"
-              className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-gold-200 backdrop-blur hover:bg-white/[0.12] transition"
-            >
-              <Settings size={15} /> Manage devices <ArrowRight size={14} />
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* ── main panel grid ── */}
+        {/* ── two-column grid: heading+cards LEFT, mihrab RIGHT ── */}
         <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-start">
 
-          {/* RIGHT (lg): Current Output card with Mughal arch — moved to the right via order-2 */}
-          <motion.div
-            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col lg:order-2"
-            style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
-          >
-            <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
-
-            <div className="relative flex flex-col items-center px-6 pt-40 pb-6">
-              <DevSpeakerOrb />
-
-              <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
-              <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
-
-              <div className="mt-5 flex gap-2 justify-center">
-                <button
-                  onClick={rescan}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
-                >
-                  <RefreshCw size={11} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
-                  {scanning ? 'Scanning…' : 'Rescan'}
-                </button>
-                <Link
-                  href="/dashboard/devices"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
-                >
-                  <Bluetooth size={11} className="text-gold-300" /> Pair
-                </Link>
-              </div>
-
-              {outCount !== null && !scanning && (
-                <p className="mt-3 text-xs text-parchment/50 text-center">
-                  {outCount > 0
-                    ? <><CheckCircle2 size={11} className="inline mr-1 text-gold-400" />{outCount} output{outCount !== 1 ? 's' : ''} detected</>
-                    : 'Connect a device to detect outputs'}
-                </p>
-              )}
-            </div>
-
-            <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
-          </motion.div>
-
-          {/* LEFT (lg): 2×2 device cards + platform pills — moved to the left via order-1 */}
+          {/* LEFT column: heading + device cards + pills + banner */}
           <motion.div
             initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
-            className="flex flex-col gap-3 lg:order-1"
+            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6 }}
+            className="flex flex-col gap-4"
           >
+            {/* heading */}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
+                  <Radio size={12} className="rotate-90" /> Connected everywhere
+                </span>
+                <h2 className="mt-4 font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.04]">
+                  <span className="text-parchment">One tap, every speaker</span><br />
+                  <span className="bg-clip-text text-transparent bg-gold-gradient">in your home answers.</span>
+                </h2>
+                <p className="mt-4 text-lg text-parchment/75 max-w-xl leading-relaxed">
+                  Route Azan and Quran to your earbuds, a Bluetooth speaker, the whole house —
+                  phones, tablets, desktops and smart speakers, kept in sync.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/devices"
+                className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-gold-200 backdrop-blur hover:bg-white/[0.12] transition shrink-0"
+              >
+                <Settings size={15} /> Manage devices <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* ↓ device cards, pills and banner follow inside this same column ↓ */}
             <div className="grid sm:grid-cols-2 gap-3">
               {DEVICES.map((d, i) => {
                 const status = getDeviceStatus(d.name);
@@ -1243,12 +1189,8 @@ export function DevicesShowcase() {
               className="relative overflow-hidden rounded-2xl border border-white/10 flex items-center gap-5 px-5 py-4"
               style={{ background: 'linear-gradient(135deg,#0F2A1C 0%,#0D2217 55%,#0B1D14 100%)' }}
             >
-              {/* Left: animated mosque icon + text */}
               <div className="flex items-center gap-3.5 shrink-0">
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-                >
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}>
                   <svg viewBox="0 0 54 64" width="44" height="50" fill="none" aria-hidden>
                     <defs>
                       <radialGradient id="bhGlow" cx="50%" cy="65%" r="58%">
@@ -1271,39 +1213,63 @@ export function DevicesShowcase() {
                   <p className="text-xs text-parchment/60 mt-0.5">Azan. Quran. Wherever you are.</p>
                 </div>
               </div>
-
-              {/* Center: animated waveform */}
-              <div className="flex-1 min-w-0">
-                <BannerWaveform />
-              </div>
-
-              {/* Right: two swinging lanterns + stars */}
+              <div className="flex-1 min-w-0"><BannerWaveform /></div>
               <div className="relative flex items-end gap-3 shrink-0 pb-1">
-                <motion.div
-                  animate={{ rotate: [-4, 4, -4] }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ transformOrigin: 'top center' }}
-                >
+                <motion.div animate={{ rotate: [-4, 4, -4] }} transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: 'top center' }}>
                   <DevLantern className="w-9 h-auto" />
                 </motion.div>
-                <motion.div
-                  animate={{ rotate: [3.5, -3.5, 3.5] }}
-                  transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.55 }}
-                  style={{ transformOrigin: 'top center' }}
-                >
+                <motion.div animate={{ rotate: [3.5, -3.5, 3.5] }} transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.55 }} style={{ transformOrigin: 'top center' }}>
                   <DevLantern className="w-7 h-auto" />
                 </motion.div>
-                <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none"
-                  style={{ fontSize: 14 }}
-                  animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }}
-                  transition={{ duration: 2.1, repeat: Infinity }}>✦</motion.span>
-                <motion.span className="absolute -top-2 right-0 text-gold-200 select-none"
-                  style={{ fontSize: 11 }}
-                  animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.2, 0.9] }}
-                  transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 }}>✦</motion.span>
+                <motion.span className="absolute -top-1 left-0 text-gold-300 font-bold select-none" style={{ fontSize: 14 }} animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.3, 0.8] }} transition={{ duration: 2.1, repeat: Infinity }}>✦</motion.span>
+                <motion.span className="absolute -top-2 right-0 text-gold-200 select-none" style={{ fontSize: 11 }} animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.2, 0.9] }} transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 }}>✦</motion.span>
               </div>
             </motion.div>
           </motion.div>
+
+          {/* RIGHT column: Mihrab card — starts flush with the top of the grid */}
+          <motion.div
+            initial={{ opacity: 0, x: 18 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, delay: 0.12 }}
+            className="relative overflow-hidden rounded-3xl border border-white/10 flex flex-col"
+            style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#0B1D14 55%,#091510 100%)' }}
+          >
+            <MughalArch className="absolute inset-x-0 top-0 w-full h-full" />
+
+            <div className="relative flex flex-col items-center px-6 pt-40 pb-6">
+              <DevSpeakerOrb />
+
+              <p className="mt-4 text-[10px] font-bold tracking-[0.22em] uppercase text-gold-400">Current Output</p>
+              <p className="mt-1 text-xl font-bold text-parchment">{outputLabel}</p>
+
+              <div className="mt-5 flex gap-2 justify-center">
+                <button
+                  onClick={rescan}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
+                >
+                  <RefreshCw size={11} className={`text-gold-300 ${scanning ? 'animate-spin' : ''}`} />
+                  {scanning ? 'Scanning…' : 'Rescan'}
+                </button>
+                <Link
+                  href="/dashboard/devices"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-semibold text-parchment/80 hover:bg-white/[0.13] transition"
+                >
+                  <Bluetooth size={11} className="text-gold-300" /> Pair
+                </Link>
+              </div>
+
+              {outCount !== null && !scanning && (
+                <p className="mt-3 text-xs text-parchment/50 text-center">
+                  {outCount > 0
+                    ? <><CheckCircle2 size={11} className="inline mr-1 text-gold-400" />{outCount} output{outCount !== 1 ? 's' : ''} detected</>
+                    : 'Connect a device to detect outputs'}
+                </p>
+              )}
+            </div>
+
+            <MosqueSilhouette className="shrink-0 w-full text-midnight-900/60" />
+          </motion.div>
+
         </div>
       </div>
     </section>
