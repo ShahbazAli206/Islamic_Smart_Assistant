@@ -665,7 +665,7 @@ export default function QiblaPage() {
               step: '2',
               icon: '🧭',
               title: 'Enable live compass',
-              desc: 'Tap "Enable Live Compass" — on iOS you'll need to approve access.',
+              desc: 'Tap "Enable Live Compass" — on iOS you’ll need to approve access.',
             },
             {
               step: '3',
@@ -677,7 +677,7 @@ export default function QiblaPage() {
               step: '4',
               icon: '✅',
               title: 'Look for alignment',
-              desc: 'The compass glows green and a banner appears when you're facing the Qibla.',
+              desc: 'The compass glows green and a banner appears when you’re facing the Qibla.',
             },
             {
               step: '5',
