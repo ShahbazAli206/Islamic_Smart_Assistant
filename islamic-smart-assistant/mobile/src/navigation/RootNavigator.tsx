@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
@@ -36,12 +37,12 @@ function MainTabs() {
         tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.subText,
       }}>
-      <Tabs.Screen name="Home" component={DashboardScreen} options={{ title: t('tabs.home') }} />
-      <Tabs.Screen name="Quran" component={QuranPlayerScreen} options={{ title: t('tabs.quran') }} />
-      <Tabs.Screen name="Qibla" component={QiblaScreen} options={{ title: t('tabs.qibla') }} />
-      <Tabs.Screen name="Azan" component={AzanSettingsScreen} options={{ title: t('tabs.azan') }} />
-      <Tabs.Screen name="Devices" component={DevicesScreen} options={{ title: t('tabs.devices') }} />
-      <Tabs.Screen name="Settings" component={SettingsScreen} options={{ title: t('tabs.settings') }} />
+      <Tabs.Screen name="Home" component={DashboardScreen} options={{ title: t('tabs.home'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🕌</Text> }} />
+      <Tabs.Screen name="Quran" component={QuranPlayerScreen} options={{ title: t('tabs.quran'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📖</Text> }} />
+      <Tabs.Screen name="Qibla" component={QiblaScreen} options={{ title: t('tabs.qibla'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🧭</Text> }} />
+      <Tabs.Screen name="Azan" component={AzanSettingsScreen} options={{ title: t('tabs.azan'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔔</Text> }} />
+      <Tabs.Screen name="Devices" component={DevicesScreen} options={{ title: t('tabs.devices'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📱</Text> }} />
+      <Tabs.Screen name="Settings" component={SettingsScreen} options={{ title: t('tabs.settings'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>⚙️</Text> }} />
     </Tabs.Navigator>
   );
 }
