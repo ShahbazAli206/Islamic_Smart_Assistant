@@ -489,7 +489,7 @@ function ToggleSwitch({ defaultOn = true }: { defaultOn?: boolean }) {
       role="switch"
       aria-checked={on}
       onClick={() => setOn((v) => !v)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-gold-600' : 'bg-stone-200'}`}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-gold-600' : 'bg-white/20'}`}
     >
       <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-6' : 'left-1'}`} />
     </button>
@@ -598,9 +598,9 @@ export function QuranShowcase() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-          className="mt-6 rounded-2xl border border-gold-300/40 bg-parchment/95 px-5 py-4 shadow-xl"
+          className="mt-6 glass-dark rounded-2xl px-5 py-4 shadow-2xl shadow-emerald-950/40"
         >
-          <div className="mb-3 flex items-center gap-2 text-gold-700">
+          <div className="mb-3 flex items-center gap-2 text-gold-300">
             <Globe2 size={17} />
             <h3 className="text-sm font-bold">Translations &amp; UI in 10+ Languages</h3>
           </div>
@@ -610,19 +610,19 @@ export function QuranShowcase() {
                 key={l.code}
                 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.03, duration: 0.35 }}
-                className="flex items-center gap-1.5 rounded-xl border border-gold-200/50 bg-white px-2 py-1.5 shadow-sm"
+                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5"
               >
                 <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${l.accent} text-[9px] font-extrabold tracking-wide text-white`}>
                   {l.code}
                 </span>
                 <span className="flex min-w-0 flex-col leading-tight">
                   <span
-                    className={`truncate text-[11px] font-bold text-ink ${l.rtl ? 'font-arabic' : ''}`}
+                    className={`truncate text-[11px] font-bold text-parchment ${l.rtl ? 'font-arabic' : ''}`}
                     style={l.rtl ? { direction: 'rtl' } : undefined}
                   >
                     {l.native}
                   </span>
-                  <span className="truncate text-[9px] font-medium text-ink/45">{l.label}</span>
+                  <span className="truncate text-[9px] font-medium text-parchment/45">{l.label}</span>
                 </span>
               </motion.div>
             ))}
@@ -635,15 +635,15 @@ export function QuranShowcase() {
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-2xl border border-stone-200 bg-parchment/95 p-5 shadow-xl"
+            className="relative overflow-hidden glass-dark rounded-2xl p-5 shadow-2xl shadow-emerald-950/40"
           >
             <div className="mb-3.5 flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gold-200 bg-gold-50 text-gold-700">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gold-300">
                 <Headphones size={18} />
               </span>
               <div>
-                <h3 className="text-base font-bold leading-tight text-ink">World-Class Qaris</h3>
-                <p className="text-xs text-ink/55">Listen to the voices of the Quran</p>
+                <h3 className="text-base font-bold leading-tight text-parchment">World-Class Qaris</h3>
+                <p className="text-xs text-parchment/55">Listen to the voices of the Quran</p>
               </div>
             </div>
             <ul className="space-y-1.5">
@@ -655,17 +655,17 @@ export function QuranShowcase() {
                     initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                     className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 transition
-                      ${playing ? 'border-gold-200 bg-gold-50' : 'border-stone-100 bg-white hover:bg-stone-50'}`}
+                      ${playing ? 'border-gold-300/50 bg-gold-300/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                   >
                     <QariAvatar name={q.name} accent={q.accent} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">{q.name}</span>
-                    <span className="font-arabic shrink-0 text-sm text-ink/50" style={{ direction: 'rtl' }}>{q.arabic}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-parchment">{q.name}</span>
+                    <span className="font-arabic shrink-0 text-sm text-parchment/50" style={{ direction: 'rtl' }}>{q.arabic}</span>
                     <button
                       type="button"
                       onClick={() => toggleQari(q)}
                       aria-label={playing ? `Pause ${q.name}` : `Play ${q.name}`}
                       className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition
-                        ${playing ? 'border-gold-500 bg-gold-500 text-white' : 'border-gold-300 text-gold-700 hover:bg-gold-50'}`}
+                        ${playing ? 'border-gold-300 bg-gold-gradient text-midnight-900' : 'border-white/10 bg-white/5 text-gold-300 hover:bg-white/10'}`}
                     >
                       {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                     </button>
@@ -675,7 +675,7 @@ export function QuranShowcase() {
             </ul>
             <Link
               href="/dashboard/quran"
-              className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 text-sm font-semibold text-ink/65 transition hover:bg-stone-50"
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-parchment/80 transition hover:bg-white/10"
             >
               View All Qaris <Users size={15} />
             </Link>
@@ -685,21 +685,21 @@ export function QuranShowcase() {
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative overflow-hidden rounded-2xl border border-stone-200 bg-parchment/95 p-5 shadow-xl"
+            className="relative overflow-hidden glass-dark rounded-2xl p-5 shadow-2xl shadow-emerald-950/40"
           >
             <div className="mb-3.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gold-200 bg-gold-50 text-gold-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gold-300">
                   <BellRing size={18} />
                 </span>
                 <div>
-                  <h3 className="text-base font-bold leading-tight text-ink">Recitation Alarms</h3>
-                  <p className="text-xs text-ink/55">Auto-recite Surahs at the times you choose</p>
+                  <h3 className="text-base font-bold leading-tight text-parchment">Recitation Alarms</h3>
+                  <p className="text-xs text-parchment/55">Auto-recite Surahs at the times you choose</p>
                 </div>
               </div>
               <Link
                 href="/dashboard/recitation"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-700 px-3.5 py-2 text-xs font-bold text-white shadow transition hover:bg-gold-600"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-gradient px-3.5 py-2 text-xs font-bold text-midnight-900 shadow-glow-gold transition hover:brightness-105"
               >
                 <Plus size={13} /> New Schedule
               </Link>
@@ -710,16 +710,16 @@ export function QuranShowcase() {
                   key={a.surah}
                   initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.07 }}
-                  className="flex items-center gap-3 rounded-xl border border-stone-100 bg-white p-3"
+                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3"
                 >
                   <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${a.tint}`}>
                     <a.icon size={18} />
                   </span>
-                  <span className="shrink-0 text-sm font-bold tabular-nums text-ink">{a.time}</span>
-                  <span aria-hidden className="h-7 w-px bg-stone-200" />
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-parchment">{a.time}</span>
+                  <span aria-hidden className="h-7 w-px bg-white/10" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink">{a.surah}</p>
-                    <p className="truncate text-xs text-ink/50">{a.when}</p>
+                    <p className="truncate text-sm font-semibold text-parchment">{a.surah}</p>
+                    <p className="truncate text-xs text-parchment/50">{a.when}</p>
                   </div>
                   <ToggleSwitch />
                 </motion.div>
