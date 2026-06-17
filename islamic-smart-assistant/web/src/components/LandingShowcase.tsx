@@ -203,7 +203,7 @@ export function AzanShowcase() {
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
-            className="space-y-5 rounded-3xl border border-white/15 bg-midnight-900/55 backdrop-blur-md p-6 sm:p-8 shadow-2xl"
+            className="space-y-5 rounded-3xl border border-white/15 bg-midnight-900/55 backdrop-blur-md p-6 sm:p-8 shadow-2xl mb-8 lg:mb-10"
           >
             <span className="inline-flex items-center gap-2 rounded-full bg-gold-50 border border-gold-200 px-4 py-1.5 text-sm font-semibold text-gold-700">
               <Sparkles size={14} /> Auto-Azan Enabled
