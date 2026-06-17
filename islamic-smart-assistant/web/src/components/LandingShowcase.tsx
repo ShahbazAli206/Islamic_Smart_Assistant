@@ -575,11 +575,11 @@ export function QuranShowcase() {
 
         {/* ── hero ── */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* left: copy + stats */}
+          {/* left: copy + stats — on a dark frosted panel (matches the ayah card) */}
           <motion.div
             initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-90px' }} transition={{ duration: 0.6 }}
-            className="space-y-5 py-2"
+            className="space-y-5 rounded-3xl border border-white/15 bg-midnight-900/55 backdrop-blur-md p-6 sm:p-8 shadow-2xl"
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-gold-200 backdrop-blur">
               <Sparkles size={13} /> Quran Experience
