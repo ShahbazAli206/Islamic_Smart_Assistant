@@ -559,15 +559,20 @@ export function QuranShowcase() {
               Explore the beauty of the Quran with crystal-clear recitations, authentic
               translations, and smart scheduling to keep you connected every day.
             </p>
-            <div className="flex flex-wrap gap-x-7 gap-y-3 pt-1">
+            {/* stat pills styled like the hero "Launch Dashboard" button:
+                gold-gradient bg, midnight text, rounded-xl, gold glow, hover brighten */}
+            <div className="flex flex-wrap gap-3 pt-1">
               {HERO_STATS.map((s) => (
-                <div key={s.value} className="flex items-center gap-2.5">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.07] text-gold-300 backdrop-blur">
+                <div
+                  key={s.value}
+                  className="flex items-center gap-2.5 rounded-xl bg-gold-gradient text-midnight-900 px-4 py-2.5 shadow-glow-gold transition hover:brightness-105"
+                >
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900/10 text-midnight-900">
                     <s.icon size={18} />
                   </span>
                   <div className="leading-tight">
-                    <div className="text-sm font-bold text-gold-200">{s.value}</div>
-                    <div className="text-xs text-parchment/50">{s.caption}</div>
+                    <div className="text-sm font-bold text-midnight-900">{s.value}</div>
+                    <div className="text-xs font-medium text-midnight-900/70">{s.caption}</div>
                   </div>
                 </div>
               ))}
