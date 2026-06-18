@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Sidebar: off-canvas drawer on mobile, fixed rail from lg up ── */}
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-5 flex flex-col gap-4 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-5 flex flex-col gap-3 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -172,17 +172,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Link>
 
         {/* navigation */}
-        <nav className="relative flex-1 overflow-y-auto pr-1 space-y-5">
+        <nav className="relative flex-1 pr-1 space-y-3">
           {NAV.map((group) => (
             <div key={group.group}>
-              <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.18em] text-emerald-100/60 font-semibold">
+              <p className="px-3 mb-1 text-[10px] uppercase tracking-[0.18em] text-emerald-100/60 font-semibold">
                 {group.group}
               </p>
               <div className="space-y-0.5">
                 {group.items.map((n) => {
                   // Exact-match highlight for the current route.
                   const active = pathname === n.href;
-                  const cls = `group relative flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-left transition ${
+                  const cls = `group relative flex w-full items-center gap-3 px-3 py-2 rounded-xl text-sm text-left transition ${
                     active
                       ? 'bg-white/15 text-white shadow-inner ring-1 ring-white/15'
                       : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'
