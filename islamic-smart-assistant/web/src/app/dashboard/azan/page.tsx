@@ -382,9 +382,9 @@ export default function AzanPage() {
           >
             <source src="/azan/mosque-loop.mp4" type="video/mp4" />
           </video>
-          {/* Legibility overlays — cream wash from the left where the text sits */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,#FAF7EE 0%,rgba(250,247,238,0.92) 28%,rgba(250,247,238,0.55) 55%,rgba(250,247,238,0.15) 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg,rgba(250,247,238,0.4) 0%,transparent 30%,transparent 70%,#FAF7EE 100%)' }} />
+          {/* Legibility overlays — light cream wash only behind the left-hand text; the image stays clear elsewhere */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,#FAF7EE 0%,rgba(250,247,238,0.82) 16%,rgba(250,247,238,0.28) 38%,transparent 62%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg,transparent 0%,transparent 68%,rgba(250,247,238,0.9) 100%)' }} />
           {/* Drifting colour auroras */}
           <motion.div className="absolute -top-20 right-1/4 w-72 h-72 rounded-full"
             style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.18) 0%,transparent 70%)' }}
