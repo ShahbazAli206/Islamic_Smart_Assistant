@@ -148,7 +148,6 @@ export function QuranPlayerScreen() {
     : SURAHS;
 
   const quickSurahs = QUICK_PICKS.map((id) => SURAHS.find((s) => s.id === id)!);
-  const isDark = theme.scheme === 'dark';
 
   return (
     <ScrollView
@@ -164,19 +163,19 @@ export function QuranPlayerScreen() {
         </View>
         <Text style={[styles.title, { color: theme.text }]}>The Noble Quran</Text>
         <Text style={[styles.subtitle, { color: theme.subText }]}>
-          All 114 Surahs · Arabic · Translations
+          All 114 Surahs · 7 world-class reciters · Arabic + translation
         </Text>
       </View>
 
       {/* Selected surah player card */}
       {selected ? (
-        <View style={[styles.playerCard, { backgroundColor: isDark ? '#0E1B2A' : theme.card, borderColor: theme.divider }]}>
-          {/* Player card header */}
-          <View style={[styles.playerHeader, { backgroundColor: isDark ? '#162639' : theme.cardAlt }]}>
+        <View style={[styles.playerCard, { backgroundColor: '#0B2017', borderColor: 'rgba(233,207,122,0.18)' }]}>
+          {/* Player card header — always deep green / gold to match the design */}
+          <View style={[styles.playerHeader, { backgroundColor: '#103024' }]}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.surahNum, { color: theme.subText }]}>Surah {selected.id}</Text>
-              <Text style={[styles.surahName, { color: theme.text }]}>{selected.name}</Text>
-              <Text style={[styles.surahMeta, { color: theme.subText }]}>
+              <Text style={[styles.surahNum, { color: 'rgba(250,247,238,0.6)' }]}>Surah {selected.id}</Text>
+              <Text style={[styles.surahName, { color: '#FAF7EE' }]}>{selected.name}</Text>
+              <Text style={[styles.surahMeta, { color: 'rgba(250,247,238,0.6)' }]}>
                 {selected.ayahs} Ayahs · {selected.type}
               </Text>
             </View>
@@ -230,7 +229,7 @@ export function QuranPlayerScreen() {
           )}
 
           <Pressable onPress={() => { setSelected(null); setPlaying(false); }} style={styles.closeBtn}>
-            <Text style={[styles.closeBtnText, { color: theme.subText }]}>✕ Close player</Text>
+            <Text style={[styles.closeBtnText, { color: 'rgba(250,247,238,0.6)' }]}>✕ Close player</Text>
           </Pressable>
         </View>
       ) : null}
