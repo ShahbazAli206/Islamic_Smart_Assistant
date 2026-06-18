@@ -67,12 +67,12 @@ function ReciterDropdown({ value, onChange }: { value: ReciterId; onChange: (v: 
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-2 bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-ink shadow-sm hover:border-emerald-400 hover:shadow-md transition-all duration-200 min-w-[185px]"
+        className="flex items-center gap-2 bg-white/[0.08] border border-white/15 rounded-xl px-3 py-2 text-sm font-medium text-parchment shadow-sm hover:bg-white/[0.14] hover:border-white/25 transition-all duration-200 min-w-[185px]"
       >
-        <Mic2 size={15} className="text-emerald-600 shrink-0" />
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold-gradient text-midnight-900 shrink-0"><Mic2 size={13} /></span>
         <span className="flex-1 text-left truncate">{selected?.name}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }}>
-          <ChevronDown size={14} className="text-emerald-500" />
+          <ChevronDown size={14} className="text-parchment/60" />
         </motion.span>
       </motion.button>
 
@@ -125,12 +125,12 @@ function TranslationDropdown({ value, onChange }: { value: TranslationId; onChan
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-2 bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-ink shadow-sm hover:border-emerald-400 hover:shadow-md transition-all duration-200 min-w-[205px]"
+        className="flex items-center gap-2 bg-white/[0.08] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-medium text-parchment shadow-sm hover:bg-white/[0.14] hover:border-white/25 transition-all duration-200 min-w-[205px]"
       >
-        <Languages size={15} className="text-emerald-600 shrink-0" />
+        <Languages size={15} className="text-gold-300 shrink-0" />
         <span className="flex-1 text-left truncate">{selected?.name ?? 'No translation'}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }}>
-          <ChevronDown size={14} className="text-emerald-500" />
+          <ChevronDown size={14} className="text-parchment/60" />
         </motion.span>
       </motion.button>
 
@@ -206,11 +206,11 @@ function ToggleSwitch({
       title={title}
       onClick={() => onChange(!checked)}
       whileTap={{ scale: 0.96 }}
-      className="flex items-center gap-2.5 bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-ink shadow-sm hover:border-emerald-400 hover:shadow-md transition-all duration-200 cursor-pointer select-none"
+      className="flex items-center gap-2.5 bg-white/[0.08] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-medium text-parchment shadow-sm hover:bg-white/[0.14] hover:border-white/25 transition-all duration-200 cursor-pointer select-none"
     >
       {/* track */}
       <motion.div
-        animate={{ backgroundColor: checked ? '#059669' : '#d1d5db' }}
+        animate={{ backgroundColor: checked ? '#10B981' : 'rgba(255,255,255,0.25)' }}
         transition={{ duration: 0.25 }}
         className="relative rounded-full shrink-0"
         style={{ width: 36, height: 20 }}
@@ -250,9 +250,16 @@ export function QuranPlayer({
   onReciterChange, onTranslationChange, onTranslationModeChange,
 }: Props) {
   const surahMeta = SURAHS.find((s) => s.number === surahNumber)!;
+  // Also fetch English (Saheeh Intl.) as a secondary line whenever the chosen
+  // translation isn't already English — the design shows Urdu + English together.
+  const showEnglishToo = translation !== 'none' && !translation.startsWith('en.');
   const editions = useMemo(
-    () => ['quran-uthmani', ...(translation === 'none' ? [] : [translation])],
-    [translation],
+    () => [
+      'quran-uthmani',
+      ...(translation === 'none' ? [] : [translation]),
+      ...(showEnglishToo ? ['en.sahih'] : []),
+    ],
+    [translation, showEnglishToo],
   );
 
   const { data, isLoading } = useQuery({
@@ -261,8 +268,9 @@ export function QuranPlayer({
     staleTime: 60 * 60 * 1000,
   });
 
-  const arabic = data?.[0];
-  const trans  = data?.[1];
+  const arabic  = data?.[0];
+  const trans   = translation === 'none' ? undefined : data?.[1];
+  const english = showEnglishToo ? data?.[2] : undefined;
 
   const [ayahIdx, setAyahIdx] = useState(0);
   const [stage, setStage] = useState<Stage>('arabic');
@@ -280,6 +288,7 @@ export function QuranPlayer({
 
   const currentAyah = arabic?.ayahs[ayahIdx];
   const currentTrans = trans?.ayahs[ayahIdx];
+  const currentEnglish = english?.ayahs[ayahIdx];
 
   const stageUrl = (() => {
     if (!currentAyah) return null;
@@ -394,10 +403,11 @@ export function QuranPlayer({
   const noAudio = translation !== 'none' && !hasTranslationAudio(translation);
 
   return (
-    <div className="card overflow-hidden">
+    <div className="rounded-3xl overflow-hidden border border-gold-300/30 shadow-2xl" style={{ background: '#F4F0E2' }}>
       {/* ── header ── */}
-      <div className="bg-mosque-gradient text-parchment p-6 relative overflow-hidden">
-        <div className="absolute inset-0 pattern-bg opacity-25 pointer-events-none" />
+      <div className="text-parchment p-6 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg,#143A28 0%,#0E2A1D 55%,#0A1F15 100%)' }}>
+        <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-gold-300 text-xs uppercase tracking-widest">Surah {surahMeta.number}</p>
@@ -411,7 +421,8 @@ export function QuranPlayer({
       </div>
 
       {/* ── controls ── */}
-      <div className="px-5 py-4 flex flex-wrap items-center gap-3 border-b border-emerald-900/5 bg-gradient-to-r from-stone-50 to-emerald-50/40">
+      <div className="px-5 py-4 flex flex-wrap items-center gap-3 border-b border-white/10"
+        style={{ background: 'linear-gradient(135deg,#0E2A1D 0%,#0B2218 100%)' }}>
         <ReciterDropdown value={reciter} onChange={(v) => onReciterChange?.(v)} />
         <TranslationDropdown value={translation} onChange={(v) => onTranslationChange?.(v)} />
         <ToggleSwitch
@@ -423,7 +434,7 @@ export function QuranPlayer({
 
         {/* playback */}
         <div className="ml-auto flex items-center gap-1">
-          <PlaybackBtn onClick={goPrev} title="Previous ayah" className="text-emerald-800 hover:bg-emerald-50">
+          <PlaybackBtn onClick={goPrev} title="Previous ayah" className="text-parchment/80 hover:bg-white/10">
             <SkipBack size={18} />
           </PlaybackBtn>
 
@@ -432,7 +443,7 @@ export function QuranPlayer({
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.91 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-            className="p-3.5 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 transition-colors mx-1"
+            className="p-3.5 rounded-full border-2 border-gold-400 text-gold-300 shadow-glow-gold hover:bg-gold-400/10 transition-colors mx-1"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
@@ -448,7 +459,7 @@ export function QuranPlayer({
             </AnimatePresence>
           </motion.button>
 
-          <PlaybackBtn onClick={goNext} title="Next ayah" className="text-emerald-800 hover:bg-emerald-50">
+          <PlaybackBtn onClick={goNext} title="Next ayah" className="text-parchment/80 hover:bg-white/10">
             <SkipForward size={18} />
           </PlaybackBtn>
 
@@ -458,8 +469,8 @@ export function QuranPlayer({
             whileTap={{ scale: 0.88 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             animate={{
-              backgroundColor: repeat ? 'rgba(180,130,20,0.1)' : 'transparent',
-              color: repeat ? '#b45309' : '#065f46',
+              backgroundColor: repeat ? 'rgba(233,207,122,0.15)' : 'transparent',
+              color: repeat ? '#E9CF7A' : 'rgba(250,247,238,0.8)',
             }}
             className="p-2.5 rounded-full transition-colors"
             title="Repeat surah"
@@ -526,23 +537,33 @@ export function QuranPlayer({
                 <span className="text-xs text-ink/55">Juz {currentAyah.juz} • Page {currentAyah.page}</span>
               </div>
 
-              <p className="font-arabic text-3xl md:text-4xl leading-[1.9] text-ink text-right">
+              <p className="font-arabic text-3xl md:text-4xl leading-[1.9] text-ink text-center" dir="rtl">
                 {currentAyah.text}
                 <span className="font-display text-emerald-700 text-2xl mx-2">
                   ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
                 </span>
               </p>
 
-              {currentTrans && (
+              {(currentTrans || currentEnglish) && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  dir={isUrdu ? 'rtl' : 'ltr'}
-                  className={`border-t border-emerald-900/10 pt-4 text-lg leading-relaxed text-ink/80
-                              ${isUrdu ? 'font-arabic text-xl' : ''}`}
+                  className="border-t border-emerald-900/10 pt-4 space-y-2 text-center"
                 >
-                  {currentTrans.text}
+                  {currentTrans && (
+                    <p
+                      dir={isUrdu ? 'rtl' : 'ltr'}
+                      className={`text-lg leading-relaxed text-ink/80 ${isUrdu ? 'font-arabic text-xl' : ''}`}
+                    >
+                      {currentTrans.text}
+                    </p>
+                  )}
+                  {currentEnglish && (
+                    <p dir="ltr" className="text-base leading-relaxed text-ink/70">
+                      {currentEnglish.text}
+                    </p>
+                  )}
                 </motion.div>
               )}
             </motion.div>
