@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, BarChart3, Settings,
   BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock, Compass,
+  Moon, Sun,
 } from 'lucide-react';
+import { useTheme } from '@/lib/ThemeContext';
 import { motion } from 'framer-motion';
 import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
 import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
@@ -72,6 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Off-canvas sidebar for mobile; always visible from `lg` up.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
+  const { isDark, toggle } = useTheme();
 
   // Profile summary values, read from the same localStorage keys the
   // onboarding wizard writes — keeps the panel in sync with the user's setup.
@@ -219,6 +222,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           ))}
         </nav>
+
+        {/* ── Dark / Light mode toggle ── */}
+        <button
+          onClick={toggle}
+          className="relative flex items-center justify-between w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition"
+        >
+          <span className="text-xs font-semibold text-emerald-100/70">
+            {isDark ? 'Dark Mode' : 'Light Mode'}
+          </span>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-white/10 text-gold-300">
+            {isDark ? <Sun size={14} /> : <Moon size={14} />}
+          </span>
+        </button>
 
         {/* ── Profile panel: greeting + stored location / sect / language,
                with a pencil to reopen onboarding and edit them ── */}

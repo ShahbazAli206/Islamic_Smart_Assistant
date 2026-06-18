@@ -11,6 +11,7 @@ import {
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { useCompassHeading } from '@/lib/compass';
 import { qiblaBearing, distanceToKaaba, compassPoint, formatDistance, isAligned } from '@/lib/qibla';
+import { useTheme } from '@/lib/ThemeContext';
 
 const QiblaMap = dynamic(() => import('@/components/QiblaMap'), {
   ssr: false,
@@ -285,6 +286,7 @@ function InfoRow({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function QiblaPage() {
+  const { isDark } = useTheme();
   const loc     = useStoredLocation();
   const compass = useCompassHeading();
   const [needleStyle, setNeedleStyle] = useState<NeedleStyle>('classic');
@@ -408,31 +410,33 @@ export default function QiblaPage() {
 
   return (
     <div
-      className="-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden"
-      style={{ background: 'linear-gradient(160deg,#0a2a1e 0%,#072017 45%,#04140d 100%)' }}
+      className={`-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden ${isDark ? 'page-dark' : 'page-light'}`}
+      style={isDark ? { background: 'linear-gradient(160deg,#0a2a1e 0%,#072017 45%,#04140d 100%)' } : undefined}
     >
       {/* ── Ambient animated background ── */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
-        <motion.div
-          className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)' }}
-          animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute top-1/3 -right-28 w-[26rem] h-[26rem] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.13) 0%, transparent 70%)' }}
-          animate={{ x: [0, -36, 0], y: [0, 44, 0], scale: [1, 1.12, 1] }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }}
-          animate={{ x: [0, 30, 0], y: [0, -28, 0] }}
-          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </div>
+      {isDark && (
+        <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
+          <motion.div
+            className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)' }}
+            animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute top-1/3 -right-28 w-[26rem] h-[26rem] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.13) 0%, transparent 70%)' }}
+            animate={{ x: [0, -36, 0], y: [0, 44, 0], scale: [1, 1.12, 1] }}
+            transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }}
+            animate={{ x: [0, 30, 0], y: [0, -28, 0] }}
+            transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+      )}
 
       <motion.div
         variants={container}
@@ -443,8 +447,8 @@ export default function QiblaPage() {
         {/* ── Header banner ─────────────────────────────────────────────── */}
         <motion.header
           variants={rise}
-          className="relative overflow-hidden rounded-3xl border border-white/10 mb-5"
-          style={{ background: 'linear-gradient(120deg,#0c2d20 0%,#0a2419 55%,rgba(10,36,25,0.4) 100%)' }}
+          className={`relative overflow-hidden rounded-3xl mb-5 ${isDark ? 'border border-white/10' : 'border border-gold-200'}`}
+          style={isDark ? { background: 'linear-gradient(120deg,#0c2d20 0%,#0a2419 55%,rgba(10,36,25,0.4) 100%)' } : { background: 'linear-gradient(120deg,#FBF8EF 0%,#F6EED0 100%)' }}
         >
           {/* photo bleed on the right */}
           <div aria-hidden className="absolute inset-y-0 right-0 w-2/3">
@@ -454,7 +458,7 @@ export default function QiblaPage() {
               animate={{ scale: [1.05, 1.12, 1.05] }}
               transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,#0a2419 0%,rgba(10,36,25,0.6) 35%,transparent 100%)' }} />
+            <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(90deg,#0a2419 0%,rgba(10,36,25,0.6) 35%,transparent 100%)' : 'linear-gradient(90deg,#F6EED0 0%,rgba(246,238,208,0.7) 40%,rgba(246,238,208,0.1) 100%)' }} />
           </div>
 
           <div className="relative flex items-center gap-4 px-6 sm:px-8 py-6">

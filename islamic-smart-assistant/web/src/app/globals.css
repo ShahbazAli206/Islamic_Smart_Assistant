@@ -81,3 +81,41 @@ body {
 ::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.30); border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.50); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Light-mode overrides for dark pages (Prayer Times, Quran, Qibla) ──
+   Applied via .page-light on each page's root wrapper. Overrides
+   dark-theme Tailwind utilities so elements look correct on a light
+   background without touching every individual element in those pages. */
+
+/* Text: parchment → ink */
+.page-light .text-parchment     { color: #0B1410 !important; }
+.page-light .text-parchment\/50 { color: rgba(11,20,16,0.50) !important; }
+.page-light .text-parchment\/60 { color: rgba(11,20,16,0.60) !important; }
+.page-light .text-parchment\/65 { color: rgba(11,20,16,0.65) !important; }
+.page-light .text-parchment\/70 { color: rgba(11,20,16,0.70) !important; }
+.page-light .text-parchment\/75 { color: rgba(11,20,16,0.75) !important; }
+.page-light .text-parchment\/80 { color: rgba(11,20,16,0.80) !important; }
+
+/* Gold: light shades → darker for legibility on cream */
+.page-light .text-gold-200 { color: #A6831A !important; }
+.page-light .text-gold-300 { color: #7D6213 !important; }
+
+/* Card / surface backgrounds: near-transparent dark → white */
+.page-light .bg-white\/5  { background-color: rgba(255,255,255,0.85) !important; }
+.page-light .bg-white\/8  { background-color: rgba(255,255,255,0.90) !important; }
+.page-light .bg-white\/10 { background-color: rgba(255,255,255,0.92) !important; }
+.page-light .bg-white\/15 { background-color: rgba(255,255,255,0.95) !important; }
+.page-light .bg-white\/20 { background-color: white !important; }
+.page-light .bg-white\/25 { background-color: white !important; }
+
+/* Borders: white-alpha → gold-alpha */
+.page-light .border-white\/5  { border-color: rgba(201,162,39,0.20) !important; }
+.page-light .border-white\/10 { border-color: rgba(201,162,39,0.30) !important; }
+.page-light .border-white\/15 { border-color: rgba(201,162,39,0.40) !important; }
+.page-light .border-white\/20 { border-color: rgba(201,162,39,0.50) !important; }
+.page-light .border-white\/25 { border-color: rgba(201,162,39,0.55) !important; }
+
+/* Dark midnight fills → light parchment fills */
+.page-light .bg-midnight-900\/40 { background-color: rgba(251,248,239,0.85) !important; }
+.page-light .bg-midnight-900\/60 { background-color: rgba(251,248,239,0.90) !important; }
+.page-light .bg-midnight-900\/80 { background-color: rgba(251,248,239,0.95) !important; }

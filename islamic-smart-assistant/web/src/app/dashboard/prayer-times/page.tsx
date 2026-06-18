@@ -18,6 +18,7 @@ import {
   FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
   type Sect, type Fiqh,
 } from '@/lib/sect';
+import { useTheme } from '@/lib/ThemeContext';
 
 const MosqueMap = dynamic(() => import('@/components/MosqueMap'), {
   ssr: false,
@@ -43,6 +44,7 @@ export default function PrayerTimesPage() {
   const [rawFiqh, setRawFiqh] = useLocalStorage<string>('isa:fiqh', 'hanafi');
   const [methodOverride, setMethodOverride] = useLocalStorage<number>('isa:method', -1);
 
+  const { isDark } = useTheme();
   const sect: Sect = normalizeSect(rawSect);
   const fiqh: Fiqh = normalizeFiqh(rawFiqh);
   const setSect = (s: Sect) => setRawSect(s);
@@ -292,16 +294,18 @@ export default function PrayerTimesPage() {
   return (
     // Break out of the dashboard's main padding so the dark theme + photo header
     // fill the content area edge-to-edge, matching the reference design.
-    <div className="-m-5 sm:-m-8 min-h-full text-parchment"
-      style={{ background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' }}>
+    <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
       {/* ── header banner: mosque photo + title + ayah ── */}
       <header className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
           <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(90deg, rgba(8,22,15,0.88) 0%, rgba(8,22,15,0.5) 32%, rgba(8,22,15,0.22) 52%, rgba(8,22,15,0.48) 72%, rgba(8,22,15,0.78) 100%)' }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#08160F]" />
+            style={{ background: isDark
+              ? 'linear-gradient(90deg, rgba(8,22,15,0.88) 0%, rgba(8,22,15,0.5) 32%, rgba(8,22,15,0.22) 52%, rgba(8,22,15,0.48) 72%, rgba(8,22,15,0.78) 100%)'
+              : 'linear-gradient(90deg, rgba(251,248,239,0.72) 0%, rgba(251,248,239,0.40) 50%, rgba(251,248,239,0.08) 100%)' }} />
+          <div className={`absolute inset-0 bg-gradient-to-b from-transparent ${isDark ? 'to-[#08160F]' : 'to-[#FAF7EE]'}`} />
           <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
         </div>
 

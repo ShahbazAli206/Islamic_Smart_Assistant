@@ -11,6 +11,7 @@ import { SURAHS } from '@/lib/surahs';
 import { QuranPlayer } from '@/components/QuranPlayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
+import { useTheme } from '@/lib/ThemeContext';
 
 // Hand-picked popular surahs surfaced as shortcut cards above the full index.
 // `tag` is the contextual reason it's a common pick (e.g. recited on Friday).
@@ -25,6 +26,7 @@ const QUICK_PICKS = [
 
 /** Quran reader: quick picks, player, and a searchable full surah index. */
 export default function QuranPage() {
+  const { isDark } = useTheme();
   const [query, setQuery] = useState('');                       // search box text for the surah index
   const [surah, setSurah] = useState(1);                        // currently selected surah number (drives the player)
   const [reciter, setReciter] = useState<ReciterId>('ar.abdulbasitmurattal');
@@ -59,16 +61,18 @@ export default function QuranPage() {
   return (
     // Break out of the dashboard's padding so the dark theme + photo header fill
     // the content area edge-to-edge, matching the reference design.
-    <div className="-m-5 sm:-m-8 min-h-full text-parchment"
-      style={{ background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' }}>
+    <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
       {/* ── header banner: mosque photo + title + CDN pill ── */}
       <header className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
           <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(90deg, rgba(8,22,15,0.94) 0%, rgba(8,22,15,0.7) 42%, rgba(8,22,15,0.45) 66%, rgba(8,22,15,0.2) 100%)' }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#08160F]" />
+            style={{ background: isDark
+              ? 'linear-gradient(90deg, rgba(8,22,15,0.94) 0%, rgba(8,22,15,0.7) 42%, rgba(8,22,15,0.45) 66%, rgba(8,22,15,0.2) 100%)'
+              : 'linear-gradient(90deg, rgba(251,248,239,0.80) 0%, rgba(251,248,239,0.50) 50%, rgba(251,248,239,0.10) 100%)' }} />
+          <div className={`absolute inset-0 bg-gradient-to-b from-transparent ${isDark ? 'to-[#08160F]' : 'to-[#FAF7EE]'}`} />
           {/* twinkling stars over the sky */}
           {[
             { r: 360, t: 30, s: 2 }, { r: 280, t: 60, s: 1.5 }, { r: 200, t: 26, s: 1.6 }, { r: 150, t: 70, s: 1.3 },
