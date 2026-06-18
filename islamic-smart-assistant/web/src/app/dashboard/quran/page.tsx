@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Sparkles, BookOpenCheck, BookOpen } from 'lucide-react';
+import { Search, BookOpen, ShieldCheck } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { QuranPlayer } from '@/components/QuranPlayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -67,12 +67,15 @@ export default function QuranPage() {
       {/* ── header banner: mosque photo + title + CDN pill ── */}
       <header className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
-          <img src="/quran-bg.png" alt="" className="w-full h-full object-cover object-center" />
+          <img src={isDark ? '/quran-bg.png' : '/masjid_img.png'} alt="" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0"
             style={{ background: isDark
               ? 'linear-gradient(90deg, rgba(8,22,15,0.94) 0%, rgba(8,22,15,0.7) 42%, rgba(8,22,15,0.45) 66%, rgba(8,22,15,0.2) 100%)'
-              : 'linear-gradient(90deg, rgba(251,248,239,0.80) 0%, rgba(251,248,239,0.50) 50%, rgba(251,248,239,0.10) 100%)' }} />
-          <div className={`absolute inset-0 bg-gradient-to-b from-transparent ${isDark ? 'to-[#08160F]' : 'to-[#FAF7EE]'}`} />
+              : 'linear-gradient(90deg, rgba(251,248,239,0.90) 0%, rgba(251,248,239,0.62) 44%, rgba(251,248,239,0.30) 78%, rgba(251,248,239,0.18) 100%)' }} />
+          <div className="absolute inset-0"
+            style={{ background: isDark
+              ? 'linear-gradient(to bottom, transparent 40%, #08160F 100%)'
+              : 'linear-gradient(to bottom, rgba(251,248,239,0.35) 0%, transparent 35%, transparent 60%, #FAF7EE 100%)' }} />
           {/* twinkling stars over the sky */}
           {[
             { r: 360, t: 30, s: 2 }, { r: 280, t: 60, s: 1.5 }, { r: 200, t: 26, s: 1.6 }, { r: 150, t: 70, s: 1.3 },
@@ -87,21 +90,23 @@ export default function QuranPage() {
 
         <div className="relative px-6 sm:px-10 pt-8 pb-7 flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
-              <Sparkles size={12} /> Holy Quran
+            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${
+              isDark ? 'border-gold-300/40 bg-white/5 text-gold-200' : 'border-gold-400/40 bg-white/85 text-emerald-800 shadow-sm'}`}>
+              <BookOpen size={13} className={isDark ? 'text-gold-200' : 'text-emerald-700'} /> Holy Quran
             </span>
-            <h1 className="mt-4 font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.02] text-parchment">
+            <h1 className={`mt-4 font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.02] ${isDark ? 'text-parchment' : 'text-emerald-900'}`}>
               The Noble Quran
             </h1>
-            <p className="mt-3 text-parchment/70 leading-relaxed">
-              All 114 Surahs · 7 world-class reciters · Arabic + Urdu/English translation
+            <p className={`mt-3 leading-relaxed ${isDark ? 'text-parchment/70' : 'text-emerald-900/55'}`}>
+              All 114 Surahs · 7 world-class reciters · Arabic · Urdu/English translation
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 text-xs font-semibold text-parchment/85 backdrop-blur">
-            <motion.span className="w-2 h-2 rounded-full bg-emerald-400"
+          <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${
+            isDark ? 'border-white/15 bg-white/[0.06] text-parchment/85' : 'border-emerald-200 bg-white/90 text-emerald-800 shadow-sm'}`}>
+            <motion.span className="w-2 h-2 rounded-full bg-emerald-500"
               animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }} />
-            <BookOpenCheck size={14} className="text-gold-300" /> Streaming from verified CDN
+            <ShieldCheck size={14} className={isDark ? 'text-gold-300' : 'text-emerald-600'} /> Streaming from verified CDN
           </span>
         </div>
       </header>
@@ -123,10 +128,10 @@ export default function QuranPage() {
                     ? 'border-gold-400 shadow-glow-gold'
                     : isDark
                       ? 'border-white/8 hover:border-gold-300/50'
-                      : 'border-black/5 hover:border-gold-300/60'}`}
+                      : 'border-black/5 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
                 style={{ background: active
                   ? 'linear-gradient(160deg,#103024 0%,#0B2017 100%)'
-                  : isDark ? 'linear-gradient(160deg,#13241c 0%,#0c1813 100%)' : '#F3EFDF' }}
+                  : isDark ? 'linear-gradient(160deg,#13241c 0%,#0c1813 100%)' : '#FFFFFF' }}
               >
                 {active && (
                   <motion.span aria-hidden className="absolute inset-0 pointer-events-none"
@@ -157,8 +162,8 @@ export default function QuranPage() {
               requestAnimationFrame(() => document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
             }}
             className={`rounded-2xl border-2 flex flex-col items-center justify-center gap-2 p-4 text-center transition
-              ${isDark ? 'border-white/10 text-parchment hover:border-gold-300/50' : 'border-black/5 text-ink hover:border-gold-300/60'}`}
-            style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : '#F3EFDF' }}
+              ${isDark ? 'border-white/10 text-parchment hover:border-gold-300/50' : 'border-emerald-200/70 text-emerald-900 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
+            style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : 'linear-gradient(160deg,#EEF3EC 0%,#E6EFE5 100%)' }}
           >
             <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
               <BookOpen size={26} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
