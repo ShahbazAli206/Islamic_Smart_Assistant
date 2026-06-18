@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
 import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
+import { ProfileModal } from '@/components/ProfileModal';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
 // Human-readable labels for the persisted `isa:sect` value, shown in the
@@ -66,6 +67,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   // Controls the OnboardingSetup modal when launched via the profile "edit" pencil.
   const [editPrefs, setEditPrefs] = useState(false);
+  // Profile popup (opened from the sidebar "Profile" item) — replaces the page.
+  const [profileOpen, setProfileOpen] = useState(false);
   // Off-canvas sidebar for mobile; always visible from `lg` up.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
@@ -179,17 +182,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items.map((n) => {
                   // Exact-match highlight for the current route.
                   const active = pathname === n.href;
-                  return (
-                    <Link
-                      key={n.href}
-                      href={n.href}
-                      onClick={closeSidebar}
-                      className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
-                        active
-                          ? 'bg-white/15 text-white shadow-inner ring-1 ring-white/15'
-                          : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
+                  const cls = `group relative flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-left transition ${
+                    active
+                      ? 'bg-white/15 text-white shadow-inner ring-1 ring-white/15'
+                      : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'
+                  }`;
+                  const inner = (
+                    <>
                       {/* Shared layoutId lets framer-motion slide one gold pill
                           between items as the active route changes. */}
                       {active && (
@@ -200,6 +199,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       )}
                       <n.icon size={18} className={`${active ? 'text-gold-300' : n.color}`} />
                       <span className="font-medium">{n.label}</span>
+                    </>
+                  );
+                  // Profile opens a popup instead of navigating to a separate page.
+                  if (n.href === '/dashboard/profile') {
+                    return (
+                      <button key={n.href} onClick={() => { setProfileOpen(true); closeSidebar(); }} className={cls}>
+                        {inner}
+                      </button>
+                    );
+                  }
+                  return (
+                    <Link key={n.href} href={n.href} onClick={closeSidebar} className={cls}>
+                      {inner}
                     </Link>
                   );
                 })}
@@ -252,6 +264,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AutoAzanScheduler />
       <SurahScheduleRunner />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />
+      <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 }
