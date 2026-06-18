@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient id="sky5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#9d174d"/>
+    </linearGradient>
+    <linearGradient id="pyr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" fill="url(#sky5)"/>
+  <circle cx="120" cy="68" r="30" fill="#fde68a" opacity="0.7"/>
+  <circle cx="120" cy="68" r="18" fill="#fff7e0" opacity="0.9"/>
+  <g fill="#ffffff" opacity="0.6">
+    <circle cx="40" cy="40" r="1.4"/><circle cx="200" cy="44" r="1.2"/><circle cx="70" cy="26" r="1.1"/>
+  </g>
+  <!-- Pyramids -->
+  <polygon points="78,188 138,98 198,188" fill="url(#pyr)"/>
+  <polygon points="22,188 70,120 118,188" fill="url(#pyr)" opacity="0.92"/>
+  <polygon points="138,98 198,188 160,188" fill="#7c2d12" opacity="0.35"/>
+  <polygon points="70,120 118,188 92,188" fill="#7c2d12" opacity="0.35"/>
+  <rect x="0" y="188" width="240" height="52" fill="#5b0e2e"/>
+  <rect x="0" y="188" width="240" height="3" fill="#9d174d" opacity="0.7"/>
+</svg>

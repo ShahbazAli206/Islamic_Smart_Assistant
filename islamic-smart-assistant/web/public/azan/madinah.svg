@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="55%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" fill="url(#sky2)"/>
+  <circle cx="58" cy="56" r="22" fill="#f6eed0" opacity="0.85"/>
+  <g fill="#ffffff" opacity="0.65">
+    <circle cx="160" cy="40" r="1.4"/><circle cx="200" cy="64" r="1.2"/><circle cx="120" cy="30" r="1.1"/>
+  </g>
+  <!-- green dome mosque -->
+  <g fill="#053b2c">
+    <path d="M120 70 q-26 0 -26 38 l52 0 q0 -38 -26 -38 z"/>
+    <rect x="94" y="108" width="52" height="68"/>
+    <rect x="58" y="120" width="16" height="56"/>
+    <rect x="166" y="120" width="16" height="56"/>
+  </g>
+  <g fill="#0a6b50">
+    <path d="M120 70 q-26 0 -26 38 l52 0 q0 -38 -26 -38 z"/>
+    <rect x="58" y="120" width="16" height="56"/>
+    <rect x="166" y="120" width="16" height="56"/>
+  </g>
+  <g fill="#dbb94b">
+    <circle cx="120" cy="66" r="4"/><circle cx="66" cy="116" r="3"/><circle cx="174" cy="116" r="3"/>
+  </g>
+  <rect x="0" y="176" width="240" height="64" fill="#022c20"/>
+  <rect x="0" y="176" width="240" height="3" fill="#10b981" opacity="0.5"/>
+</svg>
