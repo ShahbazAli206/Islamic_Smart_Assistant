@@ -439,6 +439,7 @@ export default function PrayerTimesPage() {
               mosques={mosques}
               selectedId={selected?.id ?? null}
               clickPin={clickedPin}
+              userLocation={loc.hasCoords && loc.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null}
               onMoveEnd={onMoveEnd}
               onSelectMosque={(m) => { setSelected(m); setClickedPin(null); }}
               onMapClick={handleMapClick}

@@ -14,6 +14,8 @@ type Props = {
   mosques: Mosque[];
   selectedId?: string | null;
   clickPin?: { lat: number; lng: number } | null;
+  /** The user's saved location — drawn as a precise, static pin-point marker. */
+  userLocation?: { lat: number; lng: number } | null;
   onMoveEnd?: (center: { lat: number; lng: number }, zoom: number) => void;
   onSelectMosque?: (m: Mosque) => void;
   onMapClick?: (latlng: { lat: number; lng: number }) => void;
@@ -25,6 +27,7 @@ export default function MosqueMap({
   mosques,
   selectedId,
   clickPin,
+  userLocation,
   onMoveEnd,
   onSelectMosque,
   onMapClick,
@@ -33,6 +36,7 @@ export default function MosqueMap({
   const mapRef = useRef<MlMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const clickPinMarkerRef = useRef<Marker | null>(null);
+  const userMarkerRef = useRef<Marker | null>(null);
   // Keep latest callbacks in refs so the map init effect runs once only.
   const cbRef = useRef({ onMoveEnd, onSelectMosque, onMapClick });
   cbRef.current = { onMoveEnd, onSelectMosque, onMapClick };
@@ -143,6 +147,40 @@ export default function MosqueMap({
         .addTo(map);
     }
   }, [clickPin]);
+
+  // Render the user's saved location as a precise, static pin-point.
+  // anchor:'center' places the dot's centre exactly on the coordinate, and there's
+  // no animation — so it reads as an exact point, not the blinking geolocate dot.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!userLocation) {
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
+      return;
+    }
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
+    } else {
+      const el = document.createElement('div');
+      el.title = 'Your location';
+      el.style.cssText =
+        'position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+      // Soft static halo (no animation) for an "accuracy" feel.
+      const halo = document.createElement('span');
+      halo.style.cssText =
+        'position:absolute;inset:0;border-radius:50%;background:rgba(201,162,39,0.22);border:1px solid rgba(201,162,39,0.45);';
+      // Crisp centre dot sitting exactly on the point.
+      const dot = document.createElement('span');
+      dot.style.cssText =
+        'position:relative;width:14px;height:14px;border-radius:50%;background:#C9A227;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45);';
+      el.appendChild(halo);
+      el.appendChild(dot);
+      userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([userLocation.lng, userLocation.lat])
+        .addTo(map);
+    }
+  }, [userLocation]);
 
   return <div ref={containerRef} className="w-full h-[420px] rounded-2xl overflow-hidden" />;
 }
