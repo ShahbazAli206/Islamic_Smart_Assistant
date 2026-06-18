@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
-import { Compass, MapPin, Navigation, AlertTriangle, RotateCcw, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  Compass, MapPin, Navigation, AlertTriangle, RotateCcw, Loader2, CheckCircle2,
+  Gauge, Clock, Activity, Hexagon, Box, Share2, Camera, Scan, Map as MapIcon,
+  ArrowRight, Sparkles, ExternalLink,
+} from 'lucide-react';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { useCompassHeading } from '@/lib/compass';
 import { qiblaBearing, distanceToKaaba, compassPoint, formatDistance, isAligned } from '@/lib/qibla';
@@ -11,45 +15,56 @@ import { qiblaBearing, distanceToKaaba, compassPoint, formatDistance, isAligned 
 const QiblaMap = dynamic(() => import('@/components/QiblaMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[340px] rounded-2xl bg-midnight-800/40 animate-pulse" />
+    <div className="w-full h-[300px] rounded-2xl bg-emerald-950/40 animate-pulse" />
   ),
 });
 
-// ── Needle style types ────────────────────────────────────────────────────────
+// ── Needle styles (Classic / Modern / 3D View) ─────────────────────────────────
 
 type NeedleStyle = 'classic' | 'royal' | 'minimal';
 
-interface NeedleStyleOption {
-  id: NeedleStyle;
-  label: string;
-  emoji: string;
-  desc: string;
-}
-
-const NEEDLE_STYLES: NeedleStyleOption[] = [
-  { id: 'classic', label: 'Classic', emoji: '⬆️', desc: 'Gold & green diamond' },
-  { id: 'royal',   label: 'Royal',   emoji: '✦',   desc: 'Ornate arrow' },
-  { id: 'minimal', label: 'Minimal', emoji: '—',   desc: 'Clean white line' },
+const NEEDLE_STYLES: { id: NeedleStyle; label: string; Icon: typeof Compass }[] = [
+  { id: 'classic', label: 'Classic', Icon: Compass },
+  { id: 'royal',   label: 'Modern',  Icon: Hexagon },
+  { id: 'minimal', label: '3D View', Icon: Box },
 ];
+
+// ── Count-up number (animates from 0 → value on mount) ──────────────────────────
+
+function CountUp({
+  value, decimals = 0, grouped = false,
+}: { value: number; decimals?: number; grouped?: boolean }) {
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState('0');
+
+  useEffect(() => {
+    const controls = animate(mv, value, {
+      duration: 1.1,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => {
+        const n = Number(v.toFixed(decimals));
+        setDisplay(grouped ? n.toLocaleString('en-US') : n.toFixed(decimals));
+      },
+    });
+    return controls.stop;
+  }, [value, decimals, grouped, mv]);
+
+  return <>{display}</>;
+}
 
 // ── Compass SVG ───────────────────────────────────────────────────────────────
 
 const CX = 140, CY = 140;
 
 function CompassRoseSVG({
-  aligned,
-  needleStyle,
-}: {
-  aligned: boolean;
-  needleStyle: NeedleStyle;
-}) {
-  // 72 tick marks every 5°, major at cardinal/ordinal, medium every 15°
+  aligned, needleStyle,
+}: { aligned: boolean; needleStyle: NeedleStyle }) {
   const ticks = Array.from({ length: 72 }, (_, i) => {
     const deg     = i * 5;
     const rad     = ((deg - 90) * Math.PI) / 180;
-    const isMajor = deg % 90  === 0;
-    const isOrd   = deg % 45  === 0 && !isMajor;
-    const isMed   = deg % 15  === 0 && !isOrd && !isMajor;
+    const isMajor = deg % 90 === 0;
+    const isOrd   = deg % 45 === 0 && !isMajor;
+    const isMed   = deg % 15 === 0 && !isOrd && !isMajor;
     const r0 = isMajor ? 112 : isOrd ? 116 : isMed ? 119 : 122;
     const r1 = 128;
     return {
@@ -59,7 +74,6 @@ function CompassRoseSVG({
     };
   });
 
-  // 16-point decorative star lines
   const starLines = Array.from({ length: 8 }, (_, i) => {
     const deg = i * 22.5;
     const rad = (deg * Math.PI) / 180;
@@ -69,7 +83,6 @@ function CompassRoseSVG({
   const accentColor = aligned ? '#16a34a' : '#059669';
   const goldColor   = '#D4AF37';
 
-  // Inner ring tick marks (decorative, 24 marks)
   const innerTicks = Array.from({ length: 24 }, (_, i) => {
     const deg = i * 15;
     const rad = ((deg - 90) * Math.PI) / 180;
@@ -81,75 +94,55 @@ function CompassRoseSVG({
   });
 
   return (
-    <svg viewBox="0 0 280 280" width="280" height="280" className="select-none">
+    <svg viewBox="0 0 280 280" width="280" height="280" className="select-none max-w-full">
       <defs>
-        {/* Classic needle: gold → emerald */}
         <linearGradient id="needleClassic" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stopColor={goldColor} />
           <stop offset="25%"  stopColor="#E8C547" />
           <stop offset="55%"  stopColor={accentColor} />
           <stop offset="100%" stopColor="#047857" />
         </linearGradient>
-        {/* Royal needle: deep gold */}
         <linearGradient id="needleRoyal" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stopColor="#FFE066" />
           <stop offset="20%"  stopColor={goldColor} />
           <stop offset="60%"  stopColor="#B8860B" />
           <stop offset="100%" stopColor="#7B5A00" />
         </linearGradient>
-        {/* Outer ring gradient */}
         <linearGradient id="outerRing" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%"   stopColor={goldColor} stopOpacity="0.6" />
           <stop offset="50%"  stopColor={accentColor} stopOpacity="0.4" />
           <stop offset="100%" stopColor={goldColor} stopOpacity="0.6" />
         </linearGradient>
-        {/* Background gradient */}
         <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="#f8fff8" />
+          <stop offset="0%"   stopColor="#fbfdfb" />
           <stop offset="70%"  stopColor="#f0fdf4" />
-          <stop offset="100%" stopColor="#ecfdf5" />
+          <stop offset="100%" stopColor="#e3f7ec" />
         </radialGradient>
-        {/* Inner glow */}
         <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor={accentColor} stopOpacity="0.08" />
+          <stop offset="0%"   stopColor={accentColor} stopOpacity="0.1" />
           <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
         </radialGradient>
-        {/* Alignment glow filter */}
         <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
           <feGaussianBlur stdDeviation="5" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
-        {/* Needle tip glow */}
         <filter id="tipGlow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
 
-      {/* Background circle */}
       <circle cx={CX} cy={CY} r="138" fill="url(#bgGrad)" />
-
-      {/* Inner glow */}
       <circle cx={CX} cy={CY} r="100" fill="url(#innerGlow)" />
 
-      {/* Alignment glow ring */}
       {aligned && (
-        <circle
-          cx={CX} cy={CY} r="136"
-          fill="none" stroke="#22c55e" strokeWidth="5"
-          opacity="0.65" filter="url(#glow)"
-        />
+        <circle cx={CX} cy={CY} r="136" fill="none" stroke="#22c55e"
+          strokeWidth="5" opacity="0.65" filter="url(#glow)" />
       )}
 
-      {/* Outer decorative ring (gold) */}
-      <circle cx={CX} cy={CY} r="135"
-        fill="none" stroke="url(#outerRing)" strokeWidth="1.5" />
+      <circle cx={CX} cy={CY} r="135" fill="none" stroke="url(#outerRing)" strokeWidth="1.5" />
+      <circle cx={CX} cy={CY} r="130" fill="none" stroke={aligned ? '#bbf7d0' : '#d1fae5'} strokeWidth="1.5" />
 
-      {/* Main tick ring */}
-      <circle cx={CX} cy={CY} r="130"
-        fill="none" stroke={aligned ? '#bbf7d0' : '#d1fae5'} strokeWidth="1.5" />
-
-      {/* 16-point star lines */}
       {starLines.map(({ deg, rad }) => (
         <line key={deg}
           x1={CX - 106 * Math.cos(rad)} y1={CY - 106 * Math.sin(rad)}
@@ -159,10 +152,8 @@ function CompassRoseSVG({
         />
       ))}
 
-      {/* Outer tick marks (72 total) */}
       {ticks.map((t, i) => (
-        <line key={i}
-          x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+        <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
           stroke={t.isMajor ? goldColor : t.isOrd ? accentColor : '#6ee7b7'}
           strokeWidth={t.isMajor ? 2.5 : t.isOrd ? 2 : t.isMed ? 1.5 : 0.8}
           strokeLinecap="round"
@@ -170,17 +161,14 @@ function CompassRoseSVG({
         />
       ))}
 
-      {/* Cardinal labels */}
       {(['N', 'E', 'S', 'W'] as const).map((label, i) => {
         const rad     = ((i * 90 - 90) * Math.PI) / 180;
         const r       = 102;
         const isNorth = label === 'N';
         return (
           <text key={label}
-            x={CX + r * Math.cos(rad)}
-            y={CY + r * Math.sin(rad) + 5}
-            textAnchor="middle"
-            fontSize={isNorth ? 15 : 12}
+            x={CX + r * Math.cos(rad)} y={CY + r * Math.sin(rad) + 5}
+            textAnchor="middle" fontSize={isNorth ? 15 : 12}
             fontWeight={isNorth ? '800' : '700'}
             fill={isNorth ? goldColor : accentColor}
             fontFamily="system-ui, sans-serif"
@@ -190,19 +178,14 @@ function CompassRoseSVG({
         );
       })}
 
-      {/* Ordinal labels (NE, SE, etc.) */}
       {(['NE', 'SE', 'SW', 'NW'] as const).map((label, i) => {
         const rad = ((i * 90 + 45 - 90) * Math.PI) / 180;
         const r   = 99;
         return (
           <text key={label}
-            x={CX + r * Math.cos(rad)}
-            y={CY + r * Math.sin(rad) + 4}
-            textAnchor="middle"
-            fontSize={9}
-            fontWeight="600"
-            fill={accentColor}
-            opacity="0.6"
+            x={CX + r * Math.cos(rad)} y={CY + r * Math.sin(rad) + 4}
+            textAnchor="middle" fontSize={9} fontWeight="600"
+            fill={accentColor} opacity="0.6"
             fontFamily="system-ui, sans-serif"
           >
             {label}
@@ -210,95 +193,92 @@ function CompassRoseSVG({
         );
       })}
 
-      {/* Middle decorative ring */}
-      <circle cx={CX} cy={CY} r="80"
-        fill="none" stroke="#d1fae5" strokeWidth="1" opacity="0.5" />
+      <circle cx={CX} cy={CY} r="80" fill="none" stroke="#d1fae5" strokeWidth="1" opacity="0.5" />
 
-      {/* Inner decorative ticks */}
       {innerTicks.map((t, i) => (
-        <line key={i}
-          x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-          stroke={accentColor} strokeWidth="1" opacity="0.3" strokeLinecap="round"
-        />
+        <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+          stroke={accentColor} strokeWidth="1" opacity="0.3" strokeLinecap="round" />
       ))}
 
-      {/* Inner ring */}
-      <circle cx={CX} cy={CY} r="60"
-        fill="none" stroke={goldColor} strokeWidth="0.8" opacity="0.25"
-        strokeDasharray="4 3"
-      />
+      <circle cx={CX} cy={CY} r="60" fill="none" stroke={goldColor}
+        strokeWidth="0.8" opacity="0.25" strokeDasharray="4 3" />
 
-      {/* ── NEEDLE (style-specific) ───────────────────────────────────── */}
+      {/* ── NEEDLE ── */}
       {needleStyle === 'classic' && (
         <>
-          {/* Top diamond (toward Qibla) */}
           <polygon
             points={`${CX},30 ${CX + 11},${CY - 2} ${CX},${CY + 12} ${CX - 11},${CY - 2}`}
-            fill="url(#needleClassic)"
-            filter="url(#tipGlow)"
-          />
-          {/* Bottom tail */}
+            fill="url(#needleClassic)" filter="url(#tipGlow)" />
           <polygon
             points={`${CX - 9},${CY + 12} ${CX + 9},${CY + 12} ${CX + 5},210 ${CX},220 ${CX - 5},210`}
-            fill="#4b5563" opacity="0.8"
-          />
+            fill="#4b5563" opacity="0.8" />
         </>
       )}
 
       {needleStyle === 'royal' && (
         <>
-          {/* Royal: ornate arrow with side wings */}
-          <rect x={CX - 4} y={50} width="8" height={CY - 54}
-            fill="url(#needleRoyal)" rx="2" />
+          <rect x={CX - 4} y={50} width="8" height={CY - 54} fill="url(#needleRoyal)" rx="2" />
           <polygon
             points={`${CX},28 ${CX + 18},58 ${CX + 5},52 ${CX + 5},70 ${CX - 5},70 ${CX - 5},52 ${CX - 18},58`}
-            fill="url(#needleRoyal)"
-            filter="url(#tipGlow)"
-          />
-          <polygon
-            points={`${CX - 4},${CY - 20} ${CX - 18},${CY - 8} ${CX - 4},${CY - 2}`}
-            fill={goldColor} opacity="0.5"
-          />
-          <polygon
-            points={`${CX + 4},${CY - 20} ${CX + 18},${CY - 8} ${CX + 4},${CY - 2}`}
-            fill={goldColor} opacity="0.5"
-          />
+            fill="url(#needleRoyal)" filter="url(#tipGlow)" />
+          <polygon points={`${CX - 4},${CY - 20} ${CX - 18},${CY - 8} ${CX - 4},${CY - 2}`} fill={goldColor} opacity="0.5" />
+          <polygon points={`${CX + 4},${CY - 20} ${CX + 18},${CY - 8} ${CX + 4},${CY - 2}`} fill={goldColor} opacity="0.5" />
           <polygon
             points={`${CX - 5},${CY + 12} ${CX + 5},${CY + 12} ${CX + 3},205 ${CX},215 ${CX - 3},205`}
-            fill="#374151" opacity="0.7"
-          />
+            fill="#374151" opacity="0.7" />
         </>
       )}
 
       {needleStyle === 'minimal' && (
         <>
-          <line x1={CX} y1={36} x2={CX} y2={CY - 2}
-            stroke="#ffffff" strokeWidth="3" strokeLinecap="round"
-            filter="url(#tipGlow)"
-          />
-          <polygon
-            points={`${CX},28 ${CX + 7},44 ${CX - 7},44`}
-            fill="#ffffff"
-          />
-          <line x1={CX} y1={CY + 12} x2={CX} y2={215}
-            stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round"
-          />
+          <line x1={CX} y1={36} x2={CX} y2={CY - 2} stroke="#0f766e" strokeWidth="3" strokeLinecap="round" filter="url(#tipGlow)" />
+          <polygon points={`${CX},28 ${CX + 7},44 ${CX - 7},44`} fill="#0f766e" />
+          <line x1={CX} y1={CY + 12} x2={CX} y2={215} stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
           <circle cx={CX} cy={30} r="4" fill={goldColor} />
         </>
       )}
 
-      {/* Center pivot rings */}
       <circle cx={CX} cy={CY} r="14" fill="white" stroke={goldColor} strokeWidth="2" />
-      <circle cx={CX} cy={CY} r="9" fill={aligned ? '#dcfce7' : '#f0fdf4'}
-        stroke={accentColor} strokeWidth="1.5" />
+      <circle cx={CX} cy={CY} r="9" fill={aligned ? '#dcfce7' : '#f0fdf4'} stroke={accentColor} strokeWidth="1.5" />
       <circle cx={CX} cy={CY} r="4" fill={accentColor} />
 
-      {/* Kaaba icon at needle tip */}
       <text x={CX} y={22} textAnchor="middle" fontSize="14"
-        filter={aligned ? 'url(#tipGlow)' : undefined}>
-        🕋
-      </text>
+        filter={aligned ? 'url(#tipGlow)' : undefined}>🕋</text>
     </svg>
+  );
+}
+
+// ── Small presentational helpers ────────────────────────────────────────────────
+
+function InfoRow({
+  Icon, label, value, tone = 'neutral', delay = 0,
+}: {
+  Icon: typeof Compass; label: string; value: string;
+  tone?: 'ok' | 'warn' | 'bad' | 'neutral'; delay?: number;
+}) {
+  const dot =
+    tone === 'ok'   ? 'bg-emerald-500' :
+    tone === 'warn' ? 'bg-amber-500'   :
+    tone === 'bad'  ? 'bg-rose-500'    : 'bg-slate-300';
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 18 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.45, delay, ease: 'easeOut' }}
+      whileHover={{ x: 2 }}
+      className="flex items-center gap-3 rounded-xl border border-emerald-900/8 bg-white/55 backdrop-blur-sm px-3 py-2.5"
+    >
+      <span className="inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50/80 text-emerald-700 border border-emerald-900/5">
+        <Icon size={16} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-emerald-900/50 leading-none">{label}</p>
+        <p className="text-sm font-semibold text-emerald-900 mt-1 flex items-center gap-1.5 leading-none">
+          <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+          <span className="truncate">{value}</span>
+        </p>
+      </div>
+    </motion.div>
   );
 }
 
@@ -308,13 +288,12 @@ export default function QiblaPage() {
   const loc     = useStoredLocation();
   const compass = useCompassHeading();
   const [needleStyle, setNeedleStyle] = useState<NeedleStyle>('classic');
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   const [isIOS, setIsIOS] = useState(false);
   useEffect(() => {
-    setIsIOS(
-      typeof window !== 'undefined' &&
-      /iP(hone|ad|od)/.test(navigator.userAgent),
-    );
+    setIsIOS(typeof window !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent));
   }, []);
 
   // ── Qibla bearing + distance ──────────────────────────────────────────────
@@ -326,12 +305,9 @@ export default function QiblaPage() {
     () => (loc.hasCoords && loc.lat && loc.lng ? distanceToKaaba(loc.lat, loc.lng) : null),
     [loc.hasCoords, loc.lat, loc.lng],
   );
-
   const aligned = useMemo(
-    () =>
-      compass.reading != null && bearing != null
-        ? isAligned(compass.reading.heading, bearing)
-        : false,
+    () => (compass.reading != null && bearing != null
+      ? isAligned(compass.reading.heading, bearing) : false),
     [compass.reading, bearing],
   );
 
@@ -358,522 +334,560 @@ export default function QiblaPage() {
   }, [compass.reading?.heading]);
 
   const showEnableBtn =
-    compass.status === 'idle' ||
-    compass.status === 'requesting' ||
-    compass.status === 'denied';
+    compass.status === 'idle' || compass.status === 'requesting' || compass.status === 'denied';
 
   const needsCalibration =
     compass.reading?.source === 'ios' &&
     typeof compass.reading.accuracy === 'number' &&
     (compass.reading.accuracy < 0 || compass.reading.accuracy > 20);
 
-  const showMap =
-    (compass.status === 'unsupported' || compass.status === 'denied') &&
-    loc.hasCoords && loc.lat && loc.lng;
+  const showMap = loc.hasCoords && loc.lat && loc.lng;
 
-  const STEPS = [
-    { step: '1', icon: '📍', title: 'Set your location',    desc: 'Visit Prayer Times to save your city coordinates first.' },
-    { step: '2', icon: '🧭', title: 'Enable live compass',  desc: "Tap \"Enable Live Compass\" — on iOS you'll need to approve access." },
-    { step: '3', icon: '🔄', title: 'Rotate slowly',        desc: 'Hold your device flat and turn until the Kaaba needle points straight up.' },
-    { step: '4', icon: '✅', title: 'Look for alignment',   desc: "The compass glows green and a banner appears when you're facing the Qibla." },
-    { step: '5', icon: '♾️', title: 'Calibrate if drifting', desc: 'Wave your device in a figure-8 pattern to recalibrate the magnetometer.' },
+  // ── Info-panel values (honest — real data only) ───────────────────────────
+  const statusInfo: { value: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' } =
+    compass.status === 'live'
+      ? needsCalibration ? { value: 'Needs calibration', tone: 'warn' } : { value: 'Calibrated', tone: 'ok' }
+      : compass.status === 'starting'    ? { value: 'Detecting sensor…', tone: 'neutral' }
+      : compass.status === 'requesting'  ? { value: 'Requesting access…', tone: 'neutral' }
+      : compass.status === 'denied'      ? { value: 'Access denied', tone: 'bad' }
+      : compass.status === 'unsupported' ? { value: 'No sensor — static', tone: 'neutral' }
+      : { value: 'Tap to enable', tone: 'neutral' };
+
+  const headingVal =
+    compass.status === 'live' && compass.reading ? `${compass.reading.heading.toFixed(0)}°` : '—';
+  const accuracyVal =
+    compass.status === 'live' && compass.reading?.accuracy != null
+      ? `±${Math.abs(compass.reading.accuracy).toFixed(0)}° · ${compass.reading.source}`
+      : compass.status === 'live' ? 'live · magnetic' : 'static bearing';
+  const lastUpdated = compass.status === 'live' ? 'Just now' : '—';
+
+  // ── Additional tools ───────────────────────────────────────────────────────
+  const scrollToMap = () => mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const shareDirection = async () => {
+    const text = bearing != null
+      ? `Qibla from ${loc.label}: ${bearing.toFixed(1)}° (${compassPoint(bearing)}), ${distKm != null ? formatDistance(distKm) : ''} from Makkah.`
+      : 'Find the Qibla direction with Noor.';
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: 'Qibla Direction', text });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        setShareMsg('Copied to clipboard');
+        setTimeout(() => setShareMsg(null), 2200);
+      }
+    } catch {
+      /* user dismissed share sheet — ignore */
+    }
+  };
+
+  const TOOLS = [
+    { Icon: Scan,    title: 'Augmented Reality', desc: 'View Qibla in your environment', action: 'Soon',     soon: true,  onClick: () => {} },
+    { Icon: Camera,  title: 'AR Camera',         desc: 'Point your camera towards Qibla', action: 'Soon',     soon: true,  onClick: () => {} },
+    { Icon: MapIcon, title: 'Qibla on Map',      desc: 'See Qibla direction on map',      action: 'Open Map', soon: false, onClick: scrollToMap },
+    { Icon: Share2,  title: 'Share Direction',   desc: 'Share Qibla direction with others', action: 'Share',  soon: false, onClick: shareDirection },
   ];
 
+  const STEPS = [
+    { step: '1', title: 'Set your location', sub: 'Save coordinates' },
+    { step: '2', title: 'Enable compass',    sub: 'Approve access' },
+    { step: '3', title: 'Hold device flat',  sub: 'Lay it level' },
+    { step: '4', title: 'Align arrow',        sub: 'Turn to Kaaba' },
+    { step: '5', title: "You're facing Qibla", sub: 'Glows green' },
+  ];
+
+  // staggered page entrance
+  const container = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+  };
+  const rise = {
+    hidden: { opacity: 0, y: 26 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+  };
+
   return (
-    <div className="max-w-2xl mx-auto relative">
-
-      {/* ── Page header ───────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="flex items-center gap-3 mb-8"
-      >
-        <motion.span
-          className="inline-flex w-11 h-11 rounded-2xl items-center justify-center bg-emerald-600 text-white shadow-lg shadow-emerald-900/30"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-        >
-          <Compass size={22} />
-        </motion.span>
-        <div>
-          <h1 className="text-2xl font-display font-bold text-emerald-900">Qibla Finder</h1>
-          <p className="text-sm text-emerald-700/70">Direction of Prayer toward the Holy Kaaba</p>
-        </div>
-      </motion.div>
-
-      {/* ── No location set ─────────────────────────────────────────── */}
-      {!loc.hasCoords && (
+    <div
+      className="-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden"
+      style={{ background: 'linear-gradient(160deg,#0a2a1e 0%,#072017 45%,#04140d 100%)' }}
+    >
+      {/* ── Ambient animated background ── */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-amber-50/80 backdrop-blur-sm border border-amber-200 rounded-2xl p-6 mb-6 flex gap-3"
+          className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)' }}
+          animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute top-1/3 -right-28 w-[26rem] h-[26rem] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.13) 0%, transparent 70%)' }}
+          animate={{ x: [0, -36, 0], y: [0, 44, 0], scale: [1, 1.12, 1] }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }}
+          animate={{ x: [0, 30, 0], y: [0, -28, 0] }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative max-w-[1500px] mx-auto"
+      >
+        {/* ── Header banner ─────────────────────────────────────────────── */}
+        <motion.header
+          variants={rise}
+          className="relative overflow-hidden rounded-3xl border border-white/10 mb-5"
+          style={{ background: 'linear-gradient(120deg,#0c2d20 0%,#0a2419 55%,rgba(10,36,25,0.4) 100%)' }}
         >
-          <motion.div
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <MapPin size={20} className="shrink-0 text-amber-600 mt-0.5" />
-          </motion.div>
-          <div>
-            <p className="font-semibold text-amber-800 text-sm">Location not set</p>
-            <p className="text-amber-700/80 text-xs mt-0.5">
-              Visit the Prayer Times page to set your location — your coordinates are
-              needed to calculate the exact Qibla direction.
-            </p>
+          {/* photo bleed on the right */}
+          <div aria-hidden className="absolute inset-y-0 right-0 w-2/3">
+            <motion.div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+              animate={{ scale: [1.05, 1.12, 1.05] }}
+              transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,#0a2419 0%,rgba(10,36,25,0.6) 35%,transparent 100%)' }} />
           </div>
-        </motion.div>
-      )}
 
-      {/* ── Location label ──────────────────────────────────────────── */}
-      {loc.hasCoords && (
-        <motion.div
-          initial={{ opacity: 0, x: -14 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-          className="flex items-center gap-1.5 mb-6 text-sm text-emerald-700"
-        >
-          <MapPin size={14} className="shrink-0" />
-          <span className="font-medium">{loc.label}</span>
-          {bearing != null && (
+          <div className="relative flex items-center gap-4 px-6 sm:px-8 py-6">
             <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="ml-auto text-xs text-emerald-600/70 font-mono"
+              className="inline-flex w-14 h-14 shrink-0 rounded-2xl items-center justify-center text-gold-300 border border-gold-300/30 bg-white/5 backdrop-blur"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 26, repeat: Infinity, ease: 'linear' }}
             >
-              {bearing.toFixed(1)}° {compassPoint(bearing)}
+              <Compass size={28} />
             </motion.span>
-          )}
-        </motion.div>
-      )}
-
-      {/* ── Main compass card — dark glass ──────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, delay: 0.15, ease: 'easeOut' }}
-        className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl p-8 mb-6 flex flex-col items-center gap-6"
-        style={{
-          background: 'linear-gradient(145deg, rgba(9,22,17,0.88) 0%, rgba(5,14,10,0.95) 100%)',
-          backdropFilter: 'blur(24px)',
-        }}
-      >
-        {/* Card top highlight line */}
-        <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent pointer-events-none" />
-        {/* Card inner ambient glows */}
-        <div aria-hidden className="absolute pointer-events-none inset-0 overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)' }} />
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.07) 0%, transparent 70%)' }} />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)' }} />
-        </div>
-
-        {/* ── Status badges ── */}
-        <AnimatePresence mode="wait">
-          {compass.status === 'live' && (
-            <motion.span
-              key="live"
-              initial={{ opacity: 0, y: -6, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.9 }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300
-                bg-emerald-900/50 border border-emerald-500/30 px-3 py-1.5 rounded-full backdrop-blur-sm"
-            >
-              <motion.span
-                className="w-2 h-2 rounded-full bg-emerald-400"
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
-              />
-              Live compass active
-            </motion.span>
-          )}
-          {compass.status === 'starting' && (
-            <motion.span
-              key="starting"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1.5 text-xs text-parchment/50"
-            >
-              <Loader2 size={13} className="animate-spin" /> Detecting compass sensor…
-            </motion.span>
-          )}
-          {compass.status === 'unsupported' && (
-            <motion.span
-              key="unsupported"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1.5 text-xs text-parchment/50 bg-white/5
-                border border-white/10 px-3 py-1 rounded-full"
-            >
-              <Navigation size={13} /> No compass sensor — showing static bearing
-            </motion.span>
-          )}
-        </AnimatePresence>
-
-        {/* ── Compass with decorative orbiting rings ── */}
-        {bearing != null && (
-          <div className="relative flex flex-col items-center">
-
-            {/* Floating Kaaba above compass */}
-            <AnimatePresence>
-              {aligned ? (
-                <motion.div
-                  key="kaaba-aligned"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: [1, 1.15, 1], opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 1, repeat: Infinity, repeatType: 'loop' }}
-                  className="mb-2 text-3xl"
-                >
-                  🕋
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="kaaba-normal"
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                  className="mb-2 text-2xl opacity-50"
-                >
-                  🕋
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Decorative orbiting rings */}
-            <div className="relative">
-              {/* Slow clockwise outer ring */}
-              <motion.div
-                aria-hidden
-                className="absolute rounded-full border border-emerald-500/10 pointer-events-none"
-                style={{ inset: '-28px' }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Slow counter-clockwise middle ring */}
-              <motion.div
-                aria-hidden
-                className="absolute rounded-full border border-gold-400/10 pointer-events-none"
-                style={{ inset: '-14px' }}
-                animate={{ rotate: -360 }}
-                transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Pulsing glow ring when aligned */}
-              {aligned && (
-                <motion.div
-                  aria-hidden
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{ background: 'rgba(34,197,94,0.08)' }}
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ duration: 1.3, repeat: Infinity }}
-                />
-              )}
-
-              {/* The actual rotating compass */}
-              <motion.div style={{ rotate: rotation }}>
-                <CompassRoseSVG aligned={aligned} needleStyle={needleStyle} />
-              </motion.div>
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="font-display font-bold text-3xl sm:text-4xl text-parchment leading-none"
+              >
+                Qibla Finder
+              </motion.h1>
+              <p className="text-sm text-parchment/70 mt-1.5">Find the direction of the Holy Kaaba</p>
             </div>
+            {bearing != null && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="ml-auto hidden md:inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-gold-300/10 text-gold-200 text-xs font-semibold px-4 py-2 backdrop-blur"
+              >
+                <Sparkles size={13} /> {bearing.toFixed(1)}° {compassPoint(bearing)}
+              </motion.span>
+            )}
           </div>
-        )}
+        </motion.header>
 
-        {/* No location — greyed compass */}
-        {bearing == null && (
-          <motion.div
-            animate={{ opacity: [0.4, 0.65, 0.4] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-[280px] h-[280px] rounded-full border-2 border-dashed
-              border-emerald-700/30 flex items-center justify-center text-emerald-700/30"
-          >
-            <Compass size={48} strokeWidth={1} />
-          </motion.div>
-        )}
-
-        {/* ── Needle style selector ── */}
-        {bearing != null && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex gap-2"
-          >
-            {NEEDLE_STYLES.map((style) => (
-              <motion.button
-                key={style.id}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={() => setNeedleStyle(style.id)}
-                className={`flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl
-                  border text-xs font-semibold transition-all duration-200
-                  ${needleStyle === style.id
-                    ? 'bg-gold-gradient border-gold-500/40 text-midnight-900 shadow-glow-gold'
-                    : 'bg-white/5 border-white/10 text-parchment/70 hover:border-emerald-500/30 hover:bg-white/10 hover:text-parchment'
-                  }`}
-              >
-                <span className="text-base">{style.emoji}</span>
-                <span>{style.label}</span>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-
-        {/* ── Aligned banner ── */}
+        {/* ── No-location notice ─────────────────────────────────────────── */}
         <AnimatePresence>
-          {aligned && (
+          {!loc.hasCoords && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.92 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className="flex items-center gap-2 bg-emerald-500 text-white
-                px-5 py-2.5 rounded-2xl font-semibold text-sm shadow-lg shadow-emerald-900/40"
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 20 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              className="overflow-hidden"
             >
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-              >
-                <CheckCircle2 size={17} />
-              </motion.div>
-              You&apos;re facing the Qibla! 🕋
+              <div className="flex gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 backdrop-blur-md px-5 py-4">
+                <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 2.4, repeat: Infinity }}>
+                  <MapPin size={20} className="shrink-0 text-amber-300 mt-0.5" />
+                </motion.div>
+                <div>
+                  <p className="font-semibold text-amber-200 text-sm">Location not set</p>
+                  <p className="text-amber-100/70 text-xs mt-0.5">
+                    Visit the Prayer Times page to set your location — your coordinates are needed
+                    to calculate the exact Qibla direction.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── Enable compass button ── */}
-        {showEnableBtn && bearing != null && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col items-center gap-3"
-          >
-            {compass.status === 'denied' ? (
-              <div className="text-center text-sm text-rose-400 bg-rose-900/30 border border-rose-500/30
-                rounded-xl px-4 py-3 backdrop-blur-sm">
-                <p className="font-semibold">Compass access denied</p>
-                <p className="text-xs mt-0.5 text-rose-400/70">
-                  Enable Motion &amp; Orientation access in your browser or device settings.
-                </p>
+        {/* ── Main grid ──────────────────────────────────────────────────── */}
+        <div className="grid lg:grid-cols-[1.55fr_1fr] gap-5 items-start">
+
+          {/* ════ LEFT COLUMN ════ */}
+          <div className="flex flex-col gap-5">
+
+            {/* ── Compass card ── */}
+            <motion.div
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border border-emerald-900/10 bg-parchment/95 backdrop-blur-xl shadow-2xl shadow-emerald-950/40"
+            >
+              <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/40 to-transparent" />
+              <div className="relative grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-6 p-6 sm:p-8 items-center">
+
+                {/* — left: location + readouts — */}
+                <div className="flex flex-col gap-5 order-2 lg:order-1">
+                  <div>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-700/70">
+                      <MapPin size={12} /> Your Location
+                    </p>
+                    <p className="text-lg font-bold text-emerald-900 mt-1">{loc.hasCoords ? loc.label : 'Not set'}</p>
+                    {loc.hasCoords && loc.lat != null && loc.lng != null && (
+                      <p className="text-xs text-emerald-700/50 font-mono mt-0.5">
+                        {loc.lat.toFixed(4)}°, {loc.lng.toFixed(4)}°
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700/70">Qibla Direction</p>
+                    <p className="font-display font-bold text-4xl sm:text-5xl text-emerald-900 leading-none mt-1">
+                      {bearing != null ? <><CountUp value={bearing} decimals={1} />°</> : '—'}
+                    </p>
+                    {bearing != null && (
+                      <p className="text-gold-600 font-bold text-sm mt-1.5">{compassPoint(bearing)}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700/70">Distance to Kaaba</p>
+                    <p className="font-display font-bold text-2xl sm:text-3xl text-emerald-900 leading-none mt-1">
+                      {distKm != null ? <><CountUp value={Math.round(distKm)} grouped /> km</> : '—'}
+                    </p>
+                    <p className="text-xs text-emerald-700/50 mt-1">from Makkah</p>
+                  </div>
+                </div>
+
+                {/* — center: compass — */}
+                <div className="order-1 lg:order-2 flex flex-col items-center gap-4 justify-self-center">
+                  {bearing != null ? (
+                    <div className="relative flex flex-col items-center">
+                      <AnimatePresence mode="wait">
+                        {aligned ? (
+                          <motion.div key="ka" initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: [1, 1.15, 1], opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ duration: 1, repeat: Infinity }} className="mb-2 text-3xl">🕋</motion.div>
+                        ) : (
+                          <motion.div key="kn" animate={{ y: [0, -4, 0] }}
+                            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                            className="mb-2 text-2xl opacity-60">🕋</motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="relative">
+                        <motion.div aria-hidden className="absolute rounded-full border border-emerald-600/15 pointer-events-none"
+                          style={{ inset: '-26px' }} animate={{ rotate: 360 }}
+                          transition={{ duration: 32, repeat: Infinity, ease: 'linear' }} />
+                        <motion.div aria-hidden className="absolute rounded-full border border-gold-400/20 pointer-events-none"
+                          style={{ inset: '-13px' }} animate={{ rotate: -360 }}
+                          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }} />
+                        {aligned && (
+                          <motion.div aria-hidden className="absolute inset-0 rounded-full pointer-events-none"
+                            style={{ background: 'rgba(34,197,94,0.1)' }}
+                            animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 1.3, repeat: Infinity }} />
+                        )}
+                        <motion.div style={{ rotate: rotation }}>
+                          <CompassRoseSVG aligned={aligned} needleStyle={needleStyle} />
+                        </motion.div>
+                      </div>
+                    </div>
+                  ) : (
+                    <motion.div animate={{ opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 3, repeat: Infinity }}
+                      className="w-[260px] h-[260px] rounded-full border-2 border-dashed border-emerald-300 flex items-center justify-center text-emerald-300">
+                      <Compass size={48} strokeWidth={1} />
+                    </motion.div>
+                  )}
+
+                  {/* aligned banner */}
+                  <AnimatePresence>
+                    {aligned && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.92 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.92 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                        className="flex items-center gap-2 bg-emerald-500 text-white px-5 py-2.5 rounded-2xl font-semibold text-sm shadow-lg shadow-emerald-900/30"
+                      >
+                        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>
+                          <CheckCircle2 size={17} />
+                        </motion.div>
+                        You&apos;re facing the Qibla! 🕋
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* compass style selector */}
+                  {bearing != null && (
+                    <div className="flex flex-col items-center gap-2 mt-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700/50">Compass Style</p>
+                      <div className="flex gap-2">
+                        {NEEDLE_STYLES.map(({ id, label, Icon }) => (
+                          <motion.button
+                            key={id}
+                            whileHover={{ scale: 1.06, y: -2 }}
+                            whileTap={{ scale: 0.94 }}
+                            onClick={() => setNeedleStyle(id)}
+                            className={`flex flex-col items-center gap-1 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-colors duration-200
+                              ${needleStyle === id
+                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-900/20'
+                                : 'bg-white/70 border-emerald-900/10 text-emerald-700 hover:border-emerald-400 hover:bg-white'
+                              }`}
+                          >
+                            <Icon size={16} />
+                            <span>{label}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* — right: info panel — */}
+                <div className="flex flex-col gap-2.5 order-3 lg:order-3">
+                  <InfoRow Icon={Gauge}      label="Compass Status" value={statusInfo.value} tone={statusInfo.tone} delay={0.1} />
+                  <InfoRow Icon={Navigation} label="Live Heading"   value={headingVal}  tone={compass.status === 'live' ? 'ok' : 'neutral'} delay={0.18} />
+                  <InfoRow Icon={Activity}   label="Accuracy"       value={accuracyVal} tone="neutral" delay={0.26} />
+                  <InfoRow Icon={Clock}      label="Last Updated"   value={lastUpdated} tone={compass.status === 'live' ? 'ok' : 'neutral'} delay={0.34} />
+
+                  {/* enable / stop button */}
+                  {compass.status === 'live' ? (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={compass.stop}
+                      className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-white/70 border border-emerald-900/10 text-emerald-700 hover:bg-white font-semibold text-sm px-4 py-3 transition"
+                    >
+                      <RotateCcw size={15} /> Stop Compass
+                    </motion.button>
+                  ) : showEnableBtn && bearing != null && compass.status !== 'denied' ? (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={compass.enable}
+                      disabled={compass.status === 'requesting'}
+                      className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold text-sm px-4 py-3 shadow-md shadow-emerald-900/20 transition"
+                    >
+                      {compass.status === 'requesting'
+                        ? <><Loader2 size={15} className="animate-spin" /> Requesting…</>
+                        : <><Compass size={15} /> Calibrate Compass <ArrowRight size={14} /></>}
+                    </motion.button>
+                  ) : compass.status === 'denied' ? (
+                    <div className="mt-1 rounded-xl bg-rose-500/10 border border-rose-400/30 px-4 py-3 text-center">
+                      <p className="text-sm font-semibold text-rose-600">Compass access denied</p>
+                      <p className="text-xs text-rose-500/70 mt-0.5">Enable Motion &amp; Orientation in settings.</p>
+                    </div>
+                  ) : null}
+
+                  {needsCalibration && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      className="flex items-center gap-2 text-xs text-amber-700 bg-amber-400/15 border border-amber-400/30 rounded-xl px-3 py-2.5">
+                      <AlertTriangle size={14} className="shrink-0" />
+                      <span>Move your device in a figure-8 to calibrate</span>
+                    </motion.div>
+                  )}
+                  {isIOS && showEnableBtn && compass.status !== 'denied' && (
+                    <p className="text-[11px] text-emerald-700/50 text-center">iOS requires permission to access the compass sensor.</p>
+                  )}
+                </div>
               </div>
-            ) : (
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={compass.enable}
-                disabled={compass.status === 'requesting'}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500
-                  disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-2xl
-                  shadow-lg shadow-emerald-900/40 transition text-sm"
-              >
-                {compass.status === 'requesting' ? (
-                  <><Loader2 size={16} className="animate-spin" /> Requesting access…</>
-                ) : (
-                  <><Compass size={16} /> Enable Live Compass</>
-                )}
-              </motion.button>
-            )}
-            {isIOS && compass.status !== 'denied' && (
-              <p className="text-xs text-parchment/30 text-center max-w-[240px]">
-                iOS requires your permission to access the compass sensor.
+            </motion.div>
+
+            {/* ── Additional Tools ── */}
+            <motion.div
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border border-emerald-900/10 bg-parchment/95 backdrop-blur-xl shadow-xl shadow-emerald-950/30 p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display font-bold text-lg text-emerald-900">Additional Tools</h2>
+                <AnimatePresence>
+                  {shareMsg && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                      className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full"
+                    >
+                      {shareMsg}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {TOOLS.map(({ Icon, title, desc, action, soon, onClick }, i) => (
+                  <motion.button
+                    key={title}
+                    onClick={onClick}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.07, duration: 0.4 }}
+                    whileHover={{ y: -4 }}
+                    className="group relative text-left rounded-2xl border border-emerald-900/8 bg-white/60 backdrop-blur-sm p-4 hover:bg-white hover:shadow-lg hover:shadow-emerald-900/10 transition disabled:cursor-default"
+                  >
+                    {soon && (
+                      <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide text-gold-700 bg-gold-100 border border-gold-300/50 px-1.5 py-0.5 rounded">Soon</span>
+                    )}
+                    <motion.span
+                      className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-900/5 mb-3"
+                      whileHover={{ rotate: [0, -8, 8, 0] }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Icon size={18} />
+                    </motion.span>
+                    <p className="text-sm font-bold text-emerald-900 leading-tight">{title}</p>
+                    <p className="text-[11px] text-emerald-700/55 mt-0.5 leading-snug">{desc}</p>
+                    <span className={`mt-3 inline-flex items-center gap-1 text-xs font-semibold ${soon ? 'text-emerald-700/40' : 'text-emerald-600 group-hover:gap-2'} transition-all`}>
+                      {action} {!soon && <ArrowRight size={12} />}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ════ RIGHT COLUMN ════ */}
+          <div className="flex flex-col gap-5">
+
+            {/* ── Map card ── */}
+            <motion.div
+              ref={mapRef}
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border border-emerald-900/10 bg-parchment/95 backdrop-blur-xl shadow-xl shadow-emerald-950/30 p-5"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <motion.div animate={{ x: [0, 3, -3, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+                    <Navigation size={16} className="text-emerald-600" />
+                  </motion.div>
+                  <h2 className="font-display font-bold text-base text-emerald-900">Direction to the Kaaba</h2>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-700/55 bg-emerald-50 border border-emerald-900/5 px-2.5 py-1 rounded-full">Great-circle path</span>
+              </div>
+              {showMap ? (
+                <div className="rounded-2xl overflow-hidden border border-emerald-900/10">
+                  <QiblaMap userLat={loc.lat!} userLng={loc.lng!} />
+                </div>
+              ) : (
+                <div className="h-[260px] rounded-2xl border-2 border-dashed border-emerald-300/60 bg-emerald-50/40 flex flex-col items-center justify-center gap-2 text-emerald-600/60">
+                  <MapIcon size={36} strokeWidth={1.2} />
+                  <p className="text-xs font-medium">Set your location to see the path</p>
+                </div>
+              )}
+              <p className="text-[11px] text-emerald-700/50 mt-3 text-center">
+                {bearing != null
+                  ? <>The dashed line shows the shortest path to Makkah — face {bearing.toFixed(0)}° ({compassPoint(bearing)}).</>
+                  : 'The dashed line shows the shortest path to Makkah.'}
               </p>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
 
-        {/* ── Calibration warning ── */}
-        {needsCalibration && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-xs text-amber-300 bg-amber-900/30
-              border border-amber-500/30 rounded-xl px-4 py-2.5 backdrop-blur-sm"
-          >
-            <AlertTriangle size={14} className="shrink-0" />
-            <span>Move your device in a figure-8 to calibrate the compass</span>
-          </motion.div>
-        )}
+            {/* ── How to find ── */}
+            <motion.div
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border border-emerald-900/10 bg-parchment/95 backdrop-blur-xl shadow-xl shadow-emerald-950/30 p-6"
+            >
+              <h2 className="font-display font-bold text-base text-emerald-900">How to find Qibla direction</h2>
+              <p className="text-xs text-emerald-700/55 mt-0.5 mb-5">Follow these simple steps</p>
 
-        {/* ── Bearing info row — glass stat tiles ── */}
-        {bearing != null && distKm != null && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="flex gap-3 w-full justify-center"
-          >
-            {[
-              { value: `${bearing.toFixed(0)}°`,    label: compassPoint(bearing) },
-              { value: formatDistance(distKm),       label: 'from Kaaba' },
-              {
-                value: compass.status === 'live' && compass.reading
-                  ? `${compass.reading.heading.toFixed(0)}°` : '—',
-                label: 'heading',
-              },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.08 }}
-                whileHover={{ scale: 1.04 }}
-                className="flex-1 text-center bg-white/5 border border-white/8 rounded-2xl px-3 py-3 backdrop-blur-sm"
-              >
-                <p className="text-xl font-bold font-mono text-parchment leading-none">
-                  {stat.value}
+              <div className="relative">
+                {/* connecting line */}
+                <div aria-hidden className="absolute top-4 left-4 right-4 h-px bg-gradient-to-r from-emerald-200 via-emerald-300 to-emerald-200 hidden sm:block" />
+                <div className="relative grid grid-cols-5 gap-1">
+                  {STEPS.map(({ step, title, sub }, i) => (
+                    <motion.div
+                      key={step}
+                      initial={{ opacity: 0, y: 14, scale: 0.85 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, type: 'spring', stiffness: 260, damping: 20 }}
+                      className="flex flex-col items-center text-center gap-2"
+                    >
+                      <motion.span
+                        className="relative z-10 w-8 h-8 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shadow-md shadow-emerald-900/20 ring-4 ring-parchment"
+                        whileHover={{ scale: 1.15 }}
+                      >
+                        {step}
+                      </motion.span>
+                      <div>
+                        <p className="text-[11px] font-bold text-emerald-900 leading-tight">{title}</p>
+                        <p className="text-[10px] text-emerald-700/50 leading-tight mt-0.5">{sub}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-start gap-2 rounded-xl bg-gold-50 border border-gold-200/60 px-3 py-2.5">
+                <Sparkles size={13} className="shrink-0 text-gold-600 mt-0.5" />
+                <p className="text-[11px] text-emerald-800/70 leading-snug">
+                  <span className="font-bold text-gold-700">Tip:</span> Stay away from metal objects and
+                  electronics, and wave your phone in a figure-8 to recalibrate the magnetometer.
                 </p>
-                <p className="text-[11px] text-parchment/40 mt-1 font-medium">{stat.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+              </div>
+            </motion.div>
 
-        {/* ── Live accuracy note ── */}
-        {compass.status === 'live' && compass.reading?.accuracy != null && (
-          <p className="text-[11px] text-parchment/25 font-mono -mt-3">
-            accuracy ±{compass.reading.accuracy.toFixed(0)}° · {compass.reading.source}
-          </p>
-        )}
+            {/* ── Holy Kaaba card (dark glass) ── */}
+            <motion.div
+              variants={rise}
+              className="relative overflow-hidden rounded-3xl border border-emerald-700/30 p-6 text-white"
+              style={{ background: 'linear-gradient(150deg,rgba(6,95,70,0.92) 0%,rgba(4,40,30,0.95) 100%)' }}
+            >
+              <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/40 to-transparent" />
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)' }} />
+                <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)' }} />
+              </div>
+              <div className="relative flex items-start gap-4">
+                <motion.span className="text-4xl" animate={{ y: [0, -5, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>🕋</motion.span>
+                <div>
+                  <p className="font-display font-bold text-lg mb-1">The Holy Kaaba — Makkah</p>
+                  <p className="text-xs text-emerald-100/70 leading-relaxed">
+                    The Kaaba (الكعبة) is the House of Allah at the centre of Masjid al-Haram in Makkah,
+                    Saudi Arabia. It is the holiest site in Islam and the direction Muslims face during prayer.
+                    Coordinates 21.4225° N, 39.8262° E.
+                  </p>
+                  {distKm != null && (
+                    <motion.p animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 3, repeat: Infinity }}
+                      className="text-xs text-gold-300 mt-2 font-semibold">
+                      Distance from your location: {formatDistance(distKm)}
+                    </motion.p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
 
-        {/* ── Stop compass button ── */}
-        {compass.status === 'live' && (
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={compass.stop}
-            className="flex items-center gap-1.5 text-xs text-parchment/30 hover:text-parchment/60
-              transition px-3 py-1 rounded-lg hover:bg-white/5"
-          >
-            <RotateCcw size={12} /> Stop compass
-          </motion.button>
-        )}
-
-        {/* Card bottom highlight */}
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
-      </motion.div>
-
-      {/* ── Map fallback ─────────────────────────────────────────────── */}
-      {showMap && (
+        {/* ── Did you know banner ─────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 p-5 mb-6 backdrop-blur-md"
-          style={{ background: 'rgba(9,22,17,0.70)' }}
+          variants={rise}
+          className="group relative overflow-hidden rounded-3xl border border-gold-300/20 bg-parchment/95 backdrop-blur-xl shadow-xl shadow-emerald-950/30 mt-5 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
         >
-          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent pointer-events-none" />
-          <div className="flex items-center gap-2 mb-4">
-            <motion.div
-              animate={{ x: [0, 3, -3, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Navigation size={16} className="text-emerald-400" />
-            </motion.div>
-            <h2 className="text-sm font-semibold text-parchment/80">
-              Great-circle path to the Kaaba
-            </h2>
+          {/* sheen sweep on hover */}
+          <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -inset-y-2 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 group-hover:animate-sheen" />
           </div>
-          <QiblaMap userLat={loc.lat!} userLng={loc.lng!} />
-          <p className="text-xs text-parchment/30 mt-3 text-center">
-            The dashed line shows the shortest path from your location to Makkah.
-            Face {bearing?.toFixed(0)}° ({compassPoint(bearing!)}) to align with the Qibla.
-          </p>
-        </motion.div>
-      )}
-
-      {/* ── How to use ───────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-40px' }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl border border-white/10 p-5 mb-4 backdrop-blur-md"
-        style={{ background: 'rgba(9,22,17,0.60)' }}
-      >
-        <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent pointer-events-none" />
-        <div className="flex items-center gap-2 mb-4">
           <motion.span
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-lg"
+            className="inline-flex w-11 h-11 shrink-0 items-center justify-center rounded-2xl bg-gold-gradient text-midnight-900 shadow-glow-gold"
+            animate={{ rotate: [0, 12, -12, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
           >
-            📋
+            <Sparkles size={20} />
           </motion.span>
-          <p className="font-semibold text-parchment/90">How to find Qibla direction</p>
-        </div>
-        <div className="space-y-3">
-          {STEPS.map(({ step, icon, title, desc }, i) => (
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: -16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.07 }}
-              className="flex gap-3"
-            >
-              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-600/80 text-white
-                text-xs font-bold flex items-center justify-center border border-emerald-500/30 shadow-sm">
-                {step}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-parchment/85">
-                  {icon} {title}
-                </p>
-                <p className="text-xs text-parchment/45 mt-0.5">{desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* ── Kaaba info card ──────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-40px' }}
-        transition={{ duration: 0.55 }}
-        className="relative overflow-hidden bg-gradient-to-br from-emerald-800/90 to-emerald-950/95 backdrop-blur-xl rounded-2xl p-5 text-white border border-emerald-700/30"
-      >
-        {/* Decorative ambient glows */}
-        <div aria-hidden className="absolute pointer-events-none inset-0 overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%)' }} />
-          <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
-          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/30 to-transparent" />
-        </div>
-
-        <div className="relative flex items-start gap-4">
-          <motion.span
-            className="text-4xl"
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            🕋
-          </motion.span>
-          <div>
-            <p className="font-bold text-base mb-1">The Holy Kaaba — Makkah</p>
-            <p className="text-xs text-emerald-100/70 leading-relaxed">
-              The Kaaba (الكعبة) is the House of God at the centre of Masjid al-Haram.
-              Muslims worldwide face toward it during the five daily prayers.
-              Its coordinates are 21.4225° N, 39.8262° E.
+          <div className="relative flex-1">
+            <p className="font-bold text-emerald-900 text-sm">Did you know?</p>
+            <p className="text-xs text-emerald-800/65 mt-0.5">
+              The Qibla direction changes slightly depending on your exact location on Earth —
+              it always points along the great-circle path to Makkah, not a straight line on a flat map.
             </p>
-            {distKm != null && (
-              <motion.p
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="text-xs text-gold-300 mt-2 font-medium"
-              >
-                Distance from your location: {formatDistance(distKm)}
-              </motion.p>
-            )}
           </div>
-        </div>
+          <a
+            href="https://en.wikipedia.org/wiki/Qibla"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative inline-flex items-center gap-2 rounded-full border border-emerald-900/15 bg-white/70 hover:bg-white text-emerald-700 font-semibold text-xs px-4 py-2.5 transition group-hover:gap-3"
+          >
+            Learn More <ExternalLink size={13} />
+          </a>
+        </motion.div>
       </motion.div>
     </div>
   );
