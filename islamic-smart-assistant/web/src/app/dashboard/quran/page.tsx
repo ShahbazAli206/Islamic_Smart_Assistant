@@ -50,6 +50,12 @@ export default function QuranPage() {
     );
   }, [query]);
 
+  // Show only the first two rows (6 surahs) by default; reveal all 114 when the
+  // user taps "Browse All". A search always shows the full set of matches.
+  const [showAll, setShowAll] = useState(false);
+  const isSearching = query.trim().length > 0;
+  const visibleSurahs = isSearching ? filtered : (showAll ? SURAHS : SURAHS.slice(0, 6));
+
   return (
     // Break out of the dashboard's padding so the dark theme + photo header fill
     // the content area edge-to-edge, matching the reference design.
@@ -128,15 +134,18 @@ export default function QuranPage() {
             );
           })}
 
-          {/* View All card */}
-          <a
-            href="#all-surahs"
+          {/* View All card — expands the index and scrolls to it */}
+          <button
+            onClick={() => {
+              setShowAll(true);
+              requestAnimationFrame(() => document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+            }}
             className="rounded-2xl border border-white/10 flex flex-col items-center justify-center gap-2 p-4 text-center text-parchment hover:border-gold-300/50 transition"
             style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' }}
           >
             <BookOpen size={26} className="text-gold-300" />
             <span className="text-sm font-semibold leading-tight">View All<br /><span className="text-parchment/60 text-xs">114 Surahs</span></span>
-          </a>
+          </button>
         </div>
 
         {/* ── player ── */}
@@ -155,7 +164,7 @@ export default function QuranPage() {
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <div>
               <h3 className="font-display text-2xl font-bold">All Surahs</h3>
-              <p className="text-xs text-ink/55">{filtered.length} of {SURAHS.length} Surahs</p>
+              <p className="text-xs text-ink/55">{isSearching ? filtered.length : SURAHS.length} of {SURAHS.length} Surahs</p>
             </div>
             <label className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
@@ -169,7 +178,7 @@ export default function QuranPage() {
           </div>
 
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map((s) => {
+            {visibleSurahs.map((s) => {
               const active = s.number === surah;
               return (
                 <li key={s.number}>
@@ -194,12 +203,21 @@ export default function QuranPage() {
           </ul>
 
           <div className="flex justify-center pt-5">
-            <button
-              onClick={() => setQuery('')}
-              className="inline-flex items-center gap-2 rounded-full bg-mosque-gradient text-parchment px-6 py-3 text-sm font-semibold shadow-lg hover:brightness-110 transition"
-            >
-              <BookOpen size={16} className="text-gold-300" /> Browse All 114 Surahs
-            </button>
+            {isSearching ? (
+              <button
+                onClick={() => setQuery('')}
+                className="inline-flex items-center gap-2 rounded-full bg-mosque-gradient text-parchment px-6 py-3 text-sm font-semibold shadow-lg hover:brightness-110 transition"
+              >
+                <BookOpen size={16} className="text-gold-300" /> Clear search
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-full bg-mosque-gradient text-parchment px-6 py-3 text-sm font-semibold shadow-lg hover:brightness-110 transition"
+              >
+                <BookOpen size={16} className="text-gold-300" /> {showAll ? 'Show fewer Surahs' : 'Browse All 114 Surahs'}
+              </button>
+            )}
           </div>
         </div>
       </div>
