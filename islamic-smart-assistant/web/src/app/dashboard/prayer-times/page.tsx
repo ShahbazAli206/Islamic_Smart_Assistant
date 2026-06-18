@@ -300,7 +300,7 @@ export default function PrayerTimesPage() {
         <div aria-hidden className="absolute inset-0">
           <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(90deg, rgba(8,22,15,0.95) 0%, rgba(8,22,15,0.74) 40%, rgba(8,22,15,0.5) 64%, rgba(8,22,15,0.88) 100%)' }} />
+            style={{ background: 'linear-gradient(90deg, rgba(8,22,15,0.88) 0%, rgba(8,22,15,0.5) 32%, rgba(8,22,15,0.22) 52%, rgba(8,22,15,0.48) 72%, rgba(8,22,15,0.78) 100%)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#08160F]" />
           <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
         </div>
