@@ -26,6 +26,31 @@ const URDU: Record<keyof PrayerTimes, string> = {
   Fajr: 'فجر', Sunrise: 'طلوع', Dhuhr: 'ظهر', Asr: 'عصر', Maghrib: 'مغرب', Isha: 'عشاء',
 };
 
+/** Decorative pointed Mihrab arch outline for the countdown card. */
+function MihrabArch({ isDark, className = '' }: { isDark: boolean; className?: string }) {
+  const stroke = isDark ? 'rgba(221,185,75,0.55)' : 'rgba(201,162,39,0.5)';
+  return (
+    <svg viewBox="0 0 120 200" className={className} fill="none" stroke={stroke} strokeLinecap="round">
+      <path d="M16 198 L16 78 Q16 16 60 8 Q104 16 104 78 L104 198" strokeWidth="1.4" />
+      <path d="M28 198 L28 82 Q28 30 60 22 Q92 30 92 82 L92 198" strokeWidth="1.1" opacity="0.7" />
+      <path d="M40 198 L40 88 Q40 44 60 38 Q80 44 80 88 L80 198" strokeWidth="0.9" opacity="0.5" />
+      <line x1="60" y1="40" x2="60" y2="120" strokeWidth="0.7" opacity="0.4" />
+      <circle cx="60" cy="60" r="9" strokeWidth="0.8" opacity="0.5" />
+    </svg>
+  );
+}
+
+/** Faint dome watermark for a prayer card corner. */
+function DomeMark({ color, className = '' }: { color: string; className?: string }) {
+  return (
+    <svg viewBox="0 0 60 40" className={className} fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round">
+      <path d="M9 38 L9 22 Q9 6 30 4 Q51 6 51 22 L51 38" />
+      <line x1="30" y1="4" x2="30" y2="-2" />
+      <path d="M16 38 L16 26 M44 38 L44 26" opacity="0.6" />
+    </svg>
+  );
+}
+
 type HeroProps = {
   city?: string;
   country?: string;
@@ -35,6 +60,7 @@ type HeroProps = {
   method?: number;
   school?: 0 | 1;
   label?: string; // "Name, City" shown when in coordinate mode
+  isDark?: boolean;
 };
 
 export function PrayerCountdownHero({
@@ -45,6 +71,7 @@ export function PrayerCountdownHero({
   method = 3,
   school = 0,
   label,
+  isDark = false,
 }: HeroProps) {
   const queryClient = useQueryClient();
   const byCoords = typeof lat === 'number' && typeof lng === 'number';
@@ -185,88 +212,111 @@ export function PrayerCountdownHero({
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl bg-mosque-gradient text-parchment p-8 shadow-glow-emerald"
-      >
-        {/* decorative pattern + glow */}
-        <div className="absolute inset-0 pattern-bg opacity-30 pointer-events-none" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-glow-emerald pointer-events-none" />
+      <div className="grid lg:grid-cols-[minmax(0,420px)_1fr] gap-4 sm:gap-5 items-stretch">
 
-        <div className="relative grid md:grid-cols-2 gap-8 items-center">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-emerald-100/85 text-base md:text-lg font-medium">
-              <MapPin size={18} className="shrink-0" /> {label ?? `${city}, ${country}`}
+        {/* ── Countdown card ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className={`relative overflow-hidden rounded-3xl p-6 sm:p-7 ${isDark ? 'border border-gold-400/20 text-parchment shadow-glow-emerald' : 'border border-gold-300/40 text-ink shadow-card-soft'}`}
+          style={{ background: isDark
+            ? 'linear-gradient(140deg,#0f4030 0%,#0a2c20 52%,#07190f 100%)'
+            : 'linear-gradient(140deg,#fffdf7 0%,#fbf6e9 58%,#f3ebd4 100%)' }}
+        >
+          <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.06] pointer-events-none" />
+          {isDark && <div aria-hidden className="absolute -top-24 -right-20 w-64 h-64 rounded-full bg-glow-emerald animate-aurora pointer-events-none" />}
+          <MihrabArch isDark={isDark} className="absolute right-4 top-1/2 -translate-y-1/2 h-[86%] w-auto pointer-events-none" />
+
+          {/* hanging lantern (continuous float + glow) */}
+          <div aria-hidden className="absolute left-4 top-3 pointer-events-none">
+            <span className="absolute left-1/2 top-10 -translate-x-1/2 w-12 h-12 rounded-full animate-pulse-soft" style={{ background: 'radial-gradient(circle, rgba(221,185,75,0.45) 0%, transparent 70%)' }} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/recitation/lantern.svg" alt="" className="relative w-12 animate-float" />
+          </div>
+
+          <div className="relative pl-16 sm:pl-20">
+            <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? 'text-emerald-100/85' : 'text-emerald-700'}`}>
+              <MapPin size={16} className="shrink-0" /> {label ?? `${city}, ${country}`}
             </div>
-            <p className="text-gold-300 text-base md:text-lg font-semibold tracking-widest uppercase">{data?.hijriDate ?? '—'}</p>
+            <p className={`mt-1 text-sm font-semibold tracking-widest uppercase ${isDark ? 'text-gold-300' : 'text-gold-600'}`}>{data?.hijriDate ?? '—'}</p>
 
             {isError ? (
               <>
-                <h2 className="text-2xl md:text-3xl font-display font-semibold leading-tight">
-                  Location not found
-                </h2>
-                <p className="text-emerald-100/80 text-sm max-w-md">
+                <h2 className={`mt-3 text-2xl font-display font-semibold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Location not found</h2>
+                <p className={`text-sm max-w-md mt-1 ${isDark ? 'text-emerald-100/80' : 'text-emerald-900/60'}`}>
                   We couldn&apos;t load prayer times for &ldquo;{city}, {country}&rdquo;. Please update your location.
                 </p>
-                <button
-                  onClick={() => setShowLocPopup(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold-300 text-midnight-900 font-semibold text-sm hover:bg-gold-400 transition"
-                >
+                <button onClick={() => setShowLocPopup(true)} className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold-gradient text-midnight-900 font-semibold text-sm hover:brightness-105 transition">
                   <MapPin size={16} /> Fix location
                 </button>
               </>
             ) : (
               <>
-                <h2 className="text-4xl md:text-5xl font-display font-semibold leading-tight">
+                <h2 className={`mt-3 text-2xl sm:text-3xl font-display font-semibold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
                   {next ? `${next.name} in` : 'Loading prayer times…'}
                 </h2>
-                <p className="text-6xl md:text-7xl font-display font-bold text-gold-300 tabular-nums">
-                  {next ? formatCountdown(next.inMs) : '--:--:--'}
-                </p>
-                <p className="text-emerald-100/80">
+                <div className="relative inline-block mt-1">
+                  <span aria-hidden className="absolute inset-0 blur-2xl rounded-full animate-pulse-soft" style={{ background: isDark ? 'rgba(221,185,75,0.25)' : 'rgba(201,162,39,0.18)' }} />
+                  <p className={`relative text-5xl sm:text-6xl font-display font-bold tabular-nums ${isDark ? 'text-gold-300' : 'text-gold-600'}`}>
+                    {next ? formatCountdown(next.inMs) : '--:--:--'}
+                  </p>
+                </div>
+                <p className={`mt-2 text-sm ${isDark ? 'text-emerald-100/75' : 'text-emerald-900/55'}`}>
                   {next ? `at ${next.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}` : ''}
                 </p>
               </>
             )}
           </div>
+        </motion.div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {data &&
-              (Object.keys(data.timings) as (keyof PrayerTimes)[]).map((name, i) => {
-                const Icon = ICONS[name];
-                const isNext = next?.name === name;
-                return (
-                  <motion.div
-                    key={name}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.05 * i, duration: 0.4 }}
-                    className={`rounded-2xl p-4 border ${
-                      isNext
-                        ? 'bg-gold-gradient text-midnight-900 border-gold-300 shadow-glow-gold'
-                        : 'bg-white/10 border-white/15 backdrop-blur'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <Icon size={18} className={isNext ? 'text-midnight-900' : 'text-gold-300'} />
-                      <span className="font-arabic text-lg">{URDU[name]}</span>
-                    </div>
-                    <p className={`mt-2 text-sm font-medium ${isNext ? 'text-midnight-900/80' : 'text-emerald-100/80'}`}>{name}</p>
-                    <p className={`text-xl font-bold tabular-nums ${isNext ? '' : 'text-white'}`}>
-                      {to12h(data.timings[name])}
-                    </p>
+        {/* ── Prayer-times grid ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {data &&
+            (Object.keys(data.timings) as (keyof PrayerTimes)[]).map((name, i) => {
+              const Icon = ICONS[name];
+              const isNext = next?.name === name;
+              const cardCls = isNext
+                ? (isDark
+                    ? 'bg-gold-gradient text-midnight-900 border border-gold-300 shadow-glow-gold'
+                    : 'bg-emerald-50 border border-emerald-400 text-emerald-950 shadow-sm')
+                : (isDark
+                    ? 'bg-white/[0.04] border border-white/10 text-parchment backdrop-blur'
+                    : 'bg-white border border-emerald-900/8 text-emerald-950 shadow-card-soft');
+              const iconColor = isNext
+                ? (isDark ? 'text-midnight-900' : 'text-emerald-700')
+                : (isDark ? 'text-gold-300' : 'text-gold-600');
+              const domeColor = isNext
+                ? (isDark ? 'rgba(11,20,16,0.18)' : 'rgba(5,95,70,0.16)')
+                : (isDark ? 'rgba(221,185,75,0.16)' : 'rgba(201,162,39,0.14)');
+              return (
+                <motion.div
+                  key={name}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.05 * i, duration: 0.4 }}
+                  className={`relative overflow-hidden rounded-2xl p-4 ${cardCls}`}
+                >
+                  <DomeMark color={domeColor} className="absolute -top-1 right-2 w-12 pointer-events-none" />
+                  {isNext && (
+                    <motion.span aria-hidden className="absolute inset-0 rounded-2xl pointer-events-none"
+                      style={{ boxShadow: isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.4)' : 'inset 0 0 0 1px rgba(16,185,129,0.5)' }}
+                      animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }} />
+                  )}
+                  <motion.div animate={isNext ? { scale: [1, 1.12, 1] } : {}} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} className="relative">
+                    <Icon size={20} className={iconColor} />
                   </motion.div>
-                );
-              })}
-            {(isLoading || isError) &&
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className={`rounded-2xl p-4 border border-white/10 h-24 ${isError ? 'bg-white/5' : 'bg-white/5 animate-pulse'}`} />
-              ))}
-          </div>
+                  <p className={`relative mt-3 text-sm font-medium ${isNext ? (isDark ? 'text-midnight-900/80' : 'text-emerald-800') : (isDark ? 'text-parchment/70' : 'text-emerald-900/55')}`}>{name}</p>
+                  <p className="relative text-lg sm:text-xl font-bold tabular-nums">{to12h(data.timings[name])}</p>
+                </motion.div>
+              );
+            })}
+          {(isLoading || isError) &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className={`rounded-2xl p-4 border h-24 ${isDark ? 'border-white/10 bg-white/5' : 'border-emerald-900/8 bg-white'} ${isError ? '' : 'animate-pulse'}`} />
+            ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Location fix popup ── */}
       <AnimatePresence>

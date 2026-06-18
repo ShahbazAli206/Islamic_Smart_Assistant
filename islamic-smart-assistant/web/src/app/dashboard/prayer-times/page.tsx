@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, MapPin, Search, LocateFixed, Loader2, Building2, Navigation, X, Check,
-  ChevronDown, Clock, BookOpen, Compass, Bell,
+  ChevronDown, ChevronRight, Clock, BookOpen, Compass, Bell,
 } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -334,7 +334,12 @@ export default function PrayerTimesPage() {
         </div>
       </header>
 
-      <div className="px-6 sm:px-10 pb-10 space-y-5">
+      <div className="relative px-6 sm:px-10 pb-10 space-y-5">
+
+        {/* decorative green-dome mosque bleeding off the right edge */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/prayer/mosque-side.svg" alt="" aria-hidden
+          className={`pointer-events-none select-none absolute right-0 top-[30%] w-[230px] hidden 2xl:block -z-10 animate-float ${isDark ? 'opacity-50' : 'opacity-80'}`} />
 
         {/* ── sect / madhab / method controls ── */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-5">
@@ -398,6 +403,7 @@ export default function PrayerTimesPage() {
           country={loc.country}
           method={params.method}
           school={params.school}
+          isDark={isDark}
           label={
             selected
               ? `${selected.name}${selected.city ? ', ' + selected.city : ''}`
@@ -481,12 +487,13 @@ export default function PrayerTimesPage() {
                         ${active ? 'bg-gold-gradient text-midnight-900' : 'bg-emerald-600/25 text-gold-300 border border-white/10'}`}>
                         <Building2 size={16} />
                       </span>
-                      <span className="min-w-0">
+                      <span className="min-w-0 flex-1">
                         <p className="font-semibold truncate text-parchment">{m.name}</p>
                         <p className="text-xs text-parchment/55 truncate">
                           {m.city ? m.city + ' · ' : ''}{m.distanceKm != null ? `${m.distanceKm.toFixed(1)} km away` : ''}
                         </p>
                       </span>
+                      <ChevronRight size={16} className="text-parchment/40 shrink-0 self-center" />
                     </button>
                   </li>
                 );
@@ -496,12 +503,28 @@ export default function PrayerTimesPage() {
         </div>
       </div>
 
-      {/* ── bottom feature strip ── */}
+      {/* ── bottom feature strip (cream in both themes, with a central ornament) ── */}
       <div className="bg-parchment text-ink">
-        <div className="px-6 sm:px-10 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {FEATURE_STRIP.map((f) => (
+        <div className="px-6 sm:px-10 py-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          {FEATURE_STRIP.slice(0, 2).map((f) => (
             <div key={f.title} className="flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-50 border border-gold-200 text-gold-700 shrink-0">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-50 border border-gold-200 text-gold-700 shrink-0 animate-pulse-soft">
+                <f.icon size={18} />
+              </span>
+              <div className="leading-tight">
+                <p className="text-sm font-bold text-ink">{f.title}</p>
+                <p className="text-xs text-ink/55">{f.sub}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* central ornament (slow continuous spin) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/prayer/star-ornament.svg" alt="" aria-hidden className="w-14 h-14 shrink-0 animate-spin-slow" />
+
+          {FEATURE_STRIP.slice(2).map((f) => (
+            <div key={f.title} className="flex items-center gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-50 border border-gold-200 text-gold-700 shrink-0 animate-pulse-soft">
                 <f.icon size={18} />
               </span>
               <div className="leading-tight">

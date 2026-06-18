@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="520" viewBox="0 0 340 520">
+  <defs>
+    <linearGradient id="dome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0e7a59"/>
+      <stop offset="100%" stop-color="#053b2c"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efe6cf"/>
+      <stop offset="100%" stop-color="#d8caa6"/>
+    </linearGradient>
+  </defs>
+  <!-- tall minaret -->
+  <g>
+    <rect x="246" y="120" width="30" height="380" rx="4" fill="url(#wall)"/>
+    <rect x="242" y="206" width="38" height="12" rx="3" fill="#c9a227" opacity="0.8"/>
+    <rect x="242" y="300" width="38" height="12" rx="3" fill="#c9a227" opacity="0.8"/>
+    <path d="M246 120 q15 -34 30 0 z" fill="url(#dome)"/>
+    <circle cx="261" cy="92" r="6" fill="#dbb94b"/>
+    <path d="M261 78 a8 8 0 1 0 5 14 a6 6 0 1 1 -5 -14z" fill="#dbb94b"/>
+  </g>
+  <!-- main building -->
+  <rect x="40" y="300" width="230" height="200" rx="6" fill="url(#wall)"/>
+  <!-- arched windows -->
+  <g fill="#0a3326" opacity="0.5">
+    <path d="M70 500 l0 -120 q0 -26 26 -26 q26 0 26 26 l0 120 z"/>
+    <path d="M150 500 l0 -120 q0 -26 26 -26 q26 0 26 26 l0 120 z"/>
+  </g>
+  <!-- big green dome -->
+  <path d="M70 304 q90 -150 180 0 z" fill="url(#dome)"/>
+  <path d="M70 304 q90 -150 180 0" fill="none" stroke="#0a5b42" stroke-width="2" opacity="0.5"/>
+  <!-- dome ribs -->
+  <g stroke="#08382a" stroke-width="1.5" opacity="0.45" fill="none">
+    <path d="M160 170 q-50 60 -90 134"/>
+    <path d="M160 170 q50 60 90 134"/>
+    <path d="M160 168 l0 136"/>
+  </g>
+  <!-- finial -->
+  <rect x="156" y="150" width="8" height="22" fill="#dbb94b"/>
+  <circle cx="160" cy="146" r="7" fill="#dbb94b"/>
+  <path d="M160 132 a9 9 0 1 0 5 16 a7 7 0 1 1 -5 -16z" fill="#dbb94b"/>
+  <!-- small side domes -->
+  <path d="M44 304 q24 -40 48 0 z" fill="url(#dome)"/>
+  <path d="M228 304 q24 -40 48 0 z" fill="url(#dome)"/>
+</svg>
