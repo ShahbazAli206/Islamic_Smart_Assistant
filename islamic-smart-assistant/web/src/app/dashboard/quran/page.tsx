@@ -120,20 +120,32 @@ export default function QuranPage() {
                 onClick={() => setSurah(p.number)}
                 className={`relative overflow-hidden rounded-2xl p-4 text-center transition border-2
                   ${active
-                    ? 'border-gold-400 text-parchment shadow-glow-gold'
-                    : 'border-black/5 bg-[#F3EFDF] text-ink hover:border-gold-300/60'}`}
-                style={active ? { background: 'linear-gradient(160deg,#103024 0%,#0B2017 100%)' } : undefined}
+                    ? 'border-gold-400 shadow-glow-gold'
+                    : isDark
+                      ? 'border-white/8 hover:border-gold-300/50'
+                      : 'border-black/5 hover:border-gold-300/60'}`}
+                style={{ background: active
+                  ? 'linear-gradient(160deg,#103024 0%,#0B2017 100%)'
+                  : isDark ? 'linear-gradient(160deg,#13241c 0%,#0c1813 100%)' : '#F3EFDF' }}
               >
-                {/* ornate number badge */}
-                <span className={`mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border-2
-                  ${active ? 'border-gold-300/70 text-gold-200' : 'border-gold-500/40 text-gold-700'}`}>
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-full border font-display font-bold text-base ${active ? 'border-gold-300/40' : 'border-gold-500/30'}`}>
+                {active && (
+                  <motion.span aria-hidden className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'radial-gradient(circle at 50% 0%, rgba(221,185,75,0.18), transparent 70%)' }}
+                    animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} />
+                )}
+                {/* ornate animated number badge */}
+                <span className="relative mx-auto mb-2 flex h-12 w-12 items-center justify-center">
+                  <motion.span aria-hidden className="absolute inset-0 rounded-full border border-dashed"
+                    style={{ borderColor: active ? 'rgba(233,207,122,0.55)' : isDark ? 'rgba(221,185,75,0.3)' : 'rgba(201,162,39,0.35)' }}
+                    animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
+                  <span className={`relative flex h-9 w-9 items-center justify-center rounded-full border font-display font-bold text-base
+                    ${active ? 'border-[#E9CF7A]/50 text-[#E9CF7A]' : isDark ? 'border-gold-400/30 text-gold-300' : 'border-gold-500/30 text-gold-700'}`}>
                     {p.number}
                   </span>
                 </span>
-                <p className={`text-[11px] ${active ? 'text-parchment/60' : 'text-ink/50'}`}>Surah {p.number}</p>
-                <p className={`font-display font-bold text-lg leading-tight ${active ? 'text-gold-200' : 'text-ink'}`}>{p.label}</p>
-                <p className={`text-[11px] mt-0.5 ${active ? 'text-parchment/55' : 'text-emerald-700'}`}>{p.tag}</p>
+                <p className={`relative text-[11px] ${active ? 'text-white/60' : isDark ? 'text-parchment/45' : 'text-ink/50'}`}>Surah {p.number}</p>
+                <p className={`relative font-display font-bold text-lg leading-tight ${active ? 'text-[#E9CF7A]' : isDark ? 'text-parchment' : 'text-ink'}`}>{p.label}</p>
+                <p className={`relative text-[11px] mt-0.5 ${active ? 'text-white/55' : isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>{p.tag}</p>
               </motion.button>
             );
           })}
@@ -144,11 +156,14 @@ export default function QuranPage() {
               setShowAll(true);
               requestAnimationFrame(() => document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
             }}
-            className="rounded-2xl border border-white/10 flex flex-col items-center justify-center gap-2 p-4 text-center text-parchment hover:border-gold-300/50 transition"
-            style={{ background: 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' }}
+            className={`rounded-2xl border-2 flex flex-col items-center justify-center gap-2 p-4 text-center transition
+              ${isDark ? 'border-white/10 text-parchment hover:border-gold-300/50' : 'border-black/5 text-ink hover:border-gold-300/60'}`}
+            style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : '#F3EFDF' }}
           >
-            <BookOpen size={26} className="text-gold-300" />
-            <span className="text-sm font-semibold leading-tight">View All<br /><span className="text-parchment/60 text-xs">114 Surahs</span></span>
+            <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+              <BookOpen size={26} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+            </motion.span>
+            <span className="text-sm font-semibold leading-tight">View All<br /><span className={`text-xs ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span></span>
           </button>
         </div>
 
@@ -161,6 +176,7 @@ export default function QuranPage() {
           onReciterChange={setReciter}
           onTranslationChange={setTranslation}
           onTranslationModeChange={setTranslationMode}
+          isDark={isDark}
         />
 
         {/* ── full surah index (cream panel) ── */}
