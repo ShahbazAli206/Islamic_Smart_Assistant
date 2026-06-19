@@ -143,7 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Sidebar: off-canvas drawer on mobile, fixed rail from lg up ── */}
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
+        className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 z-50 w-72 shrink-0 bg-mosque-gradient text-parchment p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -175,7 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Link>
 
         {/* navigation */}
-        <nav className="relative flex-1 overflow-hidden pr-1 space-y-2">
+        <nav className="relative flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {NAV.map((group) => (
             <div key={group.group}>
               <p className="px-3 mb-0.5 text-[10px] uppercase tracking-[0.18em] text-emerald-100/60 font-semibold">
