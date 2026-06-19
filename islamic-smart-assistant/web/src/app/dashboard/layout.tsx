@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -75,6 +75,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
   const { isDark, toggle } = useTheme();
+
+  // The Overview page's header avatar / "Edit Preferences" controls live in a
+  // separate route component, so they signal these shared modals via window events.
+  useEffect(() => {
+    const openPrefs = () => setEditPrefs(true);
+    const openProfile = () => setProfileOpen(true);
+    window.addEventListener('isa:edit-prefs', openPrefs);
+    window.addEventListener('isa:open-profile', openProfile);
+    return () => {
+      window.removeEventListener('isa:edit-prefs', openPrefs);
+      window.removeEventListener('isa:open-profile', openProfile);
+    };
+  }, []);
 
   // Theme-specific class fragments for the sidebar surfaces. Written as full
   // literal strings so Tailwind's JIT picks them up. Dark mode keeps the
