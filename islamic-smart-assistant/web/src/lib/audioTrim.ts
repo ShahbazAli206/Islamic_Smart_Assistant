@@ -91,6 +91,90 @@ export function encodeWavClip(buffer: AudioBuffer, startSec: number, endSec: num
   return new Blob([arrBuf], { type: 'audio/wav' });
 }
 
+export type WavSegment = { buffer: AudioBuffer; startSec: number; endSec: number };
+
+/**
+ * Encode an ordered list of segments (e.g. intro + trimmed Azan + outro) into a
+ * single 16-bit PCM WAV Blob. Each segment is resampled to a common rate and
+ * mixed to 2 channels, so clips with different sample rates / channel counts
+ * concatenate seamlessly into one continuous file.
+ */
+export function encodeWavFromSegments(segments: WavSegment[], opts?: { sampleRate?: number }): Blob {
+  const parts = segments.filter((s) => s && s.buffer && s.endSec > s.startSec);
+  if (parts.length === 0) return new Blob([], { type: 'audio/wav' });
+
+  const sampleRate = opts?.sampleRate ?? parts[0].buffer.sampleRate;
+  const numChannels = 2;
+
+  // Slice + resample each segment into output-rate channel data.
+  const sliced: Float32Array[][] = [];
+  let totalFrames = 0;
+  for (const seg of parts) {
+    const b = seg.buffer;
+    const sr = b.sampleRate;
+    const startSample = Math.max(0, Math.floor(seg.startSec * sr));
+    const endSample = Math.min(b.length, Math.floor(seg.endSec * sr));
+    const srcLen = Math.max(0, endSample - startSample);
+    const outLen = sr === sampleRate ? srcLen : Math.max(0, Math.round(srcLen * (sampleRate / sr)));
+    const segCh: Float32Array[] = [];
+    for (let c = 0; c < numChannels; c++) {
+      const src = b.getChannelData(Math.min(c, b.numberOfChannels - 1));
+      const out = new Float32Array(outLen);
+      if (sr === sampleRate) {
+        for (let i = 0; i < outLen; i++) out[i] = src[startSample + i] || 0;
+      } else {
+        const ratio = sr / sampleRate; // src samples per output sample
+        for (let i = 0; i < outLen; i++) {
+          const pos = startSample + i * ratio;
+          const i0 = Math.floor(pos);
+          const frac = pos - i0;
+          const a = src[i0] || 0;
+          const nx = i0 + 1 < src.length ? src[i0 + 1] : a;
+          out[i] = a + (nx - a) * frac; // linear interpolation
+        }
+      }
+      segCh.push(out);
+    }
+    sliced.push(segCh);
+    totalFrames += outLen;
+  }
+
+  const bytesPerSample = 2;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataSize = totalFrames * blockAlign;
+  const arrBuf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(arrBuf);
+  const writeStr = (off: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (const segCh of sliced) {
+    const frames = segCh[0].length;
+    for (let i = 0; i < frames; i++) {
+      for (let c = 0; c < numChannels; c++) {
+        let sample = segCh[c][i] || 0;
+        sample = Math.max(-1, Math.min(1, sample));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        offset += 2;
+      }
+    }
+  }
+  return new Blob([arrBuf], { type: 'audio/wav' });
+}
+
 /** Format seconds as "m:ss" (e.g. 83 → "1:23"). */
 export function formatClock(sec: number): string {
   const s = Math.max(0, Math.round(sec));

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2 } from 'lucide-react';
-import { decodeAudioFile, computePeaks, encodeWavClip, formatClock } from '@/lib/audioTrim';
+import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2, Plus } from 'lucide-react';
+import { decodeAudioFile, computePeaks, encodeWavFromSegments, formatClock } from '@/lib/audioTrim';
 import { putAzanClip, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
 
@@ -37,6 +37,18 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
+  // Optional intro/outro sound spliced onto the trimmed Azan and baked into the file.
+  const [extraBuffer, setExtraBuffer] = useState<AudioBuffer | null>(null);
+  const [extraName, setExtraName] = useState('');
+  const [extraDur, setExtraDur] = useState(0);
+  const [extraPos, setExtraPos] = useState<'start' | 'end'>('start');
+  const [extraDecoding, setExtraDecoding] = useState(false);
+  const [extraPlaying, setExtraPlaying] = useState(false);
+  const extraInputRef = useRef<HTMLInputElement>(null);
+  const extraPreviewRef = useRef<HTMLAudioElement>(null);
+  const extraUrlRef = useRef<string | null>(null);
+  const revokeExtraUrl = () => { if (extraUrlRef.current) { URL.revokeObjectURL(extraUrlRef.current); extraUrlRef.current = null; } };
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLAudioElement>(null);
@@ -54,8 +66,47 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
     setFile(null); setDecoding(false); setBuffer(null); setPeaks([]);
     setDuration(0); setStart(0); setEnd(0); setName(''); setSaving(false);
     setPlaying(false); setError(null); setDragOver(false);
-    revokeUrl();
+    setExtraBuffer(null); setExtraName(''); setExtraDur(0); setExtraPos('start');
+    setExtraDecoding(false); setExtraPlaying(false);
+    revokeUrl(); revokeExtraUrl();
   }, []);
+
+  // Decode an optional intro/outro sound to splice onto the trimmed Azan.
+  const onPickExtra = async (f: File) => {
+    setError(null);
+    if (!f.type.startsWith('audio/') && !/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(f.name)) {
+      setError('Please choose an audio file for the added sound.'); return;
+    }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) { setError(`That sound is too large (max ${MAX_FILE_MB} MB).`); return; }
+    revokeExtraUrl();
+    extraUrlRef.current = URL.createObjectURL(f);
+    setExtraDecoding(true);
+    try {
+      const buf = await decodeAudioFile(f);
+      setExtraBuffer(buf);
+      setExtraDur(buf.duration);
+      setExtraName(f.name.replace(/\.[^.]+$/, ''));
+    } catch {
+      setError('Could not read the added sound. Try mp3/wav/m4a.');
+      revokeExtraUrl();
+    } finally {
+      setExtraDecoding(false);
+    }
+  };
+  const removeExtra = () => {
+    extraPreviewRef.current?.pause(); setExtraPlaying(false);
+    revokeExtraUrl();
+    setExtraBuffer(null); setExtraName(''); setExtraDur(0);
+  };
+  const previewExtra = () => {
+    const el = extraPreviewRef.current;
+    if (!el || !extraUrlRef.current) return;
+    if (extraPlaying) { el.pause(); setExtraPlaying(false); return; }
+    previewRef.current?.pause(); setPlaying(false);   // don't overlap with the main preview
+    if (el.src !== extraUrlRef.current) el.src = extraUrlRef.current;
+    el.currentTime = 0;
+    el.play().then(() => setExtraPlaying(true)).catch(() => setExtraPlaying(false));
+  };
 
   const handleClose = useCallback(() => {
     previewRef.current?.pause();
@@ -182,18 +233,26 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const blob = encodeWavClip(buffer, start, end);
+      // Compose intro (if any) + trimmed Azan + outro (if any) into one file.
+      const main = { buffer, startSec: start, endSec: end };
+      const segments = extraBuffer
+        ? (extraPos === 'start'
+            ? [{ buffer: extraBuffer, startSec: 0, endSec: extraDur }, main]
+            : [main, { buffer: extraBuffer, startSec: 0, endSec: extraDur }])
+        : [main];
+      const blob = encodeWavFromSegments(segments);
+      const totalDur = (end - start) + (extraBuffer ? extraDur : 0);
       const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       await putAzanClip(id, blob);
       // Also persist to the backend so the clip is saved to the database and
       // available on this user's other devices (web / desktop / mobile).
       // Best-effort: a failure (offline / signed out) never blocks the local save.
-      Azan.uploadVoice(blob, { name: name.trim() || 'Custom Azan', durationMs: (end - start) * 1000 }).catch(() => {});
+      Azan.uploadVoice(blob, { name: name.trim() || 'Custom Azan', durationMs: totalDur * 1000 }).catch(() => {});
       onSaved({
         id,
         name: name.trim() || 'Custom Azan',
         createdAt: Date.now(),
-        durationSec: Math.round((end - start) * 10) / 10,
+        durationSec: Math.round(totalDur * 10) / 10,
       });
       handleClose();
     } catch (e) {
@@ -325,6 +384,63 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
                       {playing ? <><Square size={14} /> Stop</> : <><Play size={14} /> Play selection</>}
                     </button>
                   </div>
+
+                  {/* ── optional intro / outro sound ── */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-sm font-semibold mb-1.5">
+                      <Music2 size={14} className="text-emerald-600" /> Add a sound (intro / outro)
+                      <span className="text-ink/40 font-normal">— optional</span>
+                    </label>
+
+                    {!extraBuffer ? (
+                      <button
+                        onClick={() => extraInputRef.current?.click()}
+                        disabled={extraDecoding}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-emerald-200 bg-white/70 text-emerald-800 hover:border-emerald-400 hover:bg-white transition disabled:opacity-60"
+                      >
+                        {extraDecoding ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
+                        {extraDecoding ? 'Reading…' : 'Add another sound'}
+                      </button>
+                    ) : (
+                      <div className="rounded-xl border border-emerald-100 bg-white/60 p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 shrink-0"><Music2 size={15} /></span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold truncate">{extraName || 'Added sound'}</p>
+                            <p className="text-xs text-ink/55">{formatClock(extraDur)}</p>
+                          </div>
+                          <button onClick={previewExtra} className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-700" title="Preview added sound">
+                            {extraPlaying ? <Square size={15} /> : <Play size={15} />}
+                          </button>
+                          <button onClick={removeExtra} className="p-2 rounded-lg hover:bg-rose-50 text-rose-600" title="Remove added sound">
+                            <X size={15} />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-ink/55">Position:</span>
+                          {(['start', 'end'] as const).map((pos) => (
+                            <button
+                              key={pos}
+                              onClick={() => setExtraPos(pos)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
+                                ${extraPos === pos ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-emerald-200 text-emerald-700 hover:border-emerald-400'}`}
+                            >
+                              {pos === 'start' ? 'At start (intro)' : 'At end (outro)'}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-ink/45">
+                          Plays {extraPos === 'start' ? 'before' : 'after'} the trimmed Azan and is baked into the saved file
+                          (total {formatClock((end - start) + extraDur)}).
+                        </p>
+                      </div>
+                    )}
+
+                    <input
+                      ref={extraInputRef} type="file" accept="audio/*" className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickExtra(f); e.currentTarget.value = ''; }}
+                    />
+                  </div>
                 </>
               )}
 
@@ -344,6 +460,7 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
             </div>
 
             <audio ref={previewRef} onTimeUpdate={onPreviewTime} onEnded={() => setPlaying(false)} preload="auto" />
+            <audio ref={extraPreviewRef} onEnded={() => setExtraPlaying(false)} preload="auto" />
           </motion.div>
         </div>
       )}
