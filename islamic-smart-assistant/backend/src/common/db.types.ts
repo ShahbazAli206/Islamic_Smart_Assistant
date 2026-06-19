@@ -77,6 +77,9 @@ export interface AzanVoicesTable {
   is_default: boolean;
   is_custom: boolean;
   uploaded_by: string | null;
+  // Inline bytes for custom uploads (built-ins keep these null and use audio_url).
+  audio_data: ColumnType<Buffer | null, Buffer | null | undefined, Buffer | null | undefined>;
+  mime_type: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: AutoTimestamp;
 }
 

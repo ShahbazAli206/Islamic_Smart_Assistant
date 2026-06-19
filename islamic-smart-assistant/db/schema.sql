@@ -120,6 +120,8 @@ CREATE TABLE azan_voices (
     is_default  BOOLEAN NOT NULL DEFAULT FALSE,
     is_custom   BOOLEAN NOT NULL DEFAULT FALSE,
     uploaded_by UUID REFERENCES users(id),
+    audio_data  BYTEA,                                   -- inline bytes for custom uploads (built-ins use audio_url only)
+    mime_type   TEXT,                                    -- content-type for inline audio_data
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

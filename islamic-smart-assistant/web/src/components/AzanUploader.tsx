@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2 } from 'lucide-react';
 import { decodeAudioFile, computePeaks, encodeWavClip, formatClock } from '@/lib/audioTrim';
 import { putAzanClip, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
+import { Azan } from '@/lib/api';
 
 type Props = {
   open: boolean;
@@ -184,6 +185,10 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
       const blob = encodeWavClip(buffer, start, end);
       const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       await putAzanClip(id, blob);
+      // Also persist to the backend so the clip is saved to the database and
+      // available on this user's other devices (web / desktop / mobile).
+      // Best-effort: a failure (offline / signed out) never blocks the local save.
+      Azan.uploadVoice(blob, { name: name.trim() || 'Custom Azan', durationMs: (end - start) * 1000 }).catch(() => {});
       onSaved({
         id,
         name: name.trim() || 'Custom Azan',

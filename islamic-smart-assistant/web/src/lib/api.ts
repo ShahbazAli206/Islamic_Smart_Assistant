@@ -50,6 +50,34 @@ export const Me = {
   setLocation: (loc: SetLocation) => api.post('/users/me/location', loc).then((r) => r.data),      // store location for prayer-time calc
 };
 
+/** An Azan voice as stored on the backend (built-in or a user's custom upload). */
+export interface AzanVoice {
+  id: string;
+  name: string;
+  audio_url: string;
+  size_bytes: number;
+  duration_ms: number;
+  is_default: boolean;
+  is_custom: boolean;
+  uploaded_by: string | null;
+}
+
+/** Azan voices + custom-upload sync, shared across web / desktop / mobile. */
+export const Azan = {
+  voices: (): Promise<AzanVoice[]> => api.get('/azan/voices').then((r) => r.data),
+  // Upload a custom clip (WAV blob). Persisted to the DB and returned with a
+  // public audio_url playable on every platform.
+  uploadVoice: (file: Blob, meta: { name: string; durationMs: number }): Promise<AzanVoice> => {
+    const fd = new FormData();
+    const safe = (meta.name || 'custom-azan').replace(/[^\w.-]+/g, '_').slice(0, 60);
+    fd.append('file', file, `${safe}.wav`);
+    fd.append('name', meta.name ?? 'Custom Azan');
+    fd.append('duration_ms', String(Math.round(meta.durationMs) || 0));
+    return api.post('/azan/voices', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data);
+  },
+  deleteVoice: (id: string) => api.delete(`/azan/voices/${encodeURIComponent(id)}`).then((r) => r.data),
+};
+
 export const Admin = {
   users: () => api.get('/admin/users').then((r) => r.data),
   user: (id: string) => api.get(`/admin/users/${id}`).then((r) => r.data),
