@@ -372,7 +372,7 @@ export default function PrayerTimesPage() {
           <div className="hidden md:block max-w-md">
             <div className="rounded-2xl px-5 py-4 text-right"
               style={{ background: isDark ? 'rgba(8,22,15,0.58)' : 'rgba(10,30,20,0.44)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
-              <p className="font-arabic text-3xl lg:text-4xl text-[#E9CF7A] leading-[1.9]" dir="rtl">
+              <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
               </p>
               <p className="mt-2.5 text-base lg:text-lg leading-relaxed font-medium text-white/90">
