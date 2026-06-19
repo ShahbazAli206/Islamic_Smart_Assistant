@@ -320,7 +320,7 @@ export default function PrayerTimesPage() {
           {/* RIGHT ~60%: the mosque image, shown clearly */}
           <div className="absolute inset-y-0 right-0 w-[62%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/masjid-1.jpg" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
+            <img src="/masjid_img.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
             {/* feather the image's left edge into the pastel base */}
             <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
           </div>
