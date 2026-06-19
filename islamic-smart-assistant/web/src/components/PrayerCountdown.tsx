@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Sunrise, Sun, Sunset, Moon, Star, Compass, AlertTriangle, Navigation, X, Loader2 } from 'lucide-react';
+import { MapPin, Sunrise, Sun, Sunset, Moon, Star, Compass, AlertTriangle, Navigation, X, Loader2, Clock } from 'lucide-react';
 import {
   fetchTimingsByCity, fetchTimingsByCoords, detectLocationByIP, nextPrayerInZone, formatCountdown,
   LocationError, type PrayerTimes,
@@ -247,7 +247,7 @@ export function PrayerCountdownHero({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`relative overflow-hidden rounded-3xl p-6 sm:p-7 ${isDark ? 'border border-gold-400/20 text-parchment shadow-glow-emerald' : 'border border-gold-300/40 text-ink shadow-card-soft'}`}
+          className={`relative overflow-hidden rounded-3xl p-6 sm:p-7 ${isDark ? 'border border-gold-400/20 text-parchment shadow-glow-emerald' : 'border border-gold-300/40 text-ink shadow-xl shadow-emerald-950/10'}`}
           style={{ background: isDark
             ? 'linear-gradient(140deg,#0f4030 0%,#0a2c20 52%,#07190f 100%)'
             : 'linear-gradient(140deg,#fffdf7 0%,#fbf6e9 58%,#f3ebd4 100%)' }}
@@ -304,18 +304,35 @@ export function PrayerCountdownHero({
             (Object.keys(data.timings) as (keyof PrayerTimes)[]).map((name, i) => {
               const Icon = ICONS[name];
               const isNext = next?.name === name;
+              // Mixed cream/green gradient surface — never flat white — with depth.
+              const cardStyle = isNext
+                ? { background: isDark
+                    ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
+                    : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
+                : { background: isDark
+                    ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
+                    : 'linear-gradient(150deg,#fffdf7 0%,#f7f0db 58%,#efe4c8 100%)' };
               const cardCls = isNext
                 ? (isDark
-                    ? 'bg-gold-gradient text-midnight-900 border border-gold-300 shadow-glow-gold'
-                    : 'bg-emerald-50 border border-emerald-400 text-emerald-950 shadow-sm')
+                    ? 'border border-gold-300/50 text-parchment shadow-glow-gold'
+                    : 'border border-emerald-400/70 text-emerald-950 shadow-md shadow-emerald-700/15')
                 : (isDark
-                    ? 'bg-white/[0.04] border border-white/10 text-parchment backdrop-blur'
-                    : 'bg-white border border-emerald-900/8 text-emerald-950 shadow-card-soft');
+                    ? 'border border-white/10 text-parchment shadow-lg shadow-black/30'
+                    : 'border border-gold-300/30 text-emerald-950 shadow-card-soft');
+              const badgeBg = isNext
+                ? (isDark ? 'bg-gold-300/20' : 'bg-emerald-600/15')
+                : (isDark ? 'bg-gold-300/10' : 'bg-gold-500/12');
               const iconColor = isNext
-                ? (isDark ? 'text-midnight-900' : 'text-emerald-700')
+                ? (isDark ? 'text-gold-200' : 'text-emerald-700')
                 : (isDark ? 'text-gold-300' : 'text-gold-600');
+              const nameColor = isNext
+                ? (isDark ? 'text-parchment/80' : 'text-emerald-800')
+                : (isDark ? 'text-parchment/65' : 'text-emerald-900/55');
+              const endColor = isNext
+                ? (isDark ? 'text-parchment/65' : 'text-emerald-700/80')
+                : (isDark ? 'text-parchment/45' : 'text-emerald-900/45');
               const domeColor = isNext
-                ? (isDark ? 'rgba(11,20,16,0.18)' : 'rgba(5,95,70,0.16)')
+                ? (isDark ? 'rgba(233,207,122,0.18)' : 'rgba(5,95,70,0.16)')
                 : (isDark ? 'rgba(221,185,75,0.16)' : 'rgba(201,162,39,0.14)');
               // Each prayer's window ends when the next one begins (Isha → next Fajr).
               const PORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as (keyof PrayerTimes)[];
@@ -327,21 +344,28 @@ export function PrayerCountdownHero({
                   initial={{ opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.05 * i, duration: 0.4 }}
-                  className={`relative overflow-hidden rounded-2xl p-3.5 ${cardCls}`}
+                  whileHover={{ y: -3 }}
+                  className={`relative overflow-hidden rounded-2xl p-4 transition-shadow ${cardCls}`}
+                  style={cardStyle}
                 >
                   <DomeMark color={domeColor} className="absolute -top-1 right-2 w-12 pointer-events-none" />
                   {isNext && (
                     <motion.span aria-hidden className="absolute inset-0 rounded-2xl pointer-events-none"
-                      style={{ boxShadow: isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.4)' : 'inset 0 0 0 1px rgba(16,185,129,0.5)' }}
+                      style={{ boxShadow: isDark ? 'inset 0 0 0 1px rgba(233,207,122,0.5)' : 'inset 0 0 0 1px rgba(16,185,129,0.5)' }}
                       animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }} />
                   )}
-                  <motion.div animate={isNext ? { scale: [1, 1.12, 1] } : {}} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} className="relative">
-                    <Icon size={20} className={iconColor} />
+                  {/* prayer icon in a tinted badge */}
+                  <motion.div
+                    animate={isNext ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                    className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl ${badgeBg}`}
+                  >
+                    <Icon size={18} className={iconColor} />
                   </motion.div>
-                  <p className={`relative mt-3 text-sm font-medium ${isNext ? (isDark ? 'text-midnight-900/80' : 'text-emerald-800') : (isDark ? 'text-parchment/70' : 'text-emerald-900/55')}`}>{name}</p>
-                  <p className="relative text-lg sm:text-xl font-bold tabular-nums">{to12h(data.timings[name])}</p>
-                  <p className={`relative mt-0.5 text-[11px] font-medium ${isNext ? (isDark ? 'text-midnight-900/70' : 'text-emerald-700/80') : (isDark ? 'text-parchment/45' : 'text-emerald-900/45')}`}>
-                    Ends · {endTime}
+                  <p className={`relative mt-3 text-[13px] font-semibold tracking-wide ${nameColor}`}>{name}</p>
+                  <p className="relative text-xl sm:text-2xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
+                  <p className={`relative mt-1 flex items-center gap-1 text-[11px] font-medium ${endColor}`}>
+                    <Clock size={10} className="shrink-0" /> Ends {endTime}
                   </p>
                 </motion.div>
               );
