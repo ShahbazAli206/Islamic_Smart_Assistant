@@ -18,6 +18,7 @@ import { formatClock } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
+import { useTheme } from '@/lib/ThemeContext';
 
 type AzanVoice = {
   id: string;
@@ -199,42 +200,82 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
-// Compact compass widget for the Qibla banner; needle points to the qibla bearing.
-function MiniCompass({ bearing }: { bearing: number | null }) {
+// Compass widget for the Qibla banner. Rendered larger than the strip so it
+// pokes out top & bottom; theme-aware (rich dark face in dark mode). The tapered
+// gold/green needle continuously points toward the qibla bearing.
+function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: boolean }) {
+  const tickMajor = isDark ? '#E9CF7A' : '#059669';
+  const tickMinor = isDark ? 'rgba(110,231,183,0.45)' : '#a7f3d0';
+  const labelN = isDark ? '#E9CF7A' : '#C9A227';
+  const labelO = isDark ? '#6ee7b7' : '#059669';
+  const goldTip = isDark ? '#E9CF7A' : '#C9A227';
+  const greenTail = isDark ? '#10b981' : '#059669';
+  const hubFill = isDark ? '#0b1712' : '#ffffff';
+
   return (
-    <div className="relative w-[150px] h-[150px] rounded-full bg-white shadow-2xl shadow-emerald-950/30 border border-emerald-100 grid place-items-center">
-      <svg viewBox="0 0 100 100" width="124" height="124">
-        <circle cx="50" cy="50" r="46" fill="#f8fcfa" stroke="#d1fae5" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="40" fill="none" stroke="#ecfdf5" strokeWidth="1" />
-        {Array.from({ length: 24 }, (_, i) => {
-          const a = (i * 15 - 90) * Math.PI / 180;
-          const major = i % 6 === 0;
-          const r0 = major ? 36 : 39, r1 = 43;
+    <div
+      className="relative grid place-items-center rounded-full"
+      style={{
+        width: 240, height: 240,
+        background: isDark ? 'radial-gradient(circle at 50% 42%, #15291f 0%, #060d0a 100%)' : '#ffffff',
+        border: `1px solid ${isDark ? 'rgba(233,207,122,0.28)' : '#d1fae5'}`,
+        boxShadow: isDark
+          ? '0 18px 50px -12px rgba(0,0,0,0.7), 0 0 0 6px rgba(7,15,11,0.55)'
+          : '0 18px 50px -12px rgba(6,78,59,0.35), 0 0 0 6px rgba(255,255,255,0.7)',
+      }}
+    >
+      <svg viewBox="0 0 100 100" width="216" height="216">
+        <defs>
+          <radialGradient id="cfFace" cx="50%" cy="42%" r="60%">
+            <stop offset="0%" stopColor={isDark ? '#13271d' : '#f8fcfa'} />
+            <stop offset="100%" stopColor={isDark ? '#070f0b' : '#ecfdf5'} />
+          </radialGradient>
+          <linearGradient id="cfRing" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#E9CF7A" />
+            <stop offset="100%" stopColor={isDark ? '#10b981' : '#059669'} />
+          </linearGradient>
+          <filter id="cfGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        <circle cx="50" cy="50" r="47" fill="url(#cfFace)" stroke="url(#cfRing)" strokeWidth="2" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? 'rgba(255,255,255,0.06)' : '#ecfdf5'} strokeWidth="1" />
+
+        {Array.from({ length: 60 }, (_, i) => {
+          const a = (i * 6 - 90) * Math.PI / 180;
+          const major = i % 15 === 0;
+          const r0 = major ? 36 : 40, r1 = 44;
           return (
             <line key={i}
               x1={50 + r0 * Math.cos(a)} y1={50 + r0 * Math.sin(a)}
               x2={50 + r1 * Math.cos(a)} y2={50 + r1 * Math.sin(a)}
-              stroke={major ? '#059669' : '#a7f3d0'} strokeWidth={major ? 1.4 : 0.8} strokeLinecap="round" />
+              stroke={major ? tickMajor : tickMinor} strokeWidth={major ? 1.5 : 0.7} strokeLinecap="round" />
           );
         })}
+
         {(['N', 'E', 'S', 'W'] as const).map((l, i) => {
           const a = (i * 90 - 90) * Math.PI / 180;
           return (
-            <text key={l} x={50 + 31 * Math.cos(a)} y={50 + 31 * Math.sin(a) + 3}
-              textAnchor="middle" fontSize="7" fontWeight="700"
-              fill={l === 'N' ? '#C9A227' : '#059669'} fontFamily="system-ui">{l}</text>
+            <text key={l} x={50 + 31 * Math.cos(a)} y={50 + 31 * Math.sin(a) + 2.6}
+              textAnchor="middle" fontSize="7" fontWeight="800"
+              fill={l === 'N' ? labelN : labelO} fontFamily="system-ui">{l}</text>
           );
         })}
+
         <motion.g
           style={{ transformOrigin: '50px 50px' }}
-          animate={{ rotate: bearing != null ? [bearing - 2, bearing + 2, bearing - 2] : 0 }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ rotate: bearing != null ? [bearing - 2.5, bearing + 2.5, bearing - 2.5] : 0 }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          filter="url(#cfGlow)"
         >
-          <polygon points="50,16 56,50 50,57 44,50" fill="#C9A227" />
-          <polygon points="50,84 56,50 50,43 44,50" fill="#059669" />
+          <polygon points="50,14 55,50 50,56 45,50" fill={goldTip} />
+          <polygon points="50,86 55,50 50,44 45,50" fill={greenTail} />
         </motion.g>
-        <circle cx="50" cy="50" r="4" fill="#fff" stroke="#C9A227" strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="1.6" fill="#059669" />
+
+        <circle cx="50" cy="50" r="5" fill={hubFill} stroke={goldTip} strokeWidth="1.6" />
+        <circle cx="50" cy="50" r="2" fill={greenTail} />
       </svg>
     </div>
   );
@@ -251,6 +292,7 @@ type Item = {
 
 export default function AzanPage() {
   const loc = useStoredLocation();
+  const { isDark } = useTheme();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'makkah');
@@ -468,7 +510,10 @@ export default function AzanPage() {
   ];
 
   return (
-    <div className="-m-5 sm:-m-8">
+    <div
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'azan-dark text-parchment' : ''}`}
+      style={isDark ? { background: '#070b09' } : undefined}
+    >
 
       {/* ════════ HEADER (full-bleed, animated mosque background) ════════ */}
       <header className="relative overflow-hidden">
@@ -490,8 +535,12 @@ export default function AzanPage() {
             <source src="/azan/mosque-loop.mp4" type="video/mp4" />
           </video>
           {/* Legibility overlays — light cream wash only behind the left-hand text; the image stays clear elsewhere */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,#FAF7EE 0%,rgba(250,247,238,0.82) 16%,rgba(250,247,238,0.28) 38%,transparent 62%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg,transparent 0%,transparent 68%,rgba(250,247,238,0.9) 100%)' }} />
+          <div className="absolute inset-0" style={{ background: isDark
+            ? 'linear-gradient(90deg,#070b09 0%,rgba(7,11,9,0.88) 16%,rgba(7,11,9,0.46) 40%,transparent 66%)'
+            : 'linear-gradient(90deg,#FAF7EE 0%,rgba(250,247,238,0.82) 16%,rgba(250,247,238,0.28) 38%,transparent 62%)' }} />
+          <div className="absolute inset-0" style={{ background: isDark
+            ? 'linear-gradient(180deg,transparent 0%,transparent 62%,#070b09 100%)'
+            : 'linear-gradient(180deg,transparent 0%,transparent 68%,rgba(250,247,238,0.9) 100%)' }} />
           {/* Drifting colour auroras */}
           <motion.div className="absolute -top-20 right-1/4 w-72 h-72 rounded-full"
             style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.18) 0%,transparent 70%)' }}
@@ -561,12 +610,17 @@ export default function AzanPage() {
           {/* — Qibla banner — */}
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}
-            className="relative mt-5 rounded-3xl overflow-hidden border border-emerald-700/30 shadow-xl shadow-emerald-950/20"
-            style={{ background: 'linear-gradient(120deg,#0b6b4f 0%,#065f46 55%,#064e3b 100%)' }}
+            className="relative mt-5"
           >
+            <div
+              className="relative rounded-3xl overflow-hidden border border-emerald-700/30 shadow-xl shadow-emerald-950/20"
+              style={{ background: isDark
+                ? 'linear-gradient(120deg,#0a3a2b 0%,#072a1f 55%,#051e16 100%)'
+                : 'linear-gradient(120deg,#0b6b4f 0%,#065f46 55%,#064e3b 100%)' }}
+            >
             <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.08]" />
             <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-300/40 to-transparent" />
-            <div className="relative flex flex-col lg:flex-row lg:items-center gap-5 px-6 py-5 pr-6 lg:pr-44">
+            <div className="relative flex flex-col lg:flex-row lg:items-center gap-5 px-6 py-5 pr-6 lg:pr-52">
               {/* Qibla direction */}
               <div className="flex items-center gap-4">
                 <motion.span className="text-3xl" animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>🕋</motion.span>
@@ -600,10 +654,11 @@ export default function AzanPage() {
                 </Link>
               </div>
             </div>
+            </div>
 
-            {/* Compass widget — pokes out on the right */}
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 hidden lg:block">
-              <MiniCompass bearing={qibBearing} />
+            {/* Compass — outside the clipped banner so it pokes out top & bottom */}
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block z-10">
+              <MiniCompass bearing={qibBearing} isDark={isDark} />
             </div>
           </motion.div>
         </div>

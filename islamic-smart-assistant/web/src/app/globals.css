@@ -119,3 +119,41 @@ body {
 .page-light .bg-midnight-900\/40 { background-color: rgba(251,248,239,0.85) !important; }
 .page-light .bg-midnight-900\/60 { background-color: rgba(251,248,239,0.90) !important; }
 .page-light .bg-midnight-900\/80 { background-color: rgba(251,248,239,0.95) !important; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Azan Voices — dark theme.
+   The page is light-by-default; wrapping its root in `.azan-dark` flips the
+   light surfaces/text/borders to the dark green-black palette. White-overlay
+   opacities used ON the green Qibla banner (bg-white/10../30, border-white/20,
+   /30) are intentionally NOT remapped, so the banner keeps its accents.
+   ────────────────────────────────────────────────────────────────────────── */
+.azan-dark .bg-white,
+.azan-dark .bg-white\/80,
+.azan-dark .bg-white\/90,
+.azan-dark .bg-white\/95 { background-color: rgba(14,23,20,0.92) !important; }
+
+.azan-dark .bg-emerald-50  { background-color: rgba(16,185,129,0.10) !important; }
+.azan-dark .bg-emerald-100 { background-color: rgba(16,185,129,0.18) !important; }
+
+.azan-dark .text-emerald-950,
+.azan-dark .text-emerald-900     { color: #EAF3EE !important; }
+.azan-dark .text-emerald-900\/60 { color: rgba(234,243,238,0.60) !important; }
+.azan-dark .text-emerald-900\/55 { color: rgba(234,243,238,0.55) !important; }
+.azan-dark .text-emerald-900\/50 { color: rgba(234,243,238,0.50) !important; }
+.azan-dark .text-emerald-900\/45 { color: rgba(234,243,238,0.46) !important; }
+.azan-dark .text-emerald-900\/40 { color: rgba(234,243,238,0.42) !important; }
+.azan-dark .text-emerald-900\/35 { color: rgba(234,243,238,0.40) !important; }
+.azan-dark .text-emerald-900\/30 { color: rgba(234,243,238,0.36) !important; }
+
+/* accent green text/icons → brighter on dark */
+.azan-dark .text-emerald-700 { color: #34d399 !important; }
+.azan-dark .text-emerald-800 { color: #34d399 !important; }
+
+/* light borders → subtle dark borders */
+.azan-dark .border-emerald-100 { border-color: rgba(255,255,255,0.07) !important; }
+.azan-dark .border-emerald-200 { border-color: rgba(52,211,153,0.22) !important; }
+.azan-dark .border-white\/70   { border-color: rgba(255,255,255,0.08) !important; }
+
+/* inputs */
+.azan-dark input { color: #EAF3EE; }
+.azan-dark input::placeholder { color: rgba(234,243,238,0.40) !important; }
