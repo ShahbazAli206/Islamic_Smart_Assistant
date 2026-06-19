@@ -240,7 +240,7 @@ export function PrayerCountdownHero({
 
   return (
     <>
-      <div className="grid lg:grid-cols-[minmax(0,490px)_1fr] gap-4 sm:gap-5 items-stretch">
+      <div className="grid lg:grid-cols-[minmax(0,540px)_1fr] gap-4 sm:gap-5 items-stretch">
 
         {/* ── Countdown card ── */}
         <motion.div
@@ -317,6 +317,10 @@ export function PrayerCountdownHero({
               const domeColor = isNext
                 ? (isDark ? 'rgba(11,20,16,0.18)' : 'rgba(5,95,70,0.16)')
                 : (isDark ? 'rgba(221,185,75,0.16)' : 'rgba(201,162,39,0.14)');
+              // Each prayer's window ends when the next one begins (Isha → next Fajr).
+              const PORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as (keyof PrayerTimes)[];
+              const endName: keyof PrayerTimes = name === 'Isha' ? 'Fajr' : PORDER[PORDER.indexOf(name) + 1];
+              const endTime = to12h(data.timings[endName]);
               return (
                 <motion.div
                   key={name}
@@ -336,6 +340,9 @@ export function PrayerCountdownHero({
                   </motion.div>
                   <p className={`relative mt-3 text-sm font-medium ${isNext ? (isDark ? 'text-midnight-900/80' : 'text-emerald-800') : (isDark ? 'text-parchment/70' : 'text-emerald-900/55')}`}>{name}</p>
                   <p className="relative text-lg sm:text-xl font-bold tabular-nums">{to12h(data.timings[name])}</p>
+                  <p className={`relative mt-0.5 text-[11px] font-medium ${isNext ? (isDark ? 'text-midnight-900/70' : 'text-emerald-700/80') : (isDark ? 'text-parchment/45' : 'text-emerald-900/45')}`}>
+                    Ends · {endTime}
+                  </p>
                 </motion.div>
               );
             })}
