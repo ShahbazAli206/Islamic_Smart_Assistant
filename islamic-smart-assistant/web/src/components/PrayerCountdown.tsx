@@ -26,16 +26,44 @@ const URDU: Record<keyof PrayerTimes, string> = {
   Fajr: 'فجر', Sunrise: 'طلوع', Dhuhr: 'ظهر', Asr: 'عصر', Maghrib: 'مغرب', Isha: 'عشاء',
 };
 
-/** Decorative pointed Mihrab arch outline for the countdown card. */
+/** Ornate Mughal mihrab arch (matches the landing page) — gold, layered, with a finial. */
 function MihrabArch({ isDark, className = '' }: { isDark: boolean; className?: string }) {
-  const stroke = isDark ? 'rgba(221,185,75,0.55)' : 'rgba(201,162,39,0.5)';
+  const op = isDark ? 0.6 : 0.75;
   return (
-    <svg viewBox="0 0 120 200" className={className} fill="none" stroke={stroke} strokeLinecap="round">
-      <path d="M16 198 L16 78 Q16 16 60 8 Q104 16 104 78 L104 198" strokeWidth="1.4" />
-      <path d="M28 198 L28 82 Q28 30 60 22 Q92 30 92 82 L92 198" strokeWidth="1.1" opacity="0.7" />
-      <path d="M40 198 L40 88 Q40 44 60 38 Q80 44 80 88 L80 198" strokeWidth="0.9" opacity="0.5" />
-      <line x1="60" y1="40" x2="60" y2="120" strokeWidth="0.7" opacity="0.4" />
-      <circle cx="60" cy="60" r="9" strokeWidth="0.8" opacity="0.5" />
+    <svg viewBox="0 0 280 380" fill="none" aria-hidden className={className} preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <radialGradient id="pcMihrabGlow" cx="50%" cy="40%" r="62%">
+          <stop offset="0%"  stopColor="#E9CF7A" stopOpacity={isDark ? 0.22 : 0.16} />
+          <stop offset="45%" stopColor="#C9A227" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#0B1D14" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="pcMihrabStroke" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="#F6D67A" />
+          <stop offset="55%" stopColor="#C9A227" />
+          <stop offset="100%" stopColor="#8A6B16" />
+        </linearGradient>
+      </defs>
+      <path d="M30 380V176C30 96 64 44 140 22 216 44 250 96 250 176V380Z" fill="url(#pcMihrabGlow)" />
+      <path d="M22 380V178
+               C22 150 26 128 36 110
+               Q44 122 56 116 Q50 100 62 92
+               Q72 104 84 96  Q80 78 94 72
+               Q104 84 116 74 Q116 56 132 52
+               L140 40 L148 52 Q164 56 164 74
+               Q176 84 186 72 Q200 78 196 96
+               Q208 104 218 92 Q230 100 224 116
+               Q236 122 244 110 C254 128 258 150 258 178 V380"
+            stroke="url(#pcMihrabStroke)" strokeOpacity={op} strokeWidth="2.2"
+            strokeLinejoin="round" fill="none" />
+      <path d="M48 380V190C48 116 80 74 140 56 200 74 232 116 232 190V380"
+        stroke="#E9CF7A" strokeOpacity={isDark ? 0.3 : 0.42} strokeWidth="1.5" fill="none" />
+      <path d="M72 380V202C72 138 102 100 140 86 178 100 208 138 208 202V380"
+        stroke="#E9CF7A" strokeOpacity={isDark ? 0.16 : 0.28} strokeWidth="1" fill="none" />
+      <path d="M140 40C140 28 134 24 134 16 134 9 140 2 140 2 140 2 146 9 146 16 146 24 140 28 140 40Z"
+        fill="url(#pcMihrabStroke)" fillOpacity={op} />
+      <circle cx="140" cy="20" r="11" stroke="#E9CF7A" strokeOpacity={op} strokeWidth="1.5" fill="none" />
+      <circle cx="140" cy="20" r="5.5" fill="#E9CF7A" fillOpacity="0.5" />
+      <circle cx="140" cy="20" r="2.2" fill="#F6D67A" fillOpacity="0.95" />
     </svg>
   );
 }
@@ -212,7 +240,7 @@ export function PrayerCountdownHero({
 
   return (
     <>
-      <div className="grid lg:grid-cols-[minmax(0,420px)_1fr] gap-4 sm:gap-5 items-stretch">
+      <div className="grid lg:grid-cols-[minmax(0,490px)_1fr] gap-4 sm:gap-5 items-stretch">
 
         {/* ── Countdown card ── */}
         <motion.div
@@ -226,7 +254,7 @@ export function PrayerCountdownHero({
         >
           <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.06] pointer-events-none" />
           {isDark && <div aria-hidden className="absolute -top-24 -right-20 w-64 h-64 rounded-full bg-glow-emerald animate-aurora pointer-events-none" />}
-          <MihrabArch isDark={isDark} className="absolute right-4 top-1/2 -translate-y-1/2 h-[86%] w-auto pointer-events-none" />
+          <MihrabArch isDark={isDark} className="absolute right-1 bottom-0 h-[98%] w-auto pointer-events-none" />
 
           {/* hanging lantern (continuous float + glow) */}
           <div aria-hidden className="absolute left-4 top-3 pointer-events-none">
@@ -235,7 +263,7 @@ export function PrayerCountdownHero({
             <img src="/recitation/lantern.svg" alt="" className="relative w-12 animate-float" />
           </div>
 
-          <div className="relative pl-16 sm:pl-20">
+          <div className="relative pl-16 sm:pl-20 sm:max-w-[64%]">
             <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? 'text-emerald-100/85' : 'text-emerald-700'}`}>
               <MapPin size={16} className="shrink-0" /> {label ?? `${city}, ${country}`}
             </div>
@@ -295,7 +323,7 @@ export function PrayerCountdownHero({
                   initial={{ opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.05 * i, duration: 0.4 }}
-                  className={`relative overflow-hidden rounded-2xl p-4 ${cardCls}`}
+                  className={`relative overflow-hidden rounded-2xl p-3.5 ${cardCls}`}
                 >
                   <DomeMark color={domeColor} className="absolute -top-1 right-2 w-12 pointer-events-none" />
                   {isNext && (

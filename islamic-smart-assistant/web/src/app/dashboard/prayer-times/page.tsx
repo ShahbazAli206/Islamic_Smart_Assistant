@@ -297,60 +297,53 @@ export default function PrayerTimesPage() {
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
-      {/* ── header banner: mosque photo + title + ayah ── */}
-      <header className="relative overflow-hidden">
+      {/* ── header banner: full mosque photo (stretched, clear) + title + ayah ── */}
+      <header className="relative overflow-hidden min-h-[300px]">
         <div aria-hidden className="absolute inset-0">
+          {/* Full image stretched to fill the section — shown clearly, no dimming overlays */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <motion.img
-            src="/masjid-1.jpg" alt=""
-            className="w-full h-full object-cover object-top"
-            initial={{ scale: 1.06 }}
-            animate={{ scale: [1.06, 1.12, 1.06] }}
-            transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-            style={isDark ? { filter: 'brightness(0.62) saturate(1.05)' } : { filter: 'brightness(1.04)' }}
-          />
-          {/* left→right legibility wash (keeps the title readable, lets the mosque show) */}
-          <div className="absolute inset-0"
-            style={{ background: isDark
-              ? 'linear-gradient(90deg, rgba(6,18,12,0.92) 0%, rgba(6,18,12,0.6) 34%, rgba(6,18,12,0.25) 60%, rgba(6,18,12,0.55) 100%)'
-              : 'linear-gradient(90deg, rgba(251,248,239,0.90) 0%, rgba(251,248,239,0.58) 40%, rgba(251,248,239,0.22) 70%, rgba(251,248,239,0.45) 100%)' }} />
-          {/* top + bottom fade so it blends into the page */}
-          <div className="absolute inset-0"
-            style={{ background: isDark
-              ? 'linear-gradient(to bottom, rgba(6,18,12,0.35) 0%, transparent 28%, transparent 52%, #08160F 100%)'
-              : 'linear-gradient(to bottom, rgba(251,248,239,0.30) 0%, transparent 38%, transparent 58%, #FAF7EE 100%)' }} />
-          <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
+          <img src="/masjid-1.jpg" alt="" className="w-full h-full object-fill" />
+          {/* only a soft bottom blend into the page (no wash over the image itself) */}
+          <div className="absolute inset-x-0 bottom-0 h-24"
+            style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
           {/* crescent moon (continuous glow) */}
-          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '21%', top: 30 }}
-            animate={{ opacity: [0.65, 1, 0.65], scale: [1, 1.05, 1] }}
+          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '22%', top: 26 }}
+            animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }}
             transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
-            <svg width="44" height="44" viewBox="0 0 24 24" fill={isDark ? '#F1D588' : '#D9B441'} style={{ filter: `drop-shadow(0 0 10px ${isDark ? 'rgba(233,207,122,0.6)' : 'rgba(201,162,39,0.4)'})` }}>
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="#F1D588" style={{ filter: 'drop-shadow(0 0 12px rgba(233,207,122,0.7))' }}>
               <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
             </svg>
           </motion.div>
         </div>
 
         <div className="relative px-6 sm:px-10 pt-8 pb-7 flex flex-wrap items-start justify-between gap-6">
-          <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/40 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-gold-200 backdrop-blur">
+          <div>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-400/50 bg-white/80 text-emerald-800 shadow-sm'}`}>
               <Sparkles size={12} /> Prayer Times
             </span>
-            <h1 className="mt-4 font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.05] text-parchment">
-              Pick your mosque, anywhere on earth
+            <h1 className="mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap text-white"
+              style={{ textShadow: isDark ? '0 2px 18px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,0.9)' : '0 2px 14px rgba(255,255,255,0.7), 0 1px 2px rgba(0,0,0,0.35)' }}>
+              <span className={isDark ? 'text-white' : 'text-emerald-950'}>Pick your mosque, anywhere on earth</span>
             </h1>
-            <p className="mt-3 text-parchment/70 max-w-md leading-relaxed">
+            <p className={`mt-3 max-w-md leading-relaxed text-[15px] ${isDark ? 'text-parchment/85' : 'text-emerald-950/80'}`}
+              style={{ textShadow: isDark ? '0 1px 8px rgba(0,0,0,0.8)' : '0 1px 6px rgba(255,255,255,0.7)' }}>
               Find a masjid on the map; times are calculated for its exact location using your sect &amp; madhab.
             </p>
           </div>
 
-          <div className="hidden md:block max-w-sm text-right">
-            <p className="font-arabic text-2xl lg:text-3xl text-gold-200 leading-[1.9]" dir="rtl">
+          <div className="hidden md:block max-w-md text-right">
+            <p className="font-arabic text-3xl lg:text-4xl text-gold-200 leading-[1.9]" dir="rtl"
+              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.8)' : '0 1px 10px rgba(255,255,255,0.8), 0 1px 2px rgba(166,131,26,0.4)' }}>
               وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
             </p>
-            <p className="mt-2 text-sm text-parchment/70 leading-relaxed">
-              And establish prayer. Indeed, prayer prohibits immorality and wrong doing.
+            <p className={`mt-2.5 text-base lg:text-lg leading-relaxed font-medium ${isDark ? 'text-white/90' : 'text-emerald-950/85'}`}
+              style={{ textShadow: isDark ? '0 1px 10px rgba(0,0,0,0.85)' : '0 1px 6px rgba(255,255,255,0.75)' }}>
+              And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.
             </p>
-            <p className="mt-1.5 text-xs font-semibold text-gold-300/80">Surah Al-Ankabut (29:45)</p>
+            <p className="mt-1.5 text-sm font-bold text-gold-300"
+              style={{ textShadow: isDark ? '0 1px 10px rgba(0,0,0,0.85)' : '0 1px 6px rgba(255,255,255,0.8)' }}>
+              Surah Al-Ankabut (29:45)
+            </p>
           </div>
         </div>
       </header>
@@ -360,7 +353,7 @@ export default function PrayerTimesPage() {
         {/* decorative green-dome mosque (Masjid an-Nabawi) bleeding off the right edge */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/masjid-e-nabwi.png" alt="" aria-hidden
-          className={`pointer-events-none select-none absolute right-0 bottom-0 w-[300px] xl:w-[360px] hidden xl:block -z-10 ${isDark ? 'opacity-75' : 'opacity-95'}`} />
+          className="pointer-events-none select-none absolute right-0 bottom-0 w-[300px] xl:w-[360px] hidden xl:block -z-10 opacity-100" />
 
         {/* ── sect / madhab / method controls ── */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-5">
@@ -371,7 +364,7 @@ export default function PrayerTimesPage() {
                 {(['sunni', 'shia'] as Sect[]).map((s) => (
                   <button
                     key={s}
-                    onClick={() => { setSect(s); setFiqh(FIQH_BY_SECT[s][0]); }}
+                    onClick={() => { setSect(s); setFiqh(FIQH_BY_SECT[s][0]); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
                       ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-white/10 bg-white/[0.04] text-parchment/75 hover:bg-white/10'}`}
                   >
@@ -387,7 +380,7 @@ export default function PrayerTimesPage() {
                 {fiqhOptions.map((f) => (
                   <button
                     key={f}
-                    onClick={() => setFiqh(f)}
+                    onClick={() => { setFiqh(f); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
                       ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-white/10 bg-white/[0.04] text-parchment/75 hover:bg-white/10'}`}
                   >
