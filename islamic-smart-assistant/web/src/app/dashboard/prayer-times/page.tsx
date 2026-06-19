@@ -403,7 +403,7 @@ export default function PrayerTimesPage() {
                     key={s}
                     onClick={() => { setSect(s); setFiqh(FIQH_BY_SECT[s][0]); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]'}`}
+                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {s === 'sunni' ? 'Sunni' : 'Shia'}
                   </button>
@@ -419,7 +419,7 @@ export default function PrayerTimesPage() {
                     key={f}
                     onClick={() => { setFiqh(f); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]'}`}
+                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {FIQH_LABEL[f]}
                   </button>
@@ -433,14 +433,14 @@ export default function PrayerTimesPage() {
                 <select
                   value={methodOverride}
                   onChange={(e) => setMethodOverride(Number(e.target.value))}
-                  className="appearance-none pl-4 pr-10 py-2 rounded-xl border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/50 min-w-[16rem]"
+                  className={`appearance-none pl-4 pr-10 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 min-w-[16rem] ${isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white' : 'border-emerald-900/15 bg-white text-black'}`}
                 >
-                  <option value={-1} className="bg-midnight-900 text-parchment">Auto (by madhab)</option>
+                  <option value={-1} className={isDark ? 'bg-midnight-900 text-parchment' : 'bg-white text-black'}>Auto (by madhab)</option>
                   {METHOD_LABELS.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-midnight-900 text-parchment">{m.label}</option>
+                    <option key={m.id} value={m.id} className={isDark ? 'bg-midnight-900 text-parchment' : 'bg-white text-black'}>{m.label}</option>
                   ))}
                 </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                <ChevronDown size={16} className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-white/50' : 'text-black/50'}`} />
               </div>
             </div>
           </div>
