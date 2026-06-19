@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Users, Smartphone, Bell, BookOpen, TrendingUp, Sparkles, ArrowUpRight,
+  Smartphone, Bell, BookOpen, TrendingUp, Sparkles, ArrowUpRight,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area, CartesianGrid,
@@ -36,7 +36,6 @@ export default function Overview() {
   // Stat-card config: live `value` from analytics, gradient accent, and a
   // (currently static) delta badge. Driven by data so the JSX stays a map.
   const cards = [
-    { label: 'Total users',     value: stats.users,           icon: Users,      grad: 'from-emerald-500 to-emerald-700', delta: '+12.4%' },
     { label: 'Devices online',  value: stats.devicesOnline,   icon: Smartphone, grad: 'from-cyan-500 to-emerald-600',    delta: '+3.2%'  },
     { label: 'Azan fired (24h)', value: stats.azanFiredToday, icon: Bell,       grad: 'from-rose-500 to-amber-500',      delta: '+5.8%'  },
     { label: 'Quran played (24h)', value: stats.quranFiredToday, icon: BookOpen, grad: 'from-gold-400 to-gold-600',      delta: '+9.1%'  },
@@ -71,7 +70,7 @@ export default function Overview() {
       />
 
       {/* stat cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((c, i) => (
           <motion.div
             key={c.label}
