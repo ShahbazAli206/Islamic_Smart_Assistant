@@ -74,6 +74,68 @@ const VOICES: AzanVoice[] = [
     remote: 'https://www.islamcan.com/audio/adhan/azan4.mp3',
     art: '/azan/egypt.svg', accent: 'from-fuchsia-500 to-rose-500',
   },
+
+  // ── Uploaded reciter collection (bundled in /public/audio/azan, served to web + desktop) ──
+  {
+    id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
+    region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26', badge: 'new',
+    local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
+    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
+  },
+  {
+    id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
+    region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
+    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
+    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
+  },
+  {
+    id: 'madinah-adhan', name: 'Azan Madinah', subtitle: 'أذان مدني',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:09',
+    local: '/audio/azan/madinah-adhan.m4a', remote: '/audio/azan/madinah-adhan.m4a',
+    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
+  },
+  {
+    id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
+    region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44', badge: 'new',
+    local: '/audio/azan/egzon-ibrahimi.m4a', remote: '/audio/azan/egzon-ibrahimi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
+  },
+  {
+    id: 'islam-sobhi', name: 'Islam Sobhi', subtitle: 'القارئ اسلام صبحي',
+    region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18', badge: 'popular',
+    local: '/audio/azan/islam-sobhi.m4a', remote: '/audio/azan/islam-sobhi.m4a',
+    art: '/azan/egypt.svg', accent: 'from-rose-500 to-pink-600',
+  },
+  {
+    id: 'makkah-abdallah-ahmad', name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:29',
+    local: '/audio/azan/makkah-abdallah-ahmad.m4a', remote: '/audio/azan/makkah-abdallah-ahmad.m4a',
+    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
+  },
+  {
+    id: 'masjid-al-haram', name: 'Masjid Al-Haram', subtitle: 'The Grand Mosque, Makkah',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46', badge: 'popular',
+    local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a',
+    art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
+  },
+  {
+    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
+    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+  },
+  {
+    id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
+    region: 'Azerbaijan', lang: 'Arabic', style: 'Melodic', duration: '4:23',
+    local: '/audio/azan/seyyid-taleh-boradigahi.m4a', remote: '/audio/azan/seyyid-taleh-boradigahi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
+  },
+  {
+    id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
+    local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
+    art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
+  },
 ];
 
 const FEATURES = [
