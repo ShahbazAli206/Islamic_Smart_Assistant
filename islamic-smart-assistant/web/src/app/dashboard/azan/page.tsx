@@ -15,6 +15,7 @@ import {
   customAzanUrl, deleteAzanClip, isCustomAzan, type CustomAzan,
 } from '@/lib/customAzan';
 import { formatClock } from '@/lib/audioTrim';
+import { Azan } from '@/lib/api';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 
@@ -183,6 +184,7 @@ type Item = {
   id: string; name: string; subtitle: string; region: string;
   lang: string; style: string; duration: string; art: string; accent: string;
   badge?: 'popular' | 'new'; isCustom: boolean; defaultPick?: boolean;
+  remoteUrl?: string;   // set for backend-synced customs — played directly from this URL
 };
 
 export default function AzanPage() {
@@ -215,6 +217,19 @@ export default function AzanPage() {
   const revokeCustomUrl = () => {
     if (customUrlRef.current) { URL.revokeObjectURL(customUrlRef.current); customUrlRef.current = null; }
   };
+
+  // Custom azans synced from the backend (uploaded on ANY device). They're played
+  // straight from their public audio_url, so a clip uploaded on web/desktop/mobile
+  // shows up everywhere.
+  const [remoteCustoms, setRemoteCustoms] = useState<{ id: string; name: string; url: string; durationMs: number }[]>([]);
+  useEffect(() => {
+    Azan.voices()
+      .then((vs) => setRemoteCustoms(
+        vs.filter((v) => v.is_custom && v.audio_url)
+          .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms })),
+      ))
+      .catch(() => { /* offline / signed out — fall back to local customs only */ });
+  }, []);
 
   const selectedLabel = isCustomAzan(selectedId)
     ? (customAzans.find((c) => c.id === selectedId)?.name ?? 'Custom Azan')
@@ -272,6 +287,9 @@ export default function AzanPage() {
     if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
     await deleteAzanClip(id);
     setCustomAzans((prev) => prev.filter((c) => c.id !== id));
+    setRemoteCustoms((prev) => prev.filter((c) => c.id !== id));
+    // Remove the synced copy too (server checks ownership; no-op otherwise).
+    Azan.deleteVoice(id).catch(() => {});
     if (selectedId === id) setSelectedId('makkah');
   };
 
@@ -287,7 +305,10 @@ export default function AzanPage() {
   const downloadItem = async (item: Item) => {
     let url: string | null = null;
     let filename = `${item.name}.mp3`;
-    if (item.isCustom) {
+    if (item.remoteUrl) {
+      url = item.remoteUrl;
+      filename = `${item.name}.wav`;
+    } else if (item.isCustom) {
       url = await customAzanUrl(item.id);
       filename = `${item.name}.wav`;
     } else {
@@ -300,7 +321,21 @@ export default function AzanPage() {
     document.body.appendChild(a); a.click(); a.remove();
   };
 
+  // Play a backend-synced custom straight from its public URL.
+  const playRemote = (item: Item) => {
+    const el = audioRef.current;
+    if (!el || !item.remoteUrl) return;
+    setError(null);
+    if (activeId === item.id) { el.pause(); setActiveId(null); return; }
+    el.pause();
+    revokeCustomUrl();
+    el.src = item.remoteUrl;
+    el.play().then(() => setActiveId(item.id))
+      .catch((e) => { setActiveId(null); setError(`Couldn't play ${item.name}: ${e?.message ?? 'playback blocked'}`); });
+  };
+
   const playItem = (item: Item) => {
+    if (item.remoteUrl) { playRemote(item); return; }
     if (item.isCustom) {
       const meta = customAzans.find((c) => c.id === item.id);
       if (meta) previewCustom(meta);
@@ -322,8 +357,18 @@ export default function AzanPage() {
       lang: 'Custom', style: 'Custom', duration: formatClock(c.durationSec),
       art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true,
     }));
-    return [...builtin, ...custom];
-  }, [customAzans]);
+    // Backend-synced customs — skip any matching a local upload (same name +
+    // duration) so the uploader's own clip isn't listed twice on this device.
+    const localKeys = new Set(customAzans.map((c) => `${c.name}|${Math.round(c.durationSec)}`));
+    const remote: Item[] = remoteCustoms
+      .filter((r) => !localKeys.has(`${r.name}|${Math.round(r.durationMs / 1000)}`))
+      .map((r) => ({
+        id: r.id, name: r.name, subtitle: 'Synced upload', region: 'Custom',
+        lang: 'Custom', style: 'Custom', duration: formatClock(Math.round(r.durationMs / 1000)),
+        art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true, remoteUrl: r.url,
+      }));
+    return [...builtin, ...custom, ...remote];
+  }, [customAzans, remoteCustoms]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
