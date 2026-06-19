@@ -104,105 +104,34 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         </>
       )}
 
-      {/* ── mosque skyline anchored to the bottom, hazing out toward the top ── */}
+      {/* ── mosque panorama anchored to the bottom, hazing out toward the top ──
+          In light mode `multiply` drops the image's pale sky into the parchment
+          so only the green domes / minarets remain (watercolour feel). In dark
+          mode it's darkened + tinted and seated with a deep-green overlay. */}
       <div
-        className="absolute inset-x-0 bottom-0 h-1/2"
+        className="absolute inset-x-0 bottom-0 h-[46%] bg-no-repeat"
         style={{
-          WebkitMaskImage: 'linear-gradient(to top,#000 50%,transparent 100%)',
-          maskImage: 'linear-gradient(to top,#000 50%,transparent 100%)',
+          backgroundImage: 'url(/masjid_img.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          opacity: isDark ? 0.55 : 0.92,
+          mixBlendMode: isDark ? 'normal' : 'multiply',
+          filter: isDark
+            ? 'brightness(0.5) contrast(1.05) saturate(1.15)'
+            : 'saturate(1.05)',
+          WebkitMaskImage: 'linear-gradient(to top,#000 58%,transparent 100%)',
+          maskImage: 'linear-gradient(to top,#000 58%,transparent 100%)',
         }}
-      >
-        <MosqueSkyline isDark={isDark} />
-      </div>
-    </div>
-  );
-}
-
-/**
- * Hand-built mosque skyline silhouette: a central onion dome flanked by two
- * side domes, two inner and two outer minarets, and an arcade base. Filled with
- * a soft sage gradient in light mode (watercolour feel) and a deep-green
- * gradient in dark mode (night silhouette). Light mode also gets a few birds.
- */
-function MosqueSkyline({ isDark }: { isDark: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 400 240"
-      preserveAspectRatio="xMidYMax slice"
-      className="absolute inset-0 w-full h-full"
-    >
-      <defs>
-        <linearGradient id="mosque-light" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#d3e2d6" />
-          <stop offset="100%" stopColor="#9bbaa4" />
-        </linearGradient>
-        <linearGradient id="mosque-dark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#16563d" />
-          <stop offset="100%" stopColor="#091f15" />
-        </linearGradient>
-      </defs>
-
-      {/* birds (light mode only) */}
-      {!isDark && (
-        <g stroke="#5c7a66" strokeWidth="1.4" fill="none" opacity="0.5" className="animate-float">
-          <path d="M70 84 q5 -5 10 0 q5 -5 10 0" />
-          <path d="M104 70 q5 -5 10 0 q5 -5 10 0" />
-          <path d="M300 98 q4 -4 8 0 q4 -4 8 0" />
-        </g>
+      />
+      {isDark && (
+        <div
+          className="absolute inset-x-0 bottom-0 h-[46%]"
+          style={{
+            background:
+              'linear-gradient(to top,rgba(6,18,13,0.55) 0%,rgba(6,18,13,0.25) 45%,transparent 75%)',
+          }}
+        />
       )}
-
-      <g fill={isDark ? 'url(#mosque-dark)' : 'url(#mosque-light)'} opacity={isDark ? 0.95 : 0.6}>
-        {/* outer minaret — left */}
-        <rect x="37" y="84" width="14" height="156" />
-        <rect x="32" y="100" width="24" height="6" />
-        <path d="M37 88 Q44 64 51 88 Z" />
-        <path d="M41 66 L44 50 L47 66 Z" />
-        <circle cx="44" cy="48" r="3" />
-
-        {/* inner minaret — left */}
-        <rect x="106" y="120" width="12" height="120" />
-        <rect x="102" y="132" width="20" height="5" />
-        <path d="M106 124 Q112 104 118 124 Z" />
-        <path d="M109 108 L112 94 L115 108 Z" />
-        <circle cx="112" cy="92" r="2.5" />
-
-        {/* side dome — left */}
-        <rect x="140" y="176" width="32" height="30" />
-        <path d="M134 178 C128 156 146 146 156 134 C166 146 184 156 178 178 Z" />
-        <path d="M153 136 L156 122 L159 136 Z" />
-        <circle cx="156" cy="120" r="2.5" />
-
-        {/* central dome */}
-        <rect x="172" y="150" width="56" height="56" />
-        <path d="M166 152 C158 118 184 110 200 90 C216 110 242 118 234 152 Z" />
-        <path d="M196 92 L200 70 L204 92 Z" />
-        <circle cx="200" cy="68" r="3.5" />
-
-        {/* side dome — right */}
-        <rect x="228" y="176" width="32" height="30" />
-        <path d="M222 178 C216 156 234 146 244 134 C254 146 272 156 266 178 Z" />
-        <path d="M241 136 L244 122 L247 136 Z" />
-        <circle cx="244" cy="120" r="2.5" />
-
-        {/* inner minaret — right */}
-        <rect x="282" y="120" width="12" height="120" />
-        <rect x="278" y="132" width="20" height="5" />
-        <path d="M282 124 Q288 104 294 124 Z" />
-        <path d="M285 108 L288 94 L291 108 Z" />
-        <circle cx="288" cy="92" r="2.5" />
-
-        {/* outer minaret — right */}
-        <rect x="349" y="84" width="14" height="156" />
-        <rect x="344" y="100" width="24" height="6" />
-        <path d="M349 88 Q356 64 363 88 Z" />
-        <path d="M353 66 L356 50 L359 66 Z" />
-        <circle cx="356" cy="48" r="3" />
-
-        {/* annexes + arcade base */}
-        <rect x="60" y="186" width="44" height="54" />
-        <rect x="296" y="186" width="44" height="54" />
-        <rect x="6" y="200" width="388" height="40" />
-      </g>
-    </svg>
+    </div>
   );
 }

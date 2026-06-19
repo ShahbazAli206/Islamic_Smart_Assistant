@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, Settings,
-  BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock, Compass,
-  Moon, Sun,
+  BookOpen, Bell, Clock, Menu, X, AlarmClock, Compass,
+  Moon, Sun, ChevronRight, RefreshCw,
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { motion } from 'framer-motion';
@@ -16,24 +16,6 @@ import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { ProfileModal } from '@/components/ProfileModal';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-
-// Human-readable labels for the persisted `isa:sect` value, shown in the
-// profile panel. Falls back to the raw key if an unknown value is stored.
-const SECT_LABELS: Record<string, string> = {
-  hanafi: 'Hanafi',
-  shafii: "Shafi'i",
-  maliki: 'Maliki',
-  hanbali: 'Hanbali',
-  shia: 'Shia (Jafari)',
-};
-
-// Human-readable labels for the persisted `isa:language` value (Quran
-// translation preference) shown in the profile panel.
-const LANG_LABELS: Record<string, string> = {
-  ur: 'Urdu',
-  en: 'English',
-  none: 'Arabic only',
-};
 
 // Sidebar navigation, grouped into sections ('Worship', 'Account'). Each item
 // carries its route, label, icon, and an accent colour used when inactive.
@@ -75,6 +57,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
   const { isDark, toggle } = useTheme();
+  const router = useRouter();
+
+  // Bottom action-row state: the bell's unread dot and the sync button's spin.
+  const [hasNotif, setHasNotif] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const handleSync = () => {
+    setSyncing(true);
+    router.refresh();
+    setTimeout(() => setSyncing(false), 900);
+  };
 
   // The Overview page's header avatar / "Edit Preferences" controls live in a
   // separate route component, so they signal these shared modals via window events.
@@ -95,48 +87,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const t = isDark
     ? {
         text:        'text-parchment',
-        groupLabel:  'text-emerald-100/60',
-        itemBase:    'text-emerald-50/80 hover:bg-white/10 hover:text-white',
-        itemActive:  'bg-white/15 text-white shadow-inner ring-1 ring-white/15',
+        groupLabel:  'text-emerald-100/55',
+        itemBase:    'text-emerald-50/80 hover:bg-white/[0.06] hover:text-white',
+        itemActive:  'bg-gradient-to-r from-emerald-600/35 to-emerald-700/15 text-white ring-1 ring-emerald-400/20 shadow-inner',
         brandSub:    'text-emerald-100/70',
-        logoBox:     'bg-white/10 border-white/15',
-        toggle:      'border-white/10 bg-white/5 hover:bg-white/10 text-emerald-100/70',
-        toggleIcon:  'bg-white/10 text-gold-300',
-        profile:     'bg-white/10 border-white/10',
-        profileName: 'text-white/90',
-        profileMeta: 'text-emerald-100/70',
-        pencil:      'text-emerald-100/60 hover:text-white hover:bg-white/15',
+        logoBox:     'bg-emerald-500/15 border-emerald-300/20',
+        profile:     'bg-white/[0.07] border-white/10',
+        profileName: 'text-white',
+        premium:     'text-emerald-300',
+        chevron:     'text-emerald-100/50',
         goldAccent:  'text-gold-300/80',
         activePill:  'bg-gold-400',
         activeIcon:  'text-gold-300',
         closeBtn:    'text-emerald-100/80 hover:bg-white/15',
+        avatarRing:  'ring-emerald-300/30',
+        circleBtn:   'border-white/10 bg-white/[0.06] text-emerald-100/80 hover:bg-white/15',
+        circleGlow:  'border-emerald-400/30 bg-emerald-500/10 text-gold-300 shadow-glow-emerald',
+        divider:     'border-white/10',
       }
     : {
         text:        'text-emerald-950',
         groupLabel:  'text-emerald-800/55',
-        itemBase:    'text-emerald-900/75 hover:bg-emerald-900/5 hover:text-emerald-950',
-        itemActive:  'bg-emerald-600/15 text-emerald-900 ring-1 ring-emerald-600/20',
+        itemBase:    'text-emerald-900/75 hover:bg-emerald-900/[0.04] hover:text-emerald-950',
+        itemActive:  'bg-gradient-to-r from-emerald-200/80 to-emerald-100/55 text-emerald-900 ring-1 ring-emerald-600/15 shadow-sm',
         brandSub:    'text-emerald-800/60',
         logoBox:     'bg-emerald-600/10 border-emerald-700/20',
-        toggle:      'border-emerald-700/15 bg-white/50 hover:bg-white/80 text-emerald-800/70',
-        toggleIcon:  'bg-emerald-600/10 text-gold-700',
-        profile:     'bg-white/60 border-emerald-700/15',
+        profile:     'bg-white/70 border-emerald-700/12',
         profileName: 'text-emerald-950',
-        profileMeta: 'text-emerald-800/70',
-        pencil:      'text-emerald-700/60 hover:text-emerald-900 hover:bg-emerald-900/10',
+        premium:     'text-emerald-700',
+        chevron:     'text-emerald-800/40',
         goldAccent:  'text-gold-600',
         activePill:  'bg-gold-500',
         activeIcon:  'text-emerald-700',
         closeBtn:    'text-emerald-800/70 hover:bg-emerald-900/10',
+        avatarRing:  'ring-emerald-600/20',
+        circleBtn:   'border-emerald-700/15 bg-white/70 text-emerald-800/80 hover:bg-white',
+        circleGlow:  'border-gold-400/40 bg-gold-50 text-gold-600 shadow-[0_0_16px_rgba(221,185,75,0.35)]',
+        divider:     'border-emerald-900/10',
       };
 
-  // Profile summary values, read from the same localStorage keys the
-  // onboarding wizard writes — keeps the panel in sync with the user's setup.
-  const [name]     = useLocalStorage<string>('isa:name',     '');
-  const [city]     = useLocalStorage<string>('isa:city',     'Karachi');
-  const [country]  = useLocalStorage<string>('isa:country',  'Pakistan');
-  const [sect]     = useLocalStorage<string>('isa:sect',     'hanafi');
-  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  // Personalised greeting, read from the key the onboarding wizard writes.
+  const [name] = useLocalStorage<string>('isa:name', '');
 
   return (
     <div className="min-h-screen lg:flex">
@@ -239,7 +230,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items.map((n) => {
                   // Exact-match highlight for the current route.
                   const active = pathname === n.href;
-                  const cls = `group relative flex w-full items-center gap-3 px-3 py-1.5 rounded-xl text-sm text-left transition ${
+                  const cls = `group relative flex w-full items-center gap-3 pl-4 pr-3 py-2 rounded-2xl text-sm text-left transition ${
                     active ? t.itemActive : t.itemBase
                   }`;
                   const inner = (
@@ -275,51 +266,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        {/* ── Dark / Light mode toggle ── */}
+        {/* ── Profile card: avatar · greeting + plan · chevron (opens profile) ── */}
         <button
-          onClick={toggle}
-          className={`relative z-10 flex items-center justify-between w-full px-3 py-2.5 rounded-xl border backdrop-blur transition ${t.toggle}`}
+          onClick={() => { setProfileOpen(true); closeSidebar(); }}
+          className={`relative z-10 mt-1 flex w-full items-center gap-3 rounded-2xl border backdrop-blur px-3 py-2.5 text-left transition hover:brightness-105 ${t.profile}`}
         >
-          <span className="text-xs font-semibold">
-            {isDark ? 'Dark Mode' : 'Light Mode'}
+          {/* Avatar — initials from the stored name, else a person icon. */}
+          <span className={`shrink-0 inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 text-white font-semibold ring-2 ${t.avatarRing}`}>
+            {name ? name.trim().charAt(0).toUpperCase() : <User size={18} />}
           </span>
-          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg ${t.toggleIcon}`}>
-            {isDark ? <Sun size={14} /> : <Moon size={14} />}
+          <span className="min-w-0 flex-1">
+            <span className={`block truncate text-sm font-bold leading-tight ${t.profileName}`}>
+              {name ? `As-salamu alaykum, ${name}` : 'As-salamu alaykum'}
+            </span>
+            <span className={`block text-xs font-semibold ${t.premium}`}>Premium User</span>
           </span>
+          <ChevronRight size={18} className={`shrink-0 ${t.chevron}`} />
         </button>
 
-        {/* ── Profile panel: greeting + stored location / sect / language,
-               with a pencil to reopen onboarding and edit them ── */}
-        {/* profile panel */}
-        <div className={`relative z-10 rounded-2xl backdrop-blur border p-3 ${t.profile}`}>
-          <div className="flex items-start justify-between gap-2 mb-2">
-            {/* Personalised greeting; falls back to a generic salam if no name set. */}
-            <p className={`text-xs font-semibold leading-snug ${t.profileName}`}>
-              {name ? `As-salamu alaykum, ${name}` : 'As-salamu alaykum'}
-            </p>
-            <button
-              onClick={() => setEditPrefs(true)}
-              title="Edit preferences"
-              className={`shrink-0 p-1 rounded-lg transition ${t.pencil}`}
-            >
-              <Pencil size={13} />
-            </button>
-          </div>
+        {/* ── Quick actions: notifications · theme toggle · sync ── */}
+        <div className={`relative z-10 mt-1 flex items-center justify-around border-t pt-3 ${t.divider}`}>
+          {/* Notifications — clears its unread dot on click. */}
+          <button
+            onClick={() => setHasNotif(false)}
+            aria-label="Notifications"
+            className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${t.circleBtn}`}
+          >
+            <Bell size={18} />
+            {hasNotif && (
+              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-orange-400" />
+            )}
+          </button>
 
-          <div className={`space-y-1 text-[11px] ${t.profileMeta}`}>
-            <div className="flex items-center gap-1.5">
-              <MapPin size={11} className={`shrink-0 ${t.goldAccent}`} />
-              <span className="truncate">{city}, {country}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <GraduationCap size={11} className={`shrink-0 ${t.goldAccent}`} />
-              <span>{SECT_LABELS[sect] ?? sect}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Globe size={11} className={`shrink-0 ${t.goldAccent}`} />
-              <span>{LANG_LABELS[language] ?? language}</span>
-            </div>
-          </div>
+          {/* Theme toggle — the accented, glowing button. */}
+          <button
+            onClick={toggle}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${t.circleGlow}`}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          {/* Sync — re-fetches the dashboard data, spins while refreshing. */}
+          <button
+            onClick={handleSync}
+            aria-label="Sync"
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${t.circleBtn}`}
+          >
+            <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
+          </button>
         </div>
       </aside>
 
