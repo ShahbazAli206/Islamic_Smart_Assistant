@@ -50,6 +50,98 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
   );
 }
 
+/** Custom, fully-styled Calculation-method dropdown (replaces the native <select>). */
+function MethodDropdown({
+  value, onChange, options, isDark,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  options: { id: number; label: string }[];
+  isDark: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
+  }, []);
+
+  const items = [{ id: -1, label: 'Auto (by madhab)' }, ...options];
+  const selected = items.find((m) => m.id === value) ?? items[0];
+
+  const trig = isDark
+    ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white hover:bg-[rgba(255,255,255,0.14)]'
+    : 'border-emerald-900/15 bg-white text-black hover:bg-emerald-50';
+
+  return (
+    <div ref={ref} className="relative">
+      <motion.button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        whileTap={{ scale: 0.98 }}
+        className={`flex items-center gap-2.5 min-w-[17rem] pl-2.5 pr-3 py-2.5 rounded-xl border text-sm font-medium shadow-sm transition ${trig}`}
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold-gradient text-midnight-900 shrink-0 shadow-glow-gold">
+          <Compass size={14} />
+        </span>
+        <span className="flex-1 text-left truncate">{selected.label}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={15} className={isDark ? 'text-white/60' : 'text-emerald-700/60'} />
+        </motion.span>
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className={`absolute z-50 mt-2 left-0 w-[21rem] max-w-[82vw] rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-[#0c1f16] border-white/12 shadow-black/50' : 'bg-white border-emerald-900/10 shadow-emerald-900/15'}`}
+          >
+            <div className={`px-4 pt-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${isDark ? 'text-[#E9CF7A]/70' : 'text-emerald-600/70'}`}>
+              Calculation method
+            </div>
+            <div className="max-h-72 overflow-y-auto pb-1.5">
+              {items.map((m, i) => {
+                const sel = m.id === value;
+                return (
+                  <motion.button
+                    key={m.id}
+                    type="button"
+                    onClick={() => { onChange(m.id); setOpen(false); }}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.02, duration: 0.14 }}
+                    whileHover={{ x: 3 }}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm text-left transition-colors
+                      ${sel
+                        ? (isDark ? 'bg-emerald-500/15 text-emerald-200 font-semibold' : 'bg-emerald-50 text-emerald-800 font-semibold')
+                        : (isDark ? 'text-parchment/85 hover:bg-white/5' : 'text-ink hover:bg-emerald-50/60')}`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      {m.id === -1 && <Sparkles size={13} className={sel ? 'text-emerald-500' : isDark ? 'text-gold-300' : 'text-gold-600'} />}
+                      {m.label}
+                    </span>
+                    {sel && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }}>
+                        <Check size={15} className="text-emerald-500 shrink-0" />
+                      </motion.span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function PrayerTimesPage() {
   // --- sect / madhab (persisted) ---
   // The onboarding wizard may store isa:sect as a madhab name ('hanafi', 'shafii', …)
@@ -429,19 +521,7 @@ export default function PrayerTimesPage() {
 
             <div>
               <p className="text-[10px] text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Calculation method</p>
-              <div className="relative">
-                <select
-                  value={methodOverride}
-                  onChange={(e) => setMethodOverride(Number(e.target.value))}
-                  className={`appearance-none pl-4 pr-10 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 min-w-[16rem] ${isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white' : 'border-emerald-900/15 bg-white text-black'}`}
-                >
-                  <option value={-1} className={isDark ? 'bg-midnight-900 text-parchment' : 'bg-white text-black'}>Auto (by madhab)</option>
-                  {METHOD_LABELS.map((m) => (
-                    <option key={m.id} value={m.id} className={isDark ? 'bg-midnight-900 text-parchment' : 'bg-white text-black'}>{m.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-white/50' : 'text-black/50'}`} />
-              </div>
+              <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} />
             </div>
           </div>
         </div>
