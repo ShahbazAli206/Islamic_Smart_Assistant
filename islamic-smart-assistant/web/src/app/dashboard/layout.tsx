@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home, User, Smartphone, Music2, BarChart3, Settings,
+  Home, User, Smartphone, Music2, Settings,
   BookOpen, Bell, Clock, MapPin, Globe, GraduationCap, Pencil, Menu, X, AlarmClock, Compass,
   Moon, Sun,
 } from 'lucide-react';
@@ -52,7 +52,6 @@ const NAV = [
       { href: '/dashboard/profile',   label: 'Profile',   icon: User,       color: 'text-indigo-500' },
       { href: '/dashboard/devices',   label: 'Devices',   icon: Smartphone, color: 'text-cyan-600' },
       { href: '/dashboard/audio',     label: 'Audio',     icon: Music2,     color: 'text-fuchsia-500' },
-      { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3,  color: 'text-amber-600' },
       { href: '/dashboard/settings',  label: 'Settings',  icon: Settings,   color: 'text-slate-500' },
     ],
   },
