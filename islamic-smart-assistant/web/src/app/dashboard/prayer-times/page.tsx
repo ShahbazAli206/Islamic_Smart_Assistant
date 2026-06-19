@@ -300,13 +300,34 @@ export default function PrayerTimesPage() {
       {/* ── header banner: mosque photo + title + ayah ── */}
       <header className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
-          <img src="/backgound-image2.png" alt="" className="w-full h-full object-cover object-center" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <motion.img
+            src="/masjid-1.jpg" alt=""
+            className="w-full h-full object-cover object-top"
+            initial={{ scale: 1.06 }}
+            animate={{ scale: [1.06, 1.12, 1.06] }}
+            transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+            style={isDark ? { filter: 'brightness(0.62) saturate(1.05)' } : { filter: 'brightness(1.04)' }}
+          />
+          {/* left→right legibility wash (keeps the title readable, lets the mosque show) */}
           <div className="absolute inset-0"
             style={{ background: isDark
-              ? 'linear-gradient(90deg, rgba(8,22,15,0.88) 0%, rgba(8,22,15,0.5) 32%, rgba(8,22,15,0.22) 52%, rgba(8,22,15,0.48) 72%, rgba(8,22,15,0.78) 100%)'
-              : 'linear-gradient(90deg, rgba(251,248,239,0.72) 0%, rgba(251,248,239,0.40) 50%, rgba(251,248,239,0.08) 100%)' }} />
-          <div className={`absolute inset-0 bg-gradient-to-b from-transparent ${isDark ? 'to-[#08160F]' : 'to-[#FAF7EE]'}`} />
+              ? 'linear-gradient(90deg, rgba(6,18,12,0.92) 0%, rgba(6,18,12,0.6) 34%, rgba(6,18,12,0.25) 60%, rgba(6,18,12,0.55) 100%)'
+              : 'linear-gradient(90deg, rgba(251,248,239,0.90) 0%, rgba(251,248,239,0.58) 40%, rgba(251,248,239,0.22) 70%, rgba(251,248,239,0.45) 100%)' }} />
+          {/* top + bottom fade so it blends into the page */}
+          <div className="absolute inset-0"
+            style={{ background: isDark
+              ? 'linear-gradient(to bottom, rgba(6,18,12,0.35) 0%, transparent 28%, transparent 52%, #08160F 100%)'
+              : 'linear-gradient(to bottom, rgba(251,248,239,0.30) 0%, transparent 38%, transparent 58%, #FAF7EE 100%)' }} />
           <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
+          {/* crescent moon (continuous glow) */}
+          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '21%', top: 30 }}
+            animate={{ opacity: [0.65, 1, 0.65], scale: [1, 1.05, 1] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill={isDark ? '#F1D588' : '#D9B441'} style={{ filter: `drop-shadow(0 0 10px ${isDark ? 'rgba(233,207,122,0.6)' : 'rgba(201,162,39,0.4)'})` }}>
+              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
+            </svg>
+          </motion.div>
         </div>
 
         <div className="relative px-6 sm:px-10 pt-8 pb-7 flex flex-wrap items-start justify-between gap-6">
@@ -336,10 +357,10 @@ export default function PrayerTimesPage() {
 
       <div className="relative px-6 sm:px-10 pb-10 space-y-5">
 
-        {/* decorative green-dome mosque bleeding off the right edge */}
+        {/* decorative green-dome mosque (Masjid an-Nabawi) bleeding off the right edge */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/prayer/mosque-side.svg" alt="" aria-hidden
-          className={`pointer-events-none select-none absolute right-0 top-[30%] w-[230px] hidden 2xl:block -z-10 animate-float ${isDark ? 'opacity-50' : 'opacity-80'}`} />
+        <img src="/masjid-e-nabwi.png" alt="" aria-hidden
+          className={`pointer-events-none select-none absolute right-0 bottom-0 w-[300px] xl:w-[360px] hidden xl:block -z-10 ${isDark ? 'opacity-75' : 'opacity-95'}`} />
 
         {/* ── sect / madhab / method controls ── */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-5">
