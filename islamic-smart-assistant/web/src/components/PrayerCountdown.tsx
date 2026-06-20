@@ -304,7 +304,7 @@ export function PrayerCountdownHero({
             (Object.keys(data.timings) as (keyof PrayerTimes)[]).map((name, i) => {
               const Icon = ICONS[name];
               const isNext = next?.name === name;
-              const CARD_BGS = [
+              const CARD_BGS_LIGHT = [
                 '/OverviewPage_Asr_Time_bg.png',
                 '/quran-bg2.png',
                 '/OverviewPage_Quran-of-the-day_bg.png',
@@ -312,7 +312,15 @@ export function PrayerCountdownHero({
                 '/mihrab%20bg%20img.png',
                 '/masjid%20e%20nabwi.png',
               ];
-              const cardBg = CARD_BGS[i] ?? CARD_BGS[0];
+              const CARD_BGS_DARK = [
+                '/OverviewPage_Asr_Time_bg-darkmode.png',
+                '/quran-bg2-darkmode.png',
+                '/OverviewPage_Quran-of-the-day_bg-darkmode.png',
+                '/OverviewPage_sidebar_bottom_bg-darkmode.png',
+                '/mihrab%20bg%20img-darkmode.png',
+                '/masjid%20e%20nabwi-darkmode.png',
+              ];
+              const cardBg = (isDark ? CARD_BGS_DARK : CARD_BGS_LIGHT)[i] ?? CARD_BGS_LIGHT[0];
               // Solid gradient background; image rendered as <img> on the right side.
               const cardStyle = isNext
                 ? { background: isDark
@@ -368,18 +376,18 @@ export function PrayerCountdownHero({
                   className={`relative overflow-hidden rounded-2xl p-4 cursor-default ${cardCls}`}
                   style={{ ...cardStyle, boxShadow: cardShadow }}
                 >
-                  {/* right-side decorative image — full height, unclipped, no blur */}
+                  {/* right-side decorative image — full height, no blur, clearly visible */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={cardBg}
                     alt=""
                     aria-hidden
                     className="absolute top-1/2 right-0 -translate-y-1/2 h-[92%] w-auto pointer-events-none select-none"
-                    style={{ opacity: isDark ? 0.42 : 0.32 }}
+                    style={{ opacity: isDark ? 0.7 : 0.62 }}
                   />
-                  {/* smooth fade from card background colour to transparent — keeps text readable */}
-                  <div aria-hidden className="absolute inset-y-0 left-0 w-[68%] pointer-events-none"
-                    style={{ background: `linear-gradient(to right, ${fadeColor} 40%, transparent 100%)` }} />
+                  {/* smooth fade from card background colour to transparent */}
+                  <div aria-hidden className="absolute inset-y-0 left-0 w-[65%] pointer-events-none"
+                    style={{ background: `linear-gradient(to right, ${fadeColor} 35%, transparent 100%)` }} />
                   {/* ambient radial glow overlay */}
                   <div aria-hidden className="absolute inset-0 pointer-events-none" style={{
                     background: isNext
@@ -388,7 +396,7 @@ export function PrayerCountdownHero({
                           : 'radial-gradient(ellipse at 30% 25%, rgba(16,185,129,0.13) 0%, transparent 65%)')
                       : (isDark
                           ? 'radial-gradient(ellipse at 20% 20%, rgba(233,207,122,0.07) 0%, transparent 60%)'
-                          : 'radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.6) 0%, transparent 55%)'),
+                          : 'radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.5) 0%, transparent 55%)'),
                   }} />
                   <DomeMark color={domeColor} className="absolute -top-1 right-2 w-14 pointer-events-none" />
                   {/* pulsing border ring for the next prayer */}
@@ -405,19 +413,32 @@ export function PrayerCountdownHero({
                         : ['0 0 0px rgba(16,185,129,0)', '0 0 18px rgba(16,185,129,0.2)', '0 0 0px rgba(16,185,129,0)'] }}
                       transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }} />
                   )}
-                  {/* prayer icon in a tinted badge */}
+
+                  {/* content floats gently on a continuous slow loop */}
                   <motion.div
-                    animate={isNext ? { scale: [1, 1.14, 1], rotate: [0, 5, 0] } : {}}
-                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                    className={`relative inline-flex h-10 w-10 items-center justify-center rounded-xl ${badgeBg}`}
+                    className="relative"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{
+                      duration: 3.5 + i * 0.45,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: i * 0.55 + 0.8,
+                    }}
                   >
-                    <Icon size={20} className={iconColor} />
+                    {/* prayer icon in a tinted badge */}
+                    <motion.div
+                      animate={isNext ? { scale: [1, 1.14, 1], rotate: [0, 5, 0] } : {}}
+                      transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${badgeBg}`}
+                    >
+                      <Icon size={20} className={iconColor} />
+                    </motion.div>
+                    <p className={`mt-3 text-lg font-bold tracking-wide ${nameColor}`}>{name}</p>
+                    <p className="text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
+                    <p className={`mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold ${endColor}`}>
+                      <Clock size={13} className="shrink-0" /> Ends {endTime}
+                    </p>
                   </motion.div>
-                  <p className={`relative mt-3 text-base font-bold tracking-wide ${nameColor}`}>{name}</p>
-                  <p className="relative text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
-                  <p className={`relative mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold ${endColor}`}>
-                    <Clock size={12} className="shrink-0" /> Ends {endTime}
-                  </p>
                 </motion.div>
               );
             })}
