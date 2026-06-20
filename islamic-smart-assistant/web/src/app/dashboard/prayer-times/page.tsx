@@ -453,7 +453,7 @@ export default function PrayerTimesPage() {
             </h1>
             {/* subtitle — bigger, on a dark translucent panel */}
             <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
-              style={{ background: isDark ? 'transparent' : 'rgba(10,30,20,0.38)', backdropFilter: isDark ? 'none' : 'blur(10px)', WebkitBackdropFilter: isDark ? 'none' : 'blur(10px)', border: isDark ? 'none' : '1px solid rgba(233,207,122,0.2)' }}>
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
               <p className="text-base sm:text-lg leading-relaxed text-white/90">
                 Find a masjid on the map; times are calculated for its exact location using your sect &amp; madhab.
               </p>
@@ -463,7 +463,7 @@ export default function PrayerTimesPage() {
           {/* ayah — dark translucent panel */}
           <div className="hidden md:block max-w-md">
             <div className="rounded-2xl px-5 py-4 text-right"
-              style={{ background: isDark ? 'transparent' : 'rgba(10,30,20,0.38)', backdropFilter: isDark ? 'none' : 'blur(10px)', WebkitBackdropFilter: isDark ? 'none' : 'blur(10px)', border: isDark ? 'none' : '1px solid rgba(233,207,122,0.22)' }}>
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
               <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
               </p>
