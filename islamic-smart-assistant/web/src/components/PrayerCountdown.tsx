@@ -306,26 +306,25 @@ export function PrayerCountdownHero({
               const isNext = next?.name === name;
               const CARD_BGS = [
                 '/OverviewPage_Asr_Time_bg.png',
+                '/quran-bg2.png',
                 '/OverviewPage_Quran-of-the-day_bg.png',
                 '/OverviewPage_sidebar_bottom_bg.png',
+                '/mihrab%20bg%20img.png',
+                '/masjid%20e%20nabwi.png',
               ];
-              const cardBg = CARD_BGS[i % 3];
-              // Background image layered under a tinted gradient overlay for readability.
+              const cardBg = CARD_BGS[i] ?? CARD_BGS[0];
+              // Solid gradient background; image rendered as <img> on the right side.
               const cardStyle = isNext
-                ? {
-                    backgroundImage: isDark
-                      ? `linear-gradient(145deg,rgba(18,72,48,0.80) 0%,rgba(8,34,22,0.86) 100%), url('${cardBg}')`
-                      : `linear-gradient(145deg,rgba(210,244,230,0.78) 0%,rgba(178,232,208,0.84) 100%), url('${cardBg}')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }
-                : {
-                    backgroundImage: isDark
-                      ? `linear-gradient(150deg,rgba(18,40,28,0.84) 0%,rgba(8,20,14,0.90) 100%), url('${cardBg}')`
-                      : `linear-gradient(150deg,rgba(255,253,247,0.78) 0%,rgba(239,228,200,0.84) 100%), url('${cardBg}')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  };
+                ? { background: isDark
+                    ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
+                    : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
+                : { background: isDark
+                    ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
+                    : 'linear-gradient(150deg,#fffdf7 0%,#f7f0db 58%,#efe4c8 100%)' };
+              // Left-edge solid colour used in the image fade (matches card bg start colour).
+              const fadeColor = isNext
+                ? (isDark ? '#1c5e43' : '#e3f4ea')
+                : (isDark ? 'rgba(18,40,28,1)' : '#fffdf7');
               const cardCls = isNext
                 ? (isDark
                     ? 'border border-gold-300/50 text-parchment'
@@ -369,6 +368,18 @@ export function PrayerCountdownHero({
                   className={`relative overflow-hidden rounded-2xl p-4 cursor-default ${cardCls}`}
                   style={{ ...cardStyle, boxShadow: cardShadow }}
                 >
+                  {/* right-side decorative image — full height, unclipped, no blur */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={cardBg}
+                    alt=""
+                    aria-hidden
+                    className="absolute top-1/2 right-0 -translate-y-1/2 h-[92%] w-auto pointer-events-none select-none"
+                    style={{ opacity: isDark ? 0.42 : 0.32 }}
+                  />
+                  {/* smooth fade from card background colour to transparent — keeps text readable */}
+                  <div aria-hidden className="absolute inset-y-0 left-0 w-[68%] pointer-events-none"
+                    style={{ background: `linear-gradient(to right, ${fadeColor} 40%, transparent 100%)` }} />
                   {/* ambient radial glow overlay */}
                   <div aria-hidden className="absolute inset-0 pointer-events-none" style={{
                     background: isNext
