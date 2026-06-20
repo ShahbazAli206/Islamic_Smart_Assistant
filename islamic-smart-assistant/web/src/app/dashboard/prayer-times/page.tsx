@@ -431,7 +431,7 @@ export default function PrayerTimesPage() {
           </div>
 
           {/* bottom blend into the page */}
-          <div className="absolute inset-x-0 bottom-0 h-20" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           {/* crescent moon over the mosque */}
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
@@ -442,7 +442,7 @@ export default function PrayerTimesPage() {
           </motion.div>
         </div>
 
-        <div className="relative px-6 sm:px-10 pt-8 pb-7 flex flex-wrap items-start justify-between gap-6">
+        <div className="relative px-6 sm:px-10 pt-8 pb-3 flex flex-wrap items-start justify-between gap-6">
           <div>
             <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
               <Sparkles size={12} /> Prayer Times
@@ -461,9 +461,9 @@ export default function PrayerTimesPage() {
           </div>
 
           {/* ayah — dark translucent panel */}
-          <div className="hidden md:block max-w-md">
-            <div className="rounded-2xl px-5 py-4 text-right"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
+          <div className="hidden md:block max-w-[17rem]">
+            <div className="rounded-2xl px-4 py-6 text-right"
+              style={{ background: isDark ? 'rgba(8,22,15,0.32)' : 'rgba(10,30,20,0.15)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.14)' }}>
               <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
               </p>
@@ -488,7 +488,7 @@ export default function PrayerTimesPage() {
           style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <p className="text-[10px] text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Sect</p>
+              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Sect</p>
               <div className="flex gap-2">
                 {(['sunni', 'shia'] as Sect[]).map((s) => (
                   <button
@@ -504,7 +504,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-[10px] text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Madhab / Fiqh</p>
+              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Madhab / Fiqh</p>
               <div className="flex flex-wrap gap-2">
                 {fiqhOptions.map((f) => (
                   <button
@@ -520,7 +520,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-[10px] text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Calculation method</p>
+              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Calculation method</p>
               <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} />
             </div>
           </div>

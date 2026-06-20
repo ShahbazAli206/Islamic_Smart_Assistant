@@ -304,14 +304,28 @@ export function PrayerCountdownHero({
             (Object.keys(data.timings) as (keyof PrayerTimes)[]).map((name, i) => {
               const Icon = ICONS[name];
               const isNext = next?.name === name;
-              // Mixed cream/green gradient surface — never flat white — with depth.
+              const CARD_BGS = [
+                '/OverviewPage_Asr_Time_bg.png',
+                '/OverviewPage_Quran-of-the-day_bg.png',
+                '/OverviewPage_sidebar_bottom_bg.png',
+              ];
+              const cardBg = CARD_BGS[i % 3];
+              // Background image layered under a tinted gradient overlay for readability.
               const cardStyle = isNext
-                ? { background: isDark
-                    ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
-                    : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
-                : { background: isDark
-                    ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
-                    : 'linear-gradient(150deg,#fffdf7 0%,#f7f0db 58%,#efe4c8 100%)' };
+                ? {
+                    backgroundImage: isDark
+                      ? `linear-gradient(145deg,rgba(18,72,48,0.80) 0%,rgba(8,34,22,0.86) 100%), url('${cardBg}')`
+                      : `linear-gradient(145deg,rgba(210,244,230,0.78) 0%,rgba(178,232,208,0.84) 100%), url('${cardBg}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : {
+                    backgroundImage: isDark
+                      ? `linear-gradient(150deg,rgba(18,40,28,0.84) 0%,rgba(8,20,14,0.90) 100%), url('${cardBg}')`
+                      : `linear-gradient(150deg,rgba(255,253,247,0.78) 0%,rgba(239,228,200,0.84) 100%), url('${cardBg}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  };
               const cardCls = isNext
                 ? (isDark
                     ? 'border border-gold-300/50 text-parchment'
