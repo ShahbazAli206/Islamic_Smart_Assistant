@@ -321,18 +321,28 @@ export function PrayerCountdownHero({
                 '/masjid%20e%20nabwi-darkmode.png',
               ];
               const cardBg = (isDark ? CARD_BGS_DARK : CARD_BGS_LIGHT)[i] ?? CARD_BGS_LIGHT[0];
-              // Solid gradient background; image rendered as <img> on the right side.
+              // Per-card light-mode gradients: yellow / pink / green cycling → white on the right.
+              const LIGHT_GRADIENTS = [
+                'linear-gradient(to right, #fef9c3 0%, #fce7f3 28%, #dcfce7 55%, #ffffff 100%)',
+                'linear-gradient(to right, #fce7f3 0%, #dcfce7 28%, #fef9c3 55%, #ffffff 100%)',
+                'linear-gradient(to right, #dcfce7 0%, #fef9c3 28%, #fce7f3 55%, #ffffff 100%)',
+                'linear-gradient(to right, #fef9c3 0%, #dcfce7 28%, #fce7f3 55%, #ffffff 100%)',
+                'linear-gradient(to right, #fce7f3 0%, #fef9c3 28%, #dcfce7 55%, #ffffff 100%)',
+                'linear-gradient(to right, #dcfce7 0%, #fce7f3 28%, #fef9c3 55%, #ffffff 100%)',
+              ];
+              // Left-edge colours matching each light gradient start (used for the fade overlay).
+              const LIGHT_FADE_COLORS = ['#fef9c3', '#fce7f3', '#dcfce7', '#fef9c3', '#fce7f3', '#dcfce7'];
               const cardStyle = isNext
                 ? { background: isDark
                     ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
                     : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
                 : { background: isDark
                     ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
-                    : 'linear-gradient(150deg,#fffdf7 0%,#f7f0db 58%,#efe4c8 100%)' };
+                    : (LIGHT_GRADIENTS[i] ?? LIGHT_GRADIENTS[0]) };
               // Left-edge solid colour used in the image fade (matches card bg start colour).
               const fadeColor = isNext
                 ? (isDark ? '#1c5e43' : '#e3f4ea')
-                : (isDark ? 'rgba(18,40,28,1)' : '#fffdf7');
+                : (isDark ? 'rgba(18,40,28,1)' : (LIGHT_FADE_COLORS[i] ?? '#fef9c3'));
               const cardCls = isNext
                 ? (isDark
                     ? 'border border-gold-300/50 text-parchment'
