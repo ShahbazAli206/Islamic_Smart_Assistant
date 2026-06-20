@@ -284,12 +284,21 @@ export default function QuranPage() {
                 <BookOpen size={16} className="text-gold-300" /> Clear search
               </button>
             ) : (
-              <button
+              <motion.button
                 onClick={() => setShowAll((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-full bg-mosque-gradient text-parchment px-6 py-3 text-sm font-semibold shadow-lg hover:brightness-110 transition"
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.97 }}
+                className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-shadow ${
+                  isDark
+                    ? 'bg-emerald-900/50 border border-emerald-500/30 text-emerald-100 shadow-lg shadow-emerald-900/40 hover:bg-emerald-800/60 hover:border-emerald-400/50'
+                    : 'bg-white/70 border-2 border-emerald-500 text-emerald-800 shadow-lg shadow-emerald-200 hover:bg-emerald-50 backdrop-blur-sm'
+                }`}
               >
-                <BookOpen size={16} className="text-gold-300" /> {showAll ? 'Show fewer Surahs' : 'Browse All 114 Surahs'}
-              </button>
+                <BookOpen size={16} className={isDark ? 'text-gold-300' : 'text-emerald-600'} />
+                {showAll ? 'Show fewer Surahs' : 'Browse All 114 Surahs'}
+              </motion.button>
             )}
           </div>
         </div>
