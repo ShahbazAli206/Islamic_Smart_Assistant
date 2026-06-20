@@ -549,12 +549,12 @@ export default function PrayerTimesPage() {
           <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-4 space-y-3">
             <form onSubmit={doGeocode} className="flex flex-wrap gap-2">
               <div className="relative flex-1 min-w-[200px]">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-parchment/40" />
+                <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`} />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Search a city or area (e.g. London WC2N)…"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.06] text-parchment placeholder:text-parchment/40 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'border border-white/10 bg-white/[0.06] text-parchment placeholder:text-parchment/40' : 'border border-neutral-200 bg-white text-neutral-800 placeholder:text-neutral-400'}`}
                 />
               </div>
               <button
@@ -567,10 +567,10 @@ export default function PrayerTimesPage() {
               <button
                 type="button"
                 onClick={useMyLocation}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-parchment/85 hover:bg-white/10 transition"
+                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${isDark ? 'border border-white/15 bg-white/[0.06] text-parchment/85 hover:bg-white/10' : 'border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50'}`}
                 title="Use my location"
               >
-                <LocateFixed size={16} className="text-gold-300" /> My Location
+                <LocateFixed size={16} className={isDark ? 'text-gold-300' : 'text-emerald-600'} /> My Location
               </button>
             </form>
 
