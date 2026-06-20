@@ -321,28 +321,18 @@ export function PrayerCountdownHero({
                 '/masjid%20e%20nabwi-darkmode.png',
               ];
               const cardBg = (isDark ? CARD_BGS_DARK : CARD_BGS_LIGHT)[i] ?? CARD_BGS_LIGHT[0];
-              // Per-card light-mode gradients: yellow / pink / green cycling → white on the right.
-              const LIGHT_GRADIENTS = [
-                'linear-gradient(to right, #fef9c3 0%, #fce7f3 28%, #dcfce7 55%, #ffffff 100%)',
-                'linear-gradient(to right, #fce7f3 0%, #dcfce7 28%, #fef9c3 55%, #ffffff 100%)',
-                'linear-gradient(to right, #dcfce7 0%, #fef9c3 28%, #fce7f3 55%, #ffffff 100%)',
-                'linear-gradient(to right, #fef9c3 0%, #dcfce7 28%, #fce7f3 55%, #ffffff 100%)',
-                'linear-gradient(to right, #fce7f3 0%, #fef9c3 28%, #dcfce7 55%, #ffffff 100%)',
-                'linear-gradient(to right, #dcfce7 0%, #fce7f3 28%, #fef9c3 55%, #ffffff 100%)',
-              ];
-              // Left-edge colours matching each light gradient start (used for the fade overlay).
-              const LIGHT_FADE_COLORS = ['#fef9c3', '#fce7f3', '#dcfce7', '#fef9c3', '#fce7f3', '#dcfce7'];
+              // Light mode: green → yellow → white (all cards same gradient, image lives in white zone).
               const cardStyle = isNext
                 ? { background: isDark
                     ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
                     : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
                 : { background: isDark
                     ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
-                    : (LIGHT_GRADIENTS[i] ?? LIGHT_GRADIENTS[0]) };
-              // Left-edge solid colour used in the image fade (matches card bg start colour).
+                    : 'linear-gradient(to right, #bbf7d0 0%, #d9f99d 20%, #fef9c3 40%, #ffffff 56%)' };
+              // Fade-overlay colour (used for dark mode and the isNext light card).
               const fadeColor = isNext
                 ? (isDark ? '#1c5e43' : '#e3f4ea')
-                : (isDark ? 'rgba(18,40,28,1)' : (LIGHT_FADE_COLORS[i] ?? '#fef9c3'));
+                : 'rgba(18,40,28,1)';
               const cardCls = isNext
                 ? (isDark
                     ? 'border border-gold-300/50 text-parchment'
@@ -386,18 +376,24 @@ export function PrayerCountdownHero({
                   className={`relative overflow-hidden rounded-2xl p-4 cursor-default ${cardCls}`}
                   style={{ ...cardStyle, boxShadow: cardShadow }}
                 >
-                  {/* right-side decorative image — full height, no blur, clearly visible */}
+                  {/* right-side image — full opacity, CSS mask fades its left edge into the card */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={cardBg}
                     alt=""
                     aria-hidden
                     className="absolute top-1/2 right-0 -translate-y-1/2 h-[92%] w-auto pointer-events-none select-none"
-                    style={{ opacity: isDark ? 0.7 : 0.62 }}
+                    style={{
+                      opacity: 1,
+                      maskImage: 'linear-gradient(to right, transparent 0%, black 52%)',
+                      WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 52%)',
+                    }}
                   />
-                  {/* smooth fade from card background colour to transparent */}
-                  <div aria-hidden className="absolute inset-y-0 left-0 w-[65%] pointer-events-none"
-                    style={{ background: `linear-gradient(to right, ${fadeColor} 35%, transparent 100%)` }} />
+                  {/* fade overlay — dark mode and isNext only (light non-next uses CSS mask above) */}
+                  {(isDark || isNext) && (
+                    <div aria-hidden className="absolute inset-y-0 left-0 w-[65%] pointer-events-none"
+                      style={{ background: `linear-gradient(to right, ${fadeColor} 35%, transparent 100%)` }} />
+                  )}
                   {/* ambient radial glow overlay */}
                   <div aria-hidden className="absolute inset-0 pointer-events-none" style={{
                     background: isNext
