@@ -140,15 +140,15 @@ export default function QuranPage() {
 
           {/* right: Quran ayah */}
           <div className="hidden md:block max-w-[16rem]">
-            <div className="rounded-2xl px-4 py-8 text-right"
+            <div className="rounded-2xl px-4 py-3 text-right"
               style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
-              <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
+              <p className={`font-arabic text-xl lg:text-2xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنصِتُوا لَعَلَّكُمْ تُرْحَمُونَ
               </p>
-              <p className="mt-2.5 text-base lg:text-lg leading-relaxed font-medium text-white/90">
+              <p className="mt-1.5 text-sm lg:text-base leading-relaxed font-medium text-white/90">
                 And when the Quran is recited, listen to it and pay attention that you may receive mercy.
               </p>
-              <p className="mt-1.5 text-sm font-bold text-[#F1D588]">Surah Al-A&apos;raf (7:204)</p>
+              <p className="mt-1 text-xs font-bold text-[#F1D588]">Surah Al-A&apos;raf (7:204)</p>
             </div>
           </div>
         </div>
