@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Islamic Assistant Setup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;font-size:13px;overflow:hidden;user-select:none;background:#ececec}
+
+/* ── Window frame ───────────────────────────────────────── */
+.frame{display:flex;flex-direction:column;height:100vh;border:1px solid #999;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,.25)}
+
+/* ── Wizard body ────────────────────────────────────────── */
+.wizard-body{display:flex;flex:1;overflow:hidden}
+
+/* ── Left sidebar ───────────────────────────────────────── */
+.sidebar{
+  width:186px;flex-shrink:0;
+  background:linear-gradient(180deg,#1a4a3a 0%,#0d3028 100%);
+  display:flex;flex-direction:column;padding:0}
+.sb-logo{
+  text-align:center;padding:28px 16px 20px;
+  border-bottom:1px solid rgba(255,255,255,.12)}
+.sb-logo-icon{font-size:44px;line-height:1}
+.sb-logo-name{color:rgba(255,255,255,.92);font-size:13px;font-weight:700;margin-top:8px;letter-spacing:.3px}
+.sb-logo-ver{color:rgba(255,255,255,.38);font-size:10px;margin-top:3px}
+.sb-steps{flex:1;padding:18px 0}
+.sb-step{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;cursor:default;transition:background .15s}
+.sb-step.active{background:rgba(255,255,255,.14)}
+.step-dot{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0}
+.sb-step.done   .step-dot{background:#4ade80;color:#1a4a3a}
+.sb-step.active .step-dot{background:#fff;color:#1a4a3a}
+.sb-step.pending .step-dot{background:rgba(255,255,255,.14);color:rgba(255,255,255,.38)}
+.step-lbl{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-step.done   .step-lbl{color:rgba(255,255,255,.52)}
+.sb-step.active .step-lbl{color:#fff;font-weight:600}
+.sb-step.pending .step-lbl{color:rgba(255,255,255,.32)}
+.sb-footer{
+  padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);
+  text-align:center;color:rgba(255,255,255,.28);font-size:10px}
+
+/* ── Right content panel ────────────────────────────────── */
+.content-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.step-header{
+  background:#f4f4f4;border-bottom:1px solid #ddd;
+  padding:14px 24px}
+.step-header h2{font-size:15px;font-weight:600;color:#111}
+.step-header p{font-size:11px;color:#777;margin-top:3px}
+.content-body{flex:1;overflow-y:auto;padding:22px 24px}
+
+/* ── Screens ────────────────────────────────────────────── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* Welcome */
+.welcome-icon{font-size:68px;text-align:center;margin:4px 0 14px;line-height:1}
+.welcome-title{font-size:18px;font-weight:700;text-align:center;color:#1a4a3a;margin-bottom:10px}
+.welcome-body{font-size:12px;color:#555;line-height:1.75}
+.welcome-body p{margin-bottom:8px}
+.welcome-body strong{color:#1a4a3a}
+hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
+.tip-box{
+  background:#f0f7f4;border:1px solid #c3e0d6;border-radius:4px;
+  padding:9px 12px;font-size:11px;color:#2d6b56}
+
+/* Form elements */
+.field{margin-bottom:15px}
+.field label{display:block;font-size:11px;font-weight:600;color:#333;margin-bottom:4px}
+.field input[type=text]{
+  display:block;width:100%;padding:6px 9px;
+  border:1px solid #bbb;font-size:12px;
+  font-family:'Segoe UI',sans-serif;border-radius:2px;background:#fff;outline:none}
+.field input[type=text]:focus{border-color:#1a4a3a}
+.field-note{font-size:10px;color:#999;margin-top:3px}
+.field-row{display:flex;gap:10px}
+.field-row .field{flex:1}
+
+.input-row{display:flex;gap:6px}
+.input-row input[type=text]{flex:1;padding:6px 9px;border:1px solid #bbb;font-size:12px;font-family:'Segoe UI',sans-serif;border-radius:2px;outline:none}
+.input-row input:focus{border-color:#1a4a3a}
+.browse-btn{
+  padding:5px 11px;border:1px solid #aaa;background:#e6e6e6;
+  cursor:pointer;font-size:12px;font-family:'Segoe UI',sans-serif;border-radius:2px;white-space:nowrap}
+.browse-btn:hover{background:#d5d5d5}
+
+/* Checkboxes */
+.check-list{display:flex;flex-direction:column;gap:2px}
+.check-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:10px 11px;border:1px solid transparent;border-radius:4px;cursor:pointer;transition:background .12s}
+.check-item:hover{background:#f5f5f5;border-color:#e2e2e2}
+.check-item input[type=checkbox]{
+  margin-top:1px;width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#1a4a3a}
+.check-text .check-title{font-size:12px;font-weight:600;color:#222}
+.check-text .check-desc{font-size:10.5px;color:#888;margin-top:2px;line-height:1.4}
+
+/* Location step */
+.loc-tabs{display:flex;gap:8px;margin-bottom:14px}
+.loc-tab{
+  flex:1;padding:10px 6px;border:2px solid #ddd;border-radius:6px;
+  background:#fff;cursor:pointer;text-align:center;transition:all .14s}
+.loc-tab:hover{border-color:#aaa;background:#f9f9f9}
+.loc-tab.active{border-color:#1a4a3a;background:#f0f7f4}
+.loc-tab-icon{font-size:22px;margin-bottom:3px}
+.loc-tab-lbl{font-size:11px;color:#666;font-weight:500}
+.loc-tab.active .loc-tab-lbl{color:#1a4a3a;font-weight:700}
+
+.loc-pane{display:none}
+.loc-pane.active{display:block}
+
+.detect-btn{
+  display:block;width:100%;padding:9px;
+  border:1px solid #1a4a3a;border-radius:4px;
+  background:#1a4a3a;color:#fff;
+  font-size:12px;cursor:pointer;font-family:'Segoe UI',sans-serif;text-align:center}
+.detect-btn:hover:not(:disabled){background:#2d6b56;border-color:#2d6b56}
+.detect-btn:disabled{opacity:.55;cursor:default}
+
+.status-bar{font-size:11px;margin-top:8px;padding:7px 10px;border-radius:3px}
+.status-bar.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.status-bar.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.status-bar.info   {background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.status-bar.loading{background:#fafafa;color:#555;border:1px solid #e5e7eb}
+.loc-result{margin-top:14px;display:none}
+
+/* Summary */
+.summary{border:1px solid #e0e0e0;border-radius:4px;overflow:hidden}
+.sum-row{display:flex;border-bottom:1px solid #ebebeb}
+.sum-row:last-child{border-bottom:none}
+.sum-key{width:42%;padding:8px 12px;background:#f7f7f7;font-size:11px;font-weight:600;color:#666;border-right:1px solid #ebebeb}
+.sum-val{padding:8px 12px;font-size:11px;color:#222}
+.sum-val.on{color:#166534;font-weight:600}
+.sum-val.off{color:#999}
+
+/* Finish */
+.finish-box{text-align:center;padding:4px 0 8px}
+.finish-icon{font-size:64px;margin-bottom:12px;line-height:1}
+.finish-title{font-size:19px;font-weight:700;color:#1a4a3a;margin-bottom:10px}
+.finish-body{font-size:12px;color:#555;line-height:1.7}
+.finish-body strong{color:#1a4a3a}
+.launch-row{
+  margin-top:22px;display:flex;align-items:center;
+  justify-content:center;gap:8px;cursor:pointer}
+.launch-row input{accent-color:#1a4a3a;cursor:pointer}
+.launch-row label{font-size:12px;color:#333;cursor:pointer}
+
+/* ── Button bar ─────────────────────────────────────────── */
+.btn-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 18px;border-top:1px solid #ccc;background:#ebebeb}
+.spacer{flex:1}
+.btn{
+  padding:5px 20px;border:1px solid #adadad;background:#e3e3e3;
+  font-family:'Segoe UI',sans-serif;font-size:12px;cursor:pointer;
+  border-radius:2px;min-width:80px;text-align:center;line-height:1.6}
+.btn:hover:not(:disabled){background:#ccc;border-color:#888}
+.btn:active:not(:disabled){background:#bbb}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-primary{background:#1a4a3a;color:#fff;border-color:#1a4a3a}
+.btn-primary:hover:not(:disabled){background:#2d6b56;border-color:#2d6b56}
+.btn-primary:active:not(:disabled){background:#143d2f}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ═══════════════ WIZARD BODY ═══════════════ -->
+  <div class="wizard-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">🕌</div>
+        <div class="sb-logo-name">Islamic Assistant</div>
+        <div class="sb-logo-ver">v1.0.0 Setup</div>
+      </div>
+      <div class="sb-steps" id="sbSteps"></div>
+      <div class="sb-footer">© Islamic Assistant</div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="content-wrap">
+      <!-- Step header (updated per step) -->
+      <div class="step-header" id="stepHeader">
+        <h2 id="stepTitle">Welcome</h2>
+        <p id="stepSub">Let's get you set up</p>
+      </div>
+
+      <div class="content-body">
+
+        <!-- ── STEP 0: Welcome ── -->
+        <div class="screen active" id="s0">
+          <div class="welcome-icon">🕌</div>
+          <div class="welcome-title">Welcome to Islamic Assistant</div>
+          <div class="welcome-body">
+            <p>This wizard will guide you through the initial configuration of <strong>Islamic Assistant</strong>.</p>
+            <p>You will set up your <strong>location</strong> for accurate prayer times &amp; Qibla direction, choose <strong>shortcut</strong> preferences, and configure <strong>Azan</strong> notifications.</p>
+            <p>Click <strong>Next</strong> to begin, or <strong>Cancel</strong> to exit.</p>
+          </div>
+          <hr class="divider">
+          <div class="tip-box">💡 It is recommended that you close all other applications before continuing.</div>
+        </div>
+
+        <!-- ── STEP 1: Data Location ── -->
+        <div class="screen" id="s1">
+          <div class="field">
+            <label>Application Data Folder</label>
+            <div class="input-row">
+              <input type="text" id="dataPath" readonly placeholder="Loading…">
+              <button class="browse-btn" id="browseBtn">Browse…</button>
+            </div>
+            <div class="field-note">Prayer time cache and settings will be saved here.</div>
+          </div>
+          <div class="field">
+            <label>Estimated disk usage</label>
+            <div style="font-size:12px;color:#444;padding:4px 0">~50 MB (app) + ~5 MB (data)</div>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Shortcuts &amp; Startup ── -->
+        <div class="screen" id="s2">
+          <div class="check-list">
+            <label class="check-item">
+              <input type="checkbox" id="chkDesktop" checked>
+              <div class="check-text">
+                <div class="check-title">Create Desktop Shortcut</div>
+                <div class="check-desc">Adds an "Islamic Assistant" icon to your Desktop for quick access.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkStartup">
+              <div class="check-text">
+                <div class="check-title">Launch at Windows Startup</div>
+                <div class="check-desc">Starts automatically when you log in so you never miss Azan.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkTray" checked>
+              <div class="check-text">
+                <div class="check-title">Keep Running in System Tray</div>
+                <div class="check-desc">Closing the window hides to the system tray so Azan can play in the background.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkStartMin">
+              <div class="check-text">
+                <div class="check-title">Start Minimized to Tray</div>
+                <div class="check-desc">Launch silently without opening the main window on startup.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: Location ── -->
+        <div class="screen" id="s3">
+          <p style="font-size:12px;color:#555;margin-bottom:14px">
+            Islamic Assistant needs your location to calculate accurate prayer times and Qibla direction.
+          </p>
+          <div class="loc-tabs">
+            <div class="loc-tab active" id="tab-ip" onclick="switchTab('ip')">
+              <div class="loc-tab-icon">🌐</div>
+              <div class="loc-tab-lbl">Detect by IP</div>
+            </div>
+            <div class="loc-tab" id="tab-gps" onclick="switchTab('gps')">
+              <div class="loc-tab-icon">📍</div>
+              <div class="loc-tab-lbl">Use GPS</div>
+            </div>
+            <div class="loc-tab" id="tab-manual" onclick="switchTab('manual')">
+              <div class="loc-tab-icon">✏️</div>
+              <div class="loc-tab-lbl">Enter Manually</div>
+            </div>
+          </div>
+
+          <!-- IP pane -->
+          <div class="loc-pane active" id="pane-ip">
+            <button class="detect-btn" id="btnDetectIp" onclick="doDetectIp()">🔍 Detect Location via IP</button>
+            <div class="status-bar info" id="statusIp">Click the button above to auto-detect your city and country.</div>
+          </div>
+          <!-- GPS pane -->
+          <div class="loc-pane" id="pane-gps">
+            <button class="detect-btn" id="btnDetectGps" onclick="doDetectGps()">📡 Request GPS Location</button>
+            <div class="status-bar info" id="statusGps">Click above to use your device's GPS sensor.</div>
+          </div>
+          <!-- Manual pane -->
+          <div class="loc-pane" id="pane-manual">
+            <div class="field-row" style="margin-top:4px">
+              <div class="field">
+                <label>City</label>
+                <input type="text" id="manualCity" placeholder="e.g. Karachi" oninput="onManual()">
+              </div>
+              <div class="field">
+                <label>Country</label>
+                <input type="text" id="manualCountry" placeholder="e.g. Pakistan" oninput="onManual()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Shared detected result editor -->
+          <div class="loc-result" id="locResult">
+            <div class="field-row">
+              <div class="field">
+                <label>City (editable)</label>
+                <input type="text" id="locCity" oninput="onLocEdit()">
+              </div>
+              <div class="field">
+                <label>Country (editable)</label>
+                <input type="text" id="locCountry" oninput="onLocEdit()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STEP 4: Permissions ── -->
+        <div class="screen" id="s4">
+          <p style="font-size:12px;color:#555;margin-bottom:14px">
+            Choose which features to enable. These can be changed at any time in Settings.
+          </p>
+          <div class="check-list">
+            <label class="check-item">
+              <input type="checkbox" id="chkAzan" checked>
+              <div class="check-text">
+                <div class="check-title">Automatic Azan Playback</div>
+                <div class="check-desc">Plays the Azan audio automatically at each prayer time, even when the window is closed.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkNotif" checked>
+              <div class="check-text">
+                <div class="check-title">Desktop Notifications</div>
+                <div class="check-desc">Shows Windows toast notifications for prayer times and Azan alerts.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkGeo" checked>
+              <div class="check-text">
+                <div class="check-title">Location Access</div>
+                <div class="check-desc">Allows the app to refresh your location if you travel to a new city.</div>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" id="chkUpdates" checked>
+              <div class="check-text">
+                <div class="check-title">Automatic Updates</div>
+                <div class="check-desc">Checks for and installs updates in the background to keep your app current.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── STEP 5: Summary ── -->
+        <div class="screen" id="s5">
+          <p style="font-size:12px;color:#555;margin-bottom:14px">
+            Review your selections. Click <strong>Install</strong> to apply settings and launch Islamic Assistant.
+          </p>
+          <div class="summary" id="summaryEl"></div>
+        </div>
+
+        <!-- ── FINISH screen ── -->
+        <div class="screen" id="sFinish">
+          <div class="finish-box">
+            <div class="finish-icon">✅</div>
+            <div class="finish-title">Setup Complete!</div>
+            <div class="finish-body">
+              <p>Islamic Assistant has been configured successfully.</p>
+              <p>Prayer times &amp; Qibla direction are set for <strong id="finishLoc">your location</strong>.</p>
+            </div>
+            <div class="launch-row">
+              <input type="checkbox" id="chkLaunch" checked>
+              <label for="chkLaunch">Launch Islamic Assistant now</label>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- content-body -->
+    </div><!-- content-wrap -->
+  </div><!-- wizard-body -->
+
+  <!-- ═══════════════ BUTTON BAR ═══════════════ -->
+  <div class="btn-bar">
+    <button class="btn" id="btnBack" onclick="goBack()">← Back</button>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnNext" onclick="goNext()">Next →</button>
+    <button class="btn" id="btnCancel" onclick="doCancel()">Cancel</button>
+  </div>
+
+</div><!-- frame -->
+
+<script>
+// ── Steps config ──────────────────────────────────────────
+const STEPS = [
+  { id:'s0',      title:'Welcome',            sub:'Introduction to Islamic Assistant' },
+  { id:'s1',      title:'Select Data Folder', sub:'Where should the app store its data?' },
+  { id:'s2',      title:'Additional Tasks',   sub:'Choose shortcuts and startup behaviour' },
+  { id:'s3',      title:'Your Location',      sub:'Needed for accurate prayer times and Qibla' },
+  { id:'s4',      title:'Permissions',        sub:'Choose which features to enable' },
+  { id:'s5',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
+];
+const FINISH_STEP = 6; // virtual index
+
+let cur = 0;
+
+// Location state
+let loc = { city:'', country:'', lat:null, lng:null };
+let locOk = false;
+let curTab = 'ip';
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  // Get default userData path
+  try {
+    const p = await window.setup.getAppDataPath();
+    document.getElementById('dataPath').value = p;
+  } catch(_) {}
+
+  buildSidebar();
+  render();
+});
+
+// ── Sidebar ───────────────────────────────────────────────
+function buildSidebar() {
+  document.getElementById('sbSteps').innerHTML = STEPS.map((s,i) => `
+    <div class="sb-step pending" id="ss${i}">
+      <div class="step-dot">${i+1}</div>
+      <div class="step-lbl">${s.title}</div>
+    </div>`).join('');
+}
+
+function updateSidebar() {
+  STEPS.forEach((_,i) => {
+    const el = document.getElementById(`ss${i}`);
+    const dot = el.querySelector('.step-dot');
+    const isFinish = cur === FINISH_STEP;
+    const effective = isFinish ? STEPS.length : cur;
+    if (i < effective)       { el.className='sb-step done';    dot.textContent='✓'; }
+    else if (i === effective) { el.className='sb-step active';  dot.textContent=i+1; }
+    else                      { el.className='sb-step pending'; dot.textContent=i+1; }
+  });
+}
+
+// ── Render current step ───────────────────────────────────
+function render() {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const isFinish = cur === FINISH_STEP;
+  document.getElementById(isFinish ? 'sFinish' : `s${cur}`).classList.add('active');
+  updateSidebar();
+
+  // Step header
+  if (isFinish) {
+    document.getElementById('stepTitle').textContent = 'Setup Complete';
+    document.getElementById('stepSub').textContent   = 'Islamic Assistant is ready to use';
+  } else {
+    document.getElementById('stepTitle').textContent = STEPS[cur].title;
+    document.getElementById('stepSub').textContent   = STEPS[cur].sub;
+  }
+
+  // Buttons
+  const btnBack   = document.getElementById('btnBack');
+  const btnNext   = document.getElementById('btnNext');
+  const btnCancel = document.getElementById('btnCancel');
+  btnCancel.style.display = isFinish ? 'none' : '';
+  btnBack.style.visibility = (cur === 0) ? 'hidden' : 'visible';
+  btnNext.disabled = (cur === 3 && !locOk);
+
+  if (isFinish) {
+    btnNext.textContent = 'Finish';
+    btnNext.disabled = false;
+  } else if (cur === STEPS.length - 1) {
+    btnNext.textContent = 'Install';
+  } else {
+    btnNext.textContent = 'Next →';
+  }
+
+  // Step-specific side effects
+  if (cur === 3 && !locOk && curTab === 'ip') setTimeout(doDetectIp, 400);
+  if (cur === 5) buildSummary();
+  if (isFinish) {
+    document.getElementById('finishLoc').textContent =
+      (loc.city && loc.country) ? `${loc.city}, ${loc.country}` : 'your location';
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────
+function goNext() {
+  if (cur < STEPS.length - 1) {
+    cur++;
+    render();
+  } else if (cur === STEPS.length - 1) {
+    doInstall();
+  } else {
+    // Finish screen
+    doFinish();
+  }
+}
+
+function goBack() {
+  if (cur > 0 && cur <= FINISH_STEP) {
+    cur = Math.min(cur - 1, STEPS.length - 1);
+    render();
+  }
+}
+
+function doCancel() { window.setup.cancel(); }
+
+// ── Location tab ─────────────────────────────────────────
+function switchTab(tab) {
+  curTab = tab;
+  ['ip','gps','manual'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`pane-${t}`).classList.toggle('active', t===tab);
+  });
+  if (tab !== 'manual') {
+    document.getElementById('locResult').style.display = 'none';
+    // Reset unless already confirmed
+    if (tab !== curTab) { loc={city:'',country:'',lat:null,lng:null}; locOk=false; }
+  }
+  document.getElementById('btnNext').disabled = !locOk;
+}
+
+// IP detection
+async function doDetectIp() {
+  const btn = document.getElementById('btnDetectIp');
+  const st  = document.getElementById('statusIp');
+  btn.disabled = true;
+  st.className='status-bar loading'; st.textContent='⏳ Detecting location via IP address…';
+  try {
+    const r = await window.setup.detectIp();
+    if (r && r.city) {
+      loc = { city:r.city, country:r.country, lat:r.lat, lng:r.lng };
+      locOk = true;
+      st.className='status-bar success';
+      st.textContent=`✓ Detected: ${r.city}, ${r.country}`;
+      showLocResult();
+    } else { throw new Error(r?.message||'No location data'); }
+  } catch(e) {
+    st.className='status-bar error';
+    st.textContent=`✗ Failed: ${e.message}. Try GPS or enter manually.`;
+  }
+  btn.disabled = false;
+  document.getElementById('btnNext').disabled = !locOk;
+}
+
+// GPS detection
+function doDetectGps() {
+  const btn = document.getElementById('btnDetectGps');
+  const st  = document.getElementById('statusGps');
+  btn.disabled = true;
+  st.className='status-bar loading'; st.textContent='⏳ Requesting GPS location…';
+
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const { latitude:lat, longitude:lng } = pos.coords;
+      try {
+        const geo = await window.setup.reverseGeocode(lat, lng);
+        loc = { lat, lng, city:geo.city||`${lat.toFixed(2)}°`, country:geo.country||'Unknown' };
+      } catch {
+        loc = { lat, lng, city:`${lat.toFixed(2)}°N`, country:'Unknown' };
+      }
+      locOk = true;
+      st.className='status-bar success';
+      st.textContent=`✓ GPS: ${loc.city}, ${loc.country} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      showLocResult();
+      btn.disabled=false;
+      document.getElementById('btnNext').disabled=false;
+    },
+    err => {
+      st.className='status-bar error';
+      st.textContent=`✗ GPS failed: ${err.message}. Try IP or enter manually.`;
+      btn.disabled=false;
+    },
+    { timeout:15000, maximumAge:60000 }
+  );
+}
+
+// Manual entry
+function onManual() {
+  const city    = document.getElementById('manualCity').value.trim();
+  const country = document.getElementById('manualCountry').value.trim();
+  loc = { city, country, lat:null, lng:null };
+  locOk = !!(city && country);
+  document.getElementById('btnNext').disabled = !locOk;
+}
+
+// Shared editable result
+function showLocResult() {
+  const r = document.getElementById('locResult');
+  r.style.display='';
+  document.getElementById('locCity').value    = loc.city;
+  document.getElementById('locCountry').value = loc.country;
+}
+function onLocEdit() {
+  loc.city    = document.getElementById('locCity').value.trim();
+  loc.country = document.getElementById('locCountry').value.trim();
+  locOk = !!(loc.city && loc.country);
+  document.getElementById('btnNext').disabled = !locOk;
+}
+
+// ── Summary ───────────────────────────────────────────────
+function buildSummary() {
+  const rows = [
+    ['Data Folder',       document.getElementById('dataPath').value||'Default'],
+    ['Location',          (loc.city&&loc.country)?`${loc.city}, ${loc.country}`:'(not set)'],
+    ['Desktop Shortcut',  document.getElementById('chkDesktop').checked ?'Yes':'No'],
+    ['Launch at Startup', document.getElementById('chkStartup').checked ?'Yes':'No'],
+    ['Stay in Tray',      document.getElementById('chkTray').checked     ?'Yes':'No'],
+    ['Start Minimized',   document.getElementById('chkStartMin').checked ?'Yes':'No'],
+    ['Automatic Azan',    document.getElementById('chkAzan').checked     ?'Enabled':'Disabled'],
+    ['Notifications',     document.getElementById('chkNotif').checked    ?'Enabled':'Disabled'],
+    ['Location Access',   document.getElementById('chkGeo').checked      ?'Allowed':'Denied'],
+    ['Auto Updates',      document.getElementById('chkUpdates').checked  ?'Enabled':'Disabled'],
+  ];
+  const yes = new Set(['Yes','Enabled','Allowed']);
+  const no  = new Set(['No','Disabled','Denied']);
+  document.getElementById('summaryEl').innerHTML = rows.map(([k,v])=>`
+    <div class="sum-row">
+      <div class="sum-key">${k}</div>
+      <div class="sum-val ${yes.has(v)?'on':no.has(v)?'off':''}">${v}</div>
+    </div>`).join('');
+}
+
+// ── Install ───────────────────────────────────────────────
+async function doInstall() {
+  const btnNext = document.getElementById('btnNext');
+  btnNext.disabled = true;
+  btnNext.textContent = 'Applying…';
+
+  const settings = {
+    dataPath:        document.getElementById('dataPath').value,
+    location:        loc,
+    desktopShortcut: document.getElementById('chkDesktop').checked,
+    launchAtStartup: document.getElementById('chkStartup').checked,
+    keepInTray:      document.getElementById('chkTray').checked,
+    startMinimized:  document.getElementById('chkStartMin').checked,
+    azanAutoplay:    document.getElementById('chkAzan').checked,
+    notifications:   document.getElementById('chkNotif').checked,
+    locationAccess:  document.getElementById('chkGeo').checked,
+    autoUpdates:     document.getElementById('chkUpdates').checked,
+  };
+
+  try {
+    await window.setup.complete(settings);
+    cur = FINISH_STEP;
+    render();
+  } catch(e) {
+    btnNext.disabled=false;
+    btnNext.textContent='Install';
+    alert('Setup failed: ' + e.message);
+  }
+}
+
+// ── Finish ────────────────────────────────────────────────
+function doFinish() {
+  window.setup.launch(document.getElementById('chkLaunch').checked);
+}
+
+// Browse button
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('browseBtn').addEventListener('click', async () => {
+    const p = await window.setup.selectFolder();
+    if (p) document.getElementById('dataPath').value = p;
+  });
+});
+</script>
+</body>
+</html>

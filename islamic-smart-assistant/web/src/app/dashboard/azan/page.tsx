@@ -137,6 +137,12 @@ const VOICES: AzanVoice[] = [
     local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
     art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
   },
+  {
+    id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
+    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '', badge: 'new',
+    local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
+    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
+  },
 ];
 
 const FEATURES = [
