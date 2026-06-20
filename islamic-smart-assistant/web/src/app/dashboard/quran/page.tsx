@@ -86,7 +86,7 @@ export default function QuranPage() {
           {/* right ~62%: mosque photo */}
           <div className="absolute inset-y-0 right-0 w-[62%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/masjid_img.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
+            <img src="/quran_firstsection_bg.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
             <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
           </div>
 
@@ -157,7 +157,7 @@ export default function QuranPage() {
       <div className="px-6 sm:px-10 pb-10 space-y-6">
 
         {/* ── quick picks ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-7 gap-3">
           {QUICK_PICKS.map((p, i) => {
             const active = surah === p.number;
             return (
