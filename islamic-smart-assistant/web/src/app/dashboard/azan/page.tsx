@@ -8,13 +8,14 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
+  Pencil, X,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
 import {
-  customAzanUrl, deleteAzanClip, isCustomAzan, type CustomAzan,
+  customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan, type CustomAzan,
 } from '@/lib/customAzan';
-import { formatClock } from '@/lib/audioTrim';
+import { formatClock, decodeAudioFile, encodeWavFromSegments, type WavSegment } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
@@ -324,6 +325,18 @@ export default function AzanPage() {
   const [customAzans, setCustomAzans] = useLocalStorage<CustomAzan[]>('isa:customAzans', []);
   const [uploaderOpen, setUploaderOpen] = useState(false);
   const customUrlRef = useRef<string | null>(null);
+
+  // Built-in voices the user has hidden (deleted)
+  const [hiddenVoices, setHiddenVoices] = useLocalStorage<string[]>('isa:hiddenVoices', []);
+
+  // Azan editor (add intro / outro to an existing voice)
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [editorExtraFile, setEditorExtraFile] = useState<File | null>(null);
+  const [editorExtraBuffer, setEditorExtraBuffer] = useState<AudioBuffer | null>(null);
+  const [editorExtraPos, setEditorExtraPos] = useState<'start' | 'end'>('start');
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [editorError, setEditorError] = useState<string | null>(null);
+  const editorFileRef = useRef<HTMLInputElement>(null);
   const revokeCustomUrl = () => {
     if (customUrlRef.current) { URL.revokeObjectURL(customUrlRef.current); customUrlRef.current = null; }
   };
@@ -403,6 +416,86 @@ export default function AzanPage() {
     if (selectedId === id) setSelectedId('makkah');
   };
 
+  const deleteItem = async (item: Item) => {
+    if (item.isCustom) {
+      await deleteCustom(item.id);
+    } else {
+      if (activeId === item.id) { audioRef.current?.pause(); setActiveId(null); }
+      if (selectedId === item.id) setSelectedId('makkah');
+      setHiddenVoices((prev) => [...prev, item.id]);
+    }
+  };
+
+  const openEditor = (item: Item) => {
+    setEditingItem(item);
+    setEditorExtraFile(null);
+    setEditorExtraBuffer(null);
+    setEditorExtraPos('start');
+    setEditorError(null);
+    setEditorSaving(false);
+  };
+
+  const onEditorFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setEditorExtraFile(file);
+    setEditorError(null);
+    try {
+      const buf = await decodeAudioFile(file);
+      setEditorExtraBuffer(buf);
+    } catch {
+      setEditorError('Could not decode this file. Try mp3, wav, or m4a.');
+      setEditorExtraBuffer(null);
+    }
+  };
+
+  const saveEdited = async () => {
+    if (!editingItem || !editorExtraBuffer) return;
+    setEditorSaving(true);
+    setEditorError(null);
+    try {
+      let originalBuffer: AudioBuffer;
+      if (editingItem.isCustom) {
+        const blob = await getAzanClip(editingItem.id);
+        if (!blob) throw new Error('Original audio not found in local storage');
+        originalBuffer = await decodeAudioFile(new File([blob], 'original', { type: blob.type }));
+      } else {
+        const voice = VOICES.find((v) => v.id === editingItem.id);
+        const url = voice ? (availability[voice.id] ? voice.local : voice.remote) : null;
+        if (!url) throw new Error('Could not locate the original audio');
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed to download the original audio');
+        const blob = await resp.blob();
+        originalBuffer = await decodeAudioFile(new File([blob], 'original', { type: blob.type || 'audio/mpeg' }));
+      }
+      const main: WavSegment = { buffer: originalBuffer, startSec: 0, endSec: originalBuffer.duration };
+      const extra: WavSegment = { buffer: editorExtraBuffer, startSec: 0, endSec: editorExtraBuffer.duration };
+      const segments = editorExtraPos === 'start' ? [extra, main] : [main, extra];
+      const wavBlob = encodeWavFromSegments(segments);
+      const totalDuration = originalBuffer.duration + editorExtraBuffer.duration;
+      const newId = `custom:${crypto.randomUUID()}`;
+      await putAzanClip(newId, wavBlob);
+      const newMeta: CustomAzan = { id: newId, name: editingItem.name, createdAt: Date.now(), durationSec: totalDuration };
+      if (editingItem.isCustom) {
+        await deleteAzanClip(editingItem.id);
+        setCustomAzans((prev) => [newMeta, ...prev.filter((c) => c.id !== editingItem.id)]);
+        setRemoteCustoms((prev) => prev.filter((c) => c.id !== editingItem.id));
+        Azan.deleteVoice(editingItem.id).catch(() => {});
+      } else {
+        setHiddenVoices((prev) => [...prev, editingItem.id]);
+        setCustomAzans((prev) => [newMeta, ...prev]);
+      }
+      if (selectedId === editingItem.id) setSelectedId(newId);
+      Azan.uploadVoice(wavBlob, { name: newMeta.name, durationMs: Math.round(totalDuration * 1000) }).catch(() => {});
+      setEditingItem(null);
+    } catch (e: unknown) {
+      setEditorError(e instanceof Error ? e.message : 'Failed to save modified audio');
+    } finally {
+      setEditorSaving(false);
+    }
+  };
+
   const onSaved = (meta: CustomAzan) => {
     setCustomAzans((prev) => [meta, ...prev]);
     setSelectedId(meta.id);
@@ -457,11 +550,13 @@ export default function AzanPage() {
 
   // ── Build, filter & sort the unified item list ─────────────────────────────
   const allItems: Item[] = useMemo(() => {
-    const builtin: Item[] = VOICES.map((v) => ({
-      id: v.id, name: v.name, subtitle: v.subtitle, region: v.region,
-      lang: v.lang, style: v.style, duration: v.duration, art: v.art,
-      accent: v.accent, badge: v.badge, isCustom: false, defaultPick: v.defaultPick,
-    }));
+    const builtin: Item[] = VOICES
+      .filter((v) => !hiddenVoices.includes(v.id))
+      .map((v) => ({
+        id: v.id, name: v.name, subtitle: v.subtitle, region: v.region,
+        lang: v.lang, style: v.style, duration: v.duration, art: v.art,
+        accent: v.accent, badge: v.badge, isCustom: false, defaultPick: v.defaultPick,
+      }));
     const custom: Item[] = customAzans.map((c) => ({
       id: c.id, name: c.name, subtitle: 'Your upload', region: 'Custom',
       lang: 'Custom', style: 'Custom', duration: formatClock(c.durationSec),
@@ -803,12 +898,14 @@ export default function AzanPage() {
                         className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
                         <Download size={16} />
                       </button>
-                      {item.isCustom && (
-                        <button onClick={() => deleteCustom(item.id)} title="Delete upload"
-                          className="w-10 h-10 grid place-items-center rounded-full border border-rose-100 text-rose-500 hover:bg-rose-50 transition shrink-0">
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+                      <button onClick={() => openEditor(item)} title="Add intro / outro"
+                        className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
+                        <Pencil size={15} />
+                      </button>
+                      <button onClick={() => deleteItem(item)} title="Delete"
+                        className="w-10 h-10 grid place-items-center rounded-full border border-rose-100 text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition shrink-0">
+                        <Trash2 size={15} />
+                      </button>
                       <button
                         onClick={() => setSelectedId(item.id)}
                         className={`flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition
@@ -916,6 +1013,104 @@ export default function AzanPage() {
       />
 
       <AzanUploader open={uploaderOpen} onClose={() => setUploaderOpen(false)} onSaved={onSaved} />
+
+      {/* ── Azan Editor modal — add intro / outro to any existing voice ── */}
+      <input ref={editorFileRef} type="file" accept="audio/*" className="hidden" onChange={onEditorFilePick} />
+      <AnimatePresence>
+        {editingItem && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={(e) => { if (e.target === e.currentTarget && !editorSaving) setEditingItem(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="w-full max-w-md rounded-3xl bg-white shadow-2xl p-6 space-y-5"
+            >
+              {/* header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-emerald-950">Modify Azan Audio</h2>
+                <button onClick={() => { if (!editorSaving) setEditingItem(null); }}
+                  className="p-2 rounded-full hover:bg-neutral-100 text-neutral-400 transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <p className="text-sm text-emerald-900/60">
+                Editing: <span className="font-semibold text-emerald-900">{editingItem.name}</span>
+              </p>
+
+              {/* extra audio picker */}
+              <div>
+                <label className="block text-sm font-semibold text-emerald-900 mb-2">
+                  Upload audio to add <span className="font-normal text-emerald-900/50">(mp3, wav, m4a…)</span>
+                </label>
+                <button
+                  onClick={() => editorFileRef.current?.click()}
+                  className="w-full flex items-center gap-3 rounded-xl border-2 border-dashed border-emerald-200 px-4 py-3 text-sm text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 transition text-left"
+                >
+                  <UploadCloud size={18} className="shrink-0 text-emerald-500" />
+                  <span className="truncate">{editorExtraFile ? editorExtraFile.name : 'Choose an audio file…'}</span>
+                </button>
+                {editorExtraBuffer && (
+                  <p className="mt-1.5 text-xs text-emerald-600 font-medium">
+                    ✓ Ready — {formatClock(editorExtraBuffer.duration)}
+                  </p>
+                )}
+              </div>
+
+              {/* position picker */}
+              {editorExtraBuffer && (
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-900 mb-2">Place the added audio at</label>
+                  <div className="flex gap-3">
+                    {(['start', 'end'] as const).map((pos) => (
+                      <button
+                        key={pos}
+                        onClick={() => setEditorExtraPos(pos)}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition
+                          ${editorExtraPos === pos
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-glow-emerald'
+                            : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'}`}
+                      >
+                        {pos === 'start' ? '⏮ Start (intro)' : 'End (outro) ⏭'}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-emerald-900/50">
+                    {editorExtraPos === 'start'
+                      ? 'Added audio will play before the Azan begins.'
+                      : 'Added audio will play after the Azan finishes.'}
+                  </p>
+                </div>
+              )}
+
+              {editorError && (
+                <p className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2.5">{editorError}</p>
+              )}
+
+              {/* footer buttons */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => { if (!editorSaving) setEditingItem(null); }}
+                  disabled={editorSaving}
+                  className="flex-1 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdited}
+                  disabled={!editorExtraBuffer || editorSaving}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50 transition"
+                >
+                  {editorSaving ? 'Saving…' : 'Save & Replace'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
