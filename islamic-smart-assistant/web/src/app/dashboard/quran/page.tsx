@@ -139,8 +139,8 @@ export default function QuranPage() {
           </div>
 
           {/* right: Quran ayah */}
-          <div className="hidden md:block max-w-md">
-            <div className="rounded-2xl px-5 py-4 text-right"
+          <div className="hidden md:block max-w-[16rem]">
+            <div className="rounded-2xl px-4 py-8 text-right"
               style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
               <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنصِتُوا لَعَلَّكُمْ تُرْحَمُونَ
@@ -157,7 +157,7 @@ export default function QuranPage() {
       <div className="px-6 sm:px-10 pb-10 space-y-6">
 
         {/* ── quick picks ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
           {QUICK_PICKS.map((p, i) => {
             const active = surah === p.number;
             return (
@@ -166,7 +166,7 @@ export default function QuranPage() {
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                 whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}
                 onClick={() => setSurah(p.number)}
-                className={`relative overflow-hidden rounded-2xl p-4 text-center transition border-2
+                className={`relative overflow-hidden rounded-2xl p-3 flex items-center gap-3 text-left transition border-2
                   ${active
                     ? 'border-gold-400 shadow-glow-gold'
                     : isDark
@@ -178,40 +178,45 @@ export default function QuranPage() {
               >
                 {active && (
                   <motion.span aria-hidden className="absolute inset-0 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle at 50% 0%, rgba(221,185,75,0.18), transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle at 30% 50%, rgba(221,185,75,0.18), transparent 70%)' }}
                     animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} />
                 )}
-                {/* ornate animated number badge */}
-                <span className="relative mx-auto mb-2 flex h-12 w-12 items-center justify-center">
-                  <motion.span aria-hidden className="absolute inset-0 rounded-full border border-dashed"
+                {/* ornate animated number badge — left side, doubled size */}
+                <span className="relative shrink-0 flex h-24 w-24 items-center justify-center">
+                  <motion.span aria-hidden className="absolute inset-0 rounded-full border-2 border-dashed"
                     style={{ borderColor: active ? 'rgba(233,207,122,0.55)' : isDark ? 'rgba(221,185,75,0.3)' : 'rgba(201,162,39,0.35)' }}
                     animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
-                  <span className={`relative flex h-9 w-9 items-center justify-center rounded-full border font-display font-bold text-base
+                  <span className={`relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-2 font-display font-bold text-3xl
                     ${active ? 'border-[#E9CF7A]/50 text-[#E9CF7A]' : isDark ? 'border-gold-400/30 text-gold-300' : 'border-gold-500/30 text-gold-700'}`}>
                     {p.number}
                   </span>
                 </span>
-                <p className={`relative text-[11px] ${active ? 'text-white/60' : isDark ? 'text-parchment/45' : 'text-ink/50'}`}>Surah {p.number}</p>
-                <p className={`relative font-display font-bold text-lg leading-tight ${active ? 'text-[#E9CF7A]' : isDark ? 'text-parchment' : 'text-ink'}`}>{p.label}</p>
-                <p className={`relative text-[11px] mt-0.5 ${active ? 'text-white/55' : isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>{p.tag}</p>
+                {/* text stack — right side */}
+                <div className="relative min-w-0">
+                  <p className={`text-[11px] ${active ? 'text-white/60' : isDark ? 'text-parchment/45' : 'text-ink/50'}`}>Surah {p.number}</p>
+                  <p className={`font-display font-bold text-lg leading-tight truncate ${active ? 'text-[#E9CF7A]' : isDark ? 'text-parchment' : 'text-ink'}`}>{p.label}</p>
+                  <p className={`text-[11px] mt-0.5 ${active ? 'text-white/55' : isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>{p.tag}</p>
+                </div>
               </motion.button>
             );
           })}
 
-          {/* View All card — expands the index and scrolls to it */}
+          {/* View All card */}
           <button
             onClick={() => {
               setShowAll(true);
               requestAnimationFrame(() => document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
             }}
-            className={`rounded-2xl border-2 flex flex-col items-center justify-center gap-2 p-4 text-center transition
+            className={`rounded-2xl border-2 flex items-center gap-3 p-3 text-left transition
               ${isDark ? 'border-white/10 text-parchment hover:border-gold-300/50' : 'border-emerald-200/70 text-emerald-900 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
             style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : 'linear-gradient(160deg,#EEF3EC 0%,#E6EFE5 100%)' }}
           >
-            <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
-              <BookOpen size={26} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
-            </motion.span>
-            <span className="text-sm font-semibold leading-tight">View All<br /><span className={`text-xs ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span></span>
+            <span className="shrink-0 flex h-24 w-24 items-center justify-center">
+              <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+                <BookOpen size={40} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+              </motion.span>
+            </span>
+            <span className="font-semibold text-sm leading-tight">View All<br /><span className={`text-xs font-normal ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span></span>
           </button>
         </div>
 
