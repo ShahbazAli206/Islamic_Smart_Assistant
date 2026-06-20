@@ -314,11 +314,18 @@ export function PrayerCountdownHero({
                     : 'linear-gradient(150deg,#fffdf7 0%,#f7f0db 58%,#efe4c8 100%)' };
               const cardCls = isNext
                 ? (isDark
-                    ? 'border border-gold-300/50 text-parchment shadow-glow-gold'
-                    : 'border border-emerald-400/70 text-emerald-950 shadow-md shadow-emerald-700/15')
+                    ? 'border border-gold-300/50 text-parchment'
+                    : 'border border-emerald-400/70 text-emerald-950')
                 : (isDark
-                    ? 'border border-white/10 text-parchment shadow-lg shadow-black/30'
-                    : 'border border-gold-300/30 text-emerald-950 shadow-card-soft');
+                    ? 'border border-white/10 text-parchment'
+                    : 'border border-gold-300/30 text-emerald-950');
+              const cardShadow = isNext
+                ? (isDark
+                    ? '0 10px 40px rgba(0,0,0,0.6), 0 0 28px rgba(233,207,122,0.18), inset 0 1px 0 rgba(255,255,255,0.07)'
+                    : '0 10px 32px rgba(16,185,129,0.2), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)')
+                : (isDark
+                    ? '0 6px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)'
+                    : '0 4px 20px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.85)');
               const badgeBg = isNext
                 ? (isDark ? 'bg-gold-300/20' : 'bg-emerald-600/15')
                 : (isDark ? 'bg-gold-300/10' : 'bg-gold-500/12');
@@ -341,31 +348,50 @@ export function PrayerCountdownHero({
               return (
                 <motion.div
                   key={name}
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.05 * i, duration: 0.4 }}
-                  whileHover={{ y: -3 }}
-                  className={`relative overflow-hidden rounded-2xl p-4 transition-shadow ${cardCls}`}
-                  style={cardStyle}
+                  initial={{ opacity: 0, scale: 0.88, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.07 * i, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -7, scale: 1.03, transition: { duration: 0.22, ease: 'easeOut' } }}
+                  className={`relative overflow-hidden rounded-2xl p-4 cursor-default ${cardCls}`}
+                  style={{ ...cardStyle, boxShadow: cardShadow }}
                 >
-                  <DomeMark color={domeColor} className="absolute -top-1 right-2 w-12 pointer-events-none" />
+                  {/* ambient radial glow overlay */}
+                  <div aria-hidden className="absolute inset-0 pointer-events-none" style={{
+                    background: isNext
+                      ? (isDark
+                          ? 'radial-gradient(ellipse at 30% 25%, rgba(233,207,122,0.16) 0%, transparent 65%)'
+                          : 'radial-gradient(ellipse at 30% 25%, rgba(16,185,129,0.13) 0%, transparent 65%)')
+                      : (isDark
+                          ? 'radial-gradient(ellipse at 20% 20%, rgba(233,207,122,0.07) 0%, transparent 60%)'
+                          : 'radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.6) 0%, transparent 55%)'),
+                  }} />
+                  <DomeMark color={domeColor} className="absolute -top-1 right-2 w-14 pointer-events-none" />
+                  {/* pulsing border ring for the next prayer */}
                   {isNext && (
                     <motion.span aria-hidden className="absolute inset-0 rounded-2xl pointer-events-none"
-                      style={{ boxShadow: isDark ? 'inset 0 0 0 1px rgba(233,207,122,0.5)' : 'inset 0 0 0 1px rgba(16,185,129,0.5)' }}
-                      animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }} />
+                      style={{ boxShadow: isDark ? 'inset 0 0 0 1.5px rgba(233,207,122,0.6)' : 'inset 0 0 0 1.5px rgba(16,185,129,0.6)' }}
+                      animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} />
+                  )}
+                  {/* outer glow pulse for next prayer */}
+                  {isNext && (
+                    <motion.span aria-hidden className="absolute inset-0 rounded-2xl pointer-events-none"
+                      animate={{ boxShadow: isDark
+                        ? ['0 0 0px rgba(233,207,122,0)', '0 0 18px rgba(233,207,122,0.22)', '0 0 0px rgba(233,207,122,0)']
+                        : ['0 0 0px rgba(16,185,129,0)', '0 0 18px rgba(16,185,129,0.2)', '0 0 0px rgba(16,185,129,0)'] }}
+                      transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }} />
                   )}
                   {/* prayer icon in a tinted badge */}
                   <motion.div
-                    animate={isNext ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                    className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl ${badgeBg}`}
+                    animate={isNext ? { scale: [1, 1.14, 1], rotate: [0, 5, 0] } : {}}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                    className={`relative inline-flex h-10 w-10 items-center justify-center rounded-xl ${badgeBg}`}
                   >
-                    <Icon size={18} className={iconColor} />
+                    <Icon size={20} className={iconColor} />
                   </motion.div>
-                  <p className={`relative mt-3 text-[13px] font-semibold tracking-wide ${nameColor}`}>{name}</p>
-                  <p className="relative text-xl sm:text-2xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
-                  <p className={`relative mt-1 flex items-center gap-1 text-[11px] font-medium ${endColor}`}>
-                    <Clock size={10} className="shrink-0" /> Ends {endTime}
+                  <p className={`relative mt-3 text-base font-bold tracking-wide ${nameColor}`}>{name}</p>
+                  <p className="relative text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
+                  <p className={`relative mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold ${endColor}`}>
+                    <Clock size={12} className="shrink-0" /> Ends {endTime}
                   </p>
                 </motion.div>
               );
