@@ -321,14 +321,14 @@ export function PrayerCountdownHero({
                 '/masjid%20e%20nabwi-darkmode.png',
               ];
               const cardBg = (isDark ? CARD_BGS_DARK : CARD_BGS_LIGHT)[i] ?? CARD_BGS_LIGHT[0];
-              // Light mode: green → yellow → white (all cards same gradient, image lives in white zone).
+              // Light mode: same cream/parchment as the countdown card (left 40%) → white (right 60%).
               const cardStyle = isNext
                 ? { background: isDark
                     ? 'linear-gradient(145deg,#1c5e43 0%,#0e3a29 100%)'
                     : 'linear-gradient(145deg,#e3f4ea 0%,#c8e9d6 100%)' }
                 : { background: isDark
                     ? 'linear-gradient(150deg,rgba(22,46,34,0.92) 0%,rgba(10,24,17,0.88) 100%)'
-                    : 'linear-gradient(to right, #bbf7d0 0%, #d9f99d 20%, #fef9c3 40%, #ffffff 56%)' };
+                    : 'linear-gradient(to right, #f3ebd4 0%, #fbf6e9 22%, #fffdf7 40%, #ffffff 56%)' };
               // Fade-overlay colour (used for dark mode and the isNext light card).
               const fadeColor = isNext
                 ? (isDark ? '#1c5e43' : '#e3f4ea')

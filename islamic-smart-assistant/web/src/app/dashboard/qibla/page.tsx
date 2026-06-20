@@ -283,6 +283,21 @@ function InfoRow({
   );
 }
 
+// ── Decorative 5-petal flower (matches the prayer-times header) ──────────────
+
+function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: number; color?: string; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
+      <g fill={color} opacity="0.9">
+        {[0, 72, 144, 216, 288].map((a) => (
+          <ellipse key={a} cx="12" cy="6" rx="3" ry="5.2" transform={`rotate(${a} 12 12)`} />
+        ))}
+      </g>
+      <circle cx="12" cy="12" r="2.6" fill="#F6D67A" />
+    </svg>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function QiblaPage() {
@@ -410,88 +425,87 @@ export default function QiblaPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden ${isDark ? 'page-dark' : 'page-light'}`}
-      style={isDark ? { background: 'linear-gradient(160deg,#0a2a1e 0%,#072017 45%,#04140d 100%)' } : undefined}
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
     >
-      {/* ── Ambient animated background ── */}
-      {isDark && (
-        <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 pattern-bg opacity-[0.04]" />
-          <motion.div
-            className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)' }}
-            animate={{ x: [0, 40, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute top-1/3 -right-28 w-[26rem] h-[26rem] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.13) 0%, transparent 70%)' }}
-            animate={{ x: [0, -36, 0], y: [0, 44, 0], scale: [1, 1.12, 1] }}
-            transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }}
-            animate={{ x: [0, 30, 0], y: [0, -28, 0] }}
-            transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-          />
+      {/* ── Full-bleed header — mirrors the Prayer Times page ── */}
+      <header className="relative overflow-hidden min-h-[300px]">
+        <div aria-hidden className="absolute inset-0">
+          {/* base pastel / dark gradient */}
+          <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
+
+          {/* right ~62%: mosque photo */}
+          <div className="absolute inset-y-0 right-0 w-[62%]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/masjid_img.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
+          </div>
+
+          {/* left ~46%: animated pastel blobs + flowers */}
+          <div className="absolute inset-y-0 left-0 w-[46%] overflow-hidden">
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%', top: '6%', width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)' }} animate={{ x: [0, 22, 0], y: [0, 16, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '30%', top: '42%', width: 210, height: 210, background: 'radial-gradient(circle, rgba(134,239,172,0.42), transparent 70%)' }} animate={{ x: [0, -18, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%', top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%', width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
+            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Flower size={18} color="#fcd34d" /></motion.div>
+            <motion.div className="absolute" style={{ left: '5%', top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
+            <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
+          </div>
+
+          {/* bottom fade into page */}
+          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+
+          {/* crescent moon */}
+          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
+            animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="#F1D588" style={{ filter: 'drop-shadow(0 0 12px rgba(233,207,122,0.7))' }}>
+              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
+            </svg>
+          </motion.div>
         </div>
-      )}
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="relative max-w-[1500px] mx-auto"
-      >
-        {/* ── Header banner ─────────────────────────────────────────────── */}
-        <motion.header
-          variants={rise}
-          className={`relative overflow-hidden rounded-3xl mb-5 ${isDark ? 'border border-white/10' : 'border border-gold-200'}`}
-          style={isDark ? { background: 'linear-gradient(120deg,#0c2d20 0%,#0a2419 55%,rgba(10,36,25,0.4) 100%)' } : { background: 'linear-gradient(120deg,#FBF8EF 0%,#F6EED0 100%)' }}
-        >
-          {/* photo bleed on the right */}
-          <div aria-hidden className="absolute inset-y-0 right-0 w-2/3">
-            <motion.div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/hero-bg.jpg')" }}
-              animate={{ scale: [1.05, 1.12, 1.05] }}
-              transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(90deg,#0a2419 0%,rgba(10,36,25,0.6) 35%,transparent 100%)' : 'linear-gradient(90deg,#F6EED0 0%,rgba(246,238,208,0.7) 40%,rgba(246,238,208,0.1) 100%)' }} />
-          </div>
-
-          <div className="relative flex items-center gap-4 px-6 sm:px-8 py-6">
-            <motion.span
-              className="inline-flex w-14 h-14 shrink-0 rounded-2xl items-center justify-center text-gold-300 border border-gold-300/30 bg-white/5 backdrop-blur"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 26, repeat: Infinity, ease: 'linear' }}
-            >
-              <Compass size={28} />
-            </motion.span>
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className="font-display font-bold text-3xl sm:text-4xl text-parchment leading-none"
-              >
-                Qibla Finder
-              </motion.h1>
-              <p className="text-sm text-parchment/70 mt-1.5">Find the direction of the Holy Kaaba</p>
+        <div className="relative px-6 sm:px-10 pt-8 pb-3 flex flex-wrap items-start justify-between gap-6">
+          {/* left: badge + title + description */}
+          <div>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
+              <Sparkles size={12} /> Qibla Finder
+            </span>
+            <h1 className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap ${isDark ? 'text-white' : 'text-emerald-950'}`}
+              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}>
+              Find the direction of the Holy Kaaba
+            </h1>
+            <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
+              <p className="text-base sm:text-lg leading-relaxed text-white/90">
+                Point your device toward Makkah — accurate Qibla from GPS, live compass, or static bearing.
+              </p>
             </div>
-            {bearing != null && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5 }}
-                className="ml-auto hidden md:inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-gold-300/10 text-gold-200 text-xs font-semibold px-4 py-2 backdrop-blur"
-              >
-                <Sparkles size={13} /> {bearing.toFixed(1)}° {compassPoint(bearing)}
-              </motion.span>
-            )}
           </div>
-        </motion.header>
+
+          {/* right: Qibla ayah */}
+          <div className="hidden md:block max-w-md">
+            <div className="rounded-2xl px-5 py-4 text-right"
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
+              <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
+                فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ
+              </p>
+              <p className="mt-2.5 text-base lg:text-lg leading-relaxed font-medium text-white/90">
+                So turn your face toward al-Masjid al-Haram. And wherever you are, turn your faces toward it.
+              </p>
+              <p className="mt-1.5 text-sm font-bold text-[#F1D588]">Surah Al-Baqarah (2:144)</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Page content ── */}
+      <div className="relative px-6 sm:px-10 pb-10 space-y-5 mt-5">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
 
         {/* ── No-location notice ─────────────────────────────────────────── */}
         <AnimatePresence>
@@ -892,7 +906,8 @@ export default function QiblaPage() {
             Learn More <ExternalLink size={13} />
           </a>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
