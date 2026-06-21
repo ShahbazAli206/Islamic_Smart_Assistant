@@ -132,6 +132,31 @@ function buildDeviceGroups(
   });
 }
 
+// ── OS detection ─────────────────────────────────────────────────────────────
+
+type OS = 'windows' | 'macos' | 'linux' | 'unknown';
+
+function detectOS(): OS {
+  if (typeof navigator === 'undefined') return 'unknown';
+  const p = navigator.platform ?? '';
+  const ua = navigator.userAgent;
+  if (/Win/i.test(p) || /Windows/i.test(ua)) return 'windows';
+  if (/Mac/i.test(p) || /Macintosh|MacIntel/i.test(ua)) return 'macos';
+  if (/Linux/i.test(p) || /Linux/i.test(ua)) return 'linux';
+  return 'unknown';
+}
+
+function openOSBluetooth() {
+  const os = detectOS();
+  if (os === 'windows') {
+    window.location.href = 'ms-settings:bluetooth';
+  } else if (os === 'macos') {
+    // Works on macOS 10.x – Sonoma; opens Bluetooth pane in System Preferences / Settings
+    window.open('x-apple.systempreferences:com.apple.preferences.Bluetooth', '_blank');
+  }
+  // Linux has no standard URL scheme — caller should show instructions instead
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MIN_SPIN_MS = 900;
@@ -368,6 +393,20 @@ function MicPermModal({
 
 // ── Add / connect device modal ────────────────────────────────────────────────
 
+const OS_BT_LABEL: Record<OS, string> = {
+  windows: 'Open Bluetooth Settings',
+  macos:   'Open System Settings → Bluetooth',
+  linux:   'Open Bluetooth Manager',
+  unknown: 'Open Bluetooth Settings',
+};
+
+const LINUX_BT_STEPS = [
+  { de: 'GNOME',  cmd: 'Settings → Bluetooth' },
+  { de: 'KDE',    cmd: 'System Settings → Bluetooth' },
+  { de: 'XFCE',   cmd: 'Run: blueman-manager' },
+  { de: 'Ubuntu', cmd: 'Settings → Bluetooth' },
+];
+
 function AddDeviceModal({
   onClose,
   onPickAudio,
@@ -381,11 +420,18 @@ function AddDeviceModal({
   onRescan: () => void;
   isDark: boolean;
 }) {
+  const os = detectOS();
   const bg = isDark ? 'bg-[#0b1a12] border border-emerald-500/25' : 'bg-white';
   const heading = isDark ? 'text-parchment' : 'text-emerald-950';
   const sub = isDark ? 'text-parchment/55' : 'text-emerald-900/55';
   const row = isDark ? 'border-emerald-500/15 hover:bg-emerald-500/5' : 'border-emerald-100 hover:bg-emerald-50';
   const closeBtn = isDark ? 'bg-white/8 text-parchment/50 hover:bg-white/15' : 'bg-slate-100 text-slate-400 hover:bg-slate-200';
+  const innerBox = isDark ? 'bg-white/5 text-parchment/65' : 'bg-slate-50 text-slate-600';
+
+  const alreadyPairedNote =
+    os === 'windows' ? 'Already paired in Windows?'
+    : os === 'macos' ? 'Already paired in macOS?'
+    : 'Already paired in your system?';
 
   return (
     <div
@@ -424,7 +470,7 @@ function AddDeviceModal({
             </button>
           )}
 
-          {/* Bluetooth — already paired */}
+          {/* Bluetooth */}
           <div className={`rounded-2xl p-4 border ${isDark ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-100 bg-blue-50/50'}`}>
             <div className="flex items-start gap-3">
               <span className="w-10 h-10 rounded-xl bg-blue-600 text-white grid place-items-center shrink-0">
@@ -433,7 +479,7 @@ function AddDeviceModal({
               <div className="flex-1 min-w-0">
                 <p className={`font-semibold ${heading}`}>Bluetooth Headset / Speaker</p>
                 <p className={`text-xs mt-1 ${sub}`}>
-                  Already paired in Windows? Make sure it&apos;s connected, then rescan.
+                  {alreadyPairedNote} Make sure it&apos;s connected, then rescan.
                 </p>
                 <button
                   onClick={() => { onRescan(); onClose(); }}
@@ -441,13 +487,28 @@ function AddDeviceModal({
                 >
                   <RefreshCw size={13} /> Rescan now
                 </button>
+
+                {/* New device — OS-specific pairing */}
                 <p className={`text-xs mt-3 ${sub}`}>New device? Pair it first:</p>
-                <button
-                  onClick={() => { window.location.href = 'ms-settings:bluetooth'; }}
-                  className="mt-1.5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold px-3 py-2 hover:bg-blue-700 transition"
-                >
-                  <Bluetooth size={13} /> Open Bluetooth Settings
-                </button>
+
+                {os === 'linux' ? (
+                  /* Linux has no URL scheme — show inline steps */
+                  <div className={`mt-2 rounded-xl p-3 text-xs leading-relaxed ${innerBox}`}>
+                    <p className="font-semibold mb-1">Open your desktop&apos;s Bluetooth manager:</p>
+                    {LINUX_BT_STEPS.map((s) => (
+                      <p key={s.de} className="leading-loose">
+                        <span className="font-semibold">{s.de}:</span> {s.cmd}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { openOSBluetooth(); }}
+                    className="mt-1.5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold px-3 py-2 hover:bg-blue-700 transition"
+                  >
+                    <Bluetooth size={13} /> {OS_BT_LABEL[os]}
+                  </button>
+                )}
               </div>
             </div>
           </div>
