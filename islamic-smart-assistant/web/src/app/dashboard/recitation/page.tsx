@@ -428,16 +428,30 @@ export default function RecitationSchedulerPage() {
         {FEATURES.map(({ Icon, title, sub }, i) => (
           <motion.div
             key={title}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="flex items-center gap-3 rounded-2xl bg-white border border-emerald-900/8 shadow-card-soft px-3.5 py-3"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: [0, -(3 + i % 3), 0], x: [0, (i % 2 === 0 ? 2 : -2), 0] }}
+            transition={{
+              opacity: { delay: i * 0.06, duration: 0.4 },
+              y: { delay: i * 0.5, duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut' },
+              x: { delay: i * 0.7, duration: 4 + i * 0.3, repeat: Infinity, ease: 'easeInOut' },
+            }}
+            whileHover={{ y: -7, scale: 1.04, transition: { duration: 0.2 } }}
+            className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 cursor-default
+              ${isDark
+                ? 'bg-white/[0.09] border border-white/[0.12] backdrop-blur-md'
+                : 'bg-white/40 border border-white/60 backdrop-blur-md shadow-sm'}`}
           >
-            <span className="inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 animate-float"
-              style={{ animationDelay: `${i * 0.5}s` }}>
+            <motion.span
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 2 + i * 0.35, repeat: Infinity, ease: 'easeInOut', delay: i * 0.45 }}
+              className={`inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl border
+                ${isDark ? 'bg-emerald-400/20 text-emerald-300 border-emerald-400/25' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}
+            >
               <Icon size={16} />
-            </span>
+            </motion.span>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-emerald-950 leading-tight">{title}</p>
-              <p className="text-[11px] text-emerald-900/50 leading-tight mt-0.5 truncate">{sub}</p>
+              <p className={`text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-emerald-950'}`}>{title}</p>
+              <p className={`text-[11px] leading-tight mt-0.5 truncate ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>{sub}</p>
             </div>
           </motion.div>
         ))}
@@ -619,30 +633,79 @@ export default function RecitationSchedulerPage() {
       </div>
 
       {/* ════════ QUICK ACTIONS ════════ */}
-      <div className="rounded-3xl border border-amber-200/50 shadow-card-soft p-5 sm:p-6" style={{ background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF9EC 100%)' }}>
-        <h2 className="font-display font-bold text-lg text-emerald-950 mb-4">Quick Actions</h2>
+      <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.05] backdrop-blur-md' : 'border-emerald-200/50 bg-white/60 backdrop-blur-md shadow-card-soft'}`}>
+        <h2 className={`font-display font-bold text-lg mb-4 ${isDark ? 'text-white' : 'text-emerald-950'}`}>Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { Icon: BookOpen, label: 'Surah of the Day', value: surahOfDay?.englishName ?? '—', href: '/dashboard/quran' },
             { Icon: History,  label: 'Last Listen', value: lastListenSurah ? `${lastListenSurah.englishName}` : 'Nothing yet', href: undefined as string | undefined },
             { Icon: Mic2,     label: 'Reciters', value: `${RECITERS.length} voices`, href: undefined },
             { Icon: AlarmClock, label: 'Schedules', value: `${activeCount} active`, href: undefined },
-          ].map(({ Icon, label, value, href }) => {
+          ].map(({ Icon, label, value, href }, i) => {
             const inner = (
-              <div className="flex items-center gap-3 rounded-2xl border border-emerald-900/8 bg-white px-4 py-3.5 hover:shadow-lg hover:shadow-emerald-900/10 transition h-full">
-                <span className="inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <motion.div
+                animate={{ y: [0, -(2 + i % 2), 0], x: [0, (i % 2 === 0 ? 1.5 : -1.5), 0] }}
+                transition={{
+                  y: { delay: i * 0.4, duration: 3.5 + i * 0.3, repeat: Infinity, ease: 'easeInOut' },
+                  x: { delay: i * 0.6, duration: 4.5 + i * 0.25, repeat: Infinity, ease: 'easeInOut' },
+                }}
+                whileHover={{ y: -6, scale: 1.03, transition: { duration: 0.2 } }}
+                className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition h-full cursor-default
+                  ${isDark
+                    ? 'bg-white/[0.08] border-white/[0.11] backdrop-blur-sm hover:bg-white/[0.13]'
+                    : 'bg-white/50 border-emerald-900/8 backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-900/10'}`}
+              >
+                <span className={`inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-xl border
+                  ${isDark ? 'bg-emerald-400/20 text-emerald-300 border-emerald-400/25' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
                   <Icon size={18} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[11px] text-emerald-900/50 leading-none">{label}</p>
-                  <p className="text-sm font-bold text-emerald-950 mt-1 leading-none truncate">{value}</p>
+                  <p className={`text-[11px] leading-none ${isDark ? 'text-white/50' : 'text-emerald-900/50'}`}>{label}</p>
+                  <p className={`text-sm font-bold mt-1 leading-none truncate ${isDark ? 'text-white' : 'text-emerald-950'}`}>{value}</p>
                 </div>
-              </div>
+              </motion.div>
             );
             return href
               ? <Link key={label} href={href} className="block">{inner}</Link>
               : <div key={label}>{inner}</div>;
           })}
+        </div>
+      </div>
+
+      {/* ════════ FEATURE HIGHLIGHTS — bottom banner ════════ */}
+      <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-emerald-200/40 bg-white/50 backdrop-blur-md shadow-sm'}`}>
+        <h2 className={`font-display font-bold text-base mb-4 ${isDark ? 'text-white/70' : 'text-emerald-900/70'}`}>Everything you need for your Quran journey</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {FEATURES.map(({ Icon, title, sub }, i) => (
+            <motion.div
+              key={`bottom-${title}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: [0, -(2 + i % 3), 0], x: [0, (i % 2 === 0 ? -2 : 2), 0] }}
+              transition={{
+                opacity: { delay: 0.1 + i * 0.05, duration: 0.4 },
+                y: { delay: 0.8 + i * 0.55, duration: 3.5 + i * 0.4, repeat: Infinity, ease: 'easeInOut' },
+                x: { delay: 0.5 + i * 0.65, duration: 5 + i * 0.3, repeat: Infinity, ease: 'easeInOut' },
+              }}
+              whileHover={{ y: -6, scale: 1.04, transition: { duration: 0.2 } }}
+              className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 cursor-default
+                ${isDark
+                  ? 'bg-white/[0.08] border border-white/[0.11] backdrop-blur-sm'
+                  : 'bg-white/60 border border-emerald-200/60 backdrop-blur-sm shadow-sm'}`}
+            >
+              <motion.span
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2.2 + i * 0.35, repeat: Infinity, ease: 'easeInOut', delay: 0.6 + i * 0.45 }}
+                className={`inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl border
+                  ${isDark ? 'bg-emerald-400/20 text-emerald-300 border-emerald-400/25' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}
+              >
+                <Icon size={16} />
+              </motion.span>
+              <div className="min-w-0">
+                <p className={`text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-emerald-950'}`}>{title}</p>
+                <p className={`text-[11px] leading-tight mt-0.5 truncate ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>{sub}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
 
