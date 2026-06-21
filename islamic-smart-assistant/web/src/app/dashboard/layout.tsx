@@ -88,9 +88,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const t = isDark
     ? {
         text:        'text-parchment',
-        groupLabel:  'text-emerald-100/55',
-        itemBase:    'text-emerald-50/80 hover:bg-white/[0.09] hover:text-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.35)] hover:ring-1 hover:ring-white/[0.08]',
-        itemActive:  'bg-gradient-to-r from-emerald-600/40 to-emerald-700/20 text-white ring-1 ring-emerald-400/25 shadow-[0_4px_20px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.07)]',
+        groupLabel:  'text-emerald-100/50',
+        itemBase:    'text-emerald-50/80 hover:bg-white/[0.11] hover:text-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.45)] hover:ring-1 hover:ring-white/[0.13] hover:backdrop-blur-sm',
+        itemActive:  'bg-gradient-to-r from-emerald-500/35 to-emerald-700/15 text-white ring-1 ring-emerald-400/35 shadow-[0_6px_30px_rgba(0,0,0,0.55),0_0_18px_rgba(52,211,153,0.18),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-sm',
         brandSub:    'text-emerald-100/70',
         logoBox:     'bg-emerald-500/15 border-emerald-300/20',
         profile:     'bg-white/[0.07] border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]',
@@ -98,20 +98,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         premium:     'text-emerald-300',
         chevron:     'text-emerald-100/50',
         goldAccent:  'text-gold-300/80',
-        activePill:  'bg-gold-400',
+        activePill:  'bg-gold-400 shadow-[0_0_10px_rgba(233,207,122,0.75)]',
         activeIcon:  'text-gold-300',
         closeBtn:    'text-emerald-100/80 hover:bg-white/15',
         avatarRing:  'ring-emerald-300/30',
         circleBtn:   'border-white/10 bg-white/[0.06] text-emerald-100/80 hover:bg-white/15 hover:shadow-[0_2px_12px_rgba(0,0,0,0.3)]',
         circleGlow:  'border-emerald-400/30 bg-emerald-500/10 text-gold-300 shadow-glow-emerald',
         divider:     'border-white/10',
-        sidebarBorder: 'border-r border-emerald-300/[0.08]',
+        sidebarBorder: '',
       }
     : {
         text:        'text-emerald-950',
-        groupLabel:  'text-emerald-800/55',
-        itemBase:    'text-emerald-900/75 hover:bg-emerald-50 hover:text-emerald-950 hover:shadow-[0_2px_10px_rgba(16,185,129,0.12)] hover:ring-1 hover:ring-emerald-200/60',
-        itemActive:  'bg-gradient-to-r from-emerald-100 to-emerald-50/80 text-emerald-900 ring-1 ring-emerald-500/20 shadow-[0_4px_16px_rgba(16,185,129,0.18),inset_0_1px_0_rgba(255,255,255,0.9)]',
+        groupLabel:  'text-emerald-700/65',
+        itemBase:    'text-emerald-900/75 hover:bg-white/80 hover:text-emerald-950 hover:shadow-[0_4px_18px_rgba(16,185,129,0.20)] hover:ring-1 hover:ring-emerald-300/70 hover:backdrop-blur-sm',
+        itemActive:  'bg-gradient-to-r from-white/95 to-emerald-50/85 text-emerald-900 ring-1 ring-emerald-500/25 shadow-[0_6px_26px_rgba(16,185,129,0.24),0_0_14px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(255,255,255,1)] backdrop-blur-sm',
         brandSub:    'text-emerald-800/60',
         logoBox:     'bg-emerald-600/10 border-emerald-700/20',
         profile:     'bg-white/80 border-emerald-700/12 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]',
@@ -119,14 +119,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         premium:     'text-emerald-700',
         chevron:     'text-emerald-800/40',
         goldAccent:  'text-gold-600',
-        activePill:  'bg-gold-500',
+        activePill:  'bg-gold-500 shadow-[0_0_10px_rgba(201,162,39,0.60)]',
         activeIcon:  'text-emerald-700',
         closeBtn:    'text-emerald-800/70 hover:bg-emerald-900/10',
         avatarRing:  'ring-emerald-600/20',
         circleBtn:   'border-emerald-700/15 bg-white/70 text-emerald-800/80 hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]',
         circleGlow:  'border-gold-400/40 bg-gold-50 text-gold-600 shadow-[0_0_16px_rgba(221,185,75,0.35)]',
         divider:     'border-emerald-900/10',
-        sidebarBorder: 'border-r border-emerald-900/[0.07]',
+        sidebarBorder: '',
       };
 
   // Personalised greeting, read from the key the onboarding wizard writes.
@@ -195,8 +195,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={isDark
-          ? { boxShadow: '6px 0 48px rgba(0,0,0,0.75), 2px 0 12px rgba(0,0,0,0.55)' }
-          : { boxShadow: '6px 0 40px rgba(0,0,0,0.10), 2px 0 8px rgba(0,0,0,0.06)' }}
+          ? { boxShadow: '8px 0 64px rgba(0,0,0,0.90), 4px 0 24px rgba(0,0,0,0.70), 0 0 0 1px rgba(52,211,153,0.05)' }
+          : { boxShadow: '8px 0 48px rgba(0,0,0,0.22), 4px 0 18px rgba(0,0,0,0.14), 0 0 0 1px rgba(16,185,129,0.07), 6px 0 30px rgba(16,185,129,0.06)' }}
       >
         {/* Animated, theme-aware backdrop: gradient, drifting shades, arabesque,
             stars/birds and the mosque skyline (non-interactive, sits at z-0). */}
@@ -205,16 +205,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* animated right-edge glow — visually separates the sidebar from the page */}
         <motion.div
           aria-hidden
-          className="absolute right-0 top-0 bottom-0 w-[2px] pointer-events-none z-20"
-          animate={{ opacity: isDark ? [0.35, 0.85, 0.35] : [0.2, 0.55, 0.2] }}
+          className="absolute right-0 top-0 bottom-0 w-[3px] pointer-events-none z-20"
+          animate={{ opacity: isDark ? [0.45, 1, 0.45] : [0.35, 0.85, 0.35] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
           style={{
             background: isDark
-              ? 'linear-gradient(to bottom, transparent 0%, rgba(52,211,153,0.6) 25%, rgba(52,211,153,0.75) 55%, rgba(233,207,122,0.5) 80%, transparent 100%)'
-              : 'linear-gradient(to bottom, transparent 0%, rgba(16,185,129,0.35) 25%, rgba(16,185,129,0.45) 55%, rgba(201,162,39,0.3) 80%, transparent 100%)',
+              ? 'linear-gradient(to bottom, transparent 0%, rgba(52,211,153,0.7) 20%, rgba(52,211,153,0.90) 50%, rgba(233,207,122,0.65) 78%, transparent 100%)'
+              : 'linear-gradient(to bottom, transparent 0%, rgba(16,185,129,0.55) 20%, rgba(16,185,129,0.70) 50%, rgba(201,162,39,0.50) 78%, transparent 100%)',
             boxShadow: isDark
-              ? '0 0 12px rgba(52,211,153,0.4), 0 0 24px rgba(52,211,153,0.15)'
-              : '0 0 8px rgba(16,185,129,0.25)',
+              ? '0 0 16px rgba(52,211,153,0.55), 0 0 36px rgba(52,211,153,0.22)'
+              : '0 0 14px rgba(16,185,129,0.45), 0 0 28px rgba(16,185,129,0.18)',
           }}
         />
 
@@ -245,14 +245,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {NAV.map((group) => (
             <div key={group.group}>
-              <p className={`px-3 mb-0.5 text-[10px] uppercase tracking-[0.18em] font-semibold ${t.groupLabel}`}>
+              <p className={`px-3 mb-1 text-[11px] uppercase tracking-[0.20em] font-bold ${t.groupLabel}`}>
                 {group.group}
               </p>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {group.items.map((n) => {
                   // Exact-match highlight for the current route.
                   const active = pathname === n.href;
-                  const cls = `group relative flex w-full items-center gap-3 pl-4 pr-3 py-2 rounded-2xl text-sm text-left transition ${
+                  const cls = `group relative flex w-full items-center gap-3 pl-4 pr-3 py-2.5 rounded-2xl text-[15px] text-left transition-all duration-200 ${
                     active ? t.itemActive : t.itemBase
                   }`;
                   const inner = (
@@ -262,11 +262,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {active && (
                         <motion.span
                           layoutId="active-pill"
-                          className={`absolute left-0 top-2 bottom-2 w-1 rounded-full ${t.activePill}`}
+                          className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-full ${t.activePill}`}
                         />
                       )}
-                      <n.icon size={18} className={`${active ? t.activeIcon : n.color}`} />
-                      <span className="font-medium">{n.label}</span>
+                      <n.icon size={18} className={`shrink-0 ${active ? t.activeIcon : n.color}`} />
+                      <span className="font-semibold tracking-[0.01em]">{n.label}</span>
                     </>
                   );
                   // Profile opens a popup instead of navigating to a separate page.
