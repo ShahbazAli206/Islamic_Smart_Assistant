@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { DUAS, DUA_GROUP_LABELS, type Dua, type DuaGroup } from '@/lib/duas-data';
+import { DUAS, DUA_GROUP_LABELS, type Dua, type DuaGroup, type DuaSection } from '@/lib/duas-data';
 import { HADEES_BOOKS, HADEES_CDN } from '@/lib/hadees-books';
 
 // ── Flower SVG (same pattern as other pages) ────────────────────────────────
@@ -38,28 +38,28 @@ const TABS: { id: Tab; label: string; icon: typeof BookMarked; color: string }[]
 // ═══════════════════════════════════════════════════════════════════════════
 // DUAS SECTION
 // ═══════════════════════════════════════════════════════════════════════════
+function getDuaSection(d: Dua): DuaSection {
+  return d.group === 'ramadan' ? 'ramadan' : 'masnoon';
+}
+
 function DuasSection({ isDark }: { isDark: boolean }) {
-  const [selectedGroup, setSelectedGroup] = useState<DuaGroup | 'all'>('all');
+  const [activeSection, setActiveSection] = useState<DuaSection>('masnoon');
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
   const [search, setSearch] = useState('');
 
-  const groups = useMemo(() => {
-    const seen = new Set<DuaGroup>();
-    DUAS.forEach((d) => seen.add(d.group));
-    return Array.from(seen);
-  }, []);
+  const ramadanCount = useMemo(() => DUAS.filter((d) => getDuaSection(d) === 'ramadan').length, []);
+  const masnoonCount = useMemo(() => DUAS.filter((d) => getDuaSection(d) === 'masnoon').length, []);
 
-  const filtered = useMemo(() => {
+  const listDuas = useMemo(() => {
+    const base = DUAS.filter((d) => getDuaSection(d) === activeSection);
     const q = search.trim().toLowerCase();
-    return DUAS.filter((d) => {
-      const groupMatch = selectedGroup === 'all' || d.group === selectedGroup;
-      if (!groupMatch) return false;
-      if (!q) return true;
-      return d.title.toLowerCase().includes(q) ||
-        d.english.toLowerCase().includes(q) ||
-        d.tags?.some((t) => t.includes(q));
-    });
-  }, [selectedGroup, search]);
+    if (!q) return base;
+    return base.filter((d) =>
+      d.title.toLowerCase().includes(q) ||
+      d.english.toLowerCase().includes(q) ||
+      d.tags?.some((t) => t.includes(q)),
+    );
+  }, [activeSection, search]);
 
   const panel = isDark
     ? { background: 'rgba(8,22,15,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }
@@ -68,35 +68,44 @@ function DuasSection({ isDark }: { isDark: boolean }) {
   return (
     <div className="flex flex-col lg:flex-row gap-5">
       {/* Sidebar */}
-      <div className="lg:w-64 shrink-0 space-y-2">
-        <div className="relative mb-3">
-          <Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`} />
+      <div className="lg:w-72 shrink-0 flex flex-col gap-3">
+        {/* Section tabs */}
+        <div className={`flex rounded-xl p-1 ${isDark ? 'bg-white/[0.06]' : 'bg-neutral-100'}`}>
+          {([['ramadan', '🌙', 'Ramadan', ramadanCount], ['masnoon', '📿', 'Masnoon', masnoonCount]] as const).map(([sec, icon, label, count]) => (
+            <button key={sec}
+              onClick={() => { setActiveSection(sec); setSelectedDua(null); setSearch(''); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition ${activeSection === sec ? 'bg-emerald-600 text-white shadow-sm' : isDark ? 'text-parchment/70 hover:text-parchment' : 'text-neutral-600 hover:text-neutral-800'}`}>
+              <span>{icon}</span>
+              <span>{label}</span>
+              <span className={`text-xs ${activeSection === sec ? 'opacity-70' : 'text-emerald-500'}`}>({count})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search duas..."
-            className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment placeholder:text-parchment/40' : 'bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-400'}`}
+            className={`w-full pl-8 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment placeholder:text-parchment/40' : 'bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-400'}`}
           />
         </div>
-        <button
-          onClick={() => setSelectedGroup('all')}
-          className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${selectedGroup === 'all' ? 'bg-emerald-600 text-white' : isDark ? 'text-parchment/80 hover:bg-white/[0.06]' : 'text-neutral-700 hover:bg-neutral-100'}`}
-        >
-          All Duas ({DUAS.length})
-        </button>
-        {groups.map((g) => {
-          const count = DUAS.filter((d) => d.group === g).length;
-          return (
-            <button key={g}
-              onClick={() => setSelectedGroup(g)}
-              className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition ${selectedGroup === g ? 'bg-emerald-600 text-white font-semibold' : isDark ? 'text-parchment/70 hover:bg-white/[0.06]' : 'text-neutral-600 hover:bg-neutral-100'}`}>
-              <span className="flex items-center justify-between">
-                <span>{DUA_GROUP_LABELS[g]}</span>
-                <span className={`text-xs ${selectedGroup === g ? 'text-white/70' : 'text-emerald-500'}`}>{count}</span>
-              </span>
+
+        {/* Flat scrollable list */}
+        <div className="overflow-y-auto max-h-[55vh] lg:max-h-[calc(100vh-340px)] space-y-0.5 pr-0.5">
+          {listDuas.length === 0 ? (
+            <p className={`text-sm text-center py-8 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>No duas found</p>
+          ) : listDuas.map((dua, i) => (
+            <button key={dua.id}
+              onClick={() => setSelectedDua(dua)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition flex items-start gap-2 ${selectedDua?.id === dua.id ? 'bg-emerald-600 text-white' : isDark ? 'text-parchment/80 hover:bg-white/[0.06]' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+              <span className={`shrink-0 text-xs font-mono w-5 pt-0.5 text-right ${selectedDua?.id === dua.id ? 'text-white/60' : isDark ? 'text-parchment/30' : 'text-neutral-400'}`}>{i + 1}</span>
+              <span className="leading-snug">{dua.title}</span>
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       {/* Main area */}
@@ -145,35 +154,10 @@ function DuasSection({ isDark }: { isDark: boolean }) {
             )}
           </motion.div>
         ) : (
-          <div>
-            {search && (
-              <p className={`text-sm mb-3 ${isDark ? 'text-parchment/55' : 'text-neutral-500'}`}>
-                {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
-              </p>
-            )}
-            {filtered.length === 0 ? (
-              <div className={`text-center py-12 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
-                <Search size={36} className="mx-auto mb-3 opacity-40" />
-                <p className="font-semibold">No duas found</p>
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {filtered.map((dua) => (
-                  <motion.button key={dua.id}
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedDua(dua)}
-                    className={`text-left rounded-2xl p-4 transition ${isDark ? 'bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.07]' : 'bg-white hover:shadow-md border border-neutral-100 shadow-sm'}`}>
-                    <p className={`text-sm font-semibold mb-1.5 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{dua.title}</p>
-                    <p className={`font-arabic text-lg leading-[1.9] text-right mb-2 ${isDark ? 'text-[#E9CF7A]/85' : 'text-emerald-800'}`} dir="rtl">
-                      {dua.arabic.length > 60 ? dua.arabic.slice(0, 60) + '…' : dua.arabic}
-                    </p>
-                    <p className={`text-xs line-clamp-2 ${isDark ? 'text-parchment/55' : 'text-neutral-500'}`}>{dua.english}</p>
-                    <p className={`text-xs mt-1.5 font-medium ${isDark ? 'text-gold-300/60' : 'text-amber-600'}`}>{dua.reference}</p>
-                  </motion.button>
-                ))}
-              </div>
-            )}
+          <div className={`flex flex-col items-center justify-center py-20 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+            <Heart size={40} className="mb-4 opacity-30" />
+            <p className="font-semibold text-lg mb-1">Select a Dua</p>
+            <p className="text-sm">Choose any dua from the list on the left</p>
           </div>
         )}
       </div>
