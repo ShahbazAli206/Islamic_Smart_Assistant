@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Smartphone, Tablet, Monitor, Speaker, Headphones, Radio, Wifi, Globe2,
   Bluetooth, RefreshCw, Volume2, CheckCircle2, AlertTriangle, Info, Cast, Tv, Loader2,
-  Star, Bell, Users, Download, Compass, ChevronRight, Zap, Music2, Activity, MonitorSpeaker,
+  Star, Bell, Users, Download, Compass, ChevronRight, Zap, Music2, Activity, MonitorSpeaker, Mic,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
@@ -244,9 +244,17 @@ export default function DevicesPage() {
           setEnumPermission('granted');
         } catch { setEnumPermission('denied'); }
       } else { setEnumPermission('granted'); }
+      let unlabeledIdx = 0;
       setOutputs(
-        outs.filter((d) => d.deviceId !== 'default' && d.deviceId !== 'communications')
-          .map((d) => ({ deviceId: d.deviceId, label: d.label || 'Output device' })),
+        outs.map((d) => {
+          let label = d.label;
+          if (!label) {
+            if (d.deviceId === 'default') label = 'Default System Output';
+            else if (d.deviceId === 'communications') label = 'Communications Device';
+            else { unlabeledIdx++; label = `Audio Output ${unlabeledIdx}`; }
+          }
+          return { deviceId: d.deviceId, label };
+        }),
       );
       await captureDiag();
     } catch (e: any) {
@@ -280,6 +288,18 @@ export default function DevicesPage() {
 
   const setOutput = (d: AudioOut) => { setSelectedOutputId(d.deviceId); setSelectedOutputLabel(d.label); };
   const openWindowsBluetooth = () => { window.location.href = 'ms-settings:bluetooth'; };
+
+  const requestMicPermission = async () => {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      setEnumPermission('granted');
+      refreshList();
+    } catch {
+      setError('Microphone permission denied. Go to Chrome → Settings → Privacy → Microphone and allow this site, then click Rescan.');
+    }
+  };
 
   // ── theme tokens ──
   const T = isDark
@@ -455,9 +475,18 @@ export default function DevicesPage() {
 
             {error && <div className="rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">{error}</div>}
             {enumPermission === 'denied' && (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-600 text-sm px-4 py-3 flex gap-2">
-                <AlertTriangle size={18} className="shrink-0 mt-0.5" />
-                <div><p className="font-semibold">Device names are hidden.</p>Chrome only reveals real audio-device names after you grant microphone permission once. Click &quot;Rescan&quot; and allow the mic prompt — we close it right away, we just need the labels.</div>
+              <div className="rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-600 text-sm px-4 py-3 flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex gap-2">
+                  <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Device names are hidden.</p>
+                    Chrome only reveals real audio-device names (like &quot;G04 pro&quot;) after you grant microphone permission once — we close the mic immediately after reading labels.
+                  </div>
+                </div>
+                <button onClick={requestMicPermission}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold px-3 py-2 hover:bg-amber-600 transition shrink-0">
+                  <Mic size={13} /> Grant mic access
+                </button>
               </div>
             )}
 
@@ -485,9 +514,10 @@ export default function DevicesPage() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {outputs.map((d) => {
                     const active = d.deviceId === selectedOutputId;
-                    const isBT = /bluetooth|airpod|airbud|buds|wh-|wf-|jabra|jbl|bose|sony|beats/i.test(d.label);
-                    const isHeadphones = /headphone|earbud|airpod|buds|wf-|wh-/i.test(d.label);
-                    const Icon = isHeadphones ? Headphones : isBT ? Bluetooth : Speaker;
+                    const isBT = /bluetooth|airpod|airbud|buds|wh-|wf-|jabra|jbl|bose|sony|beats|havit|g\d+\s*pro|g\d+pro|edifier|anker|soundcore|skullcandy|sennheiser|plantronics|poly|marshall|logitech|hyperx|razer|corsair|steelseries|turtle\s*beach|arctis/i.test(d.label);
+                    const isHeadphones = /headphone|earbud|airpod|buds|wf-|wh-|g\d+\s*pro/i.test(d.label);
+                    const isDefault = d.deviceId === 'default';
+                    const Icon = isHeadphones ? Headphones : isBT ? Bluetooth : isDefault ? Volume2 : Speaker;
                     return (
                       <motion.button key={d.deviceId} onClick={() => setOutput(d)} whileHover={{ y: -3 }}
                         className={`text-left rounded-2xl p-4 transition flex items-center gap-3 ${active ? T.deviceSel : T.deviceCard}`}>
@@ -497,7 +527,7 @@ export default function DevicesPage() {
                         <span className="flex-1 min-w-0">
                           <span className={`block font-semibold truncate ${T.heading}`}>{d.label}</span>
                           <span className={`block text-xs truncate ${T.sub} flex items-center gap-1.5`}>
-                            {isBT ? 'Bluetooth' : 'Wired / System'}
+                            {isDefault ? 'System Default' : isBT ? 'Bluetooth' : 'Wired / System'}
                             {active && <><span>•</span><span className="text-emerald-500 font-semibold">Connected</span></>}
                           </span>
                         </span>
