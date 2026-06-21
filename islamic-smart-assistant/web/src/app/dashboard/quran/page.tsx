@@ -103,7 +103,7 @@ export default function QuranPage() {
           </div>
 
           {/* bottom fade into page */}
-          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           {/* crescent moon */}
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
