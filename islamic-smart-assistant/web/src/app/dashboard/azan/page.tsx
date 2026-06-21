@@ -30,6 +30,8 @@ type AzanVoice = {
   style: string;
   duration: string;
   badge?: 'popular' | 'new';
+  /** Extra label pills shown on the card alongside badge (e.g. 'Most Listened'). */
+  tags?: string[];
   /** Local path served from /public/audio/azan/ — created by download_assets.py */
   local: string;
   /** Public fallback URL (in case the local file isn't downloaded yet). */
@@ -41,20 +43,40 @@ type AzanVoice = {
 };
 
 const VOICES: AzanVoice[] = [
+  // ── Featured / curated order ──────────────────────────────────────────────
   {
-    id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
-    badge: 'popular', local: '/audio/azan/makkah.mp3',
-    remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3',
-    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800', defaultPick: true,
+    id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
+    region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
+    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
   },
   {
-    id: 'madinah', name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:12',
-    badge: 'new', local: '/audio/azan/madinah.mp3',
-    remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3',
-    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700', defaultPick: true,
+    id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
+    region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44',
+    local: '/audio/azan/egzon-ibrahimi.m4a', remote: '/audio/azan/egzon-ibrahimi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
   },
+  {
+    id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
+    region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
+    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
+    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
+  },
+  {
+    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
+    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+  },
+  {
+    id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
+    local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
+    art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
+  },
+
+  // ── Uploaded reciter collection ───────────────────────────────────────────
   {
     id: 'pakistan', name: 'Pakistan Style', subtitle: 'Lahore — Classical',
     region: 'Pakistan', lang: 'Urdu', style: 'Classical', duration: '3:58',
@@ -76,20 +98,6 @@ const VOICES: AzanVoice[] = [
     remote: 'https://www.islamcan.com/audio/adhan/azan4.mp3',
     art: '/azan/egypt.svg', accent: 'from-fuchsia-500 to-rose-500',
   },
-
-  // ── Uploaded reciter collection (bundled in /public/audio/azan, served to web + desktop) ──
-  {
-    id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
-    region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26', badge: 'new',
-    local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
-    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
-  },
-  {
-    id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
-    region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
-    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
-    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
-  },
   {
     id: 'madinah-adhan', name: 'Azan Madinah', subtitle: 'أذان مدني',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:09',
@@ -97,14 +105,8 @@ const VOICES: AzanVoice[] = [
     art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
   },
   {
-    id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
-    region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44', badge: 'new',
-    local: '/audio/azan/egzon-ibrahimi.m4a', remote: '/audio/azan/egzon-ibrahimi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
-  },
-  {
     id: 'islam-sobhi', name: 'Islam Sobhi', subtitle: 'القارئ اسلام صبحي',
-    region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18', badge: 'popular',
+    region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18',
     local: '/audio/azan/islam-sobhi.m4a', remote: '/audio/azan/islam-sobhi.m4a',
     art: '/azan/egypt.svg', accent: 'from-rose-500 to-pink-600',
   },
@@ -116,15 +118,9 @@ const VOICES: AzanVoice[] = [
   },
   {
     id: 'masjid-al-haram', name: 'Masjid Al-Haram', subtitle: 'The Grand Mosque, Makkah',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46', badge: 'popular',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46',
     local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a',
     art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
-  },
-  {
-    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
-    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
-    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
   },
   {
     id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
@@ -133,16 +129,26 @@ const VOICES: AzanVoice[] = [
     art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
   },
   {
-    id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
-    local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
-    art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
-  },
-  {
     id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
-    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '', badge: 'new',
+    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
     local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
     art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
+  },
+
+  // ── Classic voices (shown at the end) ─────────────────────────────────────
+  {
+    id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
+    local: '/audio/azan/makkah.mp3',
+    remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3',
+    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800', defaultPick: true,
+  },
+  {
+    id: 'madinah', name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:12',
+    local: '/audio/azan/madinah.mp3',
+    remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3',
+    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700', defaultPick: true,
   },
 ];
 
@@ -293,7 +299,7 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
 type Item = {
   id: string; name: string; subtitle: string; region: string;
   lang: string; style: string; duration: string; art: string; accent: string;
-  badge?: 'popular' | 'new'; isCustom: boolean; defaultPick?: boolean;
+  badge?: 'popular' | 'new'; tags?: string[]; isCustom: boolean; defaultPick?: boolean;
   remoteUrl?: string;   // set for backend-synced customs — played directly from this URL
 };
 
@@ -318,7 +324,8 @@ export default function AzanPage() {
   const [query, setQuery]   = useState('');
   const [langF, setLangF]   = useState('All Languages');
   const [styleF, setStyleF] = useState('All Styles');
-  const [sortBy, setSortBy] = useState<'popular' | 'name' | 'duration'>('popular');
+  const [sortBy, setSortBy] = useState<'default' | 'popular' | 'name' | 'duration'>('default');
+  const [showAllCards, setShowAllCards] = useState(false);
   const [view, setView]     = useState<'grid' | 'list'>('grid');
 
   // Custom uploads
@@ -555,7 +562,7 @@ export default function AzanPage() {
       .map((v) => ({
         id: v.id, name: v.name, subtitle: v.subtitle, region: v.region,
         lang: v.lang, style: v.style, duration: v.duration, art: v.art,
-        accent: v.accent, badge: v.badge, isCustom: false, defaultPick: v.defaultPick,
+        accent: v.accent, badge: v.badge, tags: v.tags, isCustom: false, defaultPick: v.defaultPick,
       }));
     const custom: Item[] = customAzans.map((c) => ({
       id: c.id, name: c.name, subtitle: 'Your upload', region: 'Custom',
@@ -585,6 +592,7 @@ export default function AzanPage() {
       return matchesQ && matchesLang && matchesStyle;
     });
     list = [...list].sort((a, b) => {
+      if (sortBy === 'default') return 0; // preserve VOICES array order
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'duration') return a.duration.localeCompare(b.duration);
       // popular: badged 'popular' first, then 'new', then the rest
@@ -797,9 +805,9 @@ export default function AzanPage() {
           <SelectChip Icon={Globe2} value={langF} options={languages} onChange={setLangF} />
           <SelectChip Icon={Music2} value={styleF} options={styles} onChange={setStyleF} />
           <SelectChip Icon={ArrowDownUp}
-            value={sortBy === 'popular' ? 'Sort by Popular' : sortBy === 'name' ? 'Sort by Name' : 'Sort by Duration'}
-            options={['Sort by Popular', 'Sort by Name', 'Sort by Duration']}
-            onChange={(v) => setSortBy(v.includes('Name') ? 'name' : v.includes('Duration') ? 'duration' : 'popular')}
+            value={sortBy === 'default' ? 'Default Order' : sortBy === 'popular' ? 'Sort by Popular' : sortBy === 'name' ? 'Sort by Name' : 'Sort by Duration'}
+            options={['Default Order', 'Sort by Popular', 'Sort by Name', 'Sort by Duration']}
+            onChange={(v) => setSortBy(v.includes('Name') ? 'name' : v.includes('Duration') ? 'duration' : v.includes('Popular') ? 'popular' : 'default')}
           />
 
           <div className="flex items-center gap-1 rounded-2xl border border-emerald-200 bg-white p-1 shadow-sm">
@@ -817,9 +825,10 @@ export default function AzanPage() {
         {/* ── Cards + settings panel ── */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-5 items-start">
           {/* card grid */}
-          <div className={`xl:col-span-3 grid gap-4 ${view === 'grid' ? 'sm:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className="xl:col-span-3 space-y-5">
+            <div className={`grid gap-4 ${view === 'grid' ? 'sm:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
             <AnimatePresence mode="popLayout">
-              {filtered.map((item, i) => {
+              {(showAllCards ? filtered : filtered.slice(0, 6)).map((item, i) => {
                 const isPlaying = activeId === item.id;
                 const isSelected = selectedId === item.id;
                 const isFav = favorites.includes(item.id);
@@ -834,17 +843,26 @@ export default function AzanPage() {
                     className={`group relative rounded-3xl border bg-white p-5 shadow-sm transition-shadow hover:shadow-xl hover:shadow-emerald-900/10
                       ${isSelected ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-emerald-900/8'}`}
                   >
-                    {/* badge */}
-                    {item.badge && (
-                      <span className={`absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm
-                        ${item.badge === 'popular' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-amber-950'}`}>
-                        {item.badge === 'popular' ? '+ Popular' : 'New'}
-                      </span>
-                    )}
-                    {item.isCustom && (
-                      <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-violet-500 text-white shadow-sm">
-                        Custom
-                      </span>
+                    {/* badge + extra tags */}
+                    {(item.badge || item.tags?.length || item.isCustom) && (
+                      <div className="absolute -top-2.5 left-5 flex gap-1.5 flex-wrap">
+                        {item.isCustom && (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-violet-500 text-white shadow-sm">
+                            Custom
+                          </span>
+                        )}
+                        {item.badge && (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm
+                            ${item.badge === 'popular' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-amber-950'}`}>
+                            {item.badge === 'popular' ? '★ Popular' : 'New'}
+                          </span>
+                        )}
+                        {item.tags?.map((tag) => (
+                          <span key={tag} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-amber-500 text-white shadow-sm">
+                            🎧 {tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
 
                     {/* bell — quick-select for auto-azan */}
@@ -933,6 +951,22 @@ export default function AzanPage() {
                 <Search size={32} className="mx-auto mb-3 opacity-50" />
                 <p className="font-semibold">No voices match your filters</p>
                 <p className="text-sm">Try a different search or reset the filters.</p>
+              </div>
+            )}
+            </div>
+
+            {/* View All / Show Less button */}
+            {filtered.length > 6 && (
+              <div className="flex justify-center pt-1">
+                <motion.button
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowAllCards((v) => !v)}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-500 bg-white text-emerald-800 font-semibold text-sm px-6 py-3 shadow-sm hover:bg-emerald-50 transition"
+                >
+                  {showAllCards
+                    ? <><BellOff size={16} /> Show less</>
+                    : <><Sparkles size={16} /> View All {filtered.length} Voices</>}
+                </motion.button>
               </div>
             )}
           </div>
