@@ -43,7 +43,7 @@ type AzanVoice = {
 };
 
 const VOICES: AzanVoice[] = [
-  // ── Featured / curated order ──────────────────────────────────────────────
+  // ── Top 3: Popular + Most Listened ───────────────────────────────────────
   {
     id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
     region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
@@ -54,36 +54,43 @@ const VOICES: AzanVoice[] = [
   {
     id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
     region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44',
+    badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/egzon-ibrahimi.m4a', remote: '/audio/azan/egzon-ibrahimi.m4a',
     art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
   },
   {
     id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
     region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
+    badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
     art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
   },
+
+  // ── Next 3: Popular only ──────────────────────────────────────────────────
   {
     id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
     region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    badge: 'popular',
     local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
     art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
   },
   {
     id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
+    badge: 'popular',
     local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
     art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
   },
-
-  // ── Uploaded reciter collection ───────────────────────────────────────────
   {
     id: 'pakistan', name: 'Pakistan Style', subtitle: 'Lahore — Classical',
     region: 'Pakistan', lang: 'Urdu', style: 'Classical', duration: '3:58',
+    badge: 'popular',
     local: '/audio/azan/pakistan.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan1.mp3',
     art: '/azan/pakistan.svg', accent: 'from-rose-500 to-amber-500',
   },
+
+  // ── Remaining: no badge ───────────────────────────────────────────────────
   {
     id: 'turkey', name: 'Turkish — Istanbul', subtitle: 'Hafiz Mustafa Özcan',
     region: 'Türkiye', lang: 'Turkish', style: 'Traditional', duration: '4:21',
@@ -134,8 +141,6 @@ const VOICES: AzanVoice[] = [
     local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
     art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
   },
-
-  // ── Classic voices (shown at the end) ─────────────────────────────────────
   {
     id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
