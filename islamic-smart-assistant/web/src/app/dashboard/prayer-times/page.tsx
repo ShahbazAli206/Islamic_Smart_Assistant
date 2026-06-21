@@ -403,8 +403,8 @@ export default function PrayerTimesPage() {
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
-      {/* ── header banner: pastel + flowers on the left 40%, mosque photo on the right 60% ── */}
-      <header className="relative overflow-hidden min-h-[300px]">
+      {/* ── hero section: header + controls + countdown share the background ── */}
+      <div className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
           {/* base colour for the left pastel area */}
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
@@ -431,7 +431,7 @@ export default function PrayerTimesPage() {
           </div>
 
           {/* bottom blend into the page */}
-          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           {/* crescent moon over the mosque */}
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
@@ -474,9 +474,8 @@ export default function PrayerTimesPage() {
             </div>
           </div>
         </div>
-      </header>
-
-      <div className="relative px-6 sm:px-10 pb-10 space-y-5">
+        {/* sect controls + countdown — inside hero so they sit over the background */}
+        <div className="relative px-6 sm:px-10 pb-8 space-y-5">
 
         {/* decorative green-dome mosque (Masjid an-Nabawi) bleeding off the right edge */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -543,7 +542,10 @@ export default function PrayerTimesPage() {
                 : `${loc.city}, ${loc.country}`
           }
         />
+        </div>{/* closes sect+countdown px wrapper */}
+      </div>{/* closes hero section */}
 
+      <div className="relative px-6 sm:px-10 pb-10 space-y-5">
         <div className="grid lg:grid-cols-3 gap-5">
           {/* Map + search */}
           <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-4 space-y-3">
