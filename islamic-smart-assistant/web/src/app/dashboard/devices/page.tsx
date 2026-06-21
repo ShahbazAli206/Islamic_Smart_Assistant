@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Smartphone, Tablet, Monitor, Speaker, Headphones, Radio, Wifi, Globe2,
   Bluetooth, RefreshCw, Volume2, CheckCircle2, AlertTriangle, Info, Cast, Tv, Loader2,
-  Star, Bell, Users, Download, Compass, ChevronRight, Zap, Music2, Activity, MonitorSpeaker, Mic,
+  Bell, Users, Download, Compass, ChevronRight, Zap, Music2, Activity, MonitorSpeaker, Mic,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
@@ -153,6 +153,17 @@ function RadialGoal({ value, target, isDark }: { value: number; target: number; 
   );
 }
 
+function Flower({ size = 18, color = '#fcd34d' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} xmlns="http://www.w3.org/2000/svg">
+      {[0, 72, 144, 216, 288].map((deg) => (
+        <ellipse key={deg} cx="12" cy="7" rx="3.5" ry="5.5" transform={`rotate(${deg} 12 12)`} opacity="0.88" />
+      ))}
+      <circle cx="12" cy="12" r="3" fill={color} />
+    </svg>
+  );
+}
+
 export default function DevicesPage() {
   const { isDark } = useTheme();
 
@@ -165,8 +176,6 @@ export default function DevicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [diag, setDiag] = useState<DiagInfo | null>(null);
   const [showDiag, setShowDiag] = useState(false);
-  const [ayahFav, setAyahFav] = useState(false);
-
   // Shared "minutes listened today" (written by the recitation page).
   const [listenLog] = useLocalStorage<{ ymd: string; seconds: number }>('isa:listenLog', { ymd: '', seconds: 0 });
   const minutesListened = listenLog.ymd === todayYMD() ? Math.floor(listenLog.seconds / 60) : 0;
@@ -334,88 +343,93 @@ export default function DevicesPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
-      style={isDark ? { background: 'radial-gradient(900px 500px at 80% -5%, rgba(16,185,129,0.10), transparent 60%), linear-gradient(165deg,#08160f 0%,#05100a 55%,#020705 100%)' } : undefined}
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment' : 'text-ink'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
     >
-      {/* dark ambient decor */}
-      {isDark && (
-        <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
-          <div className="absolute -top-24 right-1/4 w-80 h-80 rounded-full animate-aurora" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
-          <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full animate-float-y" style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)' }} />
+      {/* ── HERO SECTION ── */}
+      <header className="relative overflow-hidden">
+        <div aria-hidden className="absolute inset-0">
+          <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
+          {/* RIGHT ~62%: devices background image */}
+          <div className="absolute inset-y-0 right-0 w-[62%]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Devices%20and%20output%20first%20section%20background%20image.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
+          </div>
+          {/* LEFT ~46%: animated blobs + flowers */}
+          <div className="absolute inset-y-0 left-0 w-[46%] overflow-hidden">
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%', top: '6%', width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)' }} animate={{ x: [0, 22, 0], y: [0, 16, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '30%', top: '42%', width: 210, height: 210, background: 'radial-gradient(circle, rgba(134,239,172,0.42), transparent 70%)' }} animate={{ x: [0, -18, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%', top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%', width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
+            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Flower size={18} color="#fcd34d" /></motion.div>
+            <motion.div className="absolute" style={{ left: '5%', top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
+            <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
+          </div>
+          {/* bottom fade */}
+          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          {/* crescent moon */}
+          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
+            animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="#F1D588" style={{ filter: 'drop-shadow(0 0 12px rgba(233,207,122,0.7))' }}>
+              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
+            </svg>
+          </motion.div>
         </div>
-      )}
 
-      <div className="relative max-w-[1500px] mx-auto space-y-5">
-
-        {/* ════════ TOP ROW ════════ */}
-        <div className={`grid gap-5 ${isDark ? 'lg:grid-cols-[1fr_1.45fr]' : 'lg:grid-cols-[1fr_1.25fr_0.85fr]'}`}>
-          {/* header card */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className={`relative overflow-hidden p-6 flex items-center gap-4 ${T.card}`}>
-            <div aria-hidden className="absolute inset-y-0 right-0 w-1/2 bg-cover bg-center opacity-[0.07]" style={{ backgroundImage: "url('/backgound-image2.png')" }} />
-            <div className="relative shrink-0">
-              <motion.span aria-hidden className="absolute inset-0 rounded-2xl"
-                animate={{ boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 10px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)'] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeOut' }} />
-              <span className={`relative inline-flex w-16 h-16 items-center justify-center rounded-2xl shadow-lg ${isDark ? 'bg-[#0e2018] text-gold-300 border border-gold-400/40' : 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white'}`}>
-                <Volume2 size={30} />
-              </span>
+        <div className="relative px-6 sm:px-10 pt-8 pb-6 flex flex-wrap items-start justify-between gap-6">
+          {/* LEFT: badge + title + description */}
+          <div>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
+              <Volume2 size={12} /> Devices &amp; Outputs
+            </span>
+            <h1 className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] ${isDark ? 'text-white' : 'text-emerald-950'}`}
+              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}>
+              Choose where Azan &amp; Quran audio plays
+            </h1>
+            <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
+              <p className="text-base sm:text-lg leading-relaxed text-white/90">
+                Select your audio output, cast to Google Home or Chromecast, and sync across all devices.
+              </p>
             </div>
-            <div className="relative min-w-0">
-              <h1 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-none">
-                <span className={T.heading}>Devices &amp; </span>
-                {isDark
-                  ? <span className="bg-gold-gradient bg-clip-text text-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }}>Outputs</span>
-                  : <span className="text-emerald-600">Outputs</span>}
-              </h1>
-              <p className={`${T.sub} mt-2 text-sm`}>Choose where Azan &amp; Quran audio plays with the best quality.</p>
+          </div>
+          {/* RIGHT: ayah panel */}
+          <div className="hidden md:block max-w-[17rem]">
+            <div className="rounded-2xl px-4 py-4 text-right"
+              style={{ background: isDark ? 'rgba(8,22,15,0.32)' : 'rgba(10,30,20,0.15)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.14)' }}>
+              <p className="font-arabic text-2xl leading-[1.9] text-[#E9CF7A]" dir="rtl">
+                وَإِذَا قُرِئَ ٱلْقُرْآنُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟
+              </p>
+              <p className="mt-2 text-base leading-relaxed font-medium text-white/90">
+                And when the Qur&apos;an is recited, then listen to it and pay attention.
+              </p>
+              <p className="mt-1 text-sm font-bold text-[#F1D588]">(Surah Al-A&apos;raf 7:204)</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative max-w-[1500px] mx-auto px-6 sm:px-10 pb-10 pt-5 space-y-5">
+
+        {/* audio quality card — LIGHT ONLY */}
+        {!isDark && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+            className={`relative overflow-hidden p-5 flex flex-col max-w-xs ${T.card}`}>
+            <div className="flex items-center justify-between">
+              <p className={`text-sm font-semibold ${T.sub}`}>Audio Quality</p>
+              <Activity size={16} className="text-emerald-500" />
+            </div>
+            <p className="text-2xl font-display font-bold text-emerald-600 mt-1">Excellent</p>
+            <FlowWave color="#10b981" className="h-12 mt-2" />
+            <div className="flex items-center gap-1.5 mt-2">
+              {[0, 1].map((i) => (
+                <span key={i} className={`h-1.5 rounded-full transition-all ${i === 0 ? 'w-5 bg-emerald-500' : 'w-1.5 bg-emerald-200'}`} />
+              ))}
             </div>
           </motion.div>
-
-          {/* ayah card */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}
-            className={`relative overflow-hidden p-6 flex items-center gap-4 ${T.card}`}>
-            {isDark && <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(420px 200px at 78% 60%, rgba(16,185,129,0.18), transparent 70%)' }} />}
-            <button onClick={() => setAyahFav((v) => !v)} aria-label="Favourite ayah"
-              className={`absolute top-4 right-4 w-8 h-8 grid place-items-center rounded-full transition ${ayahFav ? 'text-gold-400' : isDark ? 'text-parchment/35 hover:text-gold-300' : 'text-emerald-900/30 hover:text-gold-500'}`}>
-              <Star size={16} fill={ayahFav ? 'currentColor' : 'none'} />
-            </button>
-            <div className="relative flex-1 min-w-0">
-              <p className={`font-arabic text-xl sm:text-2xl leading-[1.9] ${isDark ? 'text-gold-200' : 'text-emerald-900'}`} dir="rtl">
-                وَإِذَا قُرِئَ ٱلْقُرْآنُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟ لَعَلَّكُمْ تُرْحَمُونَ
-              </p>
-              <p className={`${T.sub} text-sm mt-2 leading-relaxed max-w-md`}>
-                And when the Qur&apos;an is recited, then listen to it and pay attention that you may receive mercy.
-              </p>
-              <p className={`${T.faint} text-xs mt-1.5`}>(Surah Al-A&apos;raf 7:204)</p>
-            </div>
-            <div className="relative shrink-0 hidden sm:flex items-end gap-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/recitation/rehal.svg" alt="" className="w-24 animate-float" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/recitation/lantern.svg" alt="" className="w-9 animate-float" style={{ animationDelay: '1.2s' }} />
-            </div>
-          </motion.div>
-
-          {/* audio quality card — LIGHT ONLY */}
-          {!isDark && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-              className={`relative overflow-hidden p-5 flex flex-col ${T.card}`}>
-              <div className="flex items-center justify-between">
-                <p className={`text-sm font-semibold ${T.sub}`}>Audio Quality</p>
-                <Activity size={16} className="text-emerald-500" />
-              </div>
-              <p className="text-2xl font-display font-bold text-emerald-600 mt-1">Excellent</p>
-              <FlowWave color="#10b981" className="h-12 mt-2" />
-              <div className="flex items-center gap-1.5 mt-2">
-                {[0, 1].map((i) => (
-                  <span key={i} className={`h-1.5 rounded-full transition-all ${i === 0 ? 'w-5 bg-emerald-500' : 'w-1.5 bg-emerald-200'}`} />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </div>
+        )}
 
         {/* ════════ MAIN + (light) SIDEBAR ════════ */}
         <div className={`grid gap-5 items-start ${isDark ? 'grid-cols-1' : 'xl:grid-cols-[1fr_330px]'}`}>
