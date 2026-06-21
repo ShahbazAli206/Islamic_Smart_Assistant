@@ -266,10 +266,6 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
               <div class="loc-tab-icon">🌐</div>
               <div class="loc-tab-lbl">Detect by IP</div>
             </div>
-            <div class="loc-tab" id="tab-gps" onclick="switchTab('gps')">
-              <div class="loc-tab-icon">📍</div>
-              <div class="loc-tab-lbl">Use GPS</div>
-            </div>
             <div class="loc-tab" id="tab-manual" onclick="switchTab('manual')">
               <div class="loc-tab-icon">✏️</div>
               <div class="loc-tab-lbl">Enter Manually</div>
@@ -280,11 +276,6 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
           <div class="loc-pane active" id="pane-ip">
             <button class="detect-btn" id="btnDetectIp" onclick="doDetectIp()">🔍 Detect Location via IP</button>
             <div class="status-bar info" id="statusIp">Click the button above to auto-detect your city and country.</div>
-          </div>
-          <!-- GPS pane -->
-          <div class="loc-pane" id="pane-gps">
-            <button class="detect-btn" id="btnDetectGps" onclick="doDetectGps()">📡 Request GPS Location</button>
-            <div class="status-bar info" id="statusGps">Click above to use your device's GPS sensor.</div>
           </div>
           <!-- Manual pane -->
           <div class="loc-pane" id="pane-manual">
@@ -510,14 +501,12 @@ function doCancel() { window.setup.cancel(); }
 // ── Location tab ─────────────────────────────────────────
 function switchTab(tab) {
   curTab = tab;
-  ['ip','gps','manual'].forEach(t => {
+  ['ip','manual'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
     document.getElementById(`pane-${t}`).classList.toggle('active', t===tab);
   });
   if (tab !== 'manual') {
     document.getElementById('locResult').style.display = 'none';
-    // Reset unless already confirmed
-    if (tab !== curTab) { loc={city:'',country:'',lat:null,lng:null}; locOk=false; }
   }
   document.getElementById('btnNext').disabled = !locOk;
 }
@@ -543,38 +532,6 @@ async function doDetectIp() {
   }
   btn.disabled = false;
   document.getElementById('btnNext').disabled = !locOk;
-}
-
-// GPS detection
-function doDetectGps() {
-  const btn = document.getElementById('btnDetectGps');
-  const st  = document.getElementById('statusGps');
-  btn.disabled = true;
-  st.className='status-bar loading'; st.textContent='⏳ Requesting GPS location…';
-
-  navigator.geolocation.getCurrentPosition(
-    async pos => {
-      const { latitude:lat, longitude:lng } = pos.coords;
-      try {
-        const geo = await window.setup.reverseGeocode(lat, lng);
-        loc = { lat, lng, city:geo.city||`${lat.toFixed(2)}°`, country:geo.country||'Unknown' };
-      } catch {
-        loc = { lat, lng, city:`${lat.toFixed(2)}°N`, country:'Unknown' };
-      }
-      locOk = true;
-      st.className='status-bar success';
-      st.textContent=`✓ GPS: ${loc.city}, ${loc.country} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      showLocResult();
-      btn.disabled=false;
-      document.getElementById('btnNext').disabled=false;
-    },
-    err => {
-      st.className='status-bar error';
-      st.textContent=`✗ GPS failed: ${err.message}. Try IP or enter manually.`;
-      btn.disabled=false;
-    },
-    { timeout:15000, maximumAge:60000 }
-  );
 }
 
 // Manual entry

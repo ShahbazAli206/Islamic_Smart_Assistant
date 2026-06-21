@@ -307,11 +307,11 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     <div className="space-y-5">
 
       {/* ── Filter bar ── */}
-      <div className={`flex flex-wrap items-center gap-2 px-4 py-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-white/[0.06]' : 'bg-white/60 border border-emerald-100 shadow-sm backdrop-blur'}`}>
-        <span className={`text-xs font-semibold ${isDark ? 'text-parchment/60' : 'text-emerald-800/60'}`}>Show:</span>
+      <div className={`flex flex-wrap items-center gap-2.5 px-5 py-4 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-white/[0.06]' : 'bg-white/60 border border-emerald-100 shadow-sm backdrop-blur'}`}>
+        <span className={`text-sm font-semibold ${isDark ? 'text-parchment/60' : 'text-emerald-800/60'}`}>Show:</span>
         {([['all', 'All Books'], ['sehah-sittah', 'Sehah-e-Sittah'], ['other', 'Other Books']] as const).map(([v, l]) => (
           <button key={v} onClick={() => setFilterCategory(v as any)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition border ${filterCategory === v ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : isDark ? 'border-white/15 text-parchment/70 hover:bg-white/[0.07]' : 'border-emerald-200 text-emerald-800/70 hover:bg-emerald-50'}`}>
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition border ${filterCategory === v ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : isDark ? 'border-white/15 text-parchment/70 hover:bg-white/[0.07]' : 'border-emerald-200 text-emerald-800/70 hover:bg-emerald-50'}`}>
             {l}
           </button>
         ))}
@@ -1262,10 +1262,6 @@ export default function IslamicLibraryPage() {
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'hadees');
   const [heroIdx, setHeroIdx] = useState(0);
 
-  useEffect(() => {
-    const t = setInterval(() => setHeroIdx((i) => (i + 1) % HERO_AYAT.length), 5500);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
@@ -1293,7 +1289,6 @@ export default function IslamicLibraryPage() {
             <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 h-52" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
             animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
@@ -1355,8 +1350,8 @@ export default function IslamicLibraryPage() {
                       ? 'bg-white/[0.09] border border-white/[0.14] backdrop-blur-md text-parchment/85 hover:bg-white/[0.15] hover:scale-[1.01]'
                       : 'bg-white/40 border border-white/60 backdrop-blur-md text-emerald-950 shadow-sm hover:bg-white/60 hover:scale-[1.01]'
                 }`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : isDark ? 'bg-white/[0.10]' : 'bg-white/60'}`}>
-                  <Icon size={17} className={active ? 'text-white' : tab.color} />
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-black/20' : isDark ? 'bg-white/[0.10]' : 'bg-white/60'}`}>
+                  <Icon size={18} className={active ? 'text-white' : tab.color} />
                 </div>
                 <span className="leading-snug">{tab.label}</span>
               </button>

@@ -1,15 +1,43 @@
 // Electron main process.
 // Wraps the Next.js web app in a desktop shell with native audio + tray icon.
 
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notification } = require('electron');
+const {
+  app, BrowserWindow, Tray, Menu, nativeImage,
+  ipcMain, Notification, dialog, shell, net, utilityProcess,
+} = require('electron');
 const path = require('path');
+const fs   = require('fs');
 
 const isDev = !app.isPackaged;
-const APP_URL = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../../web/.next/standalone/server.js')}`;
 
-let mainWindow = null;
-let tray = null;
+// ── Single-instance lock ──────────────────────────────────────────────────────
+// Prevents a second copy of the app from opening (and the infinite-spawn loop
+// that would occur if the packaged exe were mistakenly used as a Node runtime).
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+  process.exit(0);
+}
 
+let mainWindow  = null;
+let setupWindow = null;
+let tray        = null;
+let serverProc  = null;   // UtilityProcess running the Next.js standalone server
+
+const PROD_PORT = 3001;
+const DEV_URL   = 'http://localhost:3000';
+const PROD_URL  = `http://localhost:${PROD_PORT}`;
+
+// In packaged builds electron-builder places extraResources at process.resourcesPath.
+const WEB_STANDALONE = isDev
+  ? path.join(__dirname, '../../web/.next/standalone')
+  : path.join(process.resourcesPath, 'web/.next/standalone');
+
+// ── Setup-complete flag ───────────────────────────────────────────────────────
+function isFirstLaunch() {
+  return !fs.existsSync(path.join(app.getPath('userData'), 'setup-complete.json'));
+}
+
+// ── Main app window ───────────────────────────────────────────────────────────
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -24,49 +52,190 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  mainWindow.loadURL(APP_URL);
 
-  // The wrapped web app uses browser geolocation to detect the user's city for
-  // prayer times. Electron denies geolocation by default, so navigator.geolocation
-  // never resolves until we approve the permission request here (this is what
-  // surfaces the "first time" allow flow). Notifications are also granted for Azan.
-  // NOTE: packaged builds may additionally need a Chromium geolocation key set at
-  // build time (GOOGLE_API_KEY); if location is unavailable the web app falls back
-  // to manual city entry.
+  // Prevent window.open() calls in the web app from spawning new BrowserWindows.
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
   const ses = mainWindow.webContents.session;
-  const allowed = new Set(['geolocation', 'notifications']);
-  ses.setPermissionRequestHandler((_wc, permission, callback) => callback(allowed.has(permission)));
+  const allowed = new Set(['geolocation', 'notifications', 'media']);
+  ses.setPermissionRequestHandler((_wc, permission, cb) => cb(allowed.has(permission)));
   ses.setPermissionCheckHandler((_wc, permission) => allowed.has(permission));
 
   mainWindow.on('close', (e) => {
-    if (!app.isQuitting) {
-      e.preventDefault();
-      mainWindow.hide();
-    }
+    if (!app.isQuitting) { e.preventDefault(); mainWindow.hide(); }
   });
+
+  if (isDev) {
+    mainWindow.loadURL(DEV_URL);
+    return;
+  }
+
+  // Production: start the Next.js standalone server via utilityProcess.fork()
+  // which runs server.js in a sandboxed Node.js child — NOT another Electron app.
+  let loaded = false;
+  const loadOnce = () => {
+    if (loaded || !mainWindow) return;
+    loaded = true;
+    mainWindow.loadURL(PROD_URL);
+  };
+
+  if (!serverProc) {
+    const serverScript = path.join(WEB_STANDALONE, 'server.js');
+    serverProc = utilityProcess.fork(serverScript, [], {
+      env: { ...process.env, PORT: String(PROD_PORT), HOSTNAME: '127.0.0.1' },
+      stdio: 'ignore',
+    });
+    // Wait 2 s after the process spawns before loading (gives Next.js time to bind).
+    serverProc.on('spawn', () => setTimeout(loadOnce, 2000));
+  } else {
+    // Server already running from a previous call; short delay is enough.
+    setTimeout(loadOnce, 500);
+  }
+  // Hard fallback: load after 10 s regardless (shows error page if server died).
+  setTimeout(loadOnce, 10000);
 }
 
+// ── Setup wizard window ───────────────────────────────────────────────────────
+function createSetupWindow() {
+  setupWindow = new BrowserWindow({
+    width: 640,
+    height: 530,
+    resizable: false,
+    center: true,
+    frame: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'setup-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  setupWindow.loadFile(path.join(__dirname, 'setup.html'));
+}
+
+// ── Tray ──────────────────────────────────────────────────────────────────────
 function createTray() {
   const iconPath = path.join(__dirname, '../assets/tray-icon.png');
-  const icon = nativeImage.createFromPath(iconPath);
-  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon.resize({ width: 16, height: 16 }));
+  const raw  = nativeImage.createFromPath(iconPath);
+  const icon = raw.isEmpty() ? nativeImage.createEmpty() : raw.resize({ width: 16, height: 16 });
+  tray = new Tray(icon);
   tray.setToolTip('Islamic Assistant');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Open',  click: () => { mainWindow?.show(); } },
-    { label: 'Quit',  click: () => { app.isQuitting = true; app.quit(); } },
+    { label: 'Open', click: () => { mainWindow?.show(); } },
+    { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } },
   ]));
   tray.on('click', () => mainWindow?.isVisible() ? mainWindow.hide() : mainWindow?.show());
 }
 
+// ── App lifecycle ─────────────────────────────────────────────────────────────
+app.on('second-instance', () => {
+  // User launched a second instance — just focus the existing window.
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(() => {
-  createWindow();
-  createTray();
+  if (isFirstLaunch()) {
+    createSetupWindow();
+  } else {
+    createWindow();
+    createTray();
+  }
 });
 
 app.on('window-all-closed', () => {
-  // keep alive in tray for Azan playback
+  // Intentionally stay alive in tray for Azan playback.
 });
 
+app.on('before-quit', () => {
+  serverProc?.kill();
+});
+
+// ── Azan notification ─────────────────────────────────────────────────────────
 ipcMain.on('azan:notify', (_event, { title, body }) => {
   new Notification({ title, body }).show();
+});
+
+// ── Setup wizard IPC handlers ─────────────────────────────────────────────────
+
+ipcMain.handle('setup:getAppDataPath', () => app.getPath('userData'));
+
+ipcMain.handle('setup:detectIp', async () => {
+  // Use Electron's net.fetch() (Chromium networking — no certificate issues).
+  // Try ipinfo.io first; fall back to ip-api.com.
+  try {
+    const r = await net.fetch('https://ipinfo.io/json');
+    const j = await r.json();
+    if (j.city && j.country) {
+      const [lat, lng] = (j.loc || '0,0').split(',').map(Number);
+      return { city: j.city, country: j.country, lat, lng };
+    }
+  } catch (_) { /* fall through */ }
+
+  const r2 = await net.fetch('https://ip-api.com/json/?fields=status,city,country,lat,lon');
+  const j2 = await r2.json();
+  if (j2.status === 'success') {
+    return { city: j2.city, country: j2.country, lat: j2.lat, lng: j2.lon };
+  }
+  throw new Error('Could not detect location automatically. Please enter your city manually.');
+});
+
+ipcMain.handle('setup:reverseGeocode', async (_event, lat, lng) => {
+  const r = await net.fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
+    { headers: { 'User-Agent': 'IslamicAssistant/1.0' } },
+  );
+  const j = await r.json();
+  return {
+    city:    j.address?.city || j.address?.town || j.address?.village || j.address?.county || '',
+    country: j.address?.country || '',
+  };
+});
+
+ipcMain.handle('setup:selectFolder', async () => {
+  const result = await dialog.showOpenDialog(setupWindow, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'Select Data Folder for Islamic Assistant',
+    defaultPath: app.getPath('userData'),
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle('setup:complete', async (_event, settings) => {
+  const flagPath = path.join(app.getPath('userData'), 'setup-complete.json');
+  fs.mkdirSync(path.dirname(flagPath), { recursive: true });
+  fs.writeFileSync(flagPath, JSON.stringify(settings, null, 2), 'utf-8');
+
+  if (process.platform !== 'linux') {
+    app.setLoginItemSettings({
+      openAtLogin:  settings.launchAtStartup ?? false,
+      openAsHidden: settings.startMinimized  ?? false,
+    });
+  }
+
+  if (settings.desktopShortcut && process.platform === 'win32') {
+    try {
+      const linkPath = path.join(app.getPath('desktop'), 'Islamic Assistant.lnk');
+      shell.writeShortcutLink(linkPath, 'create', { target: process.execPath, description: 'Islamic Assistant' });
+    } catch (_) { /* non-fatal */ }
+  }
+
+  return true;
+});
+
+ipcMain.handle('setup:launch', (_event, doLaunch) => {
+  setupWindow?.close();
+  setupWindow = null;
+  if (doLaunch) {
+    createWindow();
+    createTray();
+  } else {
+    app.quit();
+  }
+});
+
+ipcMain.on('setup:cancel', () => {
+  app.quit();
 });

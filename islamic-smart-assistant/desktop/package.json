@@ -1,12 +1,15 @@
 {
   "name": "islamic-assistant-desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Islamic Assistant — Prayer times, Quran, Azan, Qibla",
+  "author": "Islamic Assistant",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
     "dev:web": "npm --prefix ../web run dev",
     "dev:electron": "wait-on http://localhost:3000 && electron .",
+    "prebuild": "cd ../web && npm run build",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
@@ -21,9 +24,45 @@
   "build": {
     "appId": "app.islamicassistant.desktop",
     "productName": "Islamic Assistant",
-    "files": ["electron/**/*"],
-    "win":   { "target": ["nsis"] },
-    "mac":   { "target": ["dmg"], "category": "public.app-category.lifestyle" },
-    "linux": { "target": ["AppImage", "deb"] }
+    "files": [
+      "electron/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/.next/standalone",
+        "to":   "web/.next/standalone",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../web/.next/static",
+        "to":   "web/.next/standalone/.next/static",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../web/public",
+        "to":   "web/.next/standalone/public",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.lifestyle",
+      "identity": null
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Network"
+    }
   }
 }

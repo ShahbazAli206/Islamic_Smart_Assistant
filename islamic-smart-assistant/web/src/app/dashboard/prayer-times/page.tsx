@@ -50,14 +50,44 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
   );
 }
 
+/** Returns the best AlAdhan method id for a given country name, or null if unknown. */
+function methodByCountry(country: string): number | null {
+  const c = (country ?? '').toLowerCase();
+  if (!c) return null;
+  // South Asia
+  if (c.includes('pakistan')) return 1;
+  if (c.includes('bangladesh') || c.includes('india')) return 1;
+  // Arabian Peninsula
+  if (c.includes('saudi') || c.includes('mecca') || c.includes('makkah')) return 4;
+  if (c.includes('kuwait')) return 9;
+  if (c.includes('qatar')) return 10;
+  if (c.includes('united arab') || c.includes('uae') || c.includes('emirates')
+    || c.includes('bahrain') || c.includes('oman') || c.includes('iraq') || c.includes('yemen')) return 8;
+  // North Africa / Levant
+  if (c.includes('egypt') || c.includes('jordan') || c.includes('palestine')
+    || c.includes('syria') || c.includes('lebanon') || c.includes('libya')
+    || c.includes('tunisia') || c.includes('algeria') || c.includes('morocco') || c.includes('sudan')) return 5;
+  // Iran
+  if (c.includes('iran')) return 7;
+  // Turkey
+  if (c.includes('turkey') || c.includes('türkiye')) return 13;
+  // Southeast Asia
+  if (c.includes('singapore') || c.includes('malaysia') || c.includes('indonesia') || c.includes('brunei')) return 11;
+  // North America
+  if (c.includes('united states') || c.includes('usa') || c.includes('canada')) return 2;
+  // Europe and rest of world → Muslim World League
+  return 3;
+}
+
 /** Custom, fully-styled Calculation-method dropdown (replaces the native <select>). */
 function MethodDropdown({
-  value, onChange, options, isDark,
+  value, onChange, options, isDark, locationLabel,
 }: {
   value: number;
   onChange: (v: number) => void;
   options: { id: number; label: string }[];
   isDark: boolean;
+  locationLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,7 +99,8 @@ function MethodDropdown({
     return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
   }, []);
 
-  const items = [{ id: -1, label: 'Auto (by madhab)' }, ...options];
+  const autoLabel = locationLabel ? `Auto — ${locationLabel}` : 'Auto (by location)';
+  const items = [{ id: -1, label: autoLabel }, ...options];
   const selected = items.find((m) => m.id === value) ?? items[0];
 
   const trig = isDark
@@ -156,11 +187,6 @@ export default function PrayerTimesPage() {
   const setSect = (s: Sect) => setRawSect(s);
   const setFiqh = (f: Fiqh) => setRawFiqh(f);
 
-  const params = useMemo(() => {
-    const base = defaultParams(fiqh);
-    return { method: methodOverride >= 0 ? methodOverride : base.method, school: base.school };
-  }, [fiqh, methodOverride]);
-
   // --- map + mosques ---
   const [center, setCenter] = useState(FALLBACK_CENTER);
   const [mapZoom, setMapZoom] = useState(13); // zoom floor for the next recenter
@@ -183,6 +209,20 @@ export default function PrayerTimesPage() {
 
   // Reactive stored location — keeps hero and map in sync with the profile popup.
   const loc = useStoredLocation();
+
+  const params = useMemo(() => {
+    const base = defaultParams(fiqh);
+    if (methodOverride >= 0) return { method: methodOverride, school: base.school };
+    const countryMethod = methodByCountry(loc.country ?? '');
+    return { method: countryMethod ?? base.method, school: base.school };
+  }, [fiqh, methodOverride, loc.country]);
+
+  // Label shown in the "Auto" dropdown item so the user sees which method their location resolves to.
+  const autoMethodLabel = useMemo(() => {
+    const m = methodByCountry(loc.country ?? '');
+    if (m == null) return undefined;
+    return METHOD_LABELS.find((l) => l.id === m)?.label;
+  }, [loc.country]);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
@@ -483,7 +523,7 @@ export default function PrayerTimesPage() {
           className="pointer-events-none select-none absolute right-0 bottom-0 w-[300px] xl:w-[360px] hidden xl:block -z-10 opacity-100" />
 
         {/* ── sect / madhab / method controls (dark translucent glass) ── */}
-        <div className="rounded-2xl p-5"
+        <div className="relative z-10 rounded-2xl p-5"
           style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
@@ -520,7 +560,7 @@ export default function PrayerTimesPage() {
 
             <div>
               <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Calculation method</p>
-              <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} />
+              <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} locationLabel={autoMethodLabel} />
             </div>
           </div>
         </div>
