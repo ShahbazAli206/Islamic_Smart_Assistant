@@ -385,7 +385,14 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
           {filteredHadiths.length === 0 && !loadingHadiths && (
             <p className={`text-center py-10 text-sm ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>No hadiths found.</p>
           )}
-          {filteredHadiths.slice(0, 30).map((h) => (
+          {/* page count row */}
+          {filteredHadiths.length > 0 && (
+            <div className={`flex items-center justify-between text-xs ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+              <span>Hadiths {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredHadiths.length)} of {filteredHadiths.length}</span>
+              {search && <span>{filteredHadiths.length} results for &ldquo;{search}&rdquo;</span>}
+            </div>
+          )}
+          {pageHadiths.map((h) => (
             <motion.div key={h.hadithnumber} layout
               className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-neutral-100 bg-white shadow-sm'}`}>
               <button className="w-full text-left p-4 flex items-start gap-3"
@@ -407,10 +414,25 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
               )}
             </motion.div>
           ))}
-          {filteredHadiths.length > 30 && (
-            <p className={`text-center text-xs py-2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
-              Showing 30 of {filteredHadiths.length}. Use search to narrow results.
-            </p>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <button
+                onClick={() => { setPage((p) => p - 1); setExpandedHadith(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={page === 0}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
+                <ChevronLeft size={15} /> Previous
+              </button>
+              <span className={`text-xs font-semibold ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+                Page {page + 1} of {totalPages}
+              </span>
+              <button
+                onClick={() => { setPage((p) => p + 1); setExpandedHadith(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={page >= totalPages - 1}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
+                Next <ChevronRight size={15} />
+              </button>
+            </div>
           )}
         </div>
       )}
