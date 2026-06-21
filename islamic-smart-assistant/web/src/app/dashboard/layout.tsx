@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, Settings,
   BookOpen, Bell, Clock, Menu, X, AlarmClock, Compass,
-  Moon, Sun, ChevronRight, RefreshCw,
+  Moon, Sun, ChevronRight, RefreshCw, Library,
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { motion } from 'framer-motion';
@@ -27,6 +27,7 @@ const NAV = [
       { href: '/dashboard/qibla',        label: 'Qibla Finder',    icon: Compass,    color: 'text-teal-600' },
       { href: '/dashboard/azan',         label: 'Azan Voices',     icon: Bell,       color: 'text-rose-500' },
       { href: '/dashboard/recitation',   label: 'Recitation Alarm', icon: AlarmClock, color: 'text-violet-600' },
+      { href: '/dashboard/advanced',     label: 'Islamic Library',  icon: Library,    color: 'text-amber-600' },
     ],
   },
   { group: 'Account',
