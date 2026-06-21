@@ -442,7 +442,7 @@ export default function PrayerTimesPage() {
           </motion.div>
         </div>
 
-        <div className="relative px-6 sm:px-10 pt-8 pb-3 flex flex-wrap items-start justify-between gap-6">
+        <div className="relative px-6 sm:px-10 pt-5 pb-3 flex flex-wrap items-start justify-between gap-4">
           <div>
             <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
               <Sparkles size={12} /> Prayer Times
@@ -461,16 +461,16 @@ export default function PrayerTimesPage() {
           </div>
 
           {/* ayah — dark translucent panel */}
-          <div className="hidden md:block max-w-[17rem]">
-            <div className="rounded-2xl px-4 py-6 text-right"
+          <div className="hidden md:block max-w-[22rem]">
+            <div className="rounded-2xl px-4 py-3.5 text-right"
               style={{ background: isDark ? 'rgba(8,22,15,0.32)' : 'rgba(10,30,20,0.15)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.14)' }}>
-              <p className={`font-arabic text-3xl lg:text-4xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
+              <p className={`font-arabic text-2xl lg:text-3xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
               </p>
-              <p className="mt-2.5 text-base lg:text-lg leading-relaxed font-medium text-white/90">
+              <p className="mt-2 text-sm lg:text-base leading-relaxed font-medium text-white/90">
                 And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.
               </p>
-              <p className="mt-1.5 text-sm font-bold text-[#F1D588]">Surah Al-Ankabut (29:45)</p>
+              <p className="mt-1 text-xs font-bold text-[#F1D588]">Surah Al-Ankabut (29:45)</p>
             </div>
           </div>
         </div>
