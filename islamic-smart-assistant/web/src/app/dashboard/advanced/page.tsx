@@ -29,8 +29,8 @@ function Flower({ size = 18, color = '#f9a8d4' }: { size?: number; color?: strin
 // ── Tab definition ───────────────────────────────────────────────────────────
 type Tab = 'duas' | 'hadees' | 'masail' | 'calculators';
 const TABS: { id: Tab; label: string; icon: typeof BookMarked; color: string }[] = [
-  { id: 'duas',        label: 'Duas & Supplications', icon: Heart,      color: 'text-rose-500' },
   { id: 'hadees',      label: 'Hadees Library',        icon: BookOpen,   color: 'text-emerald-600' },
+  { id: 'duas',        label: 'Duas & Supplications', icon: Heart,      color: 'text-rose-500' },
   { id: 'masail',      label: 'Islamic Masail',         icon: Scale,      color: 'text-amber-600' },
   { id: 'calculators', label: 'Islamic Calculators',    icon: Calculator, color: 'text-violet-600' },
 ];
@@ -44,7 +44,8 @@ function getDuaSection(d: Dua): DuaSection {
 
 function DuasSection({ isDark }: { isDark: boolean }) {
   const [activeSection, setActiveSection] = useState<DuaSection>('masnoon');
-  const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
+  const defaultDua = useMemo(() => DUAS.filter((d) => getDuaSection(d) === 'masnoon')[0] ?? null, []);
+  const [selectedDua, setSelectedDua] = useState<Dua | null>(defaultDua);
   const [search, setSearch] = useState('');
 
   const ramadanCount = useMemo(() => DUAS.filter((d) => getDuaSection(d) === 'ramadan').length, []);
@@ -73,7 +74,7 @@ function DuasSection({ isDark }: { isDark: boolean }) {
         <div className={`flex rounded-xl p-1 ${isDark ? 'bg-white/[0.06]' : 'bg-neutral-100'}`}>
           {([['ramadan', '🌙', 'Ramadan', ramadanCount], ['masnoon', '📿', 'Masnoon', masnoonCount]] as const).map(([sec, icon, label, count]) => (
             <button key={sec}
-              onClick={() => { setActiveSection(sec); setSelectedDua(null); setSearch(''); }}
+              onClick={() => { setActiveSection(sec); setSelectedDua(DUAS.filter((d) => getDuaSection(d) === sec)[0] ?? null); setSearch(''); }}
               className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition ${activeSection === sec ? 'bg-emerald-600 text-white shadow-sm' : isDark ? 'text-parchment/70 hover:text-parchment' : 'text-neutral-600 hover:text-neutral-800'}`}>
               <span>{icon}</span>
               <span>{label}</span>
@@ -1258,7 +1259,7 @@ const HERO_AYAT = [
 
 export default function IslamicLibraryPage() {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'duas');
+  const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'hadees');
   const [heroIdx, setHeroIdx] = useState(0);
 
   useEffect(() => {
@@ -1292,7 +1293,7 @@ export default function IslamicLibraryPage() {
             <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-52" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
             animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
@@ -1339,20 +1340,29 @@ export default function IslamicLibraryPage() {
             </div>
           </div>
         </div>
-      {/* ── Tab navigation — inside hero so background extends to here ── */}
-      <div className={`sticky top-0 z-20 px-6 sm:px-10 py-3 flex gap-1 overflow-x-auto ${isDark ? 'bg-[#0B231A]/90' : 'bg-white/90'} backdrop-blur`}>
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition ${active ? 'bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'text-parchment/70 hover:bg-white/[0.07]' : 'text-neutral-600 hover:bg-neutral-100'}`}>
-              <Icon size={15} className={active ? 'text-white' : tab.color} />
-              {tab.label}
-            </button>
-          );
-        })}
+      {/* ── Tab navigation cards — inside hero so background image extends here ── */}
+      <div className="relative px-6 sm:px-10 pb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold text-left transition-all duration-200 ${
+                  active
+                    ? 'bg-emerald-600 border border-emerald-400/50 text-white shadow-glow-emerald scale-[1.02]'
+                    : isDark
+                      ? 'bg-white/[0.09] border border-white/[0.14] backdrop-blur-md text-parchment/85 hover:bg-white/[0.15] hover:scale-[1.01]'
+                      : 'bg-white/40 border border-white/60 backdrop-blur-md text-emerald-950 shadow-sm hover:bg-white/60 hover:scale-[1.01]'
+                }`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : isDark ? 'bg-white/[0.10]' : 'bg-white/60'}`}>
+                  <Icon size={17} className={active ? 'text-white' : tab.color} />
+                </div>
+                <span className="leading-snug">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
       </div>{/* closes hero section */}
 
