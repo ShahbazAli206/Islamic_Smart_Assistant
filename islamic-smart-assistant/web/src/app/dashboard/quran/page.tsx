@@ -1,9 +1,5 @@
 'use client';
 
-// Quran reader page: curated quick-pick surahs, the audio/translation player,
-// and a searchable index of all 114 surahs. Selected surah + reciter +
-// translation are held in local state and handed down to <QuranPlayer />.
-
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, ShieldCheck } from 'lucide-react';
@@ -13,15 +9,23 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
 import { useTheme } from '@/lib/ThemeContext';
 
-// Hand-picked popular surahs surfaced as shortcut cards above the full index.
-// `tag` is the contextual reason it's a common pick (e.g. recited on Friday).
 const QUICK_PICKS = [
-  { number: 1,  label: 'Al-Fatihah', tag: 'The Opening' },
+  { number: 1,  label: 'Al-Fatihah', tag: 'The Opening'      },
   { number: 36, label: 'Yaseen',     tag: 'Heart of the Quran' },
-  { number: 55, label: 'Ar-Rahman',  tag: 'The Beneficent' },
-  { number: 56, label: 'Al-Waqiah',  tag: 'After Maghrib' },
-  { number: 67, label: 'Al-Mulk',    tag: 'Before Sleep' },
-  { number: 18, label: 'Al-Kahf',    tag: 'Friday' },
+  { number: 55, label: 'Ar-Rahman',  tag: 'The Beneficent'    },
+  { number: 56, label: 'Al-Waqiah',  tag: 'After Maghrib'     },
+  { number: 67, label: 'Al-Mulk',    tag: 'Before Sleep'      },
+  { number: 18, label: 'Al-Kahf',    tag: 'Friday'            },
+];
+
+// Ticker items: surah cards + "View All" card, typed for discriminated union
+type TickerSurah   = { kind: 'surah';   number: number; label: string; tag: string };
+type TickerViewAll = { kind: 'viewall' };
+type TickerItem    = TickerSurah | TickerViewAll;
+
+const TICKER_ITEMS: TickerItem[] = [
+  ...QUICK_PICKS.map((p) => ({ kind: 'surah' as const, ...p })),
+  { kind: 'viewall' as const },
 ];
 
 function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: number; color?: string; className?: string }) {
@@ -37,22 +41,17 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
   );
 }
 
-/** Quran reader: quick picks, player, and a searchable full surah index. */
 export default function QuranPage() {
   const { isDark } = useTheme();
-  const [query, setQuery] = useState('');                       // search box text for the surah index
-  const [surah, setSurah] = useState(1);                        // currently selected surah number (drives the player)
-  const [reciter, setReciter] = useState<ReciterId>('ar.abdulbasitmurattal');
-  const [translation, setTranslation] = useState<TranslationId>('ur.jalandhry');
+  const [query, setQuery]               = useState('');
+  const [surah, setSurah]               = useState(1);
+  const [reciter, setReciter]           = useState<ReciterId>('ar.abdulbasitmurattal');
+  const [translation, setTranslation]   = useState<TranslationId>('ur.jalandhry');
   const [translationMode, setTranslationMode] = useState(true);
 
-  // Apply the user's preferred language once it loads from localStorage.
   const [language] = useLocalStorage<string>('isa:language', 'ur');
-  useEffect(() => {
-    setTranslation(langToTranslation(language));
-  }, [language]);
+  useEffect(() => { setTranslation(langToTranslation(language)); }, [language]);
 
-  // Filter the full surah list by the search box.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SURAHS;
@@ -65,45 +64,56 @@ export default function QuranPage() {
     );
   }, [query]);
 
-  // Show only the first two rows (6 surahs) by default; reveal all 114 when the
-  // user taps "Browse All". A search always shows the full set of matches.
-  const [showAll, setShowAll] = useState(false);
-  const isSearching = query.trim().length > 0;
-  const visibleSurahs = isSearching ? filtered : (showAll ? SURAHS : SURAHS.slice(0, 6));
+  const [showAll, setShowAll]   = useState(false);
+  const isSearching             = query.trim().length > 0;
+  const visibleSurahs           = isSearching ? filtered : (showAll ? SURAHS : SURAHS.slice(0, 6));
+
+  const scrollToIndex = () => {
+    setShowAll(true);
+    requestAnimationFrame(() =>
+      document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  };
 
   return (
-    // Break out of the dashboard's padding so the dark theme + photo header fill
-    // the content area edge-to-edge, matching the reference design.
-    <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
-      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
+    <div
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
+    >
 
-      {/* ── hero section: header text + quick picks share the same background ── */}
+      {/* ── hero ── */}
       <div className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
-          {/* base pastel / dark gradient */}
+          {/* base gradient */}
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
 
-          {/* right ~62%: mosque photo */}
-          <div className="absolute inset-y-0 right-0 w-[62%]">
+          {/* right ~80%: mosque photo — no bottom fade, full clarity top to bottom */}
+          <div className="absolute inset-y-0 right-0 w-[80%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/quran_firstsection_bg.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
+            <img
+              src="/quran_firstsection_bg.png"
+              alt=""
+              className="w-full h-full object-cover object-center"
+              style={isDark ? { filter: 'brightness(0.82)' } : undefined}
+            />
+            {/* left-edge blend only — no bottom fade */}
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 28%)` }}
+            />
           </div>
 
-          {/* left ~46%: animated pastel blobs + floating flowers */}
-          <div className="absolute inset-y-0 left-0 w-[46%] overflow-hidden">
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%', top: '6%', width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)' }} animate={{ x: [0, 22, 0], y: [0, 16, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
+          {/* left ~22%: animated pastel blobs + floating flowers */}
+          <div className="absolute inset-y-0 left-0 w-[22%] overflow-hidden">
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%',  top: '6%',  width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)'  }} animate={{ x: [0, 22, 0], y: [0, 16, 0]  }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
             <motion.div className="absolute rounded-full blur-3xl" style={{ left: '30%', top: '42%', width: 210, height: 210, background: 'radial-gradient(circle, rgba(134,239,172,0.42), transparent 70%)' }} animate={{ x: [0, -18, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%', top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%', width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
-            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Flower size={18} color="#fcd34d" /></motion.div>
-            <motion.div className="absolute" style={{ left: '5%', top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%',  top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%',  width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0]  }} transition={{ duration: 7,   repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
+            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8,   repeat: Infinity, ease: 'easeInOut', delay: 1   }}><Flower size={18} color="#fcd34d" /></motion.div>
+            <motion.div className="absolute" style={{ left: '5%',  top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0]  }} transition={{ duration: 9,   repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
             <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
           </div>
-
-          {/* bottom fade into page */}
-          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           {/* crescent moon */}
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
@@ -114,18 +124,22 @@ export default function QuranPage() {
           </motion.div>
         </div>
 
+        {/* header text */}
         <div className="relative px-6 sm:px-10 pt-8 pb-3 flex flex-wrap items-start justify-between gap-6">
-          {/* left: badge + title + description */}
           <div>
             <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
               <BookOpen size={12} /> Holy Quran
             </span>
-            <h1 className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap ${isDark ? 'text-white' : 'text-emerald-950'}`}
-              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}>
+            <h1
+              className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap ${isDark ? 'text-white' : 'text-emerald-950'}`}
+              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}
+            >
               The Noble Quran
             </h1>
-            <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
+            <div
+              className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}
+            >
               <p className="text-base sm:text-lg leading-relaxed text-white/90">
                 All 114 Surahs · 7 world-class reciters · Arabic · Urdu/English translation
               </p>
@@ -138,10 +152,11 @@ export default function QuranPage() {
             </div>
           </div>
 
-          {/* right: Quran ayah */}
           <div className="hidden md:block max-w-[16rem]">
-            <div className="rounded-2xl px-4 py-3 text-right"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
+            <div
+              className="rounded-2xl px-4 py-3 text-right"
+              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}
+            >
               <p className={`font-arabic text-xl lg:text-2xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
                 وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنصِتُوا لَعَلَّكُمْ تُرْحَمُونَ
               </p>
@@ -152,72 +167,126 @@ export default function QuranPage() {
             </div>
           </div>
         </div>
-        {/* ── quick picks — inside hero so they sit over the background ── */}
-        <div className="relative px-6 sm:px-10 pb-10">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-7 gap-3">
-          {QUICK_PICKS.map((p, i) => {
-            const active = surah === p.number;
-            return (
-              <motion.button
-                key={p.number}
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setSurah(p.number)}
-                className={`relative overflow-hidden rounded-2xl p-3 flex items-center gap-3 text-left transition border-2
-                  ${active
-                    ? 'border-gold-400 shadow-glow-gold'
-                    : isDark
-                      ? 'border-white/8 hover:border-gold-300/50'
-                      : 'border-black/5 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
-                style={{ background: active
-                  ? 'linear-gradient(160deg,#103024 0%,#0B2017 100%)'
-                  : isDark ? 'linear-gradient(160deg,#13241c 0%,#0c1813 100%)' : '#FFFFFF' }}
-              >
-                {active && (
-                  <motion.span aria-hidden className="absolute inset-0 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle at 30% 50%, rgba(221,185,75,0.18), transparent 70%)' }}
-                    animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} />
-                )}
-                {/* ornate animated number badge — left side, doubled size */}
-                <span className="relative shrink-0 flex h-24 w-24 items-center justify-center">
-                  <motion.span aria-hidden className="absolute inset-0 rounded-full border-2 border-dashed"
-                    style={{ borderColor: active ? 'rgba(233,207,122,0.55)' : isDark ? 'rgba(221,185,75,0.3)' : 'rgba(201,162,39,0.35)' }}
-                    animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
-                  <span className={`relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-2 font-display font-bold text-3xl
-                    ${active ? 'border-[#E9CF7A]/50 text-[#E9CF7A]' : isDark ? 'border-gold-400/30 text-gold-300' : 'border-gold-500/30 text-gold-700'}`}>
-                    {p.number}
-                  </span>
-                </span>
-                {/* text stack — right side */}
-                <div className="relative min-w-0">
-                  <p className={`text-[11px] ${active ? 'text-white/60' : isDark ? 'text-parchment/45' : 'text-ink/50'}`}>Surah {p.number}</p>
-                  <p className={`font-display font-bold text-lg leading-tight truncate ${active ? 'text-[#E9CF7A]' : isDark ? 'text-parchment' : 'text-ink'}`}>{p.label}</p>
-                  <p className={`text-[11px] mt-0.5 ${active ? 'text-white/55' : isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>{p.tag}</p>
-                </div>
-              </motion.button>
-            );
-          })}
 
-          {/* View All card */}
-          <button
-            onClick={() => {
-              setShowAll(true);
-              requestAnimationFrame(() => document.getElementById('all-surahs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-            }}
-            className={`rounded-2xl border-2 flex items-center gap-3 p-3 text-left transition
-              ${isDark ? 'border-white/10 text-parchment hover:border-gold-300/50' : 'border-emerald-200/70 text-emerald-900 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
-            style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : 'linear-gradient(160deg,#EEF3EC 0%,#E6EFE5 100%)' }}
-          >
-            <span className="shrink-0 flex h-24 w-24 items-center justify-center">
-              <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
-                <BookOpen size={40} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
-              </motion.span>
-            </span>
-            <span className="font-semibold text-sm leading-tight">View All<br /><span className={`text-xs font-normal ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span></span>
-          </button>
+        {/* ── quick-pick ticker — continuous right-to-left scroll ── */}
+        <div
+          className="relative pb-10 overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(90deg, transparent 0%, black 3%, black 97%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 3%, black 97%, transparent 100%)',
+          }}
+        >
+          <style>{`
+            @keyframes quranTicker {
+              from { transform: translateX(0); }
+              to   { transform: translateX(-50%); }
+            }
+            .quran-ticker {
+              animation: quranTicker 34s linear infinite;
+              will-change: transform;
+            }
+            .quran-ticker:hover { animation-play-state: paused; }
+          `}</style>
+
+          {/* Duplicate TICKER_ITEMS for seamless infinite loop */}
+          <div className="quran-ticker flex gap-3 w-max py-1 px-6 sm:px-10">
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => {
+              if (item.kind === 'viewall') {
+                return (
+                  <button
+                    key={`va-${i}`}
+                    onClick={scrollToIndex}
+                    className={`shrink-0 rounded-2xl border-2 flex items-center gap-3 p-3 text-left transition
+                      ${isDark
+                        ? 'border-white/10 text-parchment hover:border-gold-300/50'
+                        : 'border-emerald-200/70 text-emerald-900 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
+                    style={{ background: isDark ? 'linear-gradient(160deg,#0F2A1C 0%,#091510 100%)' : 'linear-gradient(160deg,#EEF3EC 0%,#E6EFE5 100%)' }}
+                  >
+                    <span className="shrink-0 flex h-24 w-24 items-center justify-center">
+                      <motion.span animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+                        <BookOpen size={40} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+                      </motion.span>
+                    </span>
+                    <span className="font-semibold text-sm leading-tight">
+                      View All<br />
+                      <span className={`text-xs font-normal ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span>
+                    </span>
+                  </button>
+                );
+              }
+
+              // TickerSurah
+              const active = surah === item.number;
+              return (
+                <motion.button
+                  key={`${item.number}-${i}`}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setSurah(item.number)}
+                  className={`shrink-0 relative overflow-hidden rounded-2xl p-3 flex items-center gap-3 text-left transition border-2
+                    ${active
+                      ? 'border-gold-400 shadow-glow-gold'
+                      : isDark
+                        ? 'border-white/8 hover:border-gold-300/50'
+                        : 'border-black/5 hover:border-gold-300/60 shadow-[0_3px_14px_rgba(11,20,16,0.07)]'}`}
+                  style={{
+                    background: active
+                      ? 'linear-gradient(160deg,#103024 0%,#0B2017 100%)'
+                      : isDark
+                        ? 'linear-gradient(160deg,#13241c 0%,#0c1813 100%)'
+                        : '#FFFFFF',
+                  }}
+                >
+                  {active && (
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'radial-gradient(circle at 30% 50%, rgba(221,185,75,0.18), transparent 70%)' }}
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
+
+                  {/* animated ring badge */}
+                  <span className="relative shrink-0 flex h-24 w-24 items-center justify-center">
+                    {/* outer dashed ring — bolder stroke + higher opacity */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 rounded-full border-[3px] border-dashed"
+                      style={{
+                        borderColor: active
+                          ? 'rgba(233,207,122,0.90)'
+                          : isDark
+                            ? 'rgba(221,185,75,0.70)'
+                            : 'rgba(201,162,39,0.70)',
+                      }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <span
+                      className={`relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full border-2 font-display font-bold text-3xl
+                        ${active
+                          ? 'border-[#E9CF7A]/50 text-[#E9CF7A]'
+                          : isDark
+                            ? 'border-gold-400/30 text-gold-300'
+                            : 'border-gold-500/30 text-gold-700'}`}
+                    >
+                      {item.number}
+                    </span>
+                  </span>
+
+                  {/* text */}
+                  <div className="relative min-w-0">
+                    <p className={`text-[11px] ${active ? 'text-white/60' : isDark ? 'text-parchment/45' : 'text-ink/50'}`}>Surah {item.number}</p>
+                    <p className={`font-display font-bold text-lg leading-tight truncate ${active ? 'text-[#E9CF7A]' : isDark ? 'text-parchment' : 'text-ink'}`}>{item.label}</p>
+                    <p className={`text-[11px] mt-0.5 ${active ? 'text-white/55' : isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>{item.tag}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
-        </div>{/* closes quick picks px wrapper */}
-      </div>{/* closes hero section */}
+      </div>{/* closes hero */}
 
       <div className="px-6 sm:px-10 pb-10 space-y-6">
         {/* ── player ── */}
@@ -232,7 +301,7 @@ export default function QuranPage() {
           isDark={isDark}
         />
 
-        {/* ── full surah index (cream panel) ── */}
+        {/* ── full surah index ── */}
         <div id="all-surahs" className="rounded-3xl bg-parchment text-ink p-5 sm:p-6 shadow-2xl">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <div>
