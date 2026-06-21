@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Bell, BookOpen, Compass, Volume2, Smartphone, Languages, ShieldCheck,
-  ArrowRight, Moon, CalendarDays, Globe2,
+  ArrowRight, Moon, CalendarDays,
   Heart, BookMarked, Scale, Calculator,
 } from 'lucide-react';
 
@@ -69,8 +69,8 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Volume2, title: 'Ayah-by-Ayah Tilawat',
-    desc: 'Audio recitation with translation in multiple languages.',
-    href: '/dashboard/recitation',
+    desc: 'Audio recitation in 10+ languages — listen, follow along and understand.',
+    href: '/dashboard/quran',
     grad: 'from-gold-600 to-gold-900', text: 'text-gold-700',
     arrow: 'bg-gold-700', tint: 'to-gold-50', glow: 'bg-gold-500', deco: 'wave',
   },
@@ -87,13 +87,6 @@ const FEATURES: Feature[] = [
     href: '/dashboard/recitation',
     grad: 'from-gold-400 to-gold-600', text: 'text-gold-600',
     arrow: 'bg-gold-500', tint: 'to-gold-50', glow: 'bg-gold-300', deco: 'motif',
-  },
-  {
-    icon: Globe2, title: '10+ Languages',
-    desc: 'Understand the Quran in 10+ global languages seamlessly.',
-    href: '/dashboard/settings',
-    grad: 'from-gold-500 to-midnight-700', text: 'text-gold-700',
-    arrow: 'bg-gold-600', tint: 'to-gold-50', glow: 'bg-gold-400', deco: 'motif',
   },
   {
     icon: ShieldCheck, title: 'Privacy First',
