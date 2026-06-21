@@ -74,7 +74,7 @@ function ReciterDropdown({ value, onChange, isDark }: { value: ReciterId; onChan
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition-all duration-200 min-w-[185px] ${trig}`}
+        className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition-all duration-200 min-w-[240px] ${trig}`}
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold-gradient text-midnight-900 shrink-0"><Mic2 size={13} /></span>
         <span className="flex-1 text-left truncate">{selected?.name}</span>
@@ -89,7 +89,7 @@ function ReciterDropdown({ value, onChange, isDark }: { value: ReciterId; onChan
             variants={dropdownVariants}
             initial="hidden" animate="visible" exit="exit"
             transition={dropdownTransition}
-            className="absolute top-full mt-2 left-0 z-50 bg-white border border-emerald-100 rounded-2xl shadow-2xl shadow-emerald-900/10 overflow-hidden min-w-[220px]"
+            className="absolute top-full mt-2 left-0 z-50 bg-white border border-emerald-100 rounded-2xl shadow-2xl shadow-emerald-900/10 overflow-hidden min-w-[260px]"
           >
             <div className="py-2">
               {RECITERS.map((r, i) => (
@@ -135,7 +135,7 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 min-w-[205px] ${trig}`}
+        className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 min-w-[270px] ${trig}`}
       >
         <Languages size={15} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-gold-600'}`} />
         <span className="flex-1 text-left truncate">{selected?.name ?? 'No translation'}</span>
@@ -150,7 +150,7 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
             variants={dropdownVariants}
             initial="hidden" animate="visible" exit="exit"
             transition={dropdownTransition}
-            className="absolute top-full mt-2 left-0 z-50 bg-white border border-emerald-100 rounded-2xl shadow-2xl shadow-emerald-900/10 overflow-hidden min-w-[270px]"
+            className="absolute top-full mt-2 left-0 z-50 bg-white border border-emerald-100 rounded-2xl shadow-2xl shadow-emerald-900/10 overflow-hidden min-w-[340px]"
           >
             <div className="max-h-80 overflow-y-auto py-2">
               {LANG_GROUPS.map((group, gi) => (
