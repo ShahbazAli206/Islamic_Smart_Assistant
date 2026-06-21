@@ -290,7 +290,7 @@ export function PrayerCountdownHero({
                     {next ? formatCountdown(next.inMs) : '--:--:--'}
                   </p>
                 </div>
-                <p className={`mt-2 text-sm ${isDark ? 'text-emerald-100/75' : 'text-emerald-900/55'}`}>
+                <p className={`mt-2 text-base font-medium ${isDark ? 'text-emerald-100/75' : 'text-emerald-900/55'}`}>
                   {next ? `at ${next.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}` : ''}
                 </p>
               </>
@@ -439,9 +439,9 @@ export function PrayerCountdownHero({
                     >
                       <Icon size={20} className={iconColor} />
                     </motion.div>
-                    <p className={`mt-3 text-lg font-bold tracking-wide ${nameColor}`}>{name}</p>
+                    <p className={`mt-3 text-2xl sm:text-3xl font-bold tracking-wide ${nameColor}`}>{name}</p>
                     <p className="text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
-                    <p className={`mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold ${endColor}`}>
+                    <p className={`mt-1.5 flex items-center gap-1.5 text-base font-semibold ${endColor}`}>
                       <Clock size={13} className="shrink-0" /> Ends {endTime}
                     </p>
                   </motion.div>
