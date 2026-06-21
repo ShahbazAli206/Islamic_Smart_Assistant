@@ -177,257 +177,401 @@ interface ChapterItem { chapterno: number; chaptername: string; }
 
 function HadeesSection({ isDark }: { isDark: boolean }) {
   const [selectedBook, setSelectedBook] = useState(HADEES_BOOKS[0]);
-  const [selectedLang, setSelectedLang] = useState(HADEES_BOOKS[0].languages.find((l) => l.code === 'eng') ?? HADEES_BOOKS[0].languages[0]);
-  const [allHadiths, setAllHadiths] = useState<HadithItem[]>([]);
-  const [sections, setSections] = useState<ChapterItem[]>([]);
+  const [selectedLang, setSelectedLang] = useState(
+    HADEES_BOOKS[0].languages.find(l => l.code === 'eng') ?? HADEES_BOOKS[0].languages[0],
+  );
+  const [allHadiths, setAllHadiths]     = useState<HadithItem[]>([]);
+  const [arabicHadiths, setArabicHadiths] = useState<HadithItem[]>([]);
+  const [sections, setSections]         = useState<ChapterItem[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+  const [search, setSearch]             = useState('');
   const [filterCategory, setFilterCategory] = useState<'sehah-sittah' | 'other' | 'all'>('all');
   const [expandedHadith, setExpandedHadith] = useState<number | null>(null);
-  const [page, setPage] = useState(0);
+  const [page, setPage]                 = useState(0);
   const PAGE_SIZE = 15;
 
   const books = useMemo(() =>
-    filterCategory === 'all' ? HADEES_BOOKS : HADEES_BOOKS.filter((b) => b.category === filterCategory),
+    filterCategory === 'all' ? HADEES_BOOKS : HADEES_BOOKS.filter(b => b.category === filterCategory),
     [filterCategory],
   );
 
-  // Load full book JSON once per edition — chapters and hadiths together
+  // Language options excluding Arabic (Arabic is always shown alongside)
+  const transLangs = useMemo(() => selectedBook.languages.filter(l => l.code !== 'ara'), [selectedBook]);
+
+  // Arabic edition for this book
+  const araEdition = useMemo(
+    () => selectedBook.languages.find(l => l.code === 'ara')?.edition ?? null,
+    [selectedBook],
+  );
+
+  // Load full book JSON — translation + Arabic in parallel
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
     setAllHadiths([]);
+    setArabicHadiths([]);
     setSections([]);
     setPage(0);
     setExpandedHadith(null);
-    fetch(`${HADEES_CDN}/${selectedLang.edition}.min.json`)
-      .then((r) => r.json())
-      .then((data) => {
+    setSearch('');
+
+    const fetchTrans = fetch(`${HADEES_CDN}/${selectedLang.edition}.min.json`).then(r => r.json());
+    const fetchAra   = araEdition
+      ? fetch(`${HADEES_CDN}/${araEdition}.min.json`).then(r => r.json())
+      : Promise.resolve(null);
+
+    Promise.all([fetchTrans, fetchAra])
+      .then(([transData, araData]) => {
         if (cancelled) return;
-        // metadata.sections: {"0":"","1":"Revelation","2":"Belief",...}
-        const sectionMap: Record<string, string> = data?.metadata?.sections ?? data?.metadata?.section ?? {};
+        const sectionMap: Record<string, string> = transData?.metadata?.sections ?? transData?.metadata?.section ?? {};
         const parsed: ChapterItem[] = Object.entries(sectionMap)
           .filter(([no]) => Number(no) > 0)
           .map(([no, name]) => ({ chapterno: Number(no), chaptername: String(name) }))
           .sort((a, b) => a.chapterno - b.chapterno);
         setSections(parsed);
         if (parsed.length > 0) setSelectedChapter(parsed[0].chapterno);
-        setAllHadiths(Array.isArray(data?.hadiths) ? data.hadiths : []);
+        setAllHadiths(Array.isArray(transData?.hadiths) ? transData.hadiths : []);
+        if (araData) setArabicHadiths(Array.isArray(araData?.hadiths) ? araData.hadiths : []);
       })
-      .catch(() => { if (!cancelled) setError('Could not load book. Check your connection and try again.'); })
+      .catch(() => { if (!cancelled) setError('Could not load hadiths. Please check your connection.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
+
     return () => { cancelled = true; };
-  }, [selectedLang.edition]);
+  }, [selectedLang.edition, araEdition]);
 
   const selectBook = (book: typeof HADEES_BOOKS[0]) => {
-    const defaultLang = book.languages.find((l) => l.code === 'eng') ?? book.languages[0];
+    const defaultLang = book.languages.find(l => l.code === 'eng')
+      ?? book.languages.find(l => l.code !== 'ara')
+      ?? book.languages[0];
     setSelectedBook(book);
     setSelectedLang(defaultLang);
     setSearch('');
   };
 
-  const selectLang = (lang: typeof selectedLang) => {
-    setSelectedLang(lang);
-    setSearch('');
-  };
+  // O(1) Arabic text lookup by hadithnumber
+  const araMap = useMemo(() => {
+    const m = new Map<number, string>();
+    arabicHadiths.forEach(h => m.set(h.hadithnumber, h.text));
+    return m;
+  }, [arabicHadiths]);
 
-  // Filter by chapter (client-side — no extra fetch)
   const chapterHadiths = useMemo(
-    () => allHadiths.filter((h) => h.reference?.book === selectedChapter),
+    () => allHadiths.filter(h => h.reference?.book === selectedChapter),
     [allHadiths, selectedChapter],
   );
 
+  const isSearching = search.trim().length > 0;
+
+  // When searching: scan the ENTIRE book (all hadiths), not just current chapter
   const filteredHadiths = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return chapterHadiths;
-    return chapterHadiths.filter((h) => h.text?.toLowerCase().includes(q) || String(h.hadithnumber).includes(q));
-  }, [chapterHadiths, search]);
+    return allHadiths.filter(h =>
+      h.text?.toLowerCase().includes(q) ||
+      String(h.hadithnumber).includes(q) ||
+      (h.reference && String(h.reference.hadith).includes(q)),
+    );
+  }, [chapterHadiths, allHadiths, search]);
 
   useEffect(() => { setPage(0); setExpandedHadith(null); }, [filteredHadiths]);
 
-  const totalPages = Math.ceil(filteredHadiths.length / PAGE_SIZE);
+  const totalPages  = Math.ceil(filteredHadiths.length / PAGE_SIZE);
   const pageHadiths = filteredHadiths.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const chapterIdx = sections.findIndex((c) => c.chapterno === selectedChapter);
+  const chapterIdx  = sections.findIndex(c => c.chapterno === selectedChapter);
   const prevChapter = chapterIdx > 0 ? sections[chapterIdx - 1] : null;
   const nextChapter = chapterIdx < sections.length - 1 ? sections[chapterIdx + 1] : null;
 
-  const panel = isDark
-    ? { background: 'rgba(8,22,15,0.78)', border: '1px solid rgba(233,207,122,0.18)' }
-    : { background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(16,185,129,0.12)' };
-
   return (
     <div className="space-y-5">
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`text-xs font-semibold ${isDark ? 'text-parchment/60' : 'text-neutral-500'}`}>Show:</span>
+
+      {/* ── Filter bar ── */}
+      <div className={`flex flex-wrap items-center gap-2 px-4 py-3 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-white/[0.06]' : 'bg-white/60 border border-emerald-100 shadow-sm backdrop-blur'}`}>
+        <span className={`text-xs font-semibold ${isDark ? 'text-parchment/60' : 'text-emerald-800/60'}`}>Show:</span>
         {([['all', 'All Books'], ['sehah-sittah', 'Sehah-e-Sittah'], ['other', 'Other Books']] as const).map(([v, l]) => (
           <button key={v} onClick={() => setFilterCategory(v as any)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition border ${filterCategory === v ? 'bg-emerald-600 border-emerald-600 text-white' : isDark ? 'border-white/15 text-parchment/70 hover:bg-white/[0.07]' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}>
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition border ${filterCategory === v ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : isDark ? 'border-white/15 text-parchment/70 hover:bg-white/[0.07]' : 'border-emerald-200 text-emerald-800/70 hover:bg-emerald-50'}`}>
             {l}
           </button>
         ))}
+        <span className={`ml-auto text-xs ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>{books.length} books</span>
       </div>
 
-      {/* Book selector */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-        {books.map((book) => (
-          <motion.button key={book.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
-            onClick={() => selectBook(book)}
-            className={`text-left p-4 rounded-2xl border-2 transition ${selectedBook.id === book.id ? 'border-emerald-500 bg-emerald-600/10' : isDark ? 'border-white/[0.08] hover:border-emerald-500/40 bg-white/[0.04]' : 'border-neutral-100 hover:border-emerald-200 bg-white shadow-sm'}`}>
-            <div className={`text-xs font-bold px-2 py-0.5 rounded-full w-fit mb-2 ${book.category === 'sehah-sittah' ? isDark ? 'bg-gold-300/15 text-gold-300' : 'bg-amber-100 text-amber-700' : isDark ? 'bg-emerald-700/30 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
-              {book.category === 'sehah-sittah' ? 'Sehah-e-Sittah' : 'Popular Book'}
+      {/* ── Book cards — single horizontal scrolling row ── */}
+      <div className="relative">
+        <div className="flex gap-3 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {books.map((book) => (
+            <motion.button key={book.id}
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => selectBook(book)}
+              className={`relative shrink-0 w-56 text-left p-5 rounded-2xl border-2 overflow-hidden transition-all ${
+                selectedBook.id === book.id
+                  ? isDark ? 'border-emerald-500/70 shadow-xl shadow-emerald-900/30' : 'border-emerald-400 shadow-xl shadow-emerald-200/60'
+                  : isDark ? 'border-white/[0.08] hover:border-emerald-500/30' : 'border-neutral-200 hover:border-emerald-300 shadow-md hover:shadow-lg'
+              }`}
+              style={{
+                background: isDark
+                  ? selectedBook.id === book.id
+                    ? 'linear-gradient(135deg, rgba(16,44,28,0.96) 0%, rgba(10,28,18,0.92) 100%)'
+                    : 'linear-gradient(135deg, rgba(10,26,18,0.88) 0%, rgba(8,20,14,0.82) 100%)'
+                  : selectedBook.id === book.id
+                    ? 'linear-gradient(135deg, #ecfdf5 0%, #fffbeb 100%)'
+                    : 'linear-gradient(135deg, #fafffe 0%, #f4fdf6 100%)',
+              }}>
+              {/* Library bg image */}
+              <div aria-hidden className="absolute inset-0 bg-cover bg-top"
+                style={{ backgroundImage: "url('/islamic_Library_bg.png')", opacity: isDark ? 0.07 : 0.10 }} />
+              {/* selected ring */}
+              {selectedBook.id === book.id && (
+                <motion.div layoutId="book-sel-ring" className="absolute inset-0 rounded-2xl pointer-events-none"
+                  style={{ boxShadow: isDark ? 'inset 0 0 0 2px rgba(16,185,129,0.45)' : 'inset 0 0 0 2px rgba(16,185,129,0.55)' }} />
+              )}
+              <div className="relative space-y-2">
+                <div className={`text-xs font-bold px-2.5 py-1 rounded-full w-fit ${
+                  book.category === 'sehah-sittah'
+                    ? isDark ? 'bg-amber-400/15 text-amber-300' : 'bg-amber-100 text-amber-700'
+                    : isDark ? 'bg-emerald-600/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700'
+                }`}>
+                  {book.category === 'sehah-sittah' ? 'Sehah-e-Sittah' : 'Popular Book'}
+                </div>
+                <p className={`font-display font-bold text-base leading-snug ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{book.name}</p>
+                <p className={`font-arabic text-lg leading-[1.5] ${isDark ? 'text-[#E9CF7A]/75' : 'text-emerald-700'}`}>{book.arabicName}</p>
+                <div className={`pt-2 border-t ${isDark ? 'border-white/[0.07]' : 'border-emerald-100'}`}>
+                  <p className={`text-sm font-semibold ${isDark ? 'text-parchment/65' : 'text-neutral-600'}`}>{book.totalHadiths.toLocaleString()} hadiths</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>{book.languages.length} languages</p>
+                </div>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+        {/* Right-edge fade to hide the scroll overflow */}
+        <div aria-hidden className={`absolute inset-y-0 right-0 w-10 pointer-events-none ${isDark ? 'bg-gradient-to-l from-[#08160f]/90' : 'bg-gradient-to-l from-[#FAF7EE]/90'}`} />
+      </div>
+
+      {/* ── Book detail panel ── */}
+      <div className="relative rounded-3xl overflow-hidden"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(8,22,15,0.92) 0%, rgba(14,36,22,0.88) 100%)'
+            : 'linear-gradient(135deg, rgba(245,255,248,0.97) 0%, rgba(252,251,240,0.95) 100%)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: isDark ? '1px solid rgba(233,207,122,0.15)' : '1px solid rgba(16,185,129,0.2)',
+          boxShadow: isDark
+            ? '0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)'
+            : '0 8px 40px rgba(16,185,129,0.10)',
+        }}>
+        {/* Background library image */}
+        <div aria-hidden className="absolute inset-0 bg-cover bg-top pointer-events-none"
+          style={{ backgroundImage: "url('/islamic_Library_bg.png')", opacity: isDark ? 0.04 : 0.07 }} />
+
+        <div className="relative p-5 space-y-5">
+          {/* Book header */}
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-display font-bold text-xl ${isDark ? 'text-white' : 'text-emerald-950'}`}>{selectedBook.name}</h3>
+              <p className={`text-sm mt-0.5 ${isDark ? 'text-parchment/70' : 'text-neutral-600'}`}>{selectedBook.author}</p>
+              <p className={`text-xs mt-2 leading-relaxed max-w-xl ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>{selectedBook.description}</p>
             </div>
-            <p className={`font-display font-bold text-sm leading-tight mb-0.5 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{book.name}</p>
-            <p className={`font-arabic text-base ${isDark ? 'text-[#E9CF7A]/70' : 'text-emerald-700'}`}>{book.arabicName}</p>
-            <p className={`text-xs mt-1 ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>{book.totalHadiths.toLocaleString()} hadiths · {book.languages.length} languages</p>
-          </motion.button>
-        ))}
-      </div>
+            <div className={`text-right shrink-0 ${isDark ? 'text-parchment/70' : 'text-neutral-600'}`}>
+              <p className="font-arabic text-2xl">{selectedBook.arabicName}</p>
+              <p className="font-arabic text-sm mt-1 opacity-70">{selectedBook.authorArabic}</p>
+            </div>
+          </div>
 
-      {/* Selected book detail + language + chapter */}
-      <div className="rounded-2xl p-5 space-y-4" style={panel}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className={`font-display font-bold text-lg ${isDark ? 'text-white' : 'text-emerald-950'}`}>{selectedBook.name}</h3>
-            <p className={`text-sm ${isDark ? 'text-parchment/70' : 'text-neutral-600'}`}>{selectedBook.author}</p>
-            <p className={`text-xs mt-1 ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>{selectedBook.description}</p>
-          </div>
-          <div className={`text-right ${isDark ? 'text-parchment/70' : 'text-neutral-600'}`}>
-            <p className="font-arabic text-xl">{selectedBook.arabicName}</p>
-            <p className="font-arabic text-sm mt-0.5">{selectedBook.authorArabic}</p>
-          </div>
-        </div>
+          <div className={`border-t ${isDark ? 'border-white/[0.07]' : 'border-emerald-100'}`} />
 
-        {/* Language selector */}
-        <div>
-          <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-neutral-500'}`}>
-            <Languages size={13} /> Translation Language ({selectedBook.languages.length} available)
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {selectedBook.languages.map((lang) => (
-              <button key={lang.code} onClick={() => selectLang(lang)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${selectedLang.code === lang.code ? 'bg-emerald-600 border-emerald-600 text-white' : isDark ? 'border-white/15 text-parchment/70 hover:bg-white/[0.07]' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}>
-                {lang.native} ({lang.label})
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Chapter selector — only shown once book is loaded */}
-        {loading ? (
-          <div className="flex items-center gap-2 text-sm text-emerald-500">
-            <Loader2 size={16} className="animate-spin" />
-            Loading {selectedBook.name}… ({selectedBook.totalHadiths.toLocaleString()} hadiths)
-          </div>
-        ) : sections.length > 0 ? (
-          <div>
-            <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-neutral-500'}`}>
-              <Filter size={13} /> Chapter / Book
-              <span className={`ml-auto text-xs font-normal ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
-                {chapterIdx + 1} / {sections.length}
-              </span>
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => prevChapter && setSelectedChapter(prevChapter.chapterno)}
-                disabled={!prevChapter}
-                className={`shrink-0 p-2 rounded-xl border transition ${!prevChapter ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-neutral-200 text-neutral-600'}`}>
-                <ChevronLeft size={15} />
-              </button>
-              <div className="relative flex-1">
-                <select value={selectedChapter} onChange={(e) => setSelectedChapter(Number(e.target.value))}
-                  className={`w-full appearance-none px-3 py-2.5 pr-8 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment' : 'bg-white border border-neutral-200 text-neutral-800'}`}>
-                  {sections.map((c) => (
-                    <option key={c.chapterno} value={c.chapterno}>
-                      {c.chapterno}. {c.chaptername}
-                    </option>
+          {/* Language dropdown + loading */}
+          <div className="flex flex-wrap gap-5 items-end">
+            <div>
+              <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-emerald-700/70'}`}>
+                <Languages size={13} /> Translation Language
+              </p>
+              <div className="relative inline-block">
+                <select
+                  value={selectedLang.code}
+                  onChange={(e) => {
+                    const lang = transLangs.find(l => l.code === e.target.value);
+                    if (lang) { setSelectedLang(lang); setSearch(''); }
+                  }}
+                  className={`appearance-none pl-3.5 pr-9 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/50 cursor-pointer min-w-[185px] ${isDark ? 'bg-white/[0.08] border border-white/10 text-parchment' : 'bg-white border border-emerald-200 text-neutral-800 shadow-sm'}`}>
+                  {transLangs.map(lang => (
+                    <option key={lang.code} value={lang.code}>{lang.native} ({lang.label})</option>
                   ))}
                 </select>
                 <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-parchment/50' : 'text-neutral-400'}`} />
               </div>
-              <button
-                onClick={() => nextChapter && setSelectedChapter(nextChapter.chapterno)}
-                disabled={!nextChapter}
-                className={`shrink-0 p-2 rounded-xl border transition ${!nextChapter ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-neutral-200 text-neutral-600'}`}>
-                <ChevronRight size={15} />
-              </button>
+              <p className={`text-xs mt-1.5 ${isDark ? 'text-parchment/35' : 'text-neutral-400'}`}>
+                Arabic is always shown alongside
+              </p>
             </div>
-          </div>
-        ) : null}
-      </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`} />
-        <input value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search within chapter…"
-          className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment placeholder:text-parchment/40' : 'bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-400'}`} />
-      </div>
-
-      {/* Hadith list */}
-      {loading ? null : error ? (
-        <div className={`flex items-center gap-2 p-4 rounded-xl text-sm ${isDark ? 'bg-rose-900/20 text-rose-300' : 'bg-rose-50 text-rose-700'}`}>
-          <AlertCircle size={16} />{error}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredHadiths.length === 0 ? (
-            <p className={`text-center py-10 text-sm ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>No hadiths found.</p>
-          ) : (
-            <>
-              <div className={`flex items-center justify-between text-xs ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
-                <span>Hadiths {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredHadiths.length)} of {filteredHadiths.length}</span>
-                {search && <span>{filteredHadiths.length} result{filteredHadiths.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;</span>}
+            {loading && (
+              <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                <Loader2 size={16} className="animate-spin" />
+                Loading {selectedBook.name}…
+                <span className={`text-xs ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+                  ({selectedBook.totalHadiths.toLocaleString()} hadiths · Arabic + {selectedLang.label})
+                </span>
               </div>
-              {pageHadiths.map((h) => (
-                <motion.div key={h.hadithnumber} layout
-                  className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-neutral-100 bg-white shadow-sm'}`}>
-                  <button className="w-full text-left p-4 flex items-start gap-3"
-                    onClick={() => setExpandedHadith(expandedHadith === h.hadithnumber ? null : h.hadithnumber)}>
-                    <span className={`mt-0.5 shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? 'bg-emerald-700/30 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
-                      {h.hadithnumber}
-                    </span>
-                    <p className={`flex-1 text-sm leading-relaxed ${isDark ? 'text-parchment/85' : 'text-neutral-700'} ${expandedHadith === h.hadithnumber ? '' : 'line-clamp-3'}`}>
-                      {h.text}
-                    </p>
-                    <ChevronDown size={16} className={`shrink-0 mt-1 transition-transform ${isDark ? 'text-parchment/40' : 'text-neutral-400'} ${expandedHadith === h.hadithnumber ? 'rotate-180' : ''}`} />
-                  </button>
-                  {expandedHadith === h.hadithnumber && (
-                    <div className={`px-4 pb-3 pt-0 border-t ${isDark ? 'border-white/[0.06]' : 'border-neutral-50'}`}>
-                      <span className={`text-xs font-semibold ${isDark ? 'text-gold-300/70' : 'text-amber-700'}`}>
-                        {selectedBook.name} — Hadith #{h.hadithnumber}
-                      </span>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <button
-                    onClick={() => { setPage((p) => p - 1); setExpandedHadith(null); }}
-                    disabled={page === 0}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
-                    <ChevronLeft size={15} /> Previous
-                  </button>
-                  <span className={`text-xs font-semibold ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
-                    Page {page + 1} of {totalPages}
+            )}
+          </div>
+
+          {/* Chapter selector + Search — side by side, fixed max width */}
+          {!loading && sections.length > 0 && (
+            <div className="flex flex-wrap gap-4 items-end max-w-3xl">
+              {/* Chapter */}
+              <div className="flex-1 min-w-[230px]">
+                <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-emerald-700/70'}`}>
+                  <Filter size={13} /> Chapter / Book
+                  <span className={`ml-auto font-normal ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+                    {chapterIdx + 1} / {sections.length}
                   </span>
-                  <button
-                    onClick={() => { setPage((p) => p + 1); setExpandedHadith(null); }}
-                    disabled={page >= totalPages - 1}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
-                    Next <ChevronRight size={15} />
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => prevChapter && !isSearching && setSelectedChapter(prevChapter.chapterno)}
+                    disabled={!prevChapter || isSearching}
+                    className={`shrink-0 p-2 rounded-xl border transition ${!prevChapter || isSearching ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-emerald-200 text-neutral-600'}`}>
+                    <ChevronLeft size={15} />
+                  </button>
+                  <div className="relative flex-1">
+                    <select value={selectedChapter}
+                      onChange={(e) => { setSelectedChapter(Number(e.target.value)); setSearch(''); }}
+                      disabled={isSearching}
+                      className={`w-full appearance-none px-3 py-2.5 pr-8 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment disabled:opacity-40' : 'bg-white border border-emerald-200 text-neutral-800 shadow-sm disabled:opacity-40'}`}>
+                      {sections.map(c => (
+                        <option key={c.chapterno} value={c.chapterno}>{c.chapterno}. {c.chaptername}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-parchment/50' : 'text-neutral-400'}`} />
+                  </div>
+                  <button onClick={() => nextChapter && !isSearching && setSelectedChapter(nextChapter.chapterno)}
+                    disabled={!nextChapter || isSearching}
+                    className={`shrink-0 p-2 rounded-xl border transition ${!nextChapter || isSearching ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-emerald-200 text-neutral-600'}`}>
+                    <ChevronRight size={15} />
                   </button>
                 </div>
-              )}
-            </>
+              </div>
+
+              {/* Search */}
+              <div className="flex-1 min-w-[200px]">
+                <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-emerald-700/70'}`}>
+                  <Globe size={13} /> Search entire book
+                </p>
+                <div className="relative">
+                  <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`} />
+                  <input value={search} onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Hadith #, keyword, or topic…"
+                    className={`w-full pl-8 pr-8 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment placeholder:text-parchment/40' : 'bg-white border border-emerald-200 text-neutral-800 placeholder:text-neutral-400 shadow-sm'}`} />
+                  {search && (
+                    <button onClick={() => setSearch('')}
+                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/40 hover:text-parchment/70' : 'text-neutral-400 hover:text-neutral-600'}`}>
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                {isSearching && (
+                  <p className={`text-xs mt-1.5 flex items-center gap-1 ${isDark ? 'text-amber-400/70' : 'text-amber-700/70'}`}>
+                    <Globe size={11} /> Searching all {allHadiths.length.toLocaleString()} hadiths
+                  </p>
+                )}
+              </div>
+            </div>
           )}
         </div>
-      )}
+      </div>
+
+      {/* ── Hadith list ── */}
+      {loading ? null : error ? (
+        <div className={`flex items-center gap-2 p-4 rounded-2xl text-sm ${isDark ? 'bg-rose-900/20 text-rose-300 border border-rose-800/30' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+          <AlertCircle size={16} /> {error}
+        </div>
+      ) : filteredHadiths.length === 0 && sections.length > 0 ? (
+        <p className={`text-center py-12 text-sm ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+          {isSearching ? `No hadiths found for "${search}"` : 'No hadiths in this chapter.'}
+        </p>
+      ) : filteredHadiths.length > 0 ? (
+        <div className="space-y-3">
+          {/* Count row */}
+          <div className={`flex flex-wrap items-center justify-between gap-2 text-xs px-1 ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+            <span>
+              {isSearching
+                ? `${filteredHadiths.length} result${filteredHadiths.length !== 1 ? 's' : ''} for "${search}" — page ${page + 1} of ${totalPages}`
+                : `Hadiths ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, filteredHadiths.length)} of ${filteredHadiths.length}`}
+            </span>
+            {isSearching && (
+              <button onClick={() => setSearch('')}
+                className={`flex items-center gap-1 font-medium ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}>
+                <X size={11} /> Clear search
+              </button>
+            )}
+          </div>
+
+          {/* Hadith cards */}
+          {pageHadiths.map((h) => {
+            const araText  = araMap.get(h.hadithnumber);
+            const isExpanded = expandedHadith === h.hadithnumber;
+            return (
+              <motion.div key={h.hadithnumber} layout
+                className={`rounded-2xl border overflow-hidden transition-all ${isDark ? 'border-white/[0.07] hover:border-emerald-500/25' : 'border-emerald-100 hover:border-emerald-300 shadow-sm hover:shadow-md'}`}
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(10,26,18,0.75) 0%, rgba(14,32,22,0.65) 100%)'
+                    : 'linear-gradient(135deg, #fafffe 0%, #f6fcf2 100%)',
+                }}>
+                <button className="w-full text-left p-4 flex items-start gap-3"
+                  onClick={() => setExpandedHadith(isExpanded ? null : h.hadithnumber)}>
+                  <span className={`mt-0.5 shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold border ${isDark ? 'bg-emerald-700/20 text-emerald-300 border-emerald-600/20' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                    {h.hadithnumber}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    {/* Arabic text */}
+                    {araText && (
+                      <p className={`font-arabic text-right text-base leading-[2] mb-2 ${isDark ? 'text-[#E9CF7A]/85' : 'text-emerald-800'} ${isExpanded ? '' : 'line-clamp-2'}`} dir="rtl">
+                        {araText}
+                      </p>
+                    )}
+                    {/* Translation */}
+                    <p className={`text-sm leading-relaxed ${isDark ? 'text-parchment/80' : 'text-neutral-700'} ${isExpanded ? '' : 'line-clamp-3'}`}>
+                      {h.text}
+                    </p>
+                  </div>
+                  <ChevronDown size={16} className={`shrink-0 mt-1 transition-transform ${isDark ? 'text-parchment/40' : 'text-neutral-400'} ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+                {isExpanded && (
+                  <div className={`px-4 pb-3 pt-1 border-t flex flex-wrap items-center gap-3 ${isDark ? 'border-white/[0.05]' : 'border-emerald-50'}`}>
+                    <span className={`text-xs font-semibold ${isDark ? 'text-gold-300/70' : 'text-amber-700'}`}>{selectedBook.name}</span>
+                    <span className={`text-xs ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+                      Hadith #{h.hadithnumber}{h.reference ? ` · Ch. ${h.reference.book}, #${h.reference.hadith}` : ''}
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <button onClick={() => { setPage(p => p - 1); setExpandedHadith(null); }} disabled={page === 0}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-emerald-200 text-neutral-700 bg-white/70 shadow-sm'}`}>
+                <ChevronLeft size={15} /> Previous
+              </button>
+              <span className={`text-xs font-semibold ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+                Page {page + 1} of {totalPages}
+              </span>
+              <button onClick={() => { setPage(p => p + 1); setExpandedHadith(null); }} disabled={page >= totalPages - 1}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-emerald-200 text-neutral-700 bg-white/70 shadow-sm'}`}>
+                Next <ChevronRight size={15} />
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
