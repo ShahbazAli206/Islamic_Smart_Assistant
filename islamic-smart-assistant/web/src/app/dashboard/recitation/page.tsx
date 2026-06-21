@@ -456,7 +456,7 @@ export default function RecitationSchedulerPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display font-bold text-xl text-emerald-950">Your Schedules</h2>
           <motion.button onClick={openCreate} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/70 bg-white/80 text-emerald-800 font-semibold text-sm px-4 py-2 shadow-sm hover:bg-amber-50 transition">
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white font-semibold text-sm px-5 py-2.5 shadow-glow-emerald hover:bg-emerald-700 transition">
             <Plus size={15} /> New Schedule
           </motion.button>
         </div>
@@ -470,9 +470,6 @@ export default function RecitationSchedulerPage() {
               <h3 className="font-display text-base font-bold text-emerald-950">No recitation scheduled yet</h3>
               <p className="text-emerald-900/55 text-xs mt-0.5">Create your first schedule and Noor will recite the Quran at the time you choose.</p>
             </div>
-            <button onClick={openCreate} className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white font-semibold text-sm px-4 py-2 shadow-glow-emerald hover:bg-emerald-700 transition">
-              <Plus size={15} /> Schedule
-            </button>
           </div>
         ) : (
           <div className="space-y-3">
