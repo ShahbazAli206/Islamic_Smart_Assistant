@@ -390,10 +390,12 @@ export default function RecitationSchedulerPage() {
                   <span aria-hidden className="absolute inset-y-0 -left-1/3 w-1/3 bg-white/40 skew-x-12 animate-sheen" />
                   <AlarmClock size={15} /> Schedule Recitation
                 </motion.button>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-medium text-white/85">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border
+                  ${isDark ? 'bg-white/10 border-white/20 text-white/85' : 'bg-black/30 border-white/40 text-white'}`}>
                   <CalendarClock size={13} className="text-gold-300" /> {schedules.length} Scheduled
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-medium text-white/85">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border
+                  ${isDark ? 'bg-white/10 border-white/20 text-white/85' : 'bg-black/30 border-white/40 text-white'}`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse-soft" /> {activeCount > 0 ? 'Active' : 'Paused'}
                 </span>
               </div>

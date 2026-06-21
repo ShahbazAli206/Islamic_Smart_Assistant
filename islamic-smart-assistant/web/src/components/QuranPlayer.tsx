@@ -38,6 +38,7 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Bengali', ids: ['bn.bengali', 'bn.hoque'] },
   { label: 'Persian', ids: ['fa.fooladvand'] },
   { label: 'Russian', ids: ['ru.kuliev'] },
+  { label: 'Kazakh',  ids: ['kk.khalifahaltai'] },
 ];
 
 // ── Click-outside hook ────────────────────────────────────────────────────────

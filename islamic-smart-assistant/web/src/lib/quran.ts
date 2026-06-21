@@ -44,6 +44,8 @@ export const TRANSLATIONS = [
   { id: 'fa.fooladvand',     name: 'Persian — Fooladvand',                short: 'فارسی' },
   // Russian — spoken audio by 1MuslimApp (Kuliev text, 128 kbps)
   { id: 'ru.kuliev',         name: 'Russian — Elmir Kuliev',              short: 'Русский' },
+  // Kazakh — spoken audio by Khalifah Altai (128 kbps)
+  { id: 'kk.khalifahaltai',  name: 'Kazakh — Khalifah Altai',             short: 'Қазақша' },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -63,6 +65,7 @@ export function langToTranslation(lang: string): TranslationId {
     fr:   'fr.hamidullah',
     fa:   'fa.fooladvand',
     ru:   'ru.kuliev',
+    kk:   'kk.khalifahaltai',
     none: 'none',
   };
   return map[lang] ?? 'en.sahih';
@@ -98,8 +101,9 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 40 | 64 | 12
   'tr.yazir':      { edition: 'tr.vakfi-audio',          bitrate: 128 },
   'zh.majian':     { edition: 'zh.chinese',              bitrate: 128 }, // Ma Jian
   'fr.hamidullah': { edition: 'fr.leclerc',              bitrate: 128 }, // Youssouf Leclerc
-  'fa.fooladvand': { edition: 'fa.hedayatfarfooladvand', bitrate: 40  }, // Fooladvand - Hedayatfar
-  'ru.kuliev':     { edition: 'ru.kuliev-audio',         bitrate: 128 }, // Elmir Kuliev (1MuslimApp)
+  'fa.fooladvand':    { edition: 'fa.hedayatfarfooladvand', bitrate: 40  }, // Fooladvand - Hedayatfar
+  'ru.kuliev':        { edition: 'ru.kuliev-audio',         bitrate: 128 }, // Elmir Kuliev (1MuslimApp)
+  'kk.khalifahaltai': { edition: 'kk.khalifahaltai-audio',  bitrate: 128 }, // Khalifah Altai
 };
 
 // Translation editions for which we generate TTS audio. The generator reads the
