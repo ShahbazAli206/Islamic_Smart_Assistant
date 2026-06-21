@@ -333,8 +333,8 @@ export default function RecitationSchedulerPage() {
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
-      {/* ── header banner: pastel blobs left + mosque photo right ── */}
-      <header className="relative overflow-hidden min-h-[300px]">
+      {/* ── hero section: header + feature chips share the background ── */}
+      <div className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
 
@@ -358,7 +358,7 @@ export default function RecitationSchedulerPage() {
           </div>
 
           {/* bottom fade into page */}
-          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           {/* crescent moon */}
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
@@ -420,11 +420,8 @@ export default function RecitationSchedulerPage() {
             </div>
           </div>
         </div>
-      </header>
-
-      <div className="px-6 sm:px-10 pb-10 space-y-6">
-
-      {/* ════════ FEATURE CHIPS ════════ */}
+      {/* ════════ FEATURE CHIPS — inside hero so background extends here ════════ */}
+      <div className="relative px-6 sm:px-10 pb-8">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {FEATURES.map(({ Icon, title, sub }, i) => (
           <motion.div
@@ -443,7 +440,10 @@ export default function RecitationSchedulerPage() {
           </motion.div>
         ))}
       </div>
+      </div>{/* closes chips px wrapper */}
+      </div>{/* closes hero section */}
 
+      <div className="px-6 sm:px-10 pb-10 space-y-6">
       {/* ════════ YOUR SCHEDULES ════════ */}
       <div className="rounded-3xl bg-white/70 border border-emerald-900/8 shadow-card-soft p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">

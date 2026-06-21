@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookMarked, BookOpen, Search, Calculator, X, ChevronDown, ChevronRight,
+  BookMarked, BookOpen, Search, Calculator, X, ChevronDown, ChevronRight, ChevronLeft,
   Filter, Globe, Star, AlertCircle, Loader2, Library, Heart, Scale,
   Moon, Sparkles, Hash, CheckCircle2, Info, Languages, RefreshCw,
 } from 'lucide-react';
@@ -183,6 +183,8 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<'sehah-sittah' | 'other' | 'all'>('all');
   const [expandedHadith, setExpandedHadith] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 15;
 
   const books = useMemo(() =>
     filterCategory === 'all' ? HADEES_BOOKS : HADEES_BOOKS.filter((b) => b.category === filterCategory),
@@ -197,12 +199,14 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     setHadiths([]);
     setSelectedChapter(1);
     setError(null);
+    setPage(0);
   };
 
   const selectLang = (lang: typeof selectedLang) => {
     setSelectedLang(lang);
     setHadiths([]);
     setError(null);
+    setPage(0);
   };
 
   useEffect(() => {
@@ -246,6 +250,15 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     if (!q) return hadiths;
     return hadiths.filter((h) => h.text?.toLowerCase().includes(q) || String(h.hadithnumber).includes(q));
   }, [hadiths, search]);
+
+  useEffect(() => { setPage(0); setExpandedHadith(null); }, [filteredHadiths]);
+
+  const totalPages = Math.ceil(filteredHadiths.length / PAGE_SIZE);
+  const pageHadiths = filteredHadiths.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const chapterIdx = chapters.findIndex((c) => c.chapterno === selectedChapter);
+  const prevChapter = chapterIdx > 0 ? chapters[chapterIdx - 1] : null;
+  const nextChapter = chapterIdx < chapters.length - 1 ? chapters[chapterIdx + 1] : null;
 
   const panel = isDark
     ? { background: 'rgba(8,22,15,0.78)', border: '1px solid rgba(233,207,122,0.18)' }
@@ -316,17 +329,34 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
           <div>
             <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-neutral-500'}`}>
               <Filter size={13} /> Chapter / Book
+              <span className={`ml-auto text-xs font-normal ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
+                {chapterIdx + 1} / {chapters.length}
+              </span>
             </p>
-            <div className="relative">
-              <select value={selectedChapter} onChange={(e) => setSelectedChapter(Number(e.target.value))}
-                className={`w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment' : 'bg-white border border-neutral-200 text-neutral-800'}`}>
-                {chapters.map((c) => (
-                  <option key={c.chapterno} value={c.chapterno}>
-                    {c.chapterno}. {c.chaptername}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={15} className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-parchment/50' : 'text-neutral-400'}`} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => prevChapter && setSelectedChapter(prevChapter.chapterno)}
+                disabled={!prevChapter}
+                className={`shrink-0 p-2 rounded-xl border transition ${!prevChapter ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-neutral-200 text-neutral-600'}`}>
+                <ChevronLeft size={15} />
+              </button>
+              <div className="relative flex-1">
+                <select value={selectedChapter} onChange={(e) => setSelectedChapter(Number(e.target.value))}
+                  className={`w-full appearance-none px-3 py-2.5 pr-8 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment' : 'bg-white border border-neutral-200 text-neutral-800'}`}>
+                  {chapters.map((c) => (
+                    <option key={c.chapterno} value={c.chapterno}>
+                      {c.chapterno}. {c.chaptername}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-parchment/50' : 'text-neutral-400'}`} />
+              </div>
+              <button
+                onClick={() => nextChapter && setSelectedChapter(nextChapter.chapterno)}
+                disabled={!nextChapter}
+                className={`shrink-0 p-2 rounded-xl border transition ${!nextChapter ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/70' : 'border-neutral-200 text-neutral-600'}`}>
+                <ChevronRight size={15} />
+              </button>
             </div>
           </div>
         ) : null}
@@ -1075,8 +1105,8 @@ export default function IslamicLibraryPage() {
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
       {/* ── Full-bleed header ── */}
-      <header className="relative overflow-hidden min-h-[300px]">
-        <div aria-hidden className="absolute inset-0">
+      <div className="relative">
+        <div aria-hidden className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
 
           <div className="absolute inset-y-0 right-0 w-[62%]">
@@ -1096,7 +1126,7 @@ export default function IslamicLibraryPage() {
             <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
 
           <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
             animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
@@ -1143,9 +1173,7 @@ export default function IslamicLibraryPage() {
             </div>
           </div>
         </div>
-      </header>
-
-      {/* ── Tab navigation ── */}
+      {/* ── Tab navigation — inside hero so background extends to here ── */}
       <div className={`sticky top-0 z-20 px-6 sm:px-10 py-3 flex gap-1 overflow-x-auto ${isDark ? 'bg-[#0B231A]/90' : 'bg-white/90'} backdrop-blur`}>
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -1160,6 +1188,7 @@ export default function IslamicLibraryPage() {
           );
         })}
       </div>
+      </div>{/* closes hero section */}
 
       {/* ── Tab content ── */}
       <div className="px-6 sm:px-10 pb-12 pt-6">
