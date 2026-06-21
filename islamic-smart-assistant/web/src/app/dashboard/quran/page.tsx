@@ -77,8 +77,8 @@ export default function QuranPage() {
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
-      {/* ── header banner: pastel blobs left + mosque photo right ── */}
-      <header className="relative overflow-hidden min-h-[300px]">
+      {/* ── hero section: header text + quick picks share the same background ── */}
+      <div className="relative overflow-hidden">
         <div aria-hidden className="absolute inset-0">
           {/* base pastel / dark gradient */}
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
