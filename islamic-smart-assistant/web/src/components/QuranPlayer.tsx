@@ -316,7 +316,7 @@ export function QuranPlayer({
 
   // Detect desktop (Electron / Tauri) — TTS is only used on desktop
   const isDesktop = useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
     return (
       navigator.userAgent.toLowerCase().includes('electron') ||
       !!(window as Window & { __TAURI__?: unknown }).__TAURI__
