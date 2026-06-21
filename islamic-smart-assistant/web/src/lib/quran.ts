@@ -45,7 +45,17 @@ export const TRANSLATIONS = [
   // Russian — spoken audio by 1MuslimApp (Kuliev text, 128 kbps)
   { id: 'ru.kuliev',         name: 'Russian — Elmir Kuliev',              short: 'Русский' },
   // Kazakh — spoken audio by Khalifah Altai (128 kbps)
-  { id: 'kk.khalifahaltai',  name: 'Kazakh — Khalifah Altai',             short: 'Қазақша' },
+  { id: 'kk.khalifahaltai',  name: 'Kazakh — Khalifah Altai',             short: 'Қазақша'    },
+  // European — no CDN recording; audio plays via system TTS on desktop app
+  { id: 'de.bubenheim',      name: 'German — Bubenheim & Elyas',          short: 'Deutsch'    },
+  { id: 'es.cortes',         name: 'Spanish — Julio Cortes',              short: 'Español'    },
+  { id: 'nl.leemhuis',       name: 'Dutch — Leemhuis',                    short: 'Nederlands' },
+  { id: 'it.piccardo',       name: 'Italian — Hamza R. Piccardo',         short: 'Italiano'   },
+  { id: 'sv.bernstrom',      name: 'Swedish — Knut Bernström',            short: 'Svenska'    },
+  { id: 'bs.korkut',         name: 'Bosnian — Besim Korkut',              short: 'Bosanski'   },
+  { id: 'sq.nahi',           name: 'Albanian — Hasan Efendi Nahi',        short: 'Shqip'      },
+  { id: 'pl.bielawskiego',   name: 'Polish — Józefa Bielawskiego',        short: 'Polski'     },
+  { id: 'pt.elhayek',        name: 'Portuguese — Samir El-Hayek',         short: 'Português'  },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -66,6 +76,15 @@ export function langToTranslation(lang: string): TranslationId {
     fa:   'fa.fooladvand',
     ru:   'ru.kuliev',
     kk:   'kk.khalifahaltai',
+    de:   'de.bubenheim',
+    es:   'es.cortes',
+    nl:   'nl.leemhuis',
+    it:   'it.piccardo',
+    sv:   'sv.bernstrom',
+    bs:   'bs.korkut',
+    sq:   'sq.nahi',
+    pl:   'pl.bielawskiego',
+    pt:   'pt.elhayek',
     none: 'none',
   };
   return map[lang] ?? 'en.sahih';
@@ -135,6 +154,50 @@ export function hasTranslationAudio(translation: TranslationId): boolean {
   if (translation in AUDIO_TRANSLATION) return true;
   const folder = TTS_EDITIONS[translation];
   return Boolean(folder && SUPABASE_URL && TTS_LANGS.has(folder));
+}
+
+/**
+ * BCP-47 language tags used by the Web Speech API (window.speechSynthesis).
+ *
+ * Two roles:
+ *  1. PRIMARY audio for European languages — no CDN recording exists; the
+ *     desktop app speaks the fetched translation text through the OS voice.
+ *  2. FALLBACK for CDN languages on desktop — if the CDN is unreachable
+ *     (offline, transient error) the player falls back to TTS silently.
+ *
+ * Web builds ignore this map entirely; CDN audio is always used there.
+ */
+export const TTS_LANG_MAP: Partial<Record<TranslationId, string>> = {
+  // CDN languages — TTS fires only as an offline/error fallback on desktop
+  'en.sahih':         'en-US',
+  'en.asad':          'en-US',
+  'ur.jalandhry':     'ur-PK',
+  'ur.junagarhi':     'ur-PK',
+  'tr.vakfi':         'tr-TR',
+  'tr.diyanet':       'tr-TR',
+  'tr.yazir':         'tr-TR',
+  'zh.majian':        'zh-CN',
+  'fr.hamidullah':    'fr-FR',
+  'bn.bengali':       'bn-BD',
+  'bn.hoque':         'bn-BD',
+  'fa.fooladvand':    'fa-IR',
+  'ru.kuliev':        'ru-RU',
+  'kk.khalifahaltai': 'kk-KZ',
+  // European languages — TTS is the primary audio source
+  'de.bubenheim':     'de-DE',
+  'es.cortes':        'es-ES',
+  'nl.leemhuis':      'nl-NL',
+  'it.piccardo':      'it-IT',
+  'sv.bernstrom':     'sv-SE',
+  'bs.korkut':        'bs-BA',
+  'sq.nahi':          'sq-AL',
+  'pl.bielawskiego':  'pl-PL',
+  'pt.elhayek':       'pt-PT',
+};
+
+/** BCP-47 tag for the Web Speech API, or undefined if this translation has no TTS mapping. */
+export function getTtsLang(translation: TranslationId): string | undefined {
+  return TTS_LANG_MAP[translation];
 }
 
 /**

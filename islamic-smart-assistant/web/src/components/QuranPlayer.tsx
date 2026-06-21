@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   RECITERS, TRANSLATIONS, fetchSurahMulti, ayahAudioUrl, translationAudioUrl,
-  hasTranslationAudio,
+  hasTranslationAudio, getTtsLang,
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
@@ -27,18 +27,31 @@ type Props = {
   isDark?: boolean;
 };
 
-// ── Translation groups (all entries have spoken audio) ────────────────────────
+// ── Translation groups ────────────────────────────────────────────────────────
+// CDN audio: English, Urdu, Turkish, Chinese, French, Bengali, Persian, Russian, Kazakh
+// Desktop TTS (system voice): German, Spanish, Dutch, Italian, Swedish, Bosnian, Albanian, Polish, Portuguese
 const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
-  { label: null,      ids: ['none'] },
-  { label: 'English', ids: ['en.sahih', 'en.asad'] },
-  { label: 'Urdu',    ids: ['ur.jalandhry', 'ur.junagarhi'] },
-  { label: 'Turkish', ids: ['tr.vakfi', 'tr.diyanet', 'tr.yazir'] },
-  { label: 'Chinese', ids: ['zh.majian'] },
-  { label: 'French',  ids: ['fr.hamidullah'] },
-  { label: 'Bengali', ids: ['bn.bengali', 'bn.hoque'] },
-  { label: 'Persian', ids: ['fa.fooladvand'] },
-  { label: 'Russian', ids: ['ru.kuliev'] },
-  { label: 'Kazakh',  ids: ['kk.khalifahaltai'] },
+  { label: null,           ids: ['none'] },
+  // — CDN audio (all platforms) ———————————————————————————————————————————————
+  { label: 'English',      ids: ['en.sahih', 'en.asad'] },
+  { label: 'Urdu',         ids: ['ur.jalandhry', 'ur.junagarhi'] },
+  { label: 'Turkish',      ids: ['tr.vakfi', 'tr.diyanet', 'tr.yazir'] },
+  { label: 'Chinese',      ids: ['zh.majian'] },
+  { label: 'French',       ids: ['fr.hamidullah'] },
+  { label: 'Bengali',      ids: ['bn.bengali', 'bn.hoque'] },
+  { label: 'Persian',      ids: ['fa.fooladvand'] },
+  { label: 'Russian',      ids: ['ru.kuliev'] },
+  { label: 'Kazakh',       ids: ['kk.khalifahaltai'] },
+  // — System TTS on desktop (text on web) ————————————————————————————————————
+  { label: 'German',       ids: ['de.bubenheim'] },
+  { label: 'Spanish',      ids: ['es.cortes'] },
+  { label: 'Dutch',        ids: ['nl.leemhuis'] },
+  { label: 'Italian',      ids: ['it.piccardo'] },
+  { label: 'Swedish',      ids: ['sv.bernstrom'] },
+  { label: 'Bosnian',      ids: ['bs.korkut'] },
+  { label: 'Albanian',     ids: ['sq.nahi'] },
+  { label: 'Polish',       ids: ['pl.bielawskiego'] },
+  { label: 'Portuguese',   ids: ['pt.elhayek'] },
 ];
 
 // ── Click-outside hook ────────────────────────────────────────────────────────
@@ -163,7 +176,8 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
                   {group.ids.map((id, ii) => {
                     const t = transMap[id];
                     if (!t) return null;
-                    const hasAudio = hasTranslationAudio(id as TranslationId);
+                    const hasCdnAudio = hasTranslationAudio(id as TranslationId);
+                    const hasTts = !!getTtsLang(id as TranslationId);
                     const isSelected = value === id;
                     return (
                       <motion.button
@@ -179,13 +193,17 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
                         <span>{t.name}</span>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {id !== 'none' && (
-                            hasAudio
+                            hasCdnAudio
                               ? <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
                                   <Volume2 size={8} strokeWidth={2.5} /> audio
                                 </span>
-                              : <span className="flex items-center gap-0.5 text-[9px] font-medium text-ink/35 bg-stone-50 border border-stone-200 rounded-full px-1.5 py-0.5">
-                                  <FileText size={8} strokeWidth={2} /> text
-                                </span>
+                              : hasTts
+                                ? <span className="flex items-center gap-0.5 text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
+                                    <Volume2 size={8} strokeWidth={2.5} /> tts
+                                  </span>
+                                : <span className="flex items-center gap-0.5 text-[9px] font-medium text-ink/35 bg-stone-50 border border-stone-200 rounded-full px-1.5 py-0.5">
+                                    <FileText size={8} strokeWidth={2} /> text
+                                  </span>
                           )}
                           {isSelected && (
                             <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }}>
@@ -291,8 +309,19 @@ export function QuranPlayer({
   const [playing, setPlaying] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef   = useRef<HTMLAudioElement>(null);
   const preloadRef = useRef<HTMLAudioElement>(null);
+  // Stable ref so TTS callbacks can advance without stale closures
+  const advanceRef = useRef<() => void>(() => {});
+
+  // Detect desktop (Electron / Tauri) — TTS is only used on desktop
+  const isDesktop = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    return (
+      navigator.userAgent.toLowerCase().includes('electron') ||
+      !!(window as Window & { __TAURI__?: unknown }).__TAURI__
+    );
+  }, []);
 
   useEffect(() => {
     setAyahIdx(0); setStage('arabic'); setPlaying(false); setError(null);
@@ -353,22 +382,72 @@ export function QuranPlayer({
     }
   }, [playing, stageUrl]);
 
-  // When a translation audio file fails to load (e.g. TTS not yet uploaded),
-  // fall back silently to text-only for this ayah and advance to the next.
+  // Keep advanceRef always current so TTS callbacks don't capture stale state
+  advanceRef.current = () => {
+    if (!arabic) return;
+    const last = ayahIdx >= arabic.ayahs.length - 1;
+    if (last) {
+      setStage('arabic');
+      if (repeat) setAyahIdx(0); else setPlaying(false);
+    } else {
+      setTimeout(() => { setStage('arabic'); setAyahIdx((i) => i + 1); }, 400);
+    }
+  };
+
+  // Cancel TTS whenever playback pauses or the component unmounts
+  useEffect(() => {
+    if (!playing) window.speechSynthesis?.cancel();
+  }, [playing]);
+  useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
+
+  // ── Desktop TTS playback ─────────────────────────────────────────────────────
+  // Fires when stage==='translation' and there is no CDN audio URL (stageUrl===null),
+  // meaning this translation's audio comes from the OS voice instead of the CDN.
+  useEffect(() => {
+    if (!playing || stage !== 'translation' || !isDesktop || !currentTrans || stageUrl) return;
+    const lang = getTtsLang(translation);
+    if (!lang) return;
+
+    const utter = new SpeechSynthesisUtterance(currentTrans.text);
+    utter.lang = lang;
+    utter.rate = 0.92;
+    utter.onend  = () => advanceRef.current();
+    utter.onerror = (e: Event) => {
+      const err = (e as SpeechSynthesisErrorEvent).error;
+      // 'interrupted' / 'canceled' means the user paused — don't advance
+      if (err === 'interrupted' || err === 'canceled') return;
+      advanceRef.current();
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+    return () => { window.speechSynthesis.cancel(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, playing, ayahIdx, translation, isDesktop, stageUrl]);
+
+  // Translation audio failed (CDN 403/404, network offline, etc.).
+  // On desktop: silently fall back to TTS if available; otherwise advance.
+  // On web: advance silently (text stays on screen).
   const onTranslationAudioError = () => {
     if (stage === 'translation') {
-      const last = !arabic || ayahIdx >= arabic.ayahs.length - 1;
-      if (last) {
-        setStage('arabic');
-        if (repeat) setAyahIdx(0); else setPlaying(false);
-      } else {
-        // Batch stage + idx in one setTimeout so stageUrl jumps directly to the
-        // next Arabic ayah without an intermediate reload of the current one.
-        setTimeout(() => {
-          setStage('arabic');
-          setAyahIdx((i) => i + 1);
-        }, 400);
+      if (isDesktop && currentTrans) {
+        const lang = getTtsLang(translation);
+        if (lang) {
+          const utter = new SpeechSynthesisUtterance(currentTrans.text);
+          utter.lang = lang;
+          utter.rate = 0.92;
+          utter.onend  = () => advanceRef.current();
+          utter.onerror = (e: Event) => {
+            const err = (e as SpeechSynthesisErrorEvent).error;
+            if (err === 'interrupted' || err === 'canceled') return;
+            advanceRef.current();
+          };
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+          return;
+        }
       }
+      advanceRef.current();
     } else {
       setPlaying(false);
       setError('Audio failed to load from the CDN.');
@@ -378,10 +457,14 @@ export function QuranPlayer({
   const onEnded = () => {
     if (!arabic || !currentAyah) return;
 
-    // Arabic ended with translation mode on → play the translation audio next.
+    // Arabic ended with translation mode on → switch to translation stage.
+    // This covers both CDN audio and desktop TTS (for TTS, stageUrl===null but
+    // the TTS useEffect will fire once stage becomes 'translation').
+    const cdnTransUrl  = translationAudioUrl(translation, currentAyah.number);
+    const ttsAvailable = isDesktop && !!getTtsLang(translation);
     if (
       translationMode && stage === 'arabic' && translation !== 'none' &&
-      translationAudioUrl(translation, currentAyah.number)
+      (!!cdnTransUrl || ttsAvailable)
     ) {
       setStage('translation'); return;
     }
@@ -413,8 +496,13 @@ export function QuranPlayer({
   const toggle  = () => setPlaying((p) => !p);
   const goPrev  = () => { setStage('arabic'); setAyahIdx((i) => Math.max(0, i - 1)); };
   const goNext  = () => arabic && (setStage('arabic'), setAyahIdx((i) => Math.min(arabic.ayahs.length - 1, i + 1)));
-  const isUrdu  = translation.startsWith('ur.');
-  const noAudio = translation !== 'none' && !hasTranslationAudio(translation);
+  const isUrdu       = translation.startsWith('ur.');
+  const hasCdnAudio  = hasTranslationAudio(translation);
+  const hasTtsAudio  = isDesktop && !!getTtsLang(translation);
+  // true when translation mode would play nothing at all for this platform
+  const noAudio      = translation !== 'none' && !hasCdnAudio && !hasTtsAudio;
+  // on web, TTS translations exist but won't play — show an informational hint
+  const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && !!getTtsLang(translation);
 
   return (
     <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-gold-300/30' : 'border-emerald-900/10'}`} style={{ background: '#F4F0E2' }}>
@@ -512,9 +600,9 @@ export function QuranPlayer({
         </div>
       </div>
 
-      {/* ── no-audio notice ── */}
+      {/* ── no-audio / TTS hint notice ── */}
       <AnimatePresence>
-        {translationMode && noAudio && (
+        {translationMode && (noAudio || webTtsNotice) && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -524,7 +612,9 @@ export function QuranPlayer({
           >
             <div className="px-5 py-2.5 text-xs text-amber-800 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5">
               <Languages size={13} className="shrink-0" />
-              Spoken audio isn&apos;t available for this translation yet — the Arabic is recited and the translation is shown as text.
+              {webTtsNotice
+                ? 'Audio plays via system TTS on the desktop app — translation shown as text here on web.'
+                : "Spoken audio isn’t available for this translation yet — the Arabic is recited and the translation is shown as text."}
             </div>
           </motion.div>
         )}
@@ -561,7 +651,11 @@ export function QuranPlayer({
                         transition={{ duration: 0.2 }}
                         className={`chip ${stage === 'translation' ? 'bg-gold-100 text-gold-700 border-gold-300/40' : ''}`}
                       >
-                        {stage === 'arabic' ? 'Reciting Arabic…' : 'Playing translation (tarjuma)…'}
+                        {stage === 'arabic'
+                          ? 'Reciting Arabic…'
+                          : hasTtsAudio
+                            ? 'Playing via TTS…'
+                            : 'Playing translation (tarjuma)…'}
                       </motion.span>
                     )}
                   </AnimatePresence>
