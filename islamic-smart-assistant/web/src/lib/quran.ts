@@ -22,24 +22,64 @@ export type ReciterId = (typeof RECITERS)[number]['id'];
 // files have been uploaded (see the audio section below). Don't bake an audio
 // flag into this list — it would go stale.
 export const TRANSLATIONS = [
-  { id: 'none',           name: 'No translation',                short: 'Arabic only' },
+  { id: 'none',              name: 'No translation',                      short: 'Arabic only' },
   // English — spoken audio by Ibrahim Walk (Saheeh International)
-  { id: 'en.sahih',       name: 'English — Saheeh Intl.',        short: 'English' },
-  { id: 'en.asad',        name: 'English — Muhammad Asad',       short: 'English' },
+  { id: 'en.sahih',          name: 'English — Saheeh Intl.',              short: 'English' },
+  { id: 'en.asad',           name: 'English — Muhammad Asad',             short: 'English' },
   // Urdu — spoken audio by Shamshad Ali Khan
-  { id: 'ur.jalandhry',   name: 'Urdu — Fateh M. Jalandhry',     short: 'اردو' },
-  { id: 'ur.junagarhi',   name: 'Urdu — M. Junagarhi',           short: 'اردو' },
+  { id: 'ur.jalandhry',      name: 'Urdu — Fateh M. Jalandhry',           short: 'اردو' },
+  { id: 'ur.junagarhi',      name: 'Urdu — M. Junagarhi',                 short: 'اردو' },
   // Turkish — spoken audio by Diyanet Vakfı (matches the tr.vakfi text exactly)
-  { id: 'tr.vakfi',       name: 'Turkish — Diyanet Vakfı',       short: 'Türkçe' },
-  { id: 'tr.diyanet',     name: 'Turkish — Diyanet İşleri',      short: 'Türkçe' },
-  { id: 'tr.yazir',       name: 'Turkish — Elmalılı H. Yazır',   short: 'Türkçe' },
+  { id: 'tr.vakfi',          name: 'Turkish — Diyanet Vakfı',             short: 'Türkçe' },
+  { id: 'tr.diyanet',        name: 'Turkish — Diyanet İşleri',            short: 'Türkçe' },
+  { id: 'tr.yazir',          name: 'Turkish — Elmalılı H. Yazır',         short: 'Türkçe' },
   // Chinese — spoken audio (Ma Jian)
-  { id: 'zh.majian',      name: 'Chinese — Ma Jian',             short: '中文' },
+  { id: 'zh.majian',         name: 'Chinese — Ma Jian',                   short: '中文' },
   // French — spoken audio by Youssouf Leclerc
-  { id: 'fr.hamidullah',  name: 'French — Muhammad Hamidullah',  short: 'Français' },
+  { id: 'fr.hamidullah',     name: 'French — Muhammad Hamidullah',        short: 'Français' },
   // Bengali — spoken audio is self-generated (TTS) and hosted on Supabase
-  { id: 'bn.bengali',     name: 'Bengali — Muhiuddin Khan',      short: 'বাংলা' },
-  { id: 'bn.hoque',       name: 'Bengali — Zohurul Hoque',       short: 'বাংলা' },
+  { id: 'bn.bengali',        name: 'Bengali — Muhiuddin Khan',            short: 'বাংলা' },
+  { id: 'bn.hoque',          name: 'Bengali — Zohurul Hoque',             short: 'বাংলা' },
+  // Hindi
+  { id: 'hi.hindi',          name: 'Hindi — Farooq Khan & Nadwi',         short: 'हिन्दी' },
+  // Indonesian (official Ministry of Religious Affairs translation)
+  { id: 'id.indonesian',     name: 'Indonesian — Kemenag',                short: 'Indonesia' },
+  // Persian / Farsi
+  { id: 'fa.fooladvand',     name: 'Persian — Fooladvand',                short: 'فارسی' },
+  // Malay (official translation by Abdullah Muhammad Basmeih)
+  { id: 'ms.basmeih',        name: 'Malay — Abdullah Basmeih',            short: 'Melayu' },
+  // Russian
+  { id: 'ru.kuliev',         name: 'Russian — Elmir Kuliev',              short: 'Русский' },
+  // Spanish
+  { id: 'es.cortes',         name: 'Spanish — Julio Cortes',              short: 'Español' },
+  // German
+  { id: 'de.bubenheim',      name: 'German — Bubenheim & Elyas',          short: 'Deutsch' },
+  // Hausa (large West African Muslim population)
+  { id: 'ha.gumi',           name: 'Hausa — Abubakar Gumi',               short: 'Hausa' },
+  // Swahili (East African Muslim communities)
+  { id: 'sw.barwani',        name: 'Swahili — Ali Muhsin Al-Barwani',     short: 'Kiswahili' },
+  // Somali
+  { id: 'so.abduh',          name: 'Somali — Mahmud Muhammad Abduh',      short: 'Soomaali' },
+  // Tamil
+  { id: 'ta.tamil',          name: 'Tamil — Jan Trust Foundation',        short: 'தமிழ்' },
+  // Pashto
+  { id: 'ps.abdulwali',      name: 'Pashto — Abdul Wali',                 short: 'پښتو' },
+  // Uzbek
+  { id: 'uz.sodik',          name: 'Uzbek — Muhammad Sodik',              short: "O'zbek" },
+  // Azerbaijani
+  { id: 'az.mammadaliyev',   name: 'Azerbaijani — Mammadaliyev',          short: 'Azərbaycan' },
+  // Bosnian
+  { id: 'bs.korkut',         name: 'Bosnian — Besim Korkut',              short: 'Bosanski' },
+  // Italian
+  { id: 'it.piccardo',       name: 'Italian — Hamza R. Piccardo',         short: 'Italiano' },
+  // Dutch
+  { id: 'nl.leemhuis',       name: 'Dutch — Leemhuis',                    short: 'Nederlands' },
+  // Korean
+  { id: 'ko.korean',         name: 'Korean',                              short: '한국어' },
+  // Japanese
+  { id: 'ja.japanese',       name: 'Japanese',                            short: '日本語' },
+  // Sindhi
+  { id: 'sd.amroti',         name: 'Sindhi — Taj Mehmood Amroti',         short: 'سنڌي' },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -53,10 +93,30 @@ export function langToTranslation(lang: string): TranslationId {
   const map: Record<string, TranslationId> = {
     en:   'en.sahih',
     ur:   'ur.jalandhry',
-    tr:   'tr.vakfi',      // Diyanet Vakfı — text matches its spoken audio exactly
+    tr:   'tr.vakfi',
     bn:   'bn.bengali',
     zh:   'zh.majian',
     fr:   'fr.hamidullah',
+    hi:   'hi.hindi',
+    id:   'id.indonesian',
+    fa:   'fa.fooladvand',
+    ms:   'ms.basmeih',
+    ru:   'ru.kuliev',
+    es:   'es.cortes',
+    de:   'de.bubenheim',
+    ha:   'ha.gumi',
+    sw:   'sw.barwani',
+    so:   'so.abduh',
+    ta:   'ta.tamil',
+    ps:   'ps.abdulwali',
+    uz:   'uz.sodik',
+    az:   'az.mammadaliyev',
+    bs:   'bs.korkut',
+    it:   'it.piccardo',
+    nl:   'nl.leemhuis',
+    ko:   'ko.korean',
+    ja:   'ja.japanese',
+    sd:   'sd.amroti',
     none: 'none',
   };
   return map[lang] ?? 'en.sahih';
