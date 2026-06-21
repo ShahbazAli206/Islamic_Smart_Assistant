@@ -22,6 +22,7 @@ import { motion } from 'framer-motion';
 import {
   Bell, BookOpen, Compass, Volume2, Smartphone, Languages, ShieldCheck,
   ArrowRight, Moon, CalendarDays, Globe2,
+  Heart, BookMarked, Scale, Calculator,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -100,6 +101,34 @@ const FEATURES: Feature[] = [
     href: '/dashboard/settings',
     grad: 'from-midnight-700 to-midnight-900', text: 'text-midnight-700',
     arrow: 'bg-midnight-800', tint: 'to-parchment', glow: 'bg-midnight-600', deco: 'motif',
+  },
+  {
+    icon: Heart, title: 'Duas & Supplications',
+    desc: 'Masnoon & Ramadan duas with Arabic, transliteration and translation.',
+    href: '/dashboard/advanced',
+    grad: 'from-rose-500 to-rose-700', text: 'text-rose-700',
+    arrow: 'bg-rose-600', tint: 'to-rose-50', glow: 'bg-rose-400', deco: 'motif',
+  },
+  {
+    icon: BookMarked, title: 'Hadees Library',
+    desc: 'Full Sehah-e-Sittah collections with Arabic text and translation.',
+    href: '/dashboard/advanced',
+    grad: 'from-midnight-600 to-midnight-800', text: 'text-midnight-700',
+    arrow: 'bg-midnight-700', tint: 'to-parchment', glow: 'bg-midnight-400', deco: 'motif',
+  },
+  {
+    icon: Scale, title: 'Islamic Masail',
+    desc: 'Authentic rulings on everyday questions from verified scholars.',
+    href: '/dashboard/advanced',
+    grad: 'from-amber-500 to-amber-700', text: 'text-amber-700',
+    arrow: 'bg-amber-600', tint: 'to-amber-50', glow: 'bg-amber-400', deco: 'motif',
+  },
+  {
+    icon: Calculator, title: 'Islamic Calculators',
+    desc: 'Zakat, Qurbani, Inheritance, Fidyah & more — precise Islamic tools.',
+    href: '/dashboard/advanced',
+    grad: 'from-violet-600 to-violet-800', text: 'text-violet-700',
+    arrow: 'bg-violet-700', tint: 'to-violet-50', glow: 'bg-violet-400', deco: 'motif',
   },
 ];
 
