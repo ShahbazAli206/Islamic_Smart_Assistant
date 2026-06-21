@@ -154,6 +154,9 @@ export function AutoAzanScheduler() {
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
     if (typeof window === 'undefined') return;
+    // Never show this toast when the first-visit onboarding modal already asks about
+    // auto-Azan. If onboarding has been completed the user already made their choice.
+    try { if (!window.localStorage.getItem('isa:setupDone')) return; } catch {}
     let alreadyUnlocked = unlocked;
     try { alreadyUnlocked = alreadyUnlocked || window.localStorage.getItem('isa:azanUnlocked') === 'true'; } catch {}
     if (alreadyUnlocked) return;

@@ -316,6 +316,13 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
 
     persist('isa:setupDone', true);
 
+    // First-visit only: if user didn't enable auto-Azan in this wizard, turn it
+    // off so the floating "Enable auto-Azan" toast never appears to them separately.
+    // (forceOpen = re-edit from profile — don't override their existing preference.)
+    if (!forceOpen && azanStatus !== 'done') {
+      persist('isa:azanAutoplay', false);
+    }
+
     setSaving(false);
     setShow(false);
     onClose?.();
