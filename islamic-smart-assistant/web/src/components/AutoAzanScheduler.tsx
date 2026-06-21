@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellRing, Pause, Volume2, X } from 'lucide-react';
+import { BellRing, Volume2, X, Square, Radio, MapPin } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -13,6 +13,42 @@ import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+const VOICE_NAMES: Record<string, { name: string; subtitle: string; region: string }> = {
+  'hafiz-ahmed-raza-qadri':    { name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan', region: 'Pakistan' },
+  'egzon-ibrahimi':            { name: 'Egzon Ibrahimi',          subtitle: 'Balkan melodic Azan', region: 'Kosovo' },
+  'abdul-rahman-mossad':       { name: 'Abdul Rahman Mossad',     subtitle: 'Heartfelt recitation', region: 'Egypt' },
+  'mevlan-kurtishi':           { name: 'Mevlan Kurtishi',         subtitle: 'Balkan melodic Azan', region: 'Macedonia' },
+  'masjid-nabawi-osama-akhdar':{ name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف', region: 'Saudi Arabia' },
+  'pakistan':                  { name: 'Pakistan Style',          subtitle: 'Lahore — Classical', region: 'Pakistan' },
+  'turkey':                    { name: 'Turkish — Istanbul',      subtitle: 'Hafiz Mustafa Özcan', region: 'Türkiye' },
+  'egypt':                     { name: 'Egyptian — Cairo',        subtitle: 'Maqam Style', region: 'Egypt' },
+  'madinah-adhan':             { name: 'Azan Madinah',            subtitle: 'أذان مدني', region: 'Saudi Arabia' },
+  'islam-sobhi':               { name: 'Islam Sobhi',             subtitle: 'القارئ اسلام صبحي', region: 'Egypt' },
+  'makkah-abdallah-ahmad':     { name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter', region: 'Saudi Arabia' },
+  'masjid-al-haram':           { name: 'Masjid Al-Haram',         subtitle: 'The Grand Mosque, Makkah', region: 'Saudi Arabia' },
+  'seyyid-taleh-boradigahi':   { name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan', region: 'Azerbaijan' },
+  'beautiful-azan':            { name: 'Beautiful Azan',          subtitle: 'Melodic & Heartfelt', region: '' },
+  'makkah':                    { name: 'Makkah — Haramain',       subtitle: 'Sheikh Ali Mulla', region: 'Saudi Arabia' },
+  'madinah':                   { name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari', region: 'Saudi Arabia' },
+};
+
+function resolveVoiceInfo(id: string): { name: string; subtitle: string; region: string } {
+  if (isCustomAzan(id)) return { name: 'Custom Azan', subtitle: 'Your upload', region: '' };
+  return VOICE_NAMES[id] ?? {
+    name: id.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+    subtitle: '', region: '',
+  };
+}
+
+/** Deterministic waveform bar heights for SSR-stable animation (no Math.random). */
+function waveHeights(count = 30): number[] {
+  return Array.from({ length: count }, (_, i) => {
+    const v = Math.abs(Math.sin(i * 0.72 + 1.4) * 0.6 + Math.sin(i * 0.29 + 2.1) * 0.4);
+    return 0.18 + 0.82 * v;
+  });
+}
+const WAVE = waveHeights();
 
 // A guaranteed-present built-in file used only for the MUTED autoplay-unlock
 // plays — a `custom:` voice id isn't a valid path, and content is irrelevant
@@ -54,7 +90,7 @@ export function AutoAzanScheduler() {
   const byCoords = loc.hasCoords && loc.lat != null && loc.lng != null;
 
   const [needsGesture, setNeedsGesture] = useState(false);
-  const [firing, setFiring] = useState<null | { prayer: string; voice: string }>(null);
+  const [firing, setFiring] = useState<null | { prayer: string; voiceId: string }>(null);
   // A prayer that tried to fire but was blocked by the browser's autoplay policy.
   const [pendingPrayer, setPendingPrayer] = useState<string | null>(null);
 
@@ -114,7 +150,7 @@ export function AutoAzanScheduler() {
     // to a built-in if the clip is missing, e.g. cleared site data).
     revokeCustomUrl();
     const v = voiceRef.current;
-    const voiceLabel = isCustomAzan(v) ? 'Custom Azan' : v;
+    const { name: voiceLabel } = resolveVoiceInfo(v);
     let src = `/audio/azan/${v}.mp3`;
     if (isCustomAzan(v)) {
       const url = await customAzanUrl(v);
@@ -125,7 +161,7 @@ export function AutoAzanScheduler() {
     await setAudioOutput(el);
     try {
       await el.play();
-      setFiring({ prayer, voice: voiceLabel });
+      setFiring({ prayer, voiceId: v });
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel}`, silent: true });
@@ -312,41 +348,156 @@ export function AutoAzanScheduler() {
       <audio ref={audioRef} onEnded={() => { setFiring(null); revokeCustomUrl(); }} preload="auto" />
 
       <AnimatePresence>
-        {needsGesture && enabled && (
+        {/* ── Enable auto-Azan prompt ── */}
+        {needsGesture && enabled && !firing && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 right-4 lg:top-4 z-50 max-w-sm card card-pad shadow-glow-emerald flex items-start gap-3"
+            key="azan-unlock"
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 40, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+            className="fixed top-20 right-4 lg:top-4 z-[200] w-72 rounded-2xl overflow-hidden shadow-2xl"
+            style={{
+              background: 'rgba(255,255,255,0.97)',
+              border: '1px solid rgba(16,185,129,0.18)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(16,185,129,0.1)',
+            }}
           >
-            <BellRing className="text-emerald-700 shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold">Enable auto-Azan</p>
-              <p className="text-xs text-ink/60 mt-0.5">
-                {pendingPrayer
-                  ? `${pendingPrayer} prayer time just arrived — click to play the Azan now.`
-                  : 'Click once so the browser allows the Azan to autoplay at prayer time.'}
-              </p>
-              <button onClick={unlock} className="btn-primary text-sm py-2 px-4 mt-3">Enable</button>
+            <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400" />
+            <div className="p-4 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                <BellRing size={17} className="text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-emerald-950">Enable auto-Azan</p>
+                <p className="text-xs text-emerald-900/55 mt-0.5 leading-relaxed">
+                  {pendingPrayer
+                    ? `${pendingPrayer} prayer time just arrived — tap to play the Azan now.`
+                    : 'Tap once so the browser allows the Azan to autoplay at prayer time.'}
+                </p>
+                <button onClick={unlock}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 transition">
+                  <BellRing size={12} /> Enable
+                </button>
+              </div>
+              <button onClick={dismissPrompt}
+                className="p-1 rounded-full hover:bg-emerald-50 text-emerald-900/40 hover:text-emerald-700 transition shrink-0">
+                <X size={14} />
+              </button>
             </div>
-            {/* X dismisses the banner only — does NOT disable azan */}
-            <button onClick={dismissPrompt} className="p-1 hover:bg-emerald-50 rounded"><X size={16} /></button>
           </motion.div>
         )}
 
-        {firing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-4 right-4 z-50 max-w-sm rounded-2xl p-4 bg-mosque-gradient text-parchment shadow-glow-emerald flex items-center gap-3"
-          >
-            <Volume2 className="text-gold-300 animate-pulse-soft" />
-            <div className="flex-1">
-              <p className="font-semibold">{firing.prayer} — Azan playing</p>
-              <p className="text-xs text-emerald-100/80">{firing.voice} voice</p>
-            </div>
-            <button onClick={stop} className="p-2 rounded-full bg-white/10 hover:bg-white/15 text-gold-300">
-              <Pause size={16}/>
-            </button>
-          </motion.div>
-        )}
+        {/* ── Azan playing popup ── */}
+        {firing && (() => {
+          const info = resolveVoiceInfo(firing.voiceId);
+          return (
+            <motion.div
+              key="azan-firing"
+              initial={{ opacity: 0, x: 40, scale: 0.94 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 40, scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+              className="fixed top-20 right-4 lg:top-4 z-[200] w-80 rounded-3xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(145deg, rgba(6,20,13,0.97) 0%, rgba(4,12,8,0.98) 100%)',
+                border: '1px solid rgba(233,207,122,0.22)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: '0 30px 60px rgba(0,0,0,0.75), 0 0 0 1px rgba(233,207,122,0.10), 0 0 50px rgba(52,211,153,0.10)',
+              }}
+            >
+              {/* top gold accent bar */}
+              <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-gold-400 to-emerald-600" />
+
+              <div className="p-4 pb-5">
+                {/* header row */}
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/25 flex items-center justify-center"
+                    >
+                      <Radio size={13} className="text-emerald-400" />
+                    </motion.div>
+                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">Azan Playing</span>
+                  </div>
+                  <button onClick={stop}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/[0.12] text-white/40 hover:text-white/80 transition"
+                    title="Stop & dismiss">
+                    <X size={14} />
+                  </button>
+                </div>
+
+                {/* prayer badge */}
+                <div className="mb-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+                    style={{ background: 'rgba(233,207,122,0.12)', border: '1px solid rgba(233,207,122,0.22)', color: '#E9CF7A' }}>
+                    🕌 {firing.prayer} Prayer
+                  </span>
+                </div>
+
+                {/* voice info */}
+                <p className="text-white font-bold text-base leading-snug">{info.name}</p>
+                <div className="flex items-center gap-2 mt-0.5 mb-4">
+                  <p className="text-emerald-100/55 text-xs">{info.subtitle}</p>
+                  {info.region && (
+                    <>
+                      <span className="w-0.5 h-0.5 rounded-full bg-white/20 shrink-0" />
+                      <span className="flex items-center gap-1 text-[10px] text-white/35">
+                        <MapPin size={9} /> {info.region}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* animated waveform */}
+                <div className="flex items-center gap-[2.5px] h-10 mb-4 px-1">
+                  {WAVE.map((h, i) => (
+                    <motion.span
+                      key={i}
+                      className="rounded-full bg-emerald-400"
+                      style={{ width: 2.5, height: `${Math.round(h * 100)}%` }}
+                      animate={{ scaleY: [1, 0.28 + h * 0.55, 1] }}
+                      transition={{
+                        duration: 0.65 + (i % 5) * 0.13,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: (i % 7) * 0.055,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* stop button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={stop}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl py-2.5 text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: 'rgba(239,68,68,0.12)',
+                    border: '1px solid rgba(239,68,68,0.22)',
+                    color: 'rgba(252,165,165,0.9)',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.22)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.12)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.22)';
+                  }}
+                >
+                  <Square size={13} fill="currentColor" /> Stop Azan
+                </motion.button>
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </>
   );
