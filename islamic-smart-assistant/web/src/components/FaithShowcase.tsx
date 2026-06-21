@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Bell, BookOpen, Compass, Volume2, Smartphone, Languages, ShieldCheck,
-  ArrowRight, Moon, Heart, MapPin, LayoutGrid, CalendarDays, Globe2,
+  ArrowRight, Moon, CalendarDays, Globe2,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -191,111 +191,6 @@ function MosqueSilhouette({ className = '' }: { className?: string }) {
    CTA banner artwork
    ════════════════════════════════════════════════════════════════════════ */
 
-/** Glowing ornate lantern + crescent + stars + Quran on a stand (banner left). */
-function LanternArt({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 260 340" fill="none" aria-hidden className={className}>
-      <defs>
-        <radialGradient id="fsGlow" cx="50%" cy="42%" r="55%">
-          <stop offset="0%" stopColor="#FCE7A6" stopOpacity="0.95" />
-          <stop offset="45%" stopColor="#F2C94C" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#F2C94C" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="fsBrass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#F6D67A" />
-          <stop offset="55%" stopColor="#D9A93B" />
-          <stop offset="100%" stopColor="#A6791E" />
-        </linearGradient>
-      </defs>
-
-      {/* warm halo */}
-      <circle cx="118" cy="150" r="130" fill="url(#fsGlow)" />
-
-      {/* crescent moon + stars */}
-      <path d="M196 56a30 30 0 1 0 18 54 24 24 0 1 1-18-54z" fill="#F6D67A" opacity="0.95" />
-      <g fill="#FCEBA8">
-        <path d="M232 92l2.4 5 5.6.5-4.3 3.7 1.4 5.5-4.9-3-4.9 3 1.4-5.5-4.3-3.7 5.6-.5z" />
-        <circle cx="170" cy="34" r="2.4" />
-        <circle cx="214" cy="140" r="2" />
-        <circle cx="150" cy="70" r="1.6" />
-      </g>
-
-      {/* suspension chain */}
-      <path d="M118 6V40" stroke="url(#fsBrass)" strokeWidth="3" />
-      <circle cx="118" cy="6" r="4" fill="url(#fsBrass)" />
-
-      {/* lantern cap */}
-      <path d="M96 56c0-14 10-22 22-22s22 8 22 22z" fill="url(#fsBrass)" />
-      <path d="M118 28c2 0 4 3 4 7h-8c0-4 2-7 4-7z" fill="url(#fsBrass)" />
-
-      {/* lantern body */}
-      <path d="M92 64h52l8 96c0 14-18 22-34 22s-34-8-34-22z" fill="url(#fsBrass)" fillOpacity="0.92" />
-      <path d="M100 70h36l5 84c0 9-12 14-23 14s-23-5-23-14z" fill="#FFF4CE" fillOpacity="0.85" />
-      {/* lattice + flame */}
-      <g stroke="#A6791E" strokeWidth="2" opacity="0.7">
-        <path d="M118 70v98M104 96h28M102 124h32" />
-      </g>
-      <path d="M118 104c7 6 9 13 4 20-2 3-1 7 2 9-9 1-15-6-13-15 1-5 4-9 7-14z" fill="#F2994A" />
-      <path d="M118 116c3 3 4 7 1 11-3-1-4-5-1-11z" fill="#FCEBA8" />
-
-      {/* lantern base */}
-      <path d="M96 182h44l-6 18H102z" fill="url(#fsBrass)" />
-      <rect x="106" y="200" width="28" height="8" rx="2" fill="url(#fsBrass)" />
-
-      {/* Quran on a rehal (X-stand) */}
-      <g transform="translate(8 232)">
-        <path d="M20 70L96 44M96 70L20 44" stroke="#8A5A2B" strokeWidth="7" strokeLinecap="round" />
-        <path d="M10 40c20-12 44-12 48 0 4-12 28-12 48 0-20 6-44 6-48 0-4 6-28 6-48 0z" fill="#3F7A52" />
-        <path d="M58 40v22" stroke="#23472F" strokeWidth="2.5" />
-        <path d="M14 41c18-8 38-8 44 1 6-9 26-9 44-1" stroke="#F6D67A" strokeWidth="2" fill="none" />
-      </g>
-
-      {/* small potted plant */}
-      <g transform="translate(150 268)">
-        <path d="M12 36h28l-4 30H16z" fill="#C77F3A" />
-        <path d="M26 36c-6-12-2-26 0-30 2 4 6 18 0 30z" fill="#3F7A52" />
-        <path d="M26 36c-10-6-14-16-15-22 8 2 18 10 15 22z" fill="#4E9266" />
-        <path d="M26 36c10-6 14-16 15-22-8 2-18 10-15 22z" fill="#4E9266" />
-      </g>
-    </svg>
-  );
-}
-
-/** Dotted world map with golden pins joined by arcs (banner right). */
-function WorldArcArt({ className = '' }: { className?: string }) {
-  return (
-    <div aria-hidden className={`relative ${className}`}>
-      {/* dotted map texture */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(246,214,122,0.55) 1.3px, transparent 1.4px)',
-          backgroundSize: '14px 14px',
-          maskImage: 'radial-gradient(120% 90% at 65% 45%, #000 35%, transparent 80%)',
-          WebkitMaskImage: 'radial-gradient(120% 90% at 65% 45%, #000 35%, transparent 80%)',
-          opacity: 0.5,
-        }}
-      />
-      {/* arcs + pins */}
-      <svg viewBox="0 0 420 240" fill="none" className="absolute inset-0 w-full h-full">
-        <g stroke="#F6D67A" strokeWidth="1.6" fill="none" opacity="0.85" strokeLinecap="round">
-          <path d="M150 150 C200 70 280 70 330 110" strokeDasharray="2 6" />
-          <path d="M330 110 C360 130 380 120 392 96" strokeDasharray="2 6" />
-        </g>
-        {[
-          [150, 150], [330, 110], [392, 96],
-        ].map(([x, y], i) => (
-          <g key={i} transform={`translate(${x} ${y})`}>
-            <circle r="9" fill="#F6D67A" opacity="0.25" />
-            <path d="M0 -9c-5 0-9 4-9 9 0 6 9 14 9 14s9-8 9-14c0-5-4-9-9-9z" fill="#F6D67A" />
-            <circle cy="0" r="3" fill="#1F3147" />
-          </g>
-        ))}
-      </svg>
-      <MosqueSilhouette className="absolute bottom-0 right-0 w-3/4 text-gold-200/70" />
-    </div>
-  );
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    Main section
@@ -400,49 +295,7 @@ export default function FaithShowcase() {
           ))}
         </div>
 
-        {/* ── closing CTA banner ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="relative mt-14 overflow-hidden rounded-3xl bg-mosque-gradient text-parchment shadow-glow-gold"
-        >
-          <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
-          {/* left + right artwork */}
-          <LanternArt className="absolute left-2 bottom-0 h-[112%] w-auto opacity-95 hidden sm:block" />
-          <WorldArcArt className="absolute right-0 top-0 h-full w-1/2 hidden md:block" />
-
-          {/* center content */}
-          <div className="relative px-6 py-12 md:px-10 md:py-16 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-1 text-xs font-bold text-gold-700 shadow-sm">
-              <Heart size={13} className="fill-rose-500 text-rose-500" /> You&apos;re never alone
-            </span>
-            <h3 className="h-display font-bold mt-4 leading-tight text-3xl md:text-5xl">
-              <span className="text-parchment">Let every prayer find you,</span>
-              <br />
-              <span className="bg-clip-text text-transparent bg-gold-gradient">wherever you are.</span>
-            </h3>
-            <p className="mx-auto mt-4 max-w-xl text-sm md:text-base text-parchment/70 leading-relaxed">
-              So your location, time, no matter where you are in the world,
-              and keep every divine appointment right on time.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 rounded-full bg-gold-gradient hover:brightness-105 text-midnight-900 px-6 py-3 font-bold shadow-glow-gold transition"
-              >
-                <LayoutGrid size={18} /> Launch Dashboard <ArrowRight size={18} />
-              </Link>
-              <Link
-                href="/dashboard/prayer-times"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/5 text-parchment px-6 py-3 font-semibold hover:bg-white/10 transition"
-              >
-                <MapPin size={18} /> Set My Location
-              </Link>
-            </div>
-          </div>
-        </motion.div>
+        {/* closing CTA banner removed */}
       </div>
     </section>
   );
