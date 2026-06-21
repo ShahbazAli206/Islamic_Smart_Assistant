@@ -168,17 +168,20 @@ function DuasSection({ isDark }: { isDark: boolean }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // HADEES SECTION
 // ═══════════════════════════════════════════════════════════════════════════
-interface HadithItem { hadithnumber: number; text: string; }
+interface HadithItem {
+  hadithnumber: number;
+  text: string;
+  reference?: { book: number; hadith: number };
+}
 interface ChapterItem { chapterno: number; chaptername: string; }
 
 function HadeesSection({ isDark }: { isDark: boolean }) {
   const [selectedBook, setSelectedBook] = useState(HADEES_BOOKS[0]);
   const [selectedLang, setSelectedLang] = useState(HADEES_BOOKS[0].languages.find((l) => l.code === 'eng') ?? HADEES_BOOKS[0].languages[0]);
-  const [chapters, setChapters] = useState<ChapterItem[]>([]);
+  const [allHadiths, setAllHadiths] = useState<HadithItem[]>([]);
+  const [sections, setSections] = useState<ChapterItem[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
-  const [hadiths, setHadiths] = useState<HadithItem[]>([]);
-  const [loadingChapters, setLoadingChapters] = useState(false);
-  const [loadingHadiths, setLoadingHadiths] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<'sehah-sittah' | 'other' | 'all'>('all');
@@ -191,86 +194,66 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     [filterCategory],
   );
 
-  const selectBook = (book: typeof HADEES_BOOKS[0]) => {
-    setSelectedBook(book);
-    const defaultLang = book.languages.find((l) => l.code === 'eng') ?? book.languages[0];
-    setSelectedLang(defaultLang);
-    setChapters([]);
-    setHadiths([]);
-    setSelectedChapter(1);
+  // Load full book JSON once per edition — chapters and hadiths together
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     setError(null);
+    setAllHadiths([]);
+    setSections([]);
     setPage(0);
+    setExpandedHadith(null);
+    fetch(`${HADEES_CDN}/${selectedLang.edition}.min.json`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        // metadata.sections: {"0":"","1":"Revelation","2":"Belief",...}
+        const sectionMap: Record<string, string> = data?.metadata?.sections ?? data?.metadata?.section ?? {};
+        const parsed: ChapterItem[] = Object.entries(sectionMap)
+          .filter(([no]) => Number(no) > 0)
+          .map(([no, name]) => ({ chapterno: Number(no), chaptername: String(name) }))
+          .sort((a, b) => a.chapterno - b.chapterno);
+        setSections(parsed);
+        if (parsed.length > 0) setSelectedChapter(parsed[0].chapterno);
+        setAllHadiths(Array.isArray(data?.hadiths) ? data.hadiths : []);
+      })
+      .catch(() => { if (!cancelled) setError('Could not load book. Check your connection and try again.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedLang.edition]);
+
+  const selectBook = (book: typeof HADEES_BOOKS[0]) => {
+    const defaultLang = book.languages.find((l) => l.code === 'eng') ?? book.languages[0];
+    setSelectedBook(book);
+    setSelectedLang(defaultLang);
+    setSearch('');
   };
 
   const selectLang = (lang: typeof selectedLang) => {
     setSelectedLang(lang);
-    setHadiths([]);
-    setError(null);
-    setPage(0);
+    setSearch('');
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoadingChapters(true);
-    setError(null);
-    const engEdition = selectedBook.languages.find((l) => l.code === 'eng')?.edition ?? selectedBook.languages[0].edition;
-    fetch(`${HADEES_CDN}/${engEdition}/chapters.min.json`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) {
-          // Some editions return {chapters: [{chapterno, chaptername},...]}
-          // Others return {metadata: {section: {"1": "Name", ...}}}
-          if (Array.isArray(data?.chapters) && data.chapters.length > 0) {
-            setChapters(data.chapters);
-          } else {
-            const section: Record<string, string> = data?.metadata?.section ?? data?.section ?? {};
-            const parsed: ChapterItem[] = Object.entries(section)
-              .map(([no, name]) => ({ chapterno: Number(no), chaptername: String(name) }))
-              .sort((a, b) => a.chapterno - b.chapterno);
-            setChapters(parsed.length > 0 ? parsed : []);
-          }
-        }
-      })
-      .catch(() => { if (!cancelled) setChapters([]); })
-      .finally(() => { if (!cancelled) setLoadingChapters(false); });
-    return () => { cancelled = true; };
-  }, [selectedBook]);
-
-  useEffect(() => {
-    if (!selectedChapter) return;
-    let cancelled = false;
-    setLoadingHadiths(true);
-    setError(null);
-    setHadiths([]);
-    // Correct path: /chapters/{chapterNo}.min.json — NOT /{chapterNo}.min.json
-    // (/{n}.min.json fetches a single hadith by global number, not a chapter)
-    fetch(`${HADEES_CDN}/${selectedLang.edition}/chapters/${selectedChapter}.min.json`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) {
-          const raw = data?.hadiths ?? data ?? [];
-          setHadiths(Array.isArray(raw) ? raw : []);
-        }
-      })
-      .catch(() => { if (!cancelled) setError('Could not load hadiths. Please try again.'); })
-      .finally(() => { if (!cancelled) setLoadingHadiths(false); });
-    return () => { cancelled = true; };
-  }, [selectedBook, selectedLang, selectedChapter]);
+  // Filter by chapter (client-side — no extra fetch)
+  const chapterHadiths = useMemo(
+    () => allHadiths.filter((h) => h.reference?.book === selectedChapter),
+    [allHadiths, selectedChapter],
+  );
 
   const filteredHadiths = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return hadiths;
-    return hadiths.filter((h) => h.text?.toLowerCase().includes(q) || String(h.hadithnumber).includes(q));
-  }, [hadiths, search]);
+    if (!q) return chapterHadiths;
+    return chapterHadiths.filter((h) => h.text?.toLowerCase().includes(q) || String(h.hadithnumber).includes(q));
+  }, [chapterHadiths, search]);
 
   useEffect(() => { setPage(0); setExpandedHadith(null); }, [filteredHadiths]);
 
   const totalPages = Math.ceil(filteredHadiths.length / PAGE_SIZE);
   const pageHadiths = filteredHadiths.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const chapterIdx = chapters.findIndex((c) => c.chapterno === selectedChapter);
-  const prevChapter = chapterIdx > 0 ? chapters[chapterIdx - 1] : null;
-  const nextChapter = chapterIdx < chapters.length - 1 ? chapters[chapterIdx + 1] : null;
+  const chapterIdx = sections.findIndex((c) => c.chapterno === selectedChapter);
+  const prevChapter = chapterIdx > 0 ? sections[chapterIdx - 1] : null;
+  const nextChapter = chapterIdx < sections.length - 1 ? sections[chapterIdx + 1] : null;
 
   const panel = isDark
     ? { background: 'rgba(8,22,15,0.78)', border: '1px solid rgba(233,207,122,0.18)' }
@@ -334,15 +317,18 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
           </div>
         </div>
 
-        {/* Chapter selector */}
-        {loadingChapters ? (
-          <div className="flex items-center gap-2 text-sm text-emerald-500"><Loader2 size={16} className="animate-spin" /> Loading chapters…</div>
-        ) : chapters.length > 0 ? (
+        {/* Chapter selector — only shown once book is loaded */}
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm text-emerald-500">
+            <Loader2 size={16} className="animate-spin" />
+            Loading {selectedBook.name}… ({selectedBook.totalHadiths.toLocaleString()} hadiths)
+          </div>
+        ) : sections.length > 0 ? (
           <div>
             <p className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${isDark ? 'text-parchment/60' : 'text-neutral-500'}`}>
               <Filter size={13} /> Chapter / Book
               <span className={`ml-auto text-xs font-normal ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>
-                {chapterIdx + 1} / {chapters.length}
+                {chapterIdx + 1} / {sections.length}
               </span>
             </p>
             <div className="flex items-center gap-2">
@@ -355,7 +341,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
               <div className="relative flex-1">
                 <select value={selectedChapter} onChange={(e) => setSelectedChapter(Number(e.target.value))}
                   className={`w-full appearance-none px-3 py-2.5 pr-8 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${isDark ? 'bg-white/[0.06] border border-white/10 text-parchment' : 'bg-white border border-neutral-200 text-neutral-800'}`}>
-                  {chapters.map((c) => (
+                  {sections.map((c) => (
                     <option key={c.chapterno} value={c.chapterno}>
                       {c.chapterno}. {c.chaptername}
                     </option>
@@ -383,68 +369,62 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
       </div>
 
       {/* Hadith list */}
-      {loadingHadiths ? (
-        <div className="flex items-center justify-center py-16 gap-3 text-emerald-500">
-          <Loader2 size={22} className="animate-spin" />
-          <span>Loading hadiths…</span>
-        </div>
-      ) : error ? (
+      {loading ? null : error ? (
         <div className={`flex items-center gap-2 p-4 rounded-xl text-sm ${isDark ? 'bg-rose-900/20 text-rose-300' : 'bg-rose-50 text-rose-700'}`}>
           <AlertCircle size={16} />{error}
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredHadiths.length === 0 && !loadingHadiths && (
+          {filteredHadiths.length === 0 ? (
             <p className={`text-center py-10 text-sm ${isDark ? 'text-parchment/40' : 'text-neutral-400'}`}>No hadiths found.</p>
-          )}
-          {/* page count row */}
-          {filteredHadiths.length > 0 && (
-            <div className={`flex items-center justify-between text-xs ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
-              <span>Hadiths {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredHadiths.length)} of {filteredHadiths.length}</span>
-              {search && <span>{filteredHadiths.length} results for &ldquo;{search}&rdquo;</span>}
-            </div>
-          )}
-          {pageHadiths.map((h) => (
-            <motion.div key={h.hadithnumber} layout
-              className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-neutral-100 bg-white shadow-sm'}`}>
-              <button className="w-full text-left p-4 flex items-start gap-3"
-                onClick={() => setExpandedHadith(expandedHadith === h.hadithnumber ? null : h.hadithnumber)}>
-                <span className={`mt-0.5 shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? 'bg-emerald-700/30 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
-                  {h.hadithnumber}
-                </span>
-                <p className={`flex-1 text-sm leading-relaxed ${isDark ? 'text-parchment/85' : 'text-neutral-700'} ${expandedHadith === h.hadithnumber ? '' : 'line-clamp-3'}`}>
-                  {h.text}
-                </p>
-                <ChevronDown size={16} className={`shrink-0 mt-1 transition-transform ${isDark ? 'text-parchment/40' : 'text-neutral-400'} ${expandedHadith === h.hadithnumber ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedHadith === h.hadithnumber && (
-                <div className={`px-4 pb-3 pt-0 border-t ${isDark ? 'border-white/[0.06]' : 'border-neutral-50'}`}>
-                  <span className={`text-xs font-semibold ${isDark ? 'text-gold-300/70' : 'text-amber-700'}`}>
-                    {selectedBook.name} — Hadith #{h.hadithnumber}
+          ) : (
+            <>
+              <div className={`flex items-center justify-between text-xs ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+                <span>Hadiths {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredHadiths.length)} of {filteredHadiths.length}</span>
+                {search && <span>{filteredHadiths.length} result{filteredHadiths.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;</span>}
+              </div>
+              {pageHadiths.map((h) => (
+                <motion.div key={h.hadithnumber} layout
+                  className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-neutral-100 bg-white shadow-sm'}`}>
+                  <button className="w-full text-left p-4 flex items-start gap-3"
+                    onClick={() => setExpandedHadith(expandedHadith === h.hadithnumber ? null : h.hadithnumber)}>
+                    <span className={`mt-0.5 shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? 'bg-emerald-700/30 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {h.hadithnumber}
+                    </span>
+                    <p className={`flex-1 text-sm leading-relaxed ${isDark ? 'text-parchment/85' : 'text-neutral-700'} ${expandedHadith === h.hadithnumber ? '' : 'line-clamp-3'}`}>
+                      {h.text}
+                    </p>
+                    <ChevronDown size={16} className={`shrink-0 mt-1 transition-transform ${isDark ? 'text-parchment/40' : 'text-neutral-400'} ${expandedHadith === h.hadithnumber ? 'rotate-180' : ''}`} />
+                  </button>
+                  {expandedHadith === h.hadithnumber && (
+                    <div className={`px-4 pb-3 pt-0 border-t ${isDark ? 'border-white/[0.06]' : 'border-neutral-50'}`}>
+                      <span className={`text-xs font-semibold ${isDark ? 'text-gold-300/70' : 'text-amber-700'}`}>
+                        {selectedBook.name} — Hadith #{h.hadithnumber}
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <button
+                    onClick={() => { setPage((p) => p - 1); setExpandedHadith(null); }}
+                    disabled={page === 0}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
+                    <ChevronLeft size={15} /> Previous
+                  </button>
+                  <span className={`text-xs font-semibold ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
+                    Page {page + 1} of {totalPages}
                   </span>
+                  <button
+                    onClick={() => { setPage((p) => p + 1); setExpandedHadith(null); }}
+                    disabled={page >= totalPages - 1}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
+                    Next <ChevronRight size={15} />
+                  </button>
                 </div>
               )}
-            </motion.div>
-          ))}
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <button
-                onClick={() => { setPage((p) => p - 1); setExpandedHadith(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                disabled={page === 0}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
-                <ChevronLeft size={15} /> Previous
-              </button>
-              <span className={`text-xs font-semibold ${isDark ? 'text-parchment/50' : 'text-neutral-500'}`}>
-                Page {page + 1} of {totalPages}
-              </span>
-              <button
-                onClick={() => { setPage((p) => p + 1); setExpandedHadith(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                disabled={page >= totalPages - 1}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-emerald-600/10'} ${isDark ? 'border-white/10 text-parchment/80' : 'border-neutral-200 text-neutral-700'}`}>
-                Next <ChevronRight size={15} />
-              </button>
-            </div>
+            </>
           )}
         </div>
       )}
