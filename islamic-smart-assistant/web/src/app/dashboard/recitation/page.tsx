@@ -445,24 +445,31 @@ export default function RecitationSchedulerPage() {
 
       <div className="px-6 sm:px-10 pb-10 space-y-6">
       {/* ════════ YOUR SCHEDULES ════════ */}
-      <div className="rounded-3xl bg-white/70 border border-emerald-900/8 shadow-card-soft p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-200/60 shadow-card-soft p-5 sm:p-6"
+        style={{ background: 'linear-gradient(135deg, #FFFBF0 0%, #FFF6E0 55%, #FFF9EC 100%)' }}>
+        {/* Subtle Quran background image */}
+        <div aria-hidden className="absolute inset-0 bg-cover bg-right pointer-events-none"
+          style={{ backgroundImage: "url('/quran-bg-card.png')", opacity: 0.18 }} />
+        <div className="relative">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="font-display font-bold text-xl text-emerald-950">Your Schedules</h2>
           <motion.button onClick={openCreate} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white text-emerald-800 font-semibold text-sm px-4 py-2 shadow-sm hover:bg-emerald-50 transition">
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/70 bg-white/80 text-emerald-800 font-semibold text-sm px-4 py-2 shadow-sm hover:bg-amber-50 transition">
             <Plus size={15} /> New Schedule
           </motion.button>
         </div>
 
         {schedules.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-3 animate-float">
-              <AlarmClock size={28} className="text-emerald-400" />
+          <div className="flex items-center gap-4 py-3">
+            <div className="w-12 h-12 shrink-0 rounded-2xl bg-amber-100/80 border border-amber-200/60 flex items-center justify-center animate-float">
+              <AlarmClock size={22} className="text-emerald-600" />
             </div>
-            <h3 className="font-display text-lg font-bold text-emerald-950">No recitation scheduled yet</h3>
-            <p className="text-emerald-900/55 mt-1 max-w-sm mx-auto text-sm">Create your first schedule and Noor will recite the Quran for you at the time you choose.</p>
-            <button onClick={openCreate} className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white font-semibold px-5 py-2.5 shadow-glow-emerald hover:bg-emerald-700 transition">
-              <Plus size={16} /> Schedule Recitation
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-base font-bold text-emerald-950">No recitation scheduled yet</h3>
+              <p className="text-emerald-900/55 text-xs mt-0.5">Create your first schedule and Noor will recite the Quran at the time you choose.</p>
+            </div>
+            <button onClick={openCreate} className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white font-semibold text-sm px-4 py-2 shadow-glow-emerald hover:bg-emerald-700 transition">
+              <Plus size={15} /> Schedule
             </button>
           </div>
         ) : (
@@ -544,12 +551,13 @@ export default function RecitationSchedulerPage() {
             </AnimatePresence>
           </div>
         )}
+        </div>{/* closes relative wrapper */}
       </div>
 
       {/* ════════ BENEFITS + TODAY'S GOAL ════════ */}
       <div className="grid lg:grid-cols-[1.7fr_1fr] gap-4">
         {/* Benefits */}
-        <div className="rounded-3xl bg-emerald-50/60 border border-emerald-100 p-6">
+        <div className="rounded-3xl border border-amber-200/50 p-6" style={{ background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF6E0 100%)' }}>
           <h2 className="flex items-center gap-2 font-display font-bold text-lg text-emerald-950 mb-5">
             <BookOpen size={18} className="text-gold-600" /> Benefits of Listening to Quran
           </h2>
@@ -590,7 +598,8 @@ export default function RecitationSchedulerPage() {
       </div>
 
       {/* ════════ INSPIRING HADEES ════════ */}
-      <div className="relative overflow-hidden rounded-3xl bg-parchment/80 border border-emerald-900/8 shadow-card-soft p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-300/40 shadow-card-soft p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6"
+        style={{ background: 'linear-gradient(135deg,#FFF8E8 0%,#FFF3D4 55%,#FFFBF0 100%)' }}>
         <div className="flex-1">
           <h2 className="flex items-center gap-2 font-display font-bold text-lg text-emerald-950 mb-4">
             <Sparkles size={18} className="text-gold-600" /> Inspiring Hadees
@@ -611,7 +620,7 @@ export default function RecitationSchedulerPage() {
       </div>
 
       {/* ════════ QUICK ACTIONS ════════ */}
-      <div className="rounded-3xl bg-white/70 border border-emerald-900/8 shadow-card-soft p-5 sm:p-6">
+      <div className="rounded-3xl border border-amber-200/50 shadow-card-soft p-5 sm:p-6" style={{ background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF9EC 100%)' }}>
         <h2 className="font-display font-bold text-lg text-emerald-950 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
