@@ -152,11 +152,8 @@ export default function QuranPage() {
             </div>
           </div>
         </div>
-      </header>
-
-      <div className="px-6 sm:px-10 pb-10 space-y-6">
-
-        {/* ── quick picks ── */}
+        {/* ── quick picks — inside hero so they sit over the background ── */}
+        <div className="relative px-6 sm:px-10 pb-10">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-7 gap-3">
           {QUICK_PICKS.map((p, i) => {
             const active = surah === p.number;
@@ -219,7 +216,10 @@ export default function QuranPage() {
             <span className="font-semibold text-sm leading-tight">View All<br /><span className={`text-xs font-normal ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>114 Surahs</span></span>
           </button>
         </div>
+        </div>{/* closes quick picks px wrapper */}
+      </div>{/* closes hero section */}
 
+      <div className="px-6 sm:px-10 pb-10 space-y-6">
         {/* ── player ── */}
         <QuranPlayer
           surahNumber={surah}
