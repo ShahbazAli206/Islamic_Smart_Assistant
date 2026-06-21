@@ -245,7 +245,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
           .map(([no, name]) => ({ chapterno: Number(no), chaptername: String(name) }))
           .sort((a, b) => a.chapterno - b.chapterno);
         setSections(parsed);
-        if (parsed.length > 0) setSelectedChapter(parsed[0].chapterno);
+        setSelectedChapter(0); // default = All chapters so all hadiths show immediately
         setAllHadiths(Array.isArray(transData?.hadiths) ? transData.hadiths : []);
         if (araData) setArabicHadiths(Array.isArray(araData?.hadiths) ? araData.hadiths : []);
       })
@@ -271,8 +271,9 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     return m;
   }, [arabicHadiths]);
 
+  // selectedChapter === 0 means "All chapters" — show the entire book
   const chapterHadiths = useMemo(
-    () => allHadiths.filter(h => h.reference?.book === selectedChapter),
+    () => selectedChapter === 0 ? allHadiths : allHadiths.filter(h => h.reference?.book === selectedChapter),
     [allHadiths, selectedChapter],
   );
 
@@ -294,9 +295,12 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
   const totalPages  = Math.ceil(filteredHadiths.length / PAGE_SIZE);
   const pageHadiths = filteredHadiths.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const chapterIdx  = sections.findIndex(c => c.chapterno === selectedChapter);
+  // When "All chapters" (0) is selected, prev/next navigate into the real chapters
+  const chapterIdx  = selectedChapter === 0 ? -1 : sections.findIndex(c => c.chapterno === selectedChapter);
   const prevChapter = chapterIdx > 0 ? sections[chapterIdx - 1] : null;
-  const nextChapter = chapterIdx < sections.length - 1 ? sections[chapterIdx + 1] : null;
+  const nextChapter = chapterIdx === -1
+    ? (sections.length > 0 ? sections[0] : null)           // from "All" → first chapter
+    : (chapterIdx < sections.length - 1 ? sections[chapterIdx + 1] : null);
 
   return (
     <div className="space-y-5">
@@ -367,7 +371,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
                 }`}>
                   {book.category === 'sehah-sittah' ? 'Sehah-e-Sittah' : 'Popular Book'}
                 </div>
-                <p className={`font-display font-bold text-base leading-snug ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{book.name}</p>
+                <p className={`font-display font-bold text-sm leading-snug line-clamp-1 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{book.name}</p>
                 <p className={`font-arabic text-lg leading-[1.5] ${isDark ? 'text-[#E9CF7A]/80' : 'text-emerald-700'}`}>{book.arabicName}</p>
                 <div className={`pt-1.5 border-t ${isDark ? 'border-white/[0.07]' : 'border-emerald-100/60'}`}>
                   <p className={`text-sm font-semibold ${isDark ? 'text-parchment/65' : 'text-neutral-600'}`}>{book.totalHadiths.toLocaleString()} hadiths</p>
@@ -440,6 +444,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
                     onChange={(e) => { setSelectedChapter(Number(e.target.value)); setSearch(''); }}
                     disabled={isSearching}
                     className={`appearance-none pl-3 pr-8 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 max-w-[220px] ${isDark ? 'bg-white/[0.07] border border-white/10 text-parchment disabled:opacity-40' : 'bg-white border border-emerald-200 text-neutral-800 shadow-sm disabled:opacity-40'}`}>
+                    <option value={0}>All chapters ({allHadiths.length.toLocaleString()} hadiths)</option>
                     {sections.map(c => (
                       <option key={c.chapterno} value={c.chapterno}>{c.chapterno}. {c.chaptername}</option>
                     ))}
