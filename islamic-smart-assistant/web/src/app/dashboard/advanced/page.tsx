@@ -173,7 +173,7 @@ interface ChapterItem { chapterno: number; chaptername: string; }
 
 function HadeesSection({ isDark }: { isDark: boolean }) {
   const [selectedBook, setSelectedBook] = useState(HADEES_BOOKS[0]);
-  const [selectedLang, setSelectedLang] = useState(HADEES_BOOKS[0].languages[0]);
+  const [selectedLang, setSelectedLang] = useState(HADEES_BOOKS[0].languages.find((l) => l.code === 'eng') ?? HADEES_BOOKS[0].languages[0]);
   const [chapters, setChapters] = useState<ChapterItem[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
   const [hadiths, setHadiths] = useState<HadithItem[]>([]);
@@ -213,12 +213,22 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     let cancelled = false;
     setLoadingChapters(true);
     setError(null);
-    fetch(`${HADEES_CDN}/${selectedBook.languages.find(l => l.code === 'eng')?.edition ?? selectedBook.languages[0].edition}/chapters.min.json`)
+    const engEdition = selectedBook.languages.find((l) => l.code === 'eng')?.edition ?? selectedBook.languages[0].edition;
+    fetch(`${HADEES_CDN}/${engEdition}/chapters.min.json`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
-          const raw = data?.chapters ?? data ?? [];
-          setChapters(Array.isArray(raw) ? raw : []);
+          // Some editions return {chapters: [{chapterno, chaptername},...]}
+          // Others return {metadata: {section: {"1": "Name", ...}}}
+          if (Array.isArray(data?.chapters) && data.chapters.length > 0) {
+            setChapters(data.chapters);
+          } else {
+            const section: Record<string, string> = data?.metadata?.section ?? data?.section ?? {};
+            const parsed: ChapterItem[] = Object.entries(section)
+              .map(([no, name]) => ({ chapterno: Number(no), chaptername: String(name) }))
+              .sort((a, b) => a.chapterno - b.chapterno);
+            setChapters(parsed.length > 0 ? parsed : []);
+          }
         }
       })
       .catch(() => { if (!cancelled) setChapters([]); })
@@ -232,7 +242,9 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     setLoadingHadiths(true);
     setError(null);
     setHadiths([]);
-    fetch(`${HADEES_CDN}/${selectedLang.edition}/${selectedChapter}.min.json`)
+    // Correct path: /chapters/{chapterNo}.min.json — NOT /{chapterNo}.min.json
+    // (/{n}.min.json fetches a single hadith by global number, not a chapter)
+    fetch(`${HADEES_CDN}/${selectedLang.edition}/chapters/${selectedChapter}.min.json`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
@@ -240,7 +252,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
           setHadiths(Array.isArray(raw) ? raw : []);
         }
       })
-      .catch((e) => { if (!cancelled) setError('Could not load hadiths. Please try again.'); })
+      .catch(() => { if (!cancelled) setError('Could not load hadiths. Please try again.'); })
       .finally(() => { if (!cancelled) setLoadingHadiths(false); });
     return () => { cancelled = true; };
   }, [selectedBook, selectedLang, selectedChapter]);
