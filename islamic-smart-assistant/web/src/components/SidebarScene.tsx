@@ -111,7 +111,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
       <div
         className="absolute inset-x-0 bottom-0 h-[46%] bg-no-repeat"
         style={{
-          backgroundImage: 'url(/masjid_img.png)',
+          backgroundImage: 'url(/quran-bg-card.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center bottom',
           opacity: isDark ? 0.55 : 0.92,
