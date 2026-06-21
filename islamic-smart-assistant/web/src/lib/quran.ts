@@ -40,46 +40,10 @@ export const TRANSLATIONS = [
   // Bengali — spoken audio is self-generated (TTS) and hosted on Supabase
   { id: 'bn.bengali',        name: 'Bengali — Muhiuddin Khan',            short: 'বাংলা' },
   { id: 'bn.hoque',          name: 'Bengali — Zohurul Hoque',             short: 'বাংলা' },
-  // Hindi
-  { id: 'hi.hindi',          name: 'Hindi — Farooq Khan & Nadwi',         short: 'हिन्दी' },
-  // Indonesian (official Ministry of Religious Affairs translation)
-  { id: 'id.indonesian',     name: 'Indonesian — Kemenag',                short: 'Indonesia' },
-  // Persian / Farsi
+  // Persian / Farsi — spoken audio by Hedayatfar (Fooladvand text, 40 kbps)
   { id: 'fa.fooladvand',     name: 'Persian — Fooladvand',                short: 'فارسی' },
-  // Malay (official translation by Abdullah Muhammad Basmeih)
-  { id: 'ms.basmeih',        name: 'Malay — Abdullah Basmeih',            short: 'Melayu' },
-  // Russian
+  // Russian — spoken audio by 1MuslimApp (Kuliev text, 128 kbps)
   { id: 'ru.kuliev',         name: 'Russian — Elmir Kuliev',              short: 'Русский' },
-  // Spanish
-  { id: 'es.cortes',         name: 'Spanish — Julio Cortes',              short: 'Español' },
-  // German
-  { id: 'de.bubenheim',      name: 'German — Bubenheim & Elyas',          short: 'Deutsch' },
-  // Hausa (large West African Muslim population)
-  { id: 'ha.gumi',           name: 'Hausa — Abubakar Gumi',               short: 'Hausa' },
-  // Swahili (East African Muslim communities)
-  { id: 'sw.barwani',        name: 'Swahili — Ali Muhsin Al-Barwani',     short: 'Kiswahili' },
-  // Somali
-  { id: 'so.abduh',          name: 'Somali — Mahmud Muhammad Abduh',      short: 'Soomaali' },
-  // Tamil
-  { id: 'ta.tamil',          name: 'Tamil — Jan Trust Foundation',        short: 'தமிழ்' },
-  // Pashto
-  { id: 'ps.abdulwali',      name: 'Pashto — Abdul Wali',                 short: 'پښتو' },
-  // Uzbek
-  { id: 'uz.sodik',          name: 'Uzbek — Muhammad Sodik',              short: "O'zbek" },
-  // Azerbaijani
-  { id: 'az.mammadaliyev',   name: 'Azerbaijani — Mammadaliyev',          short: 'Azərbaycan' },
-  // Bosnian
-  { id: 'bs.korkut',         name: 'Bosnian — Besim Korkut',              short: 'Bosanski' },
-  // Italian
-  { id: 'it.piccardo',       name: 'Italian — Hamza R. Piccardo',         short: 'Italiano' },
-  // Dutch
-  { id: 'nl.leemhuis',       name: 'Dutch — Leemhuis',                    short: 'Nederlands' },
-  // Korean
-  { id: 'ko.korean',         name: 'Korean',                              short: '한국어' },
-  // Japanese
-  { id: 'ja.japanese',       name: 'Japanese',                            short: '日本語' },
-  // Sindhi
-  { id: 'sd.amroti',         name: 'Sindhi — Taj Mehmood Amroti',         short: 'سنڌي' },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -97,26 +61,8 @@ export function langToTranslation(lang: string): TranslationId {
     bn:   'bn.bengali',
     zh:   'zh.majian',
     fr:   'fr.hamidullah',
-    hi:   'hi.hindi',
-    id:   'id.indonesian',
     fa:   'fa.fooladvand',
-    ms:   'ms.basmeih',
     ru:   'ru.kuliev',
-    es:   'es.cortes',
-    de:   'de.bubenheim',
-    ha:   'ha.gumi',
-    sw:   'sw.barwani',
-    so:   'so.abduh',
-    ta:   'ta.tamil',
-    ps:   'ps.abdulwali',
-    uz:   'uz.sodik',
-    az:   'az.mammadaliyev',
-    bs:   'bs.korkut',
-    it:   'it.piccardo',
-    nl:   'nl.leemhuis',
-    ko:   'ko.korean',
-    ja:   'ja.japanese',
-    sd:   'sd.amroti',
     none: 'none',
   };
   return map[lang] ?? 'en.sahih';
@@ -142,16 +88,18 @@ export function ayahAudioUrl(globalAyahNumber: number, reciter: ReciterId, bitra
 //      recording exists) — produced once by scripts/generate_translation_audio.py
 //      and uploaded to a public Supabase Storage bucket.
 
-const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 64 | 128 | 192 }> = {
-  'en.sahih':      { edition: 'en.walk',        bitrate: 192 }, // Ibrahim Walk (Saheeh Intl.)
-  'en.asad':       { edition: 'en.walk',        bitrate: 192 }, // only English recording available
-  'ur.jalandhry':  { edition: 'ur.khan',        bitrate: 64  }, // Shamshad Ali Khan
-  'ur.junagarhi':  { edition: 'ur.khan',        bitrate: 64  },
-  'tr.vakfi':      { edition: 'tr.vakfi-audio', bitrate: 128 }, // Diyanet Vakfı (exact text match)
-  'tr.diyanet':    { edition: 'tr.vakfi-audio', bitrate: 128 },
-  'tr.yazir':      { edition: 'tr.vakfi-audio', bitrate: 128 },
-  'zh.majian':     { edition: 'zh.chinese',     bitrate: 128 }, // Ma Jian
-  'fr.hamidullah': { edition: 'fr.leclerc',     bitrate: 128 }, // Youssouf Leclerc
+const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 40 | 64 | 128 | 192 }> = {
+  'en.sahih':      { edition: 'en.walk',                 bitrate: 192 }, // Ibrahim Walk (Saheeh Intl.)
+  'en.asad':       { edition: 'en.walk',                 bitrate: 192 }, // only English recording available
+  'ur.jalandhry':  { edition: 'ur.khan',                 bitrate: 64  }, // Shamshad Ali Khan
+  'ur.junagarhi':  { edition: 'ur.khan',                 bitrate: 64  },
+  'tr.vakfi':      { edition: 'tr.vakfi-audio',          bitrate: 128 }, // Diyanet Vakfı (exact text match)
+  'tr.diyanet':    { edition: 'tr.vakfi-audio',          bitrate: 128 },
+  'tr.yazir':      { edition: 'tr.vakfi-audio',          bitrate: 128 },
+  'zh.majian':     { edition: 'zh.chinese',              bitrate: 128 }, // Ma Jian
+  'fr.hamidullah': { edition: 'fr.leclerc',              bitrate: 128 }, // Youssouf Leclerc
+  'fa.fooladvand': { edition: 'fa.hedayatfarfooladvand', bitrate: 40  }, // Fooladvand - Hedayatfar
+  'ru.kuliev':     { edition: 'ru.kuliev-audio',         bitrate: 128 }, // Elmir Kuliev (1MuslimApp)
 };
 
 // Translation editions for which we generate TTS audio. The generator reads the

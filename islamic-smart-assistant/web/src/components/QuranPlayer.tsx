@@ -27,37 +27,17 @@ type Props = {
   isDark?: boolean;
 };
 
-// ── Translation groups ────────────────────────────────────────────────────────
+// ── Translation groups (all entries have spoken audio) ────────────────────────
 const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
-  { label: null,             ids: ['none'] },
-  // — With spoken audio ——————————————————————————————————————————————————————
-  { label: 'English',        ids: ['en.sahih', 'en.asad'] },
-  { label: 'Urdu',           ids: ['ur.jalandhry', 'ur.junagarhi'] },
-  { label: 'Turkish',        ids: ['tr.vakfi', 'tr.diyanet', 'tr.yazir'] },
-  { label: 'Chinese',        ids: ['zh.majian'] },
-  { label: 'French',         ids: ['fr.hamidullah'] },
-  { label: 'Bengali',        ids: ['bn.bengali', 'bn.hoque'] },
-  // — Text translations ——————————————————————————————————————————————————————
-  { label: 'Hindi',          ids: ['hi.hindi'] },
-  { label: 'Indonesian',     ids: ['id.indonesian'] },
-  { label: 'Persian',        ids: ['fa.fooladvand'] },
-  { label: 'Malay',          ids: ['ms.basmeih'] },
-  { label: 'Russian',        ids: ['ru.kuliev'] },
-  { label: 'Spanish',        ids: ['es.cortes'] },
-  { label: 'German',         ids: ['de.bubenheim'] },
-  { label: 'Hausa',          ids: ['ha.gumi'] },
-  { label: 'Swahili',        ids: ['sw.barwani'] },
-  { label: 'Somali',         ids: ['so.abduh'] },
-  { label: 'Tamil',          ids: ['ta.tamil'] },
-  { label: 'Pashto',         ids: ['ps.abdulwali'] },
-  { label: 'Uzbek',          ids: ['uz.sodik'] },
-  { label: 'Azerbaijani',    ids: ['az.mammadaliyev'] },
-  { label: 'Bosnian',        ids: ['bs.korkut'] },
-  { label: 'Italian',        ids: ['it.piccardo'] },
-  { label: 'Dutch',          ids: ['nl.leemhuis'] },
-  { label: 'Korean',         ids: ['ko.korean'] },
-  { label: 'Japanese',       ids: ['ja.japanese'] },
-  { label: 'Sindhi',         ids: ['sd.amroti'] },
+  { label: null,      ids: ['none'] },
+  { label: 'English', ids: ['en.sahih', 'en.asad'] },
+  { label: 'Urdu',    ids: ['ur.jalandhry', 'ur.junagarhi'] },
+  { label: 'Turkish', ids: ['tr.vakfi', 'tr.diyanet', 'tr.yazir'] },
+  { label: 'Chinese', ids: ['zh.majian'] },
+  { label: 'French',  ids: ['fr.hamidullah'] },
+  { label: 'Bengali', ids: ['bn.bengali', 'bn.hoque'] },
+  { label: 'Persian', ids: ['fa.fooladvand'] },
+  { label: 'Russian', ids: ['ru.kuliev'] },
 ];
 
 // ── Click-outside hook ────────────────────────────────────────────────────────
