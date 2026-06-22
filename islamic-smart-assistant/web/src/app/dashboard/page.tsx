@@ -477,15 +477,15 @@ export default function Overview() {
               alt=""
               aria-hidden
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-              style={{ filter: isDark ? 'brightness(0.4) saturate(1.1)' : 'none' }}
+              style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'none' }}
             />
             {/* readability wash so the verse stays legible over the art */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0"
               style={{ background: isDark
-                ? 'linear-gradient(160deg,rgba(26,20,48,0.78) 0%,rgba(26,20,48,0.62) 100%)'
-                : 'linear-gradient(120deg,rgba(255,255,255,0.62) 0%,rgba(255,255,255,0.32) 50%,rgba(255,255,255,0.12) 100%)' }}
+                ? 'linear-gradient(160deg,rgba(26,20,48,0.5) 0%,rgba(26,20,48,0.32) 100%)'
+                : 'linear-gradient(120deg,rgba(255,255,255,0.46) 0%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.04) 100%)' }}
             />
             <div className="relative">
               <div className="flex items-center gap-2">
