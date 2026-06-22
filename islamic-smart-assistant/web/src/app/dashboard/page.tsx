@@ -294,12 +294,20 @@ export default function Overview() {
             <motion.section
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
               className={`relative overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-emerald-200/60'}`}
-              style={{ background: isDark
-                ? 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)'
-                : 'linear-gradient(150deg,#eafaf1 0%,#e2f5ee 55%,#dbf1ec 100%)' }}
+              style={isDark ? { background: 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)' } : undefined}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-52 select-none opacity-95" />
+              {isDark ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-52 select-none opacity-95" />
+              ) : (
+                <>
+                  {/* light mode: watercolour dome-and-leaves background */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-right" />
+                  {/* soft left wash so the countdown text stays legible over the art */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/70 via-white/25 to-transparent" />
+                </>
+              )}
               <div className="relative">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600/15 text-emerald-600"><Moon size={17} /></span>
