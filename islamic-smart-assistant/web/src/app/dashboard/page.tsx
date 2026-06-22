@@ -142,61 +142,61 @@ export default function Overview() {
 
   return (
     <div className={rootCls} style={rootStyle}>
-      {/* ───────────────────────── Top bar: search · status ───────────────────────── */}
-      <header className="flex flex-col gap-4 sm:relative sm:block">
-        <div className="order-2 mx-auto w-full sm:max-w-[560px]">
-          <div className={`flex items-center gap-2 rounded-full border px-4 py-2.5 ${c.search}`}>
-            <Search size={18} className={c.faint} />
-            <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm focus:outline-none" />
-            <span className={`hidden sm:inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${c.kbd}`}>Ctrl /</span>
-            <button aria-label="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-700/30 hover:bg-emerald-700 transition">
-              <Search size={15} />
-            </button>
-          </div>
-        </div>
-        <div className="order-1 flex items-center justify-end gap-5 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
-          <div className="flex items-center gap-2">
-            <MapPin size={18} className="text-emerald-600" />
-            <div className="leading-tight">
-              <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
-              <p className={`text-[11px] ${c.faint}`}>{data?.hijriDate ?? '—'}</p>
-            </div>
-          </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <Sun size={18} className="text-amber-400" />
-            <div className="leading-tight">
-              <p className="text-sm font-semibold">18°C</p>
-              <p className={`text-[11px] ${c.faint}`}>Clear</p>
-            </div>
-          </div>
-          <button onClick={() => window.dispatchEvent(new Event('isa:open-profile'))} className="relative shrink-0" aria-label="Open profile">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold ring-2 ring-white shadow-md">
-              {name ? name.trim().charAt(0).toUpperCase() : <User size={20} />}
-            </span>
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-          </button>
-        </div>
-      </header>
-
-      {/* ───────────────────────── Hero: greeting over mosque + verse ───────────────────────── */}
+      {/* ─────────── First section: full-bleed mosque banner behind the
+          search/status bar, greeting and verse card. The photo is always a
+          light scene, so text colours inside are hardcoded light-on-image
+          (independent of the dark/light theme). ─────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative min-h-[210px] overflow-hidden"
+        className="relative overflow-hidden rounded-[28px] shadow-[0_18px_44px_-20px_rgba(16,40,30,0.4)]"
       >
-        {/* Left 60% mosque banner — shown at full height (never cropped vertically),
-            clipped horizontally and faded into the card on its right edge. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-[60%] overflow-hidden"
-          style={{ WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)', maskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="h-full w-auto max-w-none select-none object-left" />
-        </div>
-        {/* readability wash under the greeting */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-[60%] bg-gradient-to-r from-white/50 via-white/15 to-transparent" />
+        {/* full-cover background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
+        {/* legibility washes: overall soften + stronger on the left (greeting) and top (status bar) */}
+        <div className="absolute inset-0 bg-white/25" />
+        <div className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-white/80 via-white/35 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/55 to-transparent" />
 
-        <div className="relative grid grid-cols-1 items-start gap-4 p-6 sm:p-7 lg:grid-cols-[1fr_minmax(0,560px)]">
+        <div className="relative p-5 sm:p-6">
+          {/* top bar: centered search + right-aligned status */}
+          <div className="relative flex flex-col gap-4 sm:block">
+            <div className="mx-auto w-full sm:max-w-[560px]">
+              <div className="flex items-center gap-2 rounded-full border border-emerald-900/[0.06] bg-white/95 px-4 py-2.5 text-emerald-950 shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
+                <Search size={18} className="text-emerald-900/40" />
+                <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm text-emerald-950 placeholder:text-emerald-900/40 focus:outline-none" />
+                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/[0.05] px-1.5 py-0.5 text-[11px] font-medium text-emerald-900/45">Ctrl /</span>
+                <button aria-label="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-700/30 hover:bg-emerald-700 transition">
+                  <Search size={15} />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-5 text-emerald-950 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+              <div className="flex items-center gap-2">
+                <MapPin size={18} className="text-emerald-600" />
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
+                  <p className="text-[11px] text-emerald-900/50">{data?.hijriDate ?? '—'}</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <Sun size={18} className="text-amber-500" />
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold">18°C</p>
+                  <p className="text-[11px] text-emerald-900/50">Clear</p>
+                </div>
+              </div>
+              <button onClick={() => window.dispatchEvent(new Event('isa:open-profile'))} className="relative shrink-0" aria-label="Open profile">
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold ring-2 ring-white shadow-md">
+                  {name ? name.trim().charAt(0).toUpperCase() : <User size={20} />}
+                </span>
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
+              </button>
+            </div>
+          </div>
+
+          {/* hero content: greeting (top-left, three lines) + verse card */}
+          <div className="mt-8 grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_minmax(0,560px)]">
           {/* greeting — top of the section, three lines */}
           <div className="drop-shadow-sm">
             <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-emerald-950">
@@ -230,6 +230,7 @@ export default function Overview() {
               </p>
               <p className="mt-2 text-xs font-medium text-emerald-800/70">Surah Ar-Ra&apos;d (13:28)</p>
             </div>
+          </div>
           </div>
         </div>
       </motion.section>
@@ -462,15 +463,24 @@ export default function Overview() {
           <motion.section
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
             className={`relative min-h-[360px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
-            style={{ background: isDark
-              ? 'linear-gradient(160deg,#241b3a 0%,#1a1430 100%)'
-              : 'linear-gradient(160deg,#f6f2ff 0%,#efe9fb 55%,#e9e1f7 100%)' }}
           >
-            <svg aria-hidden viewBox="0 0 120 80" className="pointer-events-none absolute right-3 top-12 w-28 opacity-[0.07]" fill="none" stroke={isDark ? '#fff' : '#6d28d9'} strokeWidth="2">
-              <path d="M18 78 V40 Q18 8 60 6 Q102 8 102 40 V78" /><line x1="60" y1="6" x2="60" y2="-4" />
-            </svg>
+            {/* full-bleed background: soft mosque-and-flowers artwork (darkened in dark mode) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={isDark ? '/quran-bg.png' : '/card_images/Quran_Translation_Card_image.png'} alt="" style={FADE_TL} className={`pointer-events-none absolute bottom-2 right-0 w-40 select-none ${isDark ? 'opacity-30' : 'opacity-95'}`} />
+            <img
+              src="/overview_page_bg-1.png"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+              style={{ filter: isDark ? 'brightness(0.4) saturate(1.1)' : 'none' }}
+            />
+            {/* readability wash so the verse stays legible over the art */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{ background: isDark
+                ? 'linear-gradient(160deg,rgba(26,20,48,0.78) 0%,rgba(26,20,48,0.62) 100%)'
+                : 'linear-gradient(120deg,rgba(255,255,255,0.62) 0%,rgba(255,255,255,0.32) 50%,rgba(255,255,255,0.12) 100%)' }}
+            />
             <div className="relative">
               <div className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-200/70 text-violet-700"><BookOpen size={17} /></span>
