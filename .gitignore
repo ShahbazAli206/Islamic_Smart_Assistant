@@ -4,3 +4,6 @@ zRouter data/
 ~$*.docx
 .vercel
 .claude/settings.local.json
+
+# Stray Android build output / duplicate of the root ./mobile app (no source)
+islamic-smart-assistant/mobile/
