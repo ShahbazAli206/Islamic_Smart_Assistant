@@ -402,7 +402,7 @@ export default function Overview() {
                   { name: 'Abdul Basit Abd us-Samad', region: 'Egypt' },
                   { name: 'Maher Al Muaiqly', region: 'Makkah, Saudi Arabia' },
                 ].map((r) => (
-                  <li key={r.name} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${r.active ? 'bg-emerald-50 ring-1 ring-emerald-300/60' : `border ${c.divider}`}`}>
+                  <li key={r.name} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${r.active ? (isDark ? 'bg-emerald-500/15 ring-1 ring-emerald-400/40' : 'bg-emerald-50 ring-1 ring-emerald-300/60') : `border ${c.divider} ${isDark ? 'bg-white/[0.03]' : ''}`}`}>
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 text-white"><User size={16} /></span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-semibold leading-tight">{r.name}</p>
@@ -412,7 +412,7 @@ export default function Overview() {
                   </li>
                 ))}
               </ul>
-              <Link href="/dashboard/azan" className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 py-3 text-sm font-semibold text-violet-600 transition hover:border-violet-300">
+              <Link href="/dashboard/azan" className={`mt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
                 <Bell size={15} /> View All Voices
               </Link>
             </motion.section>
@@ -468,7 +468,7 @@ export default function Overview() {
           {/* Quran of the Day (purple-tinted) */}
           <motion.section
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-            className={`relative min-h-[360px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
+            className={`relative min-h-[480px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
           >
             {/* full-bleed background: soft mosque-and-flowers artwork (darkened in dark mode) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -504,7 +504,7 @@ export default function Overview() {
               <div className={`mt-4 text-[13px] leading-relaxed ${c.muted}`}>
                 <p>The Most Merciful</p><p>Taught the Qur&apos;an</p><p>Created man</p>
               </div>
-              <Link href="/dashboard/quran" className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-violet-300/70 bg-white/70 px-4 py-2 text-sm font-semibold text-violet-700 backdrop-blur transition hover:bg-white">
+              <Link href="/dashboard/quran" className={`mt-5 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold backdrop-blur transition ${isDark ? 'border-violet-400/30 bg-violet-500/20 text-violet-100 hover:bg-violet-500/30' : 'border-violet-300/70 bg-white/70 text-violet-700 hover:bg-white'}`}>
                 <BookOpen size={15} /> Read More
               </Link>
             </div>
@@ -539,17 +539,29 @@ export default function Overview() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.12 }}
-        className={`${cardCls} p-5`}
-        style={{
-          backgroundImage: 'url(/OverviewPage_your_preference_bg.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'right center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        className={
+          isDark
+            ? 'relative overflow-hidden rounded-[26px] border border-white/10 p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]'
+            : `${cardCls} p-5`
+        }
+        style={
+          isDark
+            ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' }
+            : {
+                backgroundImage: 'url(/OverviewPage_your_preference_bg.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'right center',
+                backgroundRepeat: 'no-repeat',
+              }
+        }
       >
+        {isDark && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
+        )}
         <div className="relative">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold-100 text-gold-600"><Star size={18} /></span>
+            <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
             <div>
               <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
               <p className={`text-xs ${c.muted}`}>Customize your experience</p>
@@ -562,8 +574,8 @@ export default function Overview() {
               { icon: GraduationCap, label: 'Sect',               value: SECT_LABELS[sect] ?? sect },
               { icon: Calculator,    label: 'Calculation Method', value: methodLabel },
             ].map((p) => (
-              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><p.icon size={16} /></span>
+              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
                 <div className="min-w-0 flex-1">
                   <p className={`text-[11px] ${c.faint}`}>{p.label}</p>
                   <p className="truncate text-sm font-semibold">{p.value}</p>
