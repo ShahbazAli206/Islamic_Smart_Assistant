@@ -83,6 +83,39 @@ export function normalizeFiqh(raw: string): Fiqh {
 }
 
 /**
+ * Returns the most widely-used AlAdhan calculation method id for a given country,
+ * or null when the country is unrecognised (callers should fall back to a sect default).
+ * Centralised here so onboarding, prayer-times page, and Azan scheduler all agree.
+ */
+export function methodByCountry(country: string): number | null {
+  const c = (country ?? '').toLowerCase();
+  if (!c) return null;
+  // South Asia
+  if (c.includes('pakistan')) return METHODS.Karachi;
+  if (c.includes('bangladesh') || c.includes('india')) return METHODS.Karachi;
+  // Arabian Peninsula
+  if (c.includes('saudi') || c.includes('mecca') || c.includes('makkah')) return METHODS.Makkah;
+  if (c.includes('kuwait')) return METHODS.Kuwait;
+  if (c.includes('qatar')) return METHODS.Qatar;
+  if (c.includes('united arab') || c.includes('uae') || c.includes('emirates')
+    || c.includes('bahrain') || c.includes('oman') || c.includes('iraq') || c.includes('yemen')) return METHODS.Gulf;
+  // North Africa / Levant
+  if (c.includes('egypt') || c.includes('jordan') || c.includes('palestine')
+    || c.includes('syria') || c.includes('lebanon') || c.includes('libya')
+    || c.includes('tunisia') || c.includes('algeria') || c.includes('morocco') || c.includes('sudan')) return METHODS.Egyptian;
+  // Iran
+  if (c.includes('iran')) return METHODS.Tehran;
+  // Turkey / Turkiye
+  if (c.includes('turkey') || c.includes('türkiye')) return METHODS.Turkey;
+  // Southeast Asia
+  if (c.includes('singapore') || c.includes('malaysia') || c.includes('indonesia') || c.includes('brunei')) return METHODS.Singapore;
+  // North America
+  if (c.includes('united states') || c.includes('usa') || c.includes('canada') || c.includes('mexico')) return METHODS.ISNA;
+  // Europe and rest of world → Muslim World League
+  return METHODS.MWL;
+}
+
+/**
  * Default calculation parameters for a sect/madhab. The `method` here is a sensible
  * default; users can override it with METHOD_LABELS for their local convention.
  */

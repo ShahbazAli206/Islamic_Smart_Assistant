@@ -112,8 +112,8 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         className="absolute inset-x-0 bottom-0 h-[46%] bg-no-repeat"
         style={{
           backgroundImage: 'url(/quran-bg-card.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
+          backgroundSize: '143% auto',
+          backgroundPosition: 'left bottom',
           opacity: isDark ? 0.55 : 0.92,
           mixBlendMode: isDark ? 'normal' : 'multiply',
           filter: isDark

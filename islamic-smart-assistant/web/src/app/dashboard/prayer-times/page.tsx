@@ -16,7 +16,7 @@ import { detectLocationByIP } from '@/lib/prayer';
 import { readStoredLocation, clearPinnedMosque, setLocationByCoords } from '@/lib/location';
 import {
   FIQH_BY_SECT, FIQH_LABEL, METHOD_LABELS, defaultParams, normalizeSect, normalizeFiqh,
-  type Sect, type Fiqh,
+  methodByCountry, type Sect, type Fiqh,
 } from '@/lib/sect';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -48,35 +48,6 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
       <circle cx="12" cy="12" r="2.6" fill="#F6D67A" />
     </svg>
   );
-}
-
-/** Returns the best AlAdhan method id for a given country name, or null if unknown. */
-function methodByCountry(country: string): number | null {
-  const c = (country ?? '').toLowerCase();
-  if (!c) return null;
-  // South Asia
-  if (c.includes('pakistan')) return 1;
-  if (c.includes('bangladesh') || c.includes('india')) return 1;
-  // Arabian Peninsula
-  if (c.includes('saudi') || c.includes('mecca') || c.includes('makkah')) return 4;
-  if (c.includes('kuwait')) return 9;
-  if (c.includes('qatar')) return 10;
-  if (c.includes('united arab') || c.includes('uae') || c.includes('emirates')
-    || c.includes('bahrain') || c.includes('oman') || c.includes('iraq') || c.includes('yemen')) return 8;
-  // North Africa / Levant
-  if (c.includes('egypt') || c.includes('jordan') || c.includes('palestine')
-    || c.includes('syria') || c.includes('lebanon') || c.includes('libya')
-    || c.includes('tunisia') || c.includes('algeria') || c.includes('morocco') || c.includes('sudan')) return 5;
-  // Iran
-  if (c.includes('iran')) return 7;
-  // Turkey
-  if (c.includes('turkey') || c.includes('türkiye')) return 13;
-  // Southeast Asia
-  if (c.includes('singapore') || c.includes('malaysia') || c.includes('indonesia') || c.includes('brunei')) return 11;
-  // North America
-  if (c.includes('united states') || c.includes('usa') || c.includes('canada')) return 2;
-  // Europe and rest of world → Muslim World League
-  return 3;
 }
 
 /** Custom, fully-styled Calculation-method dropdown (replaces the native <select>). */
@@ -227,6 +198,11 @@ export default function PrayerTimesPage() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
   const locChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks the last known country so we can detect when it changes and reset the
+  // method override to auto, ensuring the new country's convention is used.
+  const lastCountryRef = useRef<string>(
+    typeof window !== 'undefined' ? (readStoredLocation().country ?? '') : '',
+  );
 
   const loadMosques = useCallback(async (lat: number, lng: number) => {
     setLoadingMosques(true);
@@ -248,6 +224,17 @@ export default function PrayerTimesPage() {
     const LOCATION_KEYS = new Set(['isa:city', 'isa:country', 'isa:lat', 'isa:lng', 'isa:coordsFor']);
     const handler = (e: StorageEvent) => {
       if (!LOCATION_KEYS.has(e.key ?? '')) return;
+      // When the country changes, reset the method override to auto so the new
+      // location's regional convention is used instead of the old one.
+      if (e.key === 'isa:country') {
+        try {
+          const newCountry = e.newValue ? (JSON.parse(e.newValue) as string) : '';
+          if (newCountry && newCountry !== lastCountryRef.current) {
+            lastCountryRef.current = newCountry;
+            setMethodOverride(-1);
+          }
+        } catch { /* ignore malformed value */ }
+      }
       // Debounce: setLocationByCity calls persist() several times in a row.
       if (locChangeTimer.current) clearTimeout(locChangeTimer.current);
       locChangeTimer.current = setTimeout(() => {

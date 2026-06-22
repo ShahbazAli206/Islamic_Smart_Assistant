@@ -8,7 +8,7 @@ import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
-import { defaultParams, normalizeFiqh } from '@/lib/sect';
+import { defaultParams, normalizeFiqh, methodByCountry } from '@/lib/sect';
 import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
@@ -81,11 +81,12 @@ export function AutoAzanScheduler() {
   const { method, school } = useMemo(() => {
     const fiqh = normalizeFiqh(rawFiqh);
     const base = defaultParams(fiqh);
+    const countryMethod = methodByCountry(loc.country ?? '');
     return {
-      method: methodOverride >= 0 ? methodOverride : base.method,
+      method: methodOverride >= 0 ? methodOverride : (countryMethod ?? base.method),
       school: base.school as 0 | 1,
     };
-  }, [rawFiqh, methodOverride]);
+  }, [rawFiqh, methodOverride, loc.country]);
 
   const byCoords = loc.hasCoords && loc.lat != null && loc.lng != null;
 

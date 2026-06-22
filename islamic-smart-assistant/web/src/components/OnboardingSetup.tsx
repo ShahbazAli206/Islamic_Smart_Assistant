@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, Compass, X, BellRing, Bell, Volume2 } from 'lucide-react';
 import { detectLocationByIP } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
+import { methodByCountry } from '@/lib/sect';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'tr' | 'bn' | 'zh' | 'fr' | 'hi' | 'none';
@@ -275,9 +276,12 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
 
   const save = async () => {
     const school = draftSect;
-    const method = SECTS.find((s) => s.id === school)?.method ?? 1;
     const city    = draftCity.trim()    || 'Karachi';
     const country = draftCountry.trim() || 'Pakistan';
+    // Prefer the regional convention for the user's country; fall back to the
+    // sect's traditional default only when the country is unrecognised.
+    const sectMethod = SECTS.find((s) => s.id === school)?.method ?? 1;
+    const method = methodByCountry(country) ?? sectMethod;
 
     // Map the onboarding school to the sect/fiqh format the prayer-times page expects.
     // Onboarding uses: hanafi, shafii, maliki, hanbali, shia
