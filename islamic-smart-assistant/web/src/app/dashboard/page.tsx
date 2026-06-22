@@ -158,7 +158,7 @@ export default function Overview() {
           {/* top bar: centered search + right-aligned status */}
           <div className="relative flex flex-col gap-4 sm:block">
             <div className="mx-auto w-full sm:max-w-[560px]">
-              <div className="flex items-center gap-2 rounded-full border border-emerald-900/[0.06] bg-white/95 px-4 py-2.5 text-emerald-950 shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
+              <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/50 px-4 py-2.5 text-emerald-950 backdrop-blur-sm shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
                 <Search size={18} className="text-emerald-900/40" />
                 <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm text-emerald-950 placeholder:text-emerald-900/40 focus:outline-none" />
                 <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/[0.05] px-1.5 py-0.5 text-[11px] font-medium text-emerald-900/45">Ctrl /</span>
@@ -167,19 +167,21 @@ export default function Overview() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-5 text-emerald-950 [text-shadow:0_1px_6px_rgba(255,255,255,0.7)] sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
-              <div className="flex items-center gap-2">
-                <MapPin size={18} className="text-emerald-600" />
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
-                  <p className="text-[11px] text-emerald-900/50">{data?.hijriDate ?? '—'}</p>
+            <div className="flex items-center justify-end gap-3 text-emerald-950 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+              <div className="flex items-center gap-5 rounded-2xl border border-white/60 bg-white/50 px-4 py-2 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin size={18} className="text-emerald-600" />
+                  <div className="leading-tight">
+                    <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
+                    <p className="text-[11px] text-emerald-900/55">{data?.hijriDate ?? '—'}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-2">
-                <Sun size={18} className="text-amber-500" />
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold">18°C</p>
-                  <p className="text-[11px] text-emerald-900/50">Clear</p>
+                <div className="hidden sm:flex items-center gap-2">
+                  <Sun size={18} className="text-amber-500" />
+                  <div className="leading-tight">
+                    <p className="text-sm font-semibold">18°C</p>
+                    <p className="text-[11px] text-emerald-900/55">Clear</p>
+                  </div>
                 </div>
               </div>
               <button onClick={() => window.dispatchEvent(new Event('isa:open-profile'))} className="relative shrink-0" aria-label="Open profile">
