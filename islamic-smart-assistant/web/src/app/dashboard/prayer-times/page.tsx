@@ -565,7 +565,11 @@ export default function PrayerTimesPage() {
           </div>
         </div>
 
-        {/* Hero countdown: selected mosque → clicked pin → user's stored location */}
+        </div>{/* closes sect controls px wrapper */}
+      </div>{/* closes hero section */}
+
+      <div className="relative px-6 sm:px-10 pb-10 space-y-5">
+        {/* Prayer countdown: outside hero so background image stays above */}
         <PrayerCountdownHero
           lat={selected?.lat ?? clickedPin?.lat ?? (loc.lat ?? undefined)}
           lng={selected?.lng ?? clickedPin?.lng ?? (loc.lng ?? undefined)}
@@ -582,10 +586,6 @@ export default function PrayerTimesPage() {
                 : `${loc.city}, ${loc.country}`
           }
         />
-        </div>{/* closes sect+countdown px wrapper */}
-      </div>{/* closes hero section */}
-
-      <div className="relative px-6 sm:px-10 pb-10 space-y-5">
         <div className="grid lg:grid-cols-3 gap-5">
           {/* Map + search */}
           <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-4 space-y-3">
