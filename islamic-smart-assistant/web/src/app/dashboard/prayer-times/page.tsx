@@ -430,9 +430,12 @@ export default function PrayerTimesPage() {
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
-      {/* ── hero section: header + controls + countdown share the background ── */}
-      <div className="relative overflow-hidden">
-        <div aria-hidden className="absolute inset-0">
+      {/* ── hero section: header + controls + countdown share the background ──
+          NB: overflow-hidden lives on the decorative layer below (not this
+          wrapper) so the Calculation-method dropdown can overflow the hero
+          without being clipped. */}
+      <div className="relative">
+        <div aria-hidden className="absolute inset-0 overflow-hidden">
           {/* base colour for the left pastel area */}
           <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
 
@@ -501,8 +504,10 @@ export default function PrayerTimesPage() {
             </div>
           </div>
         </div>
-        {/* sect controls + countdown — inside hero so they sit over the background */}
-        <div className="relative px-6 sm:px-10 pb-8 space-y-5">
+        {/* sect controls + countdown — inside hero so they sit over the background.
+            z-20 keeps this region (and the open method dropdown) above the
+            prayer-cards section that follows. */}
+        <div className="relative z-20 px-6 sm:px-10 pb-8 space-y-5">
 
         {/* decorative green-dome mosque (Masjid an-Nabawi) bleeding off the right edge */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
