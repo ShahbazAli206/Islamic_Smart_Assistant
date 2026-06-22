@@ -148,15 +148,11 @@ export default function Overview() {
           (independent of the dark/light theme). ─────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[28px] shadow-[0_18px_44px_-20px_rgba(16,40,30,0.4)]"
+        className="relative overflow-hidden -mt-5 -mx-5 sm:-mt-8 sm:-mx-8"
       >
         {/* full-cover background image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
-        {/* Light, narrow scrim behind the greeting only — keeps the artwork
-            fully visible while the dark greeting text stays legible. Text over
-            the image relies on white text-shadows rather than a broad wash. */}
-        <div className="absolute inset-y-0 left-0 w-[34%] bg-gradient-to-r from-white/45 via-white/10 to-transparent" />
 
         <div className="relative p-5 sm:p-6">
           {/* top bar: centered search + right-aligned status */}
@@ -197,8 +193,8 @@ export default function Overview() {
 
           {/* hero content: greeting (top-left, three lines) + verse card */}
           <div className="mt-8 grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_minmax(0,560px)]">
-          {/* greeting — top of the section, three lines */}
-          <div className="[text-shadow:0_2px_12px_rgba(255,255,255,0.7)]">
+          {/* greeting — light translucent panel behind just this text block */}
+          <div className="w-fit rounded-2xl bg-white/50 px-4 py-3 backdrop-blur-sm">
             <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-emerald-950">
               Assalamu Alaikum, <span className="inline-block">👋</span>
             </h1>
