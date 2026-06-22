@@ -519,7 +519,7 @@ export default function PrayerTimesPage() {
           style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Sect</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Sect</p>
               <div className="flex gap-2">
                 {(['sunni', 'shia'] as Sect[]).map((s) => (
                   <button
@@ -535,7 +535,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Madhab / Fiqh</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Madhab / Fiqh</p>
               <div className="flex flex-wrap gap-2">
                 {fiqhOptions.map((f) => (
                   <button
@@ -551,7 +551,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-sm text-[#E9CF7A]/70 mb-2 uppercase tracking-[0.16em] font-semibold">Calculation method</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Calculation method</p>
               <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} locationLabel={autoMethodLabel} />
             </div>
           </div>
