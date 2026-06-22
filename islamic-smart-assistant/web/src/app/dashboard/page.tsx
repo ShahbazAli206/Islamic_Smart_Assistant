@@ -468,16 +468,17 @@ export default function Overview() {
           {/* Quran of the Day (purple-tinted) */}
           <motion.section
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-            className={`relative min-h-[480px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
+            className={`relative min-h-[560px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
           >
-            {/* full-bleed background: soft mosque-and-flowers artwork (darkened in dark mode) */}
+            {/* full-bleed background: mosque-and-flowers artwork, anchored to the
+                bottom and rendered crisp (saturated, no wash) in light mode. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/overview_page_bg-1.png"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-              style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'none' }}
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-bottom"
+              style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'saturate(1.3) contrast(1.12)' }}
             />
             {/* No full-section wash — the artwork stays fully clear. Only the
                 verse panel below carries a translucent background for legibility. */}
