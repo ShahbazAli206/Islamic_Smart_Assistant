@@ -479,32 +479,34 @@ export default function Overview() {
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
               style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'none' }}
             />
-            {/* readability wash so the verse stays legible over the art */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{ background: isDark
-                ? 'linear-gradient(160deg,rgba(26,20,48,0.5) 0%,rgba(26,20,48,0.32) 100%)'
-                : 'linear-gradient(120deg,rgba(255,255,255,0.46) 0%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.04) 100%)' }}
-            />
-            <div className="relative">
-              <div className="flex items-center gap-2">
+            {/* No full-section wash — the artwork stays fully clear. Only the
+                verse panel below carries a translucent background for legibility. */}
+            <div className="relative flex flex-col">
+              {/* header + surface labels sit over the clear image; a soft white
+                  text-shadow (light mode) keeps them readable without a wash. */}
+              <div className={`flex items-center gap-2 ${isDark ? '' : '[text-shadow:0_1px_8px_rgba(255,255,255,0.85)]'}`}>
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-200/70 text-violet-700"><BookOpen size={17} /></span>
                 <h3 className="text-base font-bold">Quran of the Day</h3>
               </div>
-              <div className="mt-4 flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-lg font-bold leading-tight">Surah Ar-Rahman</p>
-                  <p className={`text-xs ${c.muted}`}>(55:1-3)</p>
-                </div>
-                <div dir="rtl" className={`font-arabic text-right text-[1.7rem] leading-[1.6] ${isDark ? 'text-violet-200' : 'text-violet-800'}`}>
-                  <p>الرَّحْمَٰنُ</p><p>عَلَّمَ الْقُرْآنَ</p><p>خَلَقَ الْإِنْسَانَ</p>
-                </div>
+
+              <div className={`mt-4 ${isDark ? '' : '[text-shadow:0_1px_8px_rgba(255,255,255,0.85)]'}`}>
+                <p className="text-lg font-bold leading-tight">Surah Ar-Rahman</p>
+                <p className={`text-xs ${c.muted}`}>(55:1-3)</p>
               </div>
-              <div className={`mt-4 text-[13px] leading-relaxed ${c.muted}`}>
-                <p>The Most Merciful</p><p>Taught the Qur&apos;an</p><p>Created man</p>
+
+              {/* Verse panel — translucent like the first section's ayah card.
+                  Arabic + translation each flow on one line and wrap to two only
+                  when they run out of width. */}
+              <div className={`mt-4 rounded-2xl border px-4 py-3 backdrop-blur-md ${isDark ? 'border-white/15 bg-midnight-900/35' : 'border-white/60 bg-white/55'}`}>
+                <p dir="rtl" className={`font-arabic text-2xl leading-[1.7] ${isDark ? 'text-violet-100' : 'text-violet-900'}`}>
+                  الرَّحْمَٰنُ عَلَّمَ الْقُرْآنَ خَلَقَ الْإِنْسَانَ
+                </p>
+                <p className={`mt-2 text-[13px] font-medium leading-relaxed ${c.muted}`}>
+                  The Most Merciful · Taught the Qur&apos;an · Created man
+                </p>
               </div>
-              <Link href="/dashboard/quran" className={`mt-5 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold backdrop-blur transition ${isDark ? 'border-violet-400/30 bg-violet-500/20 text-violet-100 hover:bg-violet-500/30' : 'border-violet-300/70 bg-white/70 text-violet-700 hover:bg-white'}`}>
+
+              <Link href="/dashboard/quran" className={`mt-5 inline-flex w-fit items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold backdrop-blur transition ${isDark ? 'border-violet-400/30 bg-violet-500/20 text-violet-100 hover:bg-violet-500/30' : 'border-violet-300/70 bg-white/70 text-violet-700 hover:bg-white'}`}>
                 <BookOpen size={15} /> Read More
               </Link>
             </div>
