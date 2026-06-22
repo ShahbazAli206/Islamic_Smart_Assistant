@@ -22,6 +22,7 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 const NAV = [
   { group: 'Worship',
     items: [
+      { href: '/dashboard',              label: 'Overview',        icon: Home,       color: 'text-emerald-700' },
       { href: '/dashboard/prayer-times', label: 'Prayer Times',    icon: Clock,      color: 'text-emerald-600' },
       { href: '/dashboard/quran',        label: 'Holy Quran',      icon: BookOpen,   color: 'text-gold-600' },
       { href: '/dashboard/qibla',        label: 'Qibla Finder',    icon: Compass,    color: 'text-teal-600' },
@@ -32,7 +33,6 @@ const NAV = [
   },
   { group: 'Account',
     items: [
-      { href: '/dashboard',           label: 'Overview',  icon: Home,       color: 'text-emerald-700' },
       { href: '/dashboard/profile',   label: 'Profile',   icon: User,       color: 'text-indigo-500' },
       { href: '/dashboard/devices',   label: 'Devices',   icon: Smartphone, color: 'text-cyan-600' },
       { href: '/dashboard/audio',     label: 'Audio',     icon: Music2,     color: 'text-fuchsia-500' },

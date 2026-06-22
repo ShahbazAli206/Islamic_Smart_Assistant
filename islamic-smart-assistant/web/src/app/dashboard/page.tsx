@@ -153,10 +153,10 @@ export default function Overview() {
         {/* full-cover background image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
-        {/* legibility washes: overall soften + stronger on the left (greeting) and top (status bar) */}
-        <div className="absolute inset-0 bg-white/25" />
-        <div className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-white/80 via-white/35 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/55 to-transparent" />
+        {/* Light, narrow scrim behind the greeting only — keeps the artwork
+            fully visible while the dark greeting text stays legible. Text over
+            the image relies on white text-shadows rather than a broad wash. */}
+        <div className="absolute inset-y-0 left-0 w-[34%] bg-gradient-to-r from-white/45 via-white/10 to-transparent" />
 
         <div className="relative p-5 sm:p-6">
           {/* top bar: centered search + right-aligned status */}
@@ -171,7 +171,7 @@ export default function Overview() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-5 text-emerald-950 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+            <div className="flex items-center justify-end gap-5 text-emerald-950 [text-shadow:0_1px_6px_rgba(255,255,255,0.7)] sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
               <div className="flex items-center gap-2">
                 <MapPin size={18} className="text-emerald-600" />
                 <div className="leading-tight">
@@ -198,11 +198,11 @@ export default function Overview() {
           {/* hero content: greeting (top-left, three lines) + verse card */}
           <div className="mt-8 grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_minmax(0,560px)]">
           {/* greeting — top of the section, three lines */}
-          <div className="drop-shadow-sm">
+          <div className="[text-shadow:0_2px_12px_rgba(255,255,255,0.7)]">
             <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-emerald-950">
               Assalamu Alaikum, <span className="inline-block">👋</span>
             </h1>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-emerald-900/75">
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-emerald-900/80">
               May Allah bless your day<br />and ease your journey.
             </p>
           </div>
@@ -529,9 +529,18 @@ export default function Overview() {
       </div>
 
       {/* ───────────────────────── Your Preferences ───────────────────────── */}
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className={`${cardCls} p-5`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/masjid-e-nabwi.png" alt="" className="pointer-events-none absolute -bottom-3 right-40 hidden h-48 select-none opacity-95 lg:block" />
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+        className={`${cardCls} p-5`}
+        style={{
+          backgroundImage: 'url(/OverviewPage_your_preference_bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'right center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         <div className="relative">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold-100 text-gold-600"><Star size={18} /></span>
