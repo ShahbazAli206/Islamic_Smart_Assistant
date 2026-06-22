@@ -143,8 +143,8 @@ export default function Overview() {
   return (
     <div className={rootCls} style={rootStyle}>
       {/* ───────────────────────── Top bar: search · status ───────────────────────── */}
-      <header className="flex flex-wrap items-center gap-4">
-        <div className="order-2 sm:order-1 w-full sm:flex-1 sm:max-w-[560px]">
+      <header className="flex flex-col gap-4 sm:relative sm:block">
+        <div className="order-2 mx-auto w-full sm:max-w-[560px]">
           <div className={`flex items-center gap-2 rounded-full border px-4 py-2.5 ${c.search}`}>
             <Search size={18} className={c.faint} />
             <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm focus:outline-none" />
@@ -154,7 +154,7 @@ export default function Overview() {
             </button>
           </div>
         </div>
-        <div className="order-1 sm:order-2 ml-auto flex items-center gap-5">
+        <div className="order-1 flex items-center justify-end gap-5 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
           <div className="flex items-center gap-2">
             <MapPin size={18} className="text-emerald-600" />
             <div className="leading-tight">
@@ -181,21 +181,29 @@ export default function Overview() {
       {/* ───────────────────────── Hero: greeting over mosque + verse ───────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[28px] shadow-[0_18px_44px_-20px_rgba(16,40,30,0.4)]"
+        className={`relative min-h-[210px] overflow-hidden rounded-[28px] ${isDark ? 'bg-midnight-800' : 'bg-white'} shadow-[0_18px_44px_-20px_rgba(16,40,30,0.4)]`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/backgound-image2.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/45 to-white/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+        {/* Left 60% mosque banner — shown at full height (never cropped vertically),
+            clipped horizontally and faded into the card on its right edge. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-[60%] overflow-hidden"
+          style={{ WebkitMaskImage: 'linear-gradient(to right, black 60%, transparent 100%)', maskImage: 'linear-gradient(to right, black 60%, transparent 100%)' }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="h-full w-auto max-w-none select-none object-left" />
+        </div>
+        {/* readability wash under the greeting */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-[60%] bg-gradient-to-r from-white/50 via-white/15 to-transparent" />
 
-        <div className="relative grid grid-cols-1 items-center gap-4 p-6 sm:p-7 lg:grid-cols-[1fr_minmax(0,560px)]">
-          {/* greeting */}
+        <div className="relative grid grid-cols-1 items-start gap-4 p-6 sm:p-7 lg:grid-cols-[1fr_minmax(0,560px)]">
+          {/* greeting — top of the section, three lines */}
           <div className="drop-shadow-sm">
             <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-emerald-950">
               Assalamu Alaikum, <span className="inline-block">👋</span>
             </h1>
-            <p className="mt-2 max-w-xs text-sm font-medium text-emerald-900/75">
-              May Allah bless your day and ease your journey.
+            <p className="mt-2 text-sm font-medium leading-relaxed text-emerald-900/75">
+              May Allah bless your day<br />and ease your journey.
             </p>
           </div>
 
