@@ -158,29 +158,29 @@ export default function Overview() {
           {/* top bar: centered search + right-aligned status */}
           <div className="relative flex flex-col gap-4 sm:block">
             <div className="mx-auto w-full sm:max-w-[560px]">
-              <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/50 px-4 py-2.5 text-emerald-950 backdrop-blur-sm shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
-                <Search size={18} className="text-emerald-950/80" />
-                <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm font-medium text-emerald-950 placeholder:text-emerald-950/70 focus:outline-none" />
-                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/10 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-950/75">Ctrl /</span>
+              <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/60 px-4 py-2.5 text-black backdrop-blur-sm shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
+                <Search size={18} className="text-black/90" />
+                <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm font-semibold text-black placeholder:text-black/80 focus:outline-none" />
+                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/10 px-1.5 py-0.5 text-[11px] font-bold text-black/80">Ctrl /</span>
                 <button aria-label="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-700/30 hover:bg-emerald-700 transition">
                   <Search size={15} />
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 text-emerald-950 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
-              <div className="flex items-center gap-5 rounded-2xl border border-white/60 bg-white/50 px-4 py-2 backdrop-blur-sm">
+            <div className="flex items-center justify-end gap-3 text-black sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+              <div className="flex items-center gap-5 rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                  <MapPin size={18} className="text-emerald-600" />
+                  <MapPin size={18} className="text-emerald-700" />
                   <div className="leading-tight">
-                    <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
-                    <p className="text-[11px] font-medium text-emerald-950/80">{data?.hijriDate ?? '—'}</p>
+                    <p className="text-sm font-bold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
+                    <p className="text-[11px] font-semibold text-black/80">{data?.hijriDate ?? '—'}</p>
                   </div>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
                   <Sun size={18} className="text-amber-500" />
                   <div className="leading-tight">
-                    <p className="text-sm font-semibold">18°C</p>
-                    <p className="text-[11px] font-medium text-emerald-950/80">Clear</p>
+                    <p className="text-sm font-bold">18°C</p>
+                    <p className="text-[11px] font-semibold text-black/80">Clear</p>
                   </div>
                 </div>
               </div>
@@ -196,11 +196,11 @@ export default function Overview() {
           {/* hero content: greeting (top-left, three lines) + verse card */}
           <div className="mt-8 grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_minmax(0,560px)]">
           {/* greeting — light translucent panel behind just this text block */}
-          <div className="w-fit rounded-2xl bg-white/50 px-4 py-3 backdrop-blur-sm">
-            <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-emerald-950">
+          <div className="w-fit rounded-2xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <h1 className="h-display text-3xl sm:text-4xl font-bold leading-[1.05] text-black">
               Assalamu Alaikum, <span className="inline-block">👋</span>
             </h1>
-            <p className="mt-2 text-sm font-semibold leading-relaxed text-emerald-900/80">
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-black/85">
               May Allah bless your day<br />and ease your journey.
             </p>
           </div>
@@ -221,12 +221,12 @@ export default function Overview() {
             <div className="relative">
               <div className="flex items-center gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">۲۸</span>
-                <p dir="rtl" className="font-arabic text-2xl leading-snug text-emerald-900">أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</p>
+                <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</p>
               </div>
-              <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-emerald-950">
+              <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
                 Verily, in the remembrance of Allah do hearts find rest.
               </p>
-              <p className="mt-2 text-xs font-medium text-emerald-800/70">Surah Ar-Ra&apos;d (13:28)</p>
+              <p className="mt-2 text-xs font-semibold text-black/75">Surah Ar-Ra&apos;d (13:28)</p>
             </div>
           </div>
           </div>
@@ -246,7 +246,7 @@ export default function Overview() {
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-100 text-violet-600"><Clock size={20} /></span>
                   <div>
                     <h2 className="text-lg font-bold leading-tight">Prayer Times</h2>
-                    <p className={`text-xs ${c.muted}`}>Today, {data?.hijriDate ?? '—'}</p>
+                    <p className={`text-sm ${c.muted}`}>Today, {data?.hijriDate ?? '—'}</p>
                   </div>
                 </div>
                 <ChevronDown size={18} className={c.faint} />
@@ -269,7 +269,7 @@ export default function Overview() {
                       <span className={`grid h-10 w-10 place-items-center rounded-full ${active ? 'bg-white/20' : meta.badge}`}>
                         <meta.icon size={18} className={active ? 'text-white' : meta.tint} />
                       </span>
-                      <p className={`mt-2 text-[11px] font-medium ${active ? 'text-white/85' : c.muted}`}>{p}</p>
+                      <p className={`mt-2 text-sm font-medium ${active ? 'text-white/85' : c.muted}`}>{p}</p>
                       <p className="mt-1 text-base font-bold tabular-nums leading-none">{t.hm}</p>
                       <p className={`mt-1 text-[10px] font-semibold ${active ? 'text-white/70' : c.faint}`}>{t.ap}</p>
                       {active && <span className="absolute bottom-1.5 left-1/2 h-1 w-6 -translate-x-1/2 rounded-full bg-white/80" />}
@@ -301,9 +301,11 @@ export default function Overview() {
                 <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-52 select-none opacity-95" />
               ) : (
                 <>
-                  {/* light mode: watercolour dome-and-leaves background */}
+                  {/* light mode: watercolour dome-and-leaves background — sized
+                      down and object-contain so the whole illustration shows on
+                      the right instead of being cropped by object-cover. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] w-full select-none object-cover object-right" style={{ WebkitMaskImage: 'linear-gradient(to top, black 72%, transparent)', maskImage: 'linear-gradient(to top, black 72%, transparent)' }} />
+                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute bottom-0 right-0 h-[55%] w-[55%] select-none object-contain object-bottom" />
                   {/* soft left wash so the countdown text stays legible over the art */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/70 via-white/25 to-transparent" />
                 </>
@@ -313,7 +315,7 @@ export default function Overview() {
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600/15 text-emerald-600"><Moon size={17} /></span>
                   <div>
                     <h2 className="text-base font-bold leading-tight">{currentName ?? 'Prayer'} Time Left</h2>
-                    <p className={`text-xs ${c.muted}`}>Stay mindful of your time</p>
+                    <p className={`text-sm font-medium ${c.muted}`}>Stay mindful of your time</p>
                   </div>
                 </div>
 
