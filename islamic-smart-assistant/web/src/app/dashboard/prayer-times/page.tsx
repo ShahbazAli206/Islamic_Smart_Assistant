@@ -633,7 +633,7 @@ export default function PrayerTimesPage() {
             </div>
 
             {mosqueErr && (
-              <div className="px-4 py-3 text-sm text-rose-200 bg-rose-500/15 border-b border-rose-500/20">{mosqueErr}</div>
+              <div className={`px-4 py-3 text-sm border-b ${isDark ? 'text-rose-200 bg-rose-500/15 border-rose-500/20' : 'text-rose-800 bg-rose-100 border-rose-200'}`}>{mosqueErr}</div>
             )}
 
             <ul className="max-h-[440px] overflow-y-auto divide-y divide-white/5">
