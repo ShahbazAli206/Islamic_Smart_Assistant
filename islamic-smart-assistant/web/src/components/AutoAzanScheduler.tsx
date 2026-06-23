@@ -417,11 +417,11 @@ export function AutoAzanScheduler() {
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
               className="fixed top-20 right-4 lg:top-4 z-[200] w-80 rounded-3xl overflow-hidden"
               style={{
-                background: 'linear-gradient(145deg, rgba(6,20,13,0.97) 0%, rgba(4,12,8,0.98) 100%)',
-                border: '1px solid rgba(233,207,122,0.22)',
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(244,250,246,0.94) 100%)',
+                border: '1px solid rgba(16,185,129,0.20)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.75), 0 0 0 1px rgba(233,207,122,0.10), 0 0 50px rgba(52,211,153,0.10)',
+                boxShadow: '0 24px 50px rgba(6,40,28,0.22), 0 0 0 1px rgba(16,185,129,0.08)',
               }}
             >
               {/* top gold accent bar */}
@@ -434,14 +434,14 @@ export function AutoAzanScheduler() {
                     <motion.div
                       animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/25 flex items-center justify-center"
+                      className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center"
                     >
-                      <Radio size={13} className="text-emerald-400" />
+                      <Radio size={13} className="text-emerald-600" />
                     </motion.div>
-                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">Azan Playing</span>
+                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Azan Playing</span>
                   </div>
                   <button onClick={stop}
-                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/[0.12] text-white/40 hover:text-white/80 transition"
+                    className="p-1.5 rounded-full bg-emerald-900/5 hover:bg-emerald-900/10 text-emerald-900/40 hover:text-emerald-800 transition"
                     title="Stop & dismiss">
                     <X size={14} />
                   </button>
@@ -450,19 +450,19 @@ export function AutoAzanScheduler() {
                 {/* prayer badge */}
                 <div className="mb-3">
                   <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
-                    style={{ background: 'rgba(233,207,122,0.12)', border: '1px solid rgba(233,207,122,0.22)', color: '#E9CF7A' }}>
+                    style={{ background: 'rgba(180,131,24,0.12)', border: '1px solid rgba(180,131,24,0.28)', color: '#92670A' }}>
                     🕌 {firing.prayer} Prayer
                   </span>
                 </div>
 
                 {/* voice info */}
-                <p className="text-white font-bold text-base leading-snug">{info.name}</p>
+                <p className="text-emerald-950 font-bold text-base leading-snug">{info.name}</p>
                 <div className="flex items-center gap-2 mt-0.5 mb-4">
-                  <p className="text-emerald-100/55 text-xs">{info.subtitle}</p>
+                  <p className="text-emerald-900/60 text-xs">{info.subtitle}</p>
                   {info.region && (
                     <>
-                      <span className="w-0.5 h-0.5 rounded-full bg-white/20 shrink-0" />
-                      <span className="flex items-center gap-1 text-[10px] text-white/35">
+                      <span className="w-0.5 h-0.5 rounded-full bg-emerald-900/25 shrink-0" />
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-900/45">
                         <MapPin size={9} /> {info.region}
                       </span>
                     </>
@@ -474,7 +474,7 @@ export function AutoAzanScheduler() {
                   {WAVE.map((h, i) => (
                     <motion.span
                       key={i}
-                      className="rounded-full bg-emerald-400"
+                      className="rounded-full bg-emerald-500"
                       style={{ width: 2.5, height: `${Math.round(h * 100)}%` }}
                       animate={{ scaleY: [1, 0.28 + h * 0.55, 1] }}
                       transition={{
@@ -494,17 +494,17 @@ export function AutoAzanScheduler() {
                   onClick={stop}
                   className="w-full flex items-center justify-center gap-2 rounded-2xl py-2.5 text-sm font-semibold transition-all duration-200"
                   style={{
-                    background: 'rgba(239,68,68,0.12)',
-                    border: '1px solid rgba(239,68,68,0.22)',
-                    color: 'rgba(252,165,165,0.9)',
+                    background: 'rgba(239,68,68,0.10)',
+                    border: '1px solid rgba(239,68,68,0.30)',
+                    color: '#b91c1c',
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.22)';
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.4)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.18)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.5)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.12)';
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.22)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.10)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.30)';
                   }}
                 >
                   <Square size={13} fill="currentColor" /> Stop Azan
