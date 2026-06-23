@@ -49,7 +49,7 @@ export default function QuranPage() {
   const [translation, setTranslation]   = useState<TranslationId>('ur.jalandhry');
   const [translationMode, setTranslationMode] = useState(true);
 
-  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  const [language] = useLocalStorage<string>('isa:language', 'en');
   useEffect(() => { setTranslation(langToTranslation(language)); }, [language]);
 
   const filtered = useMemo(() => {

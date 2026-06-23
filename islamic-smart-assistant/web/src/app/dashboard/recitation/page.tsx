@@ -142,7 +142,7 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
 
 export default function RecitationSchedulerPage() {
   const { isDark } = useTheme();
-  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  const [language] = useLocalStorage<string>('isa:language', 'en');
   const [schedules, setSchedules] = useLocalStorage<RecitationSchedule[]>('isa:recitationSchedules', []);
 
   // Honest local tracking for the goal / "last listen" widgets.

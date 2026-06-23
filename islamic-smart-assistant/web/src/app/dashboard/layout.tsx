@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, User, Smartphone, Music2, Settings,
   BookOpen, Bell, Clock, Menu, X, AlarmClock, Compass,
-  Moon, Sun, ChevronRight, RefreshCw, Library,
+  Moon, Sun, ChevronRight, RefreshCw, Library, SlidersHorizontal,
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { motion } from 'framer-motion';
@@ -16,6 +16,7 @@ import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { ProfileModal } from '@/components/ProfileModal';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { QuickSettingsPopup, AzanOffTag, type QuickSection } from '@/components/QuickSettings';
 
 // Sidebar navigation, grouped into sections ('Worship', 'Account'). Each item
 // carries its route, label, icon, and an accent colour used when inactive.
@@ -131,6 +132,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Personalised greeting, read from the key the onboarding wizard writes.
   const [name] = useLocalStorage<string>('isa:name', '');
+
+  // Quick settings popup state.
+  const [quickOpen,  setQuickOpen]  = useState(false);
+  const [quickFocus, setQuickFocus] = useState<QuickSection | undefined>();
+  const openQuick = (section?: QuickSection) => { setQuickFocus(section); setQuickOpen(true); };
 
   return (
     <div className="min-h-screen lg:flex">
@@ -306,7 +312,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <ChevronRight size={18} className={`shrink-0 ${t.chevron}`} />
         </button>
 
-        {/* ── Quick actions: notifications · theme toggle · sync ── */}
+        {/* Azan-off blinking tag — appears between profile card and quick-actions */}
+        <div className="relative z-10 mt-1 px-2">
+          <AzanOffTag onClick={() => openQuick('azan')} className="w-full justify-center" />
+        </div>
+
+        {/* ── Quick actions: notifications · theme toggle · sync · settings ── */}
         <div className={`relative z-10 mt-1 flex items-center justify-around border-t pt-3 ${t.divider}`}>
           {/* Notifications — clears its unread dot on click. */}
           <button
@@ -337,8 +348,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
           </button>
+
+          {/* Quick settings — opens the flat settings popup. */}
+          <button
+            onClick={() => openQuick()}
+            aria-label="Quick settings"
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${t.circleBtn}`}
+          >
+            <SlidersHorizontal size={18} />
+          </button>
         </div>
       </aside>
+
+      {/* Mobile-only: floating azan-off tag visible when the sidebar drawer is closed */}
+      <div className="lg:hidden fixed bottom-24 right-4 z-[140] pointer-events-none">
+        <div className="pointer-events-auto">
+          <AzanOffTag onClick={() => openQuick('azan')} />
+        </div>
+      </div>
 
       {/* ── Routed page content ── */}
       <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">{children}</main>
@@ -350,6 +377,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SurahScheduleRunner />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <QuickSettingsPopup
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        focusSection={quickFocus}
+      />
     </div>
   );
 }

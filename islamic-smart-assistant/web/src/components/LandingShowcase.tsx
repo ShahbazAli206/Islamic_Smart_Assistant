@@ -486,7 +486,7 @@ const AZAN_AYAH = {
  *  with the translation in the user's selected language (falls back to English;
  *  'none' shows the Arabic only). Mirrors the AyahGlassCard styling. */
 function AzanAyahCard({ className = '' }: { className?: string }) {
-  const [language] = useLocalStorage<string>('isa:language', 'ur');
+  const [language] = useLocalStorage<string>('isa:language', 'en');
   const translation = language === 'none' ? null : (AZAN_AYAH.translations[language] ?? AZAN_AYAH.translations.en);
   const rtl = language === 'ur';
   return (
