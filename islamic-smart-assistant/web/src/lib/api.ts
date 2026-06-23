@@ -78,6 +78,34 @@ export const Azan = {
   deleteVoice: (id: string) => api.delete(`/azan/voices/${encodeURIComponent(id)}`).then((r) => r.data),
 };
 
+/** A device the user has registered/linked to their account (GET /devices). */
+export interface BackendDevice {
+  id: string;
+  user_id: string;
+  device_type: 'mobile' | 'tablet' | 'web' | 'desktop' | 'speaker';
+  platform: 'android' | 'ios' | 'web' | 'windows' | 'macos' | 'linux' | 'alexa' | 'google_home';
+  name: string | null;
+  push_token: string | null;
+  sync_group: string;
+  last_seen_at: string | null;
+  created_at: string;
+}
+
+export interface RegisterDevice {
+  device_type: BackendDevice['device_type'];
+  platform: BackendDevice['platform'];
+  name?: string;
+  push_token?: string;
+}
+
+/** Devices linked to the current account — shared across web / desktop / mobile. */
+export const Devices = {
+  list: (): Promise<BackendDevice[]> => api.get('/devices').then((r) => r.data),
+  register: (dto: RegisterDevice): Promise<BackendDevice> => api.post('/devices', dto).then((r) => r.data),
+  rename: (id: string, name: string) => api.patch(`/devices/${id}`, { name }).then((r) => r.data),
+  remove: (id: string) => api.delete(`/devices/${id}`).then((r) => r.data),
+};
+
 export const Admin = {
   users: () => api.get('/admin/users').then((r) => r.data),
   user: (id: string) => api.get(`/admin/users/${id}`).then((r) => r.data),

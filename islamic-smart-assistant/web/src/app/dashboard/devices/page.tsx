@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Smartphone, Tablet, Monitor, Speaker, Headphones, Radio, Wifi, Globe2,
-  Bluetooth, RefreshCw, Volume2, CheckCircle2, AlertTriangle, Info, Cast, Loader2,
-  Star, Bell, Users, Download, Compass, ChevronRight, Zap, Music2, Activity,
-  MonitorSpeaker, Mic, X, Plus,
+  Bluetooth, RefreshCw, Volume2, VolumeX, CheckCircle2, AlertTriangle, Info, Cast, Loader2,
+  Star, Bell, Users, Download, Compass, ChevronRight, ChevronDown, Zap, Music2, Activity,
+  MonitorSpeaker, MonitorSmartphone, Mic, X, Plus, Play, Pause, Trash2, Link2, WifiOff, LogIn,
+  HelpCircle, Settings, ExternalLink,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
 import { useTheme } from '@/lib/ThemeContext';
+import { Devices, type BackendDevice } from '@/lib/api';
+import { resolveAzanCastUrl, RECITATION_CAST_TEST_URL } from '@/lib/castAudioSources';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -157,20 +160,68 @@ function openOSBluetooth() {
   // Linux has no standard URL scheme — caller should show instructions instead
 }
 
+/** Open the OS network/Wi-Fi settings so the user can confirm the device and
+ *  this computer are on the SAME Wi-Fi (the #1 reason a Cast device won't show). */
+function openOSWifi() {
+  const os = detectOS();
+  if (os === 'windows') {
+    window.location.href = 'ms-settings:network-wifi';
+  } else if (os === 'macos') {
+    window.open('x-apple.systempreferences:com.apple.preference.network', '_blank');
+  }
+  // Linux has no standard scheme — caller shows instructions instead.
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MIN_SPIN_MS = 900;
-const CAST_TEST_URL = 'https://cdn.islamic.network/quran/audio/192/ar.alafasy/1.mp3';
-
-const FALLBACK_LINKED = [
-  { id: '1', user_name: 'Aisha Khan',   platform: 'iPhone 15',   sync_group: 'Home',   kind: 'mobile',  status: 'playing' },
-  { id: '2', user_name: 'Aisha Khan',   platform: 'iPad Pro',    sync_group: 'Home',   kind: 'tablet',  status: 'online'  },
-  { id: '3', user_name: 'Yusuf Rahman', platform: 'Macbook Pro', sync_group: 'Office', kind: 'desktop', status: 'online'  },
-];
 
 const ICON: Record<string, any> = {
   mobile: Smartphone, tablet: Tablet, desktop: Monitor, speaker: Speaker, earbuds: Headphones,
+  web: Globe2, google_home: MonitorSpeaker, alexa: Speaker,
 };
+
+// ── Linked-device helpers (GET /devices) ───────────────────────────────────────
+
+const PLATFORM_LABEL: Record<BackendDevice['platform'], string> = {
+  android: 'Android', ios: 'iOS', web: 'Web browser', windows: 'Windows',
+  macos: 'macOS', linux: 'Linux', alexa: 'Amazon Alexa', google_home: 'Google Home',
+};
+
+/** Pick an icon for a backend device from its type, then platform. */
+function deviceIcon(d: BackendDevice) {
+  if (d.device_type === 'speaker') return d.platform === 'google_home' ? MonitorSpeaker : Speaker;
+  return ICON[d.device_type] ?? ICON[d.platform] ?? Radio;
+}
+
+/** Best-effort identity of the current browser/desktop session, for "Link this device". */
+function currentSessionDevice(): { device_type: BackendDevice['device_type']; platform: BackendDevice['platform']; name: string } {
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isElectron = /Electron/i.test(ua) || (typeof window !== 'undefined' && !!(window as any).electronAPI);
+  const os = detectOS();
+  const platform: BackendDevice['platform'] =
+    os === 'windows' ? 'windows' : os === 'macos' ? 'macos' : os === 'linux' ? 'linux' : 'web';
+  const device_type: BackendDevice['device_type'] = isElectron ? 'desktop' : 'web';
+  const browser =
+    /Edg/i.test(ua) ? 'Edge' : /Chrome/i.test(ua) ? 'Chrome' : /Firefox/i.test(ua) ? 'Firefox' : /Safari/i.test(ua) ? 'Safari' : 'Browser';
+  const osName = os === 'windows' ? 'Windows' : os === 'macos' ? 'macOS' : os === 'linux' ? 'Linux' : '';
+  const name = isElectron ? `Desktop App${osName ? ` · ${osName}` : ''}` : `${browser}${osName ? ` · ${osName}` : ''}`;
+  return { device_type, platform: isElectron ? platform : 'web', name };
+}
+
+function relativeTime(iso: string | null): string {
+  if (!iso) return 'never';
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return 'unknown';
+  const diff = Date.now() - t;
+  if (diff < 60_000) return 'just now';
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 const QUICK_ACTIONS = [
   { Icon: Bell,       title: 'Daily Reminder',     sub: 'Never miss a recitation',  tint: 'bg-emerald-50 text-emerald-600', href: '/dashboard/recitation' },
@@ -561,6 +612,18 @@ export default function DevicesPage() {
   const cast = useGoogleCast();
   const [castBusy, setCastBusy] = useState(false);
   const [castError, setCastError] = useState<string | null>(null);
+  const [castNote, setCastNote] = useState<string | null>(null);
+  const [showCastHelp, setShowCastHelp] = useState(false);
+  const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'makkah');
+
+  // ── Linked devices on the account (real, from the backend) ──
+  const [linked, setLinked] = useState<BackendDevice[]>([]);
+  const [linkedLoading, setLinkedLoading] = useState(true);
+  const [linkedError, setLinkedError] = useState<string | null>(null);
+  // Whether the last fetch was rejected for missing/invalid auth (vs a real error).
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     setPickerSupported(
@@ -576,6 +639,75 @@ export default function DevicesPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load the account's linked devices from the backend on mount.
+  useEffect(() => {
+    fetchLinked();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchLinked = async () => {
+    setLinkedError(null);
+    setLinkedLoading(true);
+    try {
+      const list = await Devices.list();
+      setLinked(Array.isArray(list) ? list : []);
+      setNeedsAuth(false);
+    } catch (e: any) {
+      const status = e?.response?.status;
+      if (status === 401 || status === 403) {
+        // Not signed in — fold into the "No devices found" empty state (no scary error).
+        setNeedsAuth(true);
+        setLinked([]);
+      } else {
+        setLinkedError(
+          e?.code === 'ERR_NETWORK'
+            ? 'Could not reach the server to load your devices. Check your connection (or that the backend is running) and try again.'
+            : `Couldn't load your devices: ${e?.response?.data?.message ?? e?.message ?? e}`,
+        );
+      }
+    } finally {
+      setLinkedLoading(false);
+    }
+  };
+
+  const linkThisDevice = async () => {
+    const me = currentSessionDevice();
+    // The backend register endpoint always INSERTs (no upsert / unique constraint),
+    // so guard against creating duplicate rows for a device that's already linked.
+    const already = linked.some(
+      (d) => d.device_type === me.device_type && d.platform === me.platform && (d.name ?? '') === me.name,
+    );
+    if (already) { setLinkedError('This device is already linked to your account.'); return; }
+    setLinking(true);
+    setLinkedError(null);
+    try {
+      await Devices.register(me);
+      await fetchLinked();
+    } catch (e: any) {
+      const status = e?.response?.status;
+      setLinkedError(
+        status === 401 || status === 403
+          ? 'Sign in to link this device to your account.'
+          : `Couldn't link this device: ${e?.response?.data?.message ?? e?.message ?? e}`,
+      );
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const removeLinked = async (id: string) => {
+    setRemovingId(id);
+    setLinkedError(null);
+    try {
+      await Devices.remove(id);
+      setLinked((prev) => prev.filter((d) => d.id !== id));
+    } catch (e: any) {
+      setLinkedError(`Couldn't remove that device: ${e?.response?.data?.message ?? e?.message ?? e}`);
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   const captureDiag = async () => {
     if (typeof navigator === 'undefined') return;
@@ -692,11 +824,27 @@ export default function DevicesPage() {
     }
   };
 
-  const testCast = async () => {
+  const castRecitation = async () => {
     setCastError(null);
+    setCastNote(null);
     setCastBusy(true);
     try {
-      await cast.castAudio(CAST_TEST_URL, 'Test — Surah Al-Fatihah');
+      await cast.castAudio(RECITATION_CAST_TEST_URL, 'Surah Al-Fatihah — Mishary Alafasy');
+    } catch (e: any) {
+      setCastError(e?.message ?? 'Casting failed.');
+    } finally {
+      setCastBusy(false);
+    }
+  };
+
+  const castAzan = async () => {
+    setCastError(null);
+    setCastNote(null);
+    setCastBusy(true);
+    try {
+      const r = resolveAzanCastUrl(selectedAzanVoice);
+      if (r.note) setCastNote(r.note);
+      await cast.castAudio(r.url, r.title);
     } catch (e: any) {
       setCastError(e?.message ?? 'Casting failed.');
     } finally {
@@ -760,8 +908,21 @@ export default function DevicesPage() {
     cast.state === 'connected'       ? 'bg-emerald-100 text-emerald-800'
     : cast.state === 'not_connected' ? 'bg-cyan-50 text-cyan-700'
     : cast.state === 'connecting'    ? 'bg-amber-50 text-amber-700'
+    : cast.state === 'loading'       ? 'bg-amber-50 text-amber-700'
     : isDark                         ? 'bg-white/8 text-parchment/60'
     :                                  'bg-slate-100 text-slate-600';
+
+  const castStatusLabel =
+    cast.state === 'connected'       ? 'Connected'
+    : cast.state === 'not_connected' ? 'Devices available'
+    : cast.state === 'connecting'    ? 'Connecting'
+    : cast.state === 'loading'       ? 'Looking for devices…'
+    : cast.state === 'no_devices'    ? 'No devices found'
+    :                                  'Not supported here';
+
+  // Resolve whether the user's selected azan voice is castable from here (for a
+  // pre-emptive heads-up rather than a failed cast attempt).
+  const azanCastable = useMemo(() => resolveAzanCastUrl(selectedAzanVoice), [selectedAzanVoice]);
 
   return (
     <div
@@ -1118,12 +1279,11 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   </div>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${castPill}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${cast.state === 'connected' || cast.state === 'not_connected' ? 'bg-emerald-500 animate-pulse-soft' : 'bg-slate-400'}`} />
-                  {cast.state === 'connected' ? 'Connected'
-                    : cast.state === 'not_connected' ? 'Devices available'
-                    : cast.state === 'connecting'    ? 'Connecting'
-                    : cast.state === 'no_devices'    ? 'No devices found'
-                    :                                  'Not supported here'}
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    cast.state === 'connected' || cast.state === 'not_connected' ? 'bg-emerald-500 animate-pulse-soft'
+                    : cast.state === 'connecting' || cast.state === 'loading' ? 'bg-amber-500 animate-pulse-soft'
+                    : 'bg-slate-400'}`} />
+                  {castStatusLabel}
                 </span>
               </div>
 
@@ -1138,22 +1298,44 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   <span className={`relative w-10 h-12 rounded-b-full rounded-t-2xl ${isDark ? 'bg-emerald-900/60 border border-emerald-500/30' : 'bg-emerald-100 border border-emerald-200'}`} />
                   <MonitorSpeaker size={48} className={isDark ? 'relative text-emerald-300/80' : 'relative text-emerald-500/70'} />
                 </div>
+
                 <div className="relative flex items-start gap-2 max-w-xl">
-                  <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2.4, repeat: Infinity }}>
-                    <Wifi size={16} className="shrink-0 mt-0.5 text-emerald-500" />
+                  <motion.span animate={cast.state === 'connected' ? { scale: [1, 1.15, 1] } : undefined} transition={{ duration: 2.4, repeat: Infinity }}>
+                    {cast.state === 'no_sdk' ? <WifiOff size={16} className="shrink-0 mt-0.5 text-slate-400" /> : <Wifi size={16} className="shrink-0 mt-0.5 text-emerald-500" />}
                   </motion.span>
-                  <div>
-                    <p className="font-semibold text-emerald-600 text-sm">
-                      {cast.state === 'no_sdk'
-                        ? 'Casting needs Chrome or Edge.'
-                        : cast.state === 'connected'
-                        ? `Casting to ${cast.deviceName || 'your device'}`
-                        : 'No Cast devices found yet.'}
+                  <div className="min-w-0">
+                    {/* Headline + helper text per state */}
+                    <p className={`font-semibold text-sm ${cast.state === 'no_sdk' ? (isDark ? 'text-parchment/80' : 'text-slate-600') : 'text-emerald-600'}`}>
+                      {cast.state === 'loading'        ? 'Looking for Cast devices on your network…'
+                        : cast.state === 'no_sdk'      ? 'Casting needs desktop Chrome, Edge or Brave.'
+                        : cast.state === 'no_devices'  ? 'No Cast devices found yet.'
+                        : cast.state === 'connecting'  ? 'Connecting to the device…'
+                        : cast.state === 'connected'   ? `Casting to ${cast.deviceName || 'your device'}`
+                        :                                'Cast devices are available.'}
                     </p>
-                    <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                      Power on your Chromecast / Google Home / Nest and make sure it&apos;s on the same
-                      Wi-Fi as this computer. It will appear here automatically, no rescan needed.
-                    </p>
+
+                    {cast.state === 'no_sdk' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Your current browser can&apos;t reach Cast devices. Open this page in
+                        desktop <strong>Chrome</strong>, <strong>Edge</strong> or <strong>Brave</strong> — Safari, Firefox and phone
+                        browsers don&apos;t support Google Cast.
+                      </p>
+                    ) : cast.state === 'no_devices' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Power on your Chromecast / Google Home / Nest on the <strong>same Wi-Fi</strong> as this computer — devices appear on their own, no rescan needed. The steps below help if yours doesn&apos;t show up.
+                      </p>
+                    ) : cast.state === 'connected' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        {cast.mediaTitle ? <>Now playing: <strong>{cast.mediaTitle}</strong>. </> : null}
+                        Azan &amp; recitations you start will stream straight to this device.
+                      </p>
+                    ) : (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Connect, then send the adhan or a recitation. Make sure the device is on the same Wi-Fi as this computer.
+                      </p>
+                    )}
+
+                    {/* Action buttons */}
                     <div className="flex flex-wrap items-center gap-2 mt-3">
                       {(cast.state === 'not_connected' || cast.state === 'connecting') && (
                         <button
@@ -1161,16 +1343,43 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
                         >
                           {cast.state === 'connecting' ? <Loader2 size={15} className="animate-spin" /> : <Cast size={15} />}
-                          {cast.state === 'connecting' ? 'Connecting…' : 'Connect a Cast device'}
+                          {cast.state === 'connecting' ? 'Connecting…' : 'Connect a device'}
+                        </button>
+                      )}
+                      {cast.state === 'connecting' && (
+                        <button
+                          onClick={() => { cast.stopCasting(); cast.clearError(); }}
+                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
+                        >
+                          <X size={15} /> Cancel
                         </button>
                       )}
                       {(cast.state === 'not_connected' || cast.state === 'connected') && (
+                        <>
+                          <button
+                            onClick={castAzan} disabled={castBusy}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
+                          >
+                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Bell size={15} />}
+                            Cast Adhan
+                          </button>
+                          <button
+                            onClick={castRecitation} disabled={castBusy}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}
+                          >
+                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Volume2 size={15} />}
+                            Cast recitation
+                          </button>
+                        </>
+                      )}
+                      {cast.state === 'connected' && cast.mediaState !== 'idle' && (
                         <button
-                          onClick={testCast} disabled={castBusy}
-                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}
+                          onClick={cast.pauseResume}
+                          className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${T.ghost}`}
+                          aria-label={cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
                         >
-                          {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Volume2 size={15} />}
-                          Test recitation
+                          {cast.mediaState === 'playing' ? <Pause size={15} /> : <Play size={15} />}
+                          {cast.mediaState === 'buffering' ? 'Buffering…' : cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
                         </button>
                       )}
                       {cast.state === 'connected' && (
@@ -1178,17 +1387,96 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                           onClick={cast.stopCasting}
                           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
                         >
-                          Stop casting
+                          <X size={15} /> Stop casting
                         </button>
                       )}
                     </div>
+
+                    {/* Volume control while connected */}
+                    {cast.state === 'connected' && (
+                      <div className="flex items-center gap-2 mt-3 max-w-xs">
+                        <button onClick={() => cast.setVolume(cast.volume > 0 ? 0 : 0.5)} className={T.sub} aria-label="Toggle mute">
+                          {cast.volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                        </button>
+                        <input
+                          type="range" min={0} max={1} step={0.05} value={cast.volume}
+                          onChange={(e) => cast.setVolume(parseFloat(e.target.value))}
+                          className="flex-1 accent-emerald-500 cursor-pointer"
+                          aria-label="Cast device volume"
+                        />
+                        <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(cast.volume * 100)}%</span>
+                      </div>
+                    )}
+
+                    {/* How-to-connect toggle (hidden once actively casting) */}
+                    {cast.state !== 'connected' && (
+                      <button
+                        onClick={() => setShowCastHelp((v) => !v)}
+                        className={`inline-flex items-center gap-1.5 mt-3 text-xs font-semibold ${isDark ? 'text-parchment/70 hover:text-parchment' : 'text-emerald-700 hover:text-emerald-900'}`}
+                        aria-expanded={showCastHelp}
+                      >
+                        <HelpCircle size={13} /> How to connect a device
+                        <ChevronDown size={13} className={`transition-transform ${showCastHelp ? 'rotate-180' : ''}`} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {castError && (
-                <div className="mt-3 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
-                  {castError}
+              {/* Guided steps + system-settings shortcuts (auto-opens when no devices found) */}
+              {(showCastHelp || cast.state === 'no_devices') && (
+                <div className={`mt-3 rounded-xl px-4 py-3 text-xs leading-relaxed ${isDark ? 'bg-white/[0.03] border border-white/10 text-parchment/75' : 'bg-slate-50 border border-slate-200 text-emerald-900/70'}`}>
+                  <p className={`font-semibold mb-2 ${T.heading}`}>How to connect Chromecast / Google Home / Nest</p>
+                  <ol className="space-y-1.5 list-decimal list-inside">
+                    <li>Power on the device and put it on the <strong>same Wi-Fi</strong> as this computer (not a Guest network; turn off any VPN).</li>
+                    <li>Use <strong>desktop Chrome, Edge or Brave</strong> — Safari, Firefox and phone browsers can&apos;t cast.</li>
+                    <li>Click <strong>“Connect a device”</strong> above. Chrome opens its own picker and <em>lists your devices there</em> — for privacy the browser, not this page, shows them.</li>
+                    <li>Choose your device in that picker to approve the connection, then press <strong>Cast Adhan</strong> or <strong>Cast recitation</strong>.</li>
+                  </ol>
+                  <p className={`mt-2 ${T.faint}`}>
+                    Still not showing? Some routers block discovery — turn off <em>AP/client isolation</em> in your router, or the device may be in use by another app/phone. Casting needs no in-browser permission to grant; it&apos;s purely a network/Wi-Fi matter.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    {detectOS() === 'linux' ? (
+                      <span className={T.faint}>On Linux, open your system network settings to confirm the Wi-Fi.</span>
+                    ) : (
+                      <button onClick={openOSWifi} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}>
+                        <Settings size={13} /> Open Wi-Fi settings
+                      </button>
+                    )}
+                    <a
+                      href="https://support.google.com/chromecast/answer/3212934"
+                      target="_blank" rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}
+                    >
+                      <ExternalLink size={13} /> Google Cast help
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Pre-emptive heads-up: selected azan voice can't be reached from here */}
+              {(cast.state === 'not_connected' || cast.state === 'connected') && !azanCastable.exact && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
+                  <Info size={14} className="shrink-0 mt-0.5" />
+                  <p>{azanCastable.note}</p>
+                </div>
+              )}
+
+              {/* Runtime substitution note (set when a cast actually fell back) */}
+              {castNote && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
+                  <Info size={14} className="shrink-0 mt-0.5" /> <p>{castNote}</p>
+                </div>
+              )}
+
+              {/* Errors (from the SDK or a cast attempt) */}
+              {(cast.error || castError) && (
+                <div className="mt-3 flex items-start justify-between gap-3 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
+                  <span className="flex items-start gap-2"><AlertTriangle size={15} className="shrink-0 mt-0.5" /> {cast.error || castError}</span>
+                  <button onClick={() => { cast.clearError(); setCastError(null); }} className="shrink-0 opacity-70 hover:opacity-100" aria-label="Dismiss">
+                    <X size={15} />
+                  </button>
                 </div>
               )}
 
@@ -1218,44 +1506,103 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
               className={`p-5 sm:p-6 ${T.card}`}
             >
-              <h3 className={`flex items-center gap-2 font-bold ${T.heading} mb-4`}>
-                <MonitorSpeaker size={18} className="text-emerald-500" /> Other devices on your account
-              </h3>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {FALLBACK_LINKED.map((d, i) => {
-                  const Icon = ICON[d.kind] ?? Radio;
-                  const playing = d.status === 'playing';
-                  return (
-                    <motion.div
-                      key={d.id}
-                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }} whileHover={{ y: -3 }}
-                      className={`rounded-2xl p-4 flex flex-col gap-3 ${T.deviceCard}`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <span className={`w-11 h-11 grid place-items-center rounded-xl ${isDark ? 'bg-white/5 text-gold-300 border border-gold-400/30' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md'}`}>
-                          <Icon size={20} />
-                        </span>
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${playing ? 'bg-emerald-100 text-emerald-700' : isDark ? 'bg-emerald-500/10 text-emerald-300' : 'bg-cyan-50 text-cyan-700'}`}>
-                          {playing ? <MiniEq /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />}
-                          {playing ? 'Playing' : 'Online'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className={`font-bold ${T.heading} leading-tight`}>{d.platform}</p>
-                          <p className={`text-sm ${T.sub}`}>{d.user_name}</p>
-                          <div className={`mt-1.5 flex items-center gap-3 text-xs ${T.faint}`}>
-                            <span className="inline-flex items-center gap-1"><Wifi size={12} /> {d.sync_group}</span>
-                            <span className="inline-flex items-center gap-1"><Globe2 size={12} /> Linked</span>
-                          </div>
-                        </div>
-                        <ChevronRight size={18} className={`${T.faint} shrink-0`} />
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+                <h3 className={`flex items-center gap-2 font-bold ${T.heading}`}>
+                  <MonitorSpeaker size={18} className="text-emerald-500" /> Other devices on your account
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={linkThisDevice} disabled={linking}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${T.ghost} disabled:opacity-70`}
+                  >
+                    {linking ? <Loader2 size={13} className="animate-spin" /> : <Link2 size={13} />}
+                    Link this device
+                  </button>
+                  <button
+                    onClick={fetchLinked} disabled={linkedLoading}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${T.ghost} disabled:opacity-70`}
+                    aria-label="Refresh devices"
+                  >
+                    <RefreshCw size={13} className={linkedLoading ? 'animate-spin' : ''} /> Refresh
+                  </button>
+                </div>
               </div>
+
+              {linkedError && (
+                <div className="mb-3 flex items-start gap-2 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" /> {linkedError}
+                </div>
+              )}
+
+              {linkedLoading ? (
+                /* Loading skeletons */
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className={`rounded-2xl p-4 h-[124px] animate-pulse ${isDark ? 'bg-white/5' : 'bg-emerald-50/60'}`} />
+                  ))}
+                </div>
+              ) : linked.length === 0 ? (
+                /* No devices — the requested empty state (covers both "none linked" and "not signed in") */
+                <div className={`rounded-2xl border border-dashed px-5 py-8 text-center ${isDark ? 'border-white/12 bg-white/[0.02]' : 'border-emerald-900/12 bg-emerald-50/30'}`}>
+                  <span className={`mx-auto w-12 h-12 grid place-items-center rounded-2xl ${isDark ? 'bg-white/5 text-parchment/60' : 'bg-white text-emerald-600 shadow-sm'}`}>
+                    {needsAuth ? <LogIn size={22} /> : <MonitorSmartphone size={22} />}
+                  </span>
+                  <p className={`font-bold mt-3 ${T.heading}`}>No devices found</p>
+                  <p className={`text-sm ${T.sub} mt-1 max-w-md mx-auto`}>
+                    {needsAuth
+                      ? 'Sign in to sync your devices — your phone, tablet and desktop apps will appear here so azan & recitations stay in step across all of them.'
+                      : 'You haven’t linked any devices yet. Link this one to get started — your phone and tablet apps will appear here too.'}
+                  </p>
+                  <button onClick={linkThisDevice} disabled={linking} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 mt-4 text-sm font-semibold ${T.primary} disabled:opacity-70`}>
+                    {linking ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
+                    Link this device
+                  </button>
+                </div>
+              ) : (
+                /* Real linked devices */
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {linked.map((d, i) => {
+                    const Icon = deviceIcon(d);
+                    const online = !!d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 5 * 60_000;
+                    const title = d.name || PLATFORM_LABEL[d.platform] || d.device_type;
+                    return (
+                      <motion.div
+                        key={d.id}
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }} whileHover={{ y: -3 }}
+                        className={`group relative rounded-2xl p-4 flex flex-col gap-3 ${T.deviceCard}`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className={`w-11 h-11 grid place-items-center rounded-xl ${isDark ? 'bg-white/5 text-gold-300 border border-gold-400/30' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md'}`}>
+                            <Icon size={20} />
+                          </span>
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${online ? 'bg-emerald-100 text-emerald-700' : isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500'}`}>
+                            {online ? <MiniEq /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                            {online ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
+                        <div className="flex items-end justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className={`font-bold ${T.heading} leading-tight truncate`}>{title}</p>
+                            <p className={`text-sm ${T.sub}`}>{PLATFORM_LABEL[d.platform] ?? d.platform}</p>
+                            <div className={`mt-1.5 flex items-center gap-3 text-xs ${T.faint}`}>
+                              <span className="inline-flex items-center gap-1"><Wifi size={12} /> {d.sync_group}</span>
+                              <span className="inline-flex items-center gap-1"><Globe2 size={12} /> {relativeTime(d.last_seen_at)}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeLinked(d.id)} disabled={removingId === d.id}
+                            className={`shrink-0 p-2 rounded-lg transition opacity-0 group-hover:opacity-100 focus:opacity-100 ${isDark ? 'hover:bg-rose-500/15 text-rose-300' : 'hover:bg-rose-50 text-rose-500'} disabled:opacity-50`}
+                            aria-label={`Remove ${title}`}
+                          >
+                            {removingId === d.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
 
             {/* ── Bottom feature strip ── */}
