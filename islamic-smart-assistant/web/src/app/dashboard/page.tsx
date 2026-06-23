@@ -294,7 +294,7 @@ export default function Overview() {
             <motion.section
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
               className={`relative overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-emerald-200/60'}`}
-              style={isDark ? { background: 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)' } : undefined}
+              style={{ background: isDark ? 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)' : 'linear-gradient(150deg,#eafaf1 0%,#e2f5ee 55%,#dbf1ec 100%)' }}
             >
               {isDark ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -303,7 +303,7 @@ export default function Overview() {
                 <>
                   {/* light mode: watercolour dome-and-leaves background */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-right" />
+                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] w-full select-none object-cover object-right" style={{ WebkitMaskImage: 'linear-gradient(to top, black 72%, transparent)', maskImage: 'linear-gradient(to top, black 72%, transparent)' }} />
                   {/* soft left wash so the countdown text stays legible over the art */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/70 via-white/25 to-transparent" />
                 </>
@@ -340,8 +340,8 @@ export default function Overview() {
               className="relative flex flex-col overflow-hidden rounded-[26px] p-5 text-white shadow-[0_16px_38px_-18px_rgba(16,40,30,0.5)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg,rgba(7,40,28,0.78) 0%,rgba(6,28,20,0.88) 100%)' }} />
+              <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_42%]" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(7,40,28,0.34) 0%, rgba(6,28,20,0.55) 52%, rgba(5,18,12,0.82) 100%)' }} />
               <div className="relative flex flex-1 flex-col">
                 <h3 className="text-base font-bold leading-tight">Qibla Direction</h3>
                 <p className="text-xs text-white/65">Find the direction of the Kaaba</p>
@@ -469,6 +469,7 @@ export default function Overview() {
           <motion.section
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
             className={`relative min-h-[560px] overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-violet-200/60'}`}
+            style={{ background: isDark ? 'linear-gradient(160deg,#241b3a 0%,#1a1430 100%)' : 'linear-gradient(160deg,#f6f2ff 0%,#efe9fb 55%,#e9e1f7 100%)' }}
           >
             {/* full-bleed background: mosque-and-flowers artwork, anchored to the
                 bottom and rendered crisp (saturated, no wash) in light mode. */}
@@ -477,8 +478,8 @@ export default function Overview() {
               src="/overview_page_bg-1.png"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-bottom"
-              style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'saturate(1.3) contrast(1.12)' }}
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] w-full select-none object-cover object-bottom"
+              style={{ filter: isDark ? 'brightness(0.62) saturate(1.1)' : 'saturate(1.3) contrast(1.12)', WebkitMaskImage: 'linear-gradient(to top, black 74%, transparent)', maskImage: 'linear-gradient(to top, black 74%, transparent)' }}
             />
             {/* No full-section wash — the artwork stays fully clear. Only the
                 verse panel below carries a translucent background for legibility. */}
@@ -552,8 +553,8 @@ export default function Overview() {
             ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' }
             : {
                 backgroundImage: 'url(/OverviewPage_your_preference_bg.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'right center',
+                backgroundSize: 'auto 72%',
+                backgroundPosition: 'right bottom',
                 backgroundRepeat: 'no-repeat',
               }
         }
