@@ -568,7 +568,7 @@ export default function Overview() {
             <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
             <div>
               <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
-              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900/80'}`}>Customize your experience</p>
+              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
@@ -581,7 +581,7 @@ export default function Overview() {
               <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
                 <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-800'}`}>{p.label}</p>
+                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
                   <p className={`truncate text-sm font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
                 </div>
                 <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
