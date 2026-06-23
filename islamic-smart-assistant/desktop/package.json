@@ -16,9 +16,9 @@
     "build:linux": "electron-builder --linux"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
-    "concurrently": "^8.2.2",
     "wait-on": "^7.2.0"
   },
   "build": {
@@ -31,22 +31,30 @@
     "extraResources": [
       {
         "from": "../web/.next/standalone",
-        "to":   "web/.next/standalone",
-        "filter": ["**/*"]
+        "to": "web/.next/standalone",
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../web/.next/static",
-        "to":   "web/.next/standalone/.next/static",
-        "filter": ["**/*"]
+        "to": "web/.next/standalone/.next/static",
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../web/public",
-        "to":   "web/.next/standalone/public",
-        "filter": ["**/*"]
+        "to": "web/.next/standalone/public",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -56,13 +64,24 @@
       "runAfterFinish": true
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "category": "public.app-category.lifestyle",
       "identity": null
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Network"
     }
+  },
+  "dependencies": {
+    "bonjour-service": "^1.4.1",
+    "castv2-client": "^1.2.0",
+    "node-ssdp": "^4.0.1",
+    "upnp-mediarenderer-client": "^1.4.0"
   }
 }

@@ -14,7 +14,8 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
 import { useTheme } from '@/lib/ThemeContext';
 import { Devices, type BackendDevice } from '@/lib/api';
-import { resolveAzanCastUrl, RECITATION_CAST_TEST_URL } from '@/lib/castAudioSources';
+import { resolveAzanCastUrl, RECITATION_CAST_TEST_URL, azanLocalPath, azanVoiceName } from '@/lib/castAudioSources';
+import { useDesktopDevices, type LanDevice } from '@/lib/useDesktopDevices';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -179,6 +180,14 @@ const MIN_SPIN_MS = 900;
 const ICON: Record<string, any> = {
   mobile: Smartphone, tablet: Tablet, desktop: Monitor, speaker: Speaker, earbuds: Headphones,
   web: Globe2, google_home: MonitorSpeaker, alexa: Speaker,
+};
+
+// LAN device kinds discovered by the desktop app (mDNS / SSDP).
+const LAN_KIND: Record<string, { icon: any; label: string }> = {
+  chromecast: { icon: Cast,           label: 'Chromecast / Google Home' },
+  dlna:       { icon: MonitorSpeaker, label: 'DLNA speaker / TV' },
+  airplay:    { icon: MonitorSpeaker, label: 'AirPlay (Apple)' },
+  alexa:      { icon: Speaker,        label: 'Amazon Alexa' },
 };
 
 // ── Linked-device helpers (GET /devices) ───────────────────────────────────────
@@ -615,6 +624,28 @@ export default function DevicesPage() {
   const [castNote, setCastNote] = useState<string | null>(null);
   const [showCastHelp, setShowCastHelp] = useState(false);
   const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'makkah');
+
+  // ── Desktop-only: real LAN devices (Chromecast / DLNA / AirPlay / Alexa) ──
+  const lan = useDesktopDevices();
+  const [castDeviceId, setCastDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
+  const [, setCastDeviceName] = useLocalStorage<string>('isa:castDeviceName', '');
+  const [lanVol, setLanVol] = useState(0.6);
+
+  // Bundled file path for the selected azan (served to the device over the LAN),
+  // with a public stream as fallback if the device can't reach our LAN server.
+  const azanLanSource = useMemo(() => {
+    const path = azanLocalPath(selectedAzanVoice) ?? '/audio/azan/makkah.mp3';
+    const name = azanVoiceName(selectedAzanVoice) ?? 'Makkah — Haramain';
+    return { kind: 'lan' as const, path, title: `Adhan — ${name}`, fallbackUrl: resolveAzanCastUrl(selectedAzanVoice).url };
+  }, [selectedAzanVoice]);
+
+  const playAzanOnLan = (id: string) => lan.play(id, azanLanSource).catch(() => {});
+  const playRecitationOnLan = (id: string) =>
+    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Surah Al-Fatihah — Mishary Alafasy' }).catch(() => {});
+  const setDefaultCastDevice = (d: LanDevice) => {
+    if (castDeviceId === d.id) { setCastDeviceId(''); setCastDeviceName(''); }
+    else { setCastDeviceId(d.id); setCastDeviceName(d.name); }
+  };
 
   // ── Linked devices on the account (real, from the backend) ──
   const [linked, setLinked] = useState<BackendDevice[]>([]);
@@ -1263,6 +1294,139 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
               )}
             </motion.div>
 
+            {/* ── Devices on your network (DESKTOP ONLY — real LAN scan) ── */}
+            {lan.supported && (
+              <motion.div
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+                className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
+              >
+                <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                      <Wifi size={20} />
+                    </span>
+                    <div>
+                      <h3 className={`font-bold ${T.heading}`}>Devices on your network</h3>
+                      <p className={`text-sm ${T.sub}`}>Found on your Wi-Fi by the desktop app — connect and play Azan or tilawat directly.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs ${T.faint}`}>{lan.devices.length} found</span>
+                    <button onClick={lan.rescan} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${T.ghost}`}>
+                      <RefreshCw size={13} /> Rescan
+                    </button>
+                  </div>
+                </div>
+
+                {lan.error && (
+                  <div className="mb-3 flex items-start justify-between gap-3 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
+                    <span className="flex items-start gap-2"><AlertTriangle size={15} className="shrink-0 mt-0.5" /> {lan.error}</span>
+                    <button onClick={lan.clearError} className="shrink-0 opacity-70 hover:opacity-100" aria-label="Dismiss"><X size={15} /></button>
+                  </div>
+                )}
+
+                {lan.devices.length === 0 ? (
+                  <div className={`rounded-2xl border border-dashed px-5 py-8 text-center ${isDark ? 'border-white/12 bg-white/[0.02]' : 'border-emerald-900/12 bg-emerald-50/30'}`}>
+                    <span className={`mx-auto w-12 h-12 grid place-items-center rounded-2xl ${isDark ? 'bg-white/5 text-parchment/60' : 'bg-white text-emerald-600 shadow-sm'}`}>
+                      <Loader2 size={22} className="animate-spin" />
+                    </span>
+                    <p className={`font-bold mt-3 ${T.heading}`}>Looking for devices…</p>
+                    <p className={`text-sm ${T.sub} mt-1 max-w-md mx-auto`}>
+                      Power on your Chromecast / Google Home / Nest / smart speaker on the <strong>same Wi-Fi</strong> as this computer. They appear here automatically.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {lan.devices.map((d) => {
+                      const meta = LAN_KIND[d.kind] ?? { icon: Radio, label: d.kind };
+                      const Icon = meta.icon;
+                      const castable = d.capabilities?.cast;
+                      const active = lan.activeId === d.id;
+                      const busy = lan.busyId === d.id;
+                      const isDefault = castDeviceId === d.id;
+                      return (
+                        <motion.div
+                          key={d.id}
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
+                          className={`rounded-2xl p-4 flex flex-col gap-3 ${active ? T.deviceSel : T.deviceCard}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <span className={`w-11 h-11 shrink-0 grid place-items-center rounded-xl ${castable ? (isDark ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md') : (isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500')}`}>
+                                <Icon size={20} />
+                              </span>
+                              <div className="min-w-0">
+                                <p className={`font-bold ${T.heading} leading-tight truncate`}>{d.name}</p>
+                                <p className={`text-xs ${T.sub} truncate`}>{meta.label}{d.model ? ` · ${d.model}` : ''}</p>
+                              </div>
+                            </div>
+                            {castable ? (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                                {active ? <MiniEq /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />}
+                                {active ? 'Playing' : 'Ready'}
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500'}`}>
+                                Discovered
+                              </span>
+                            )}
+                          </div>
+
+                          {castable ? (
+                            <>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <button onClick={() => playAzanOnLan(d.id)} disabled={busy}
+                                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}>
+                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />} Play Adhan
+                                </button>
+                                <button onClick={() => playRecitationOnLan(d.id)} disabled={busy}
+                                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}>
+                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Recitation
+                                </button>
+                                {active && (
+                                  <button onClick={() => lan.stop(d.id)}
+                                    className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost}`}>
+                                    <X size={14} /> Stop
+                                  </button>
+                                )}
+                              </div>
+
+                              {active && (
+                                <div className="flex items-center gap-2 max-w-xs">
+                                  <Volume2 size={14} className={T.faint} />
+                                  <input
+                                    type="range" min={0} max={1} step={0.05} value={lanVol}
+                                    onChange={(e) => { const v = parseFloat(e.target.value); setLanVol(v); lan.setVolume(d.id, v); }}
+                                    className="flex-1 accent-emerald-500 cursor-pointer" aria-label="Device volume"
+                                  />
+                                  <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(lanVol * 100)}%</span>
+                                </div>
+                              )}
+
+                              <button
+                                onClick={() => setDefaultCastDevice(d)}
+                                className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isDefault ? 'text-emerald-600' : T.faint} hover:underline`}
+                              >
+                                <Bell size={12} /> {isDefault ? 'Default for auto-Azan ✓' : 'Use for auto-Azan'}
+                              </button>
+                            </>
+                          ) : (
+                            <p className={`text-xs ${T.faint} leading-relaxed`}>
+                              {d.kind === 'airplay'
+                                ? 'AirPlay device detected. Direct casting needs AirPlay 2 pairing (not supported yet) — use a Chromecast/Google Home, a DLNA speaker, or Bluetooth.'
+                                : d.kind === 'alexa'
+                                ? 'Amazon Echo detected. Playing to Alexa needs a published Alexa Skill (cloud), not a local connection.'
+                                : 'This device was found but can’t be controlled directly.'}
+                            </p>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* ── Cast ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -1275,7 +1439,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   </span>
                   <div>
                     <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
-                    <p className={`text-sm ${T.sub}`}>Stream Azan &amp; Quran audio to your smart devices on the same Wi-Fi.</p>
+                    <p className={`text-sm ${T.sub}`}>{lan.supported ? 'Or use your browser’s built-in casting (Chrome picker).' : 'Stream Azan & Quran audio to your smart devices on the same Wi-Fi.'}</p>
                   </div>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${castPill}`}>

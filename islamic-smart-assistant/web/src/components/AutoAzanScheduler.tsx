@@ -9,7 +9,7 @@ import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTim
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { usePrayerParams } from '@/lib/usePrayerParams';
 import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
-import { builtInAzanPath } from '@/lib/castAudioSources';
+import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -101,6 +101,16 @@ export function AutoAzanScheduler() {
   // True while an Azan is actually playing, so a stray gesture doesn't re-arm
   // (which would reload the element's src) mid-playback.
   const firingRef = useRef(false);
+  // Desktop only: a LAN device (Chromecast/DLNA) chosen as the Azan output.
+  const [castDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
+  const castDeviceIdRef = useRef(castDeviceId);
+  castDeviceIdRef.current = castDeviceId;
+  // When the azan is cast to a device there's no local <audio> 'ended' event, so
+  // we auto-clear the "Azan Playing" popup after a typical adhan length.
+  const castClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearCastTimer = () => {
+    if (castClearTimerRef.current) { clearTimeout(castClearTimerRef.current); castClearTimerRef.current = null; }
+  };
 
   // Query key matches PrayerCountdownHero exactly so both share the same cache.
   const { data } = useQuery({
@@ -138,6 +148,7 @@ export function AutoAzanScheduler() {
     const el = audioRef.current;
     if (!el) return;
     el.muted = false;
+    clearCastTimer();
 
     // Resolve the audio source. Built-in voices map to a bundled file; a custom
     // voice loads its trimmed clip from IndexedDB as an object URL (falling back
@@ -149,12 +160,38 @@ export function AutoAzanScheduler() {
     // not .mp3) via the shared voice table — guessing `${v}.mp3` 404s for those
     // and the Azan silently fails to play.
     let src: string;
+
+    // Desktop: if the user picked a LAN device (Chromecast/DLNA) as the Azan
+    // output, play it THERE instead of the laptop speakers. Falls back to local
+    // playback if the device is unreachable or the voice has no bundled file.
+    const lanPath = azanLocalPath(v);
+    const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
+    if (castDeviceIdRef.current && desktopApi && lanPath) {
+      try {
+        await desktopApi.play({
+          deviceId: castDeviceIdRef.current,
+          source: { kind: 'lan', path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url },
+          title: `Adhan — ${voiceLabel}`,
+        });
+        setFiring({ prayer, voiceId: v });
+        // No local 'ended' event fires for a device cast — auto-clear the popup
+        // after ~4 min (longer than any adhan) unless the user stops it sooner.
+        clearCastTimer();
+        castClearTimerRef.current = setTimeout(() => setFiring(null), 4 * 60_000);
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel} on your device`, silent: true });
+        }
+        return; // played on the chosen device — skip local speakers
+      } catch {
+        /* device unreachable — fall through to local playback below */
+      }
+    }
     if (isCustomAzan(v)) {
       const url = await customAzanUrl(v);
       if (url) { customUrlRef.current = url; src = url; }
       else src = UNLOCK_SRC;
     } else {
-      src = builtInAzanPath(v) ?? UNLOCK_SRC;
+      src = azanLocalPath(v) ?? UNLOCK_SRC;
     }
     el.src = src;
     await setAudioOutput(el);
@@ -319,6 +356,11 @@ export function AutoAzanScheduler() {
     if (el) { el.pause(); el.currentTime = 0; }
     revokeCustomUrl();
     firingRef.current = false;
+    clearCastTimer();
+    // Also stop playback on the LAN device if the Azan was cast there.
+    const id = castDeviceIdRef.current;
+    const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
+    if (id && api) { try { api.stop({ deviceId: id }); } catch { /* ignore */ } }
     setFiring(null);
   };
 

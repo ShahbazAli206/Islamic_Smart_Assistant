@@ -43,12 +43,18 @@ const AZAN: Record<string, AzanSrc> = {
   'madinah':                    { name: 'Madinah — Masjid Nabawi', local: '/audio/azan/madinah.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3' },
 };
 
-/** Bundled local file path (correct extension) for a built-in voice id.
- *  Returns null for unknown/custom ids. Single source of truth so callers never
- *  guess the extension — most voices are .m4a, not .mp3. */
-export function builtInAzanPath(voiceId: string): string | null {
+/** Bundled (public/) path for a built-in azan voice, e.g. '/audio/azan/makkah.mp3'.
+ *  Returns null for unknown/custom voices. Used by the desktop LAN media server,
+ *  which serves these files to Chromecast/DLNA devices on the network. */
+export function azanLocalPath(voiceId: string): string | null {
   return AZAN[voiceId]?.local ?? null;
 }
+
+/** Display name for a built-in azan voice (or null if unknown/custom). */
+export function azanVoiceName(voiceId: string): string | null {
+  return AZAN[voiceId]?.name ?? null;
+}
+
 
 function isLocalHost(host: string): boolean {
   return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0';

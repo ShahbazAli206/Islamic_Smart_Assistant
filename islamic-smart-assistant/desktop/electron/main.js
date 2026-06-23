@@ -8,6 +8,8 @@ const {
 const path = require('path');
 const fs   = require('fs');
 
+const { DeviceManager } = require('./devices');
+
 const isDev = !app.isPackaged;
 
 // ── Single-instance lock ──────────────────────────────────────────────────────
@@ -22,6 +24,8 @@ let mainWindow  = null;
 let setupWindow = null;
 let tray        = null;
 let serverProc  = null;   // UtilityProcess running the Next.js standalone server
+let deviceManager = null; // LAN device discovery + cast
+let devicesInited = false;
 
 const PROD_PORT = 3001;
 const DEV_URL   = 'http://localhost:3000';
@@ -65,6 +69,9 @@ function createWindow() {
     if (!app.isQuitting) { e.preventDefault(); mainWindow.hide(); }
   });
 
+  // Start LAN device discovery + media server (independent of dev/prod load path).
+  initDevices();
+
   if (isDev) {
     mainWindow.loadURL(DEV_URL);
     return;
@@ -78,6 +85,17 @@ function createWindow() {
     loaded = true;
     mainWindow.loadURL(PROD_URL);
   };
+
+  // On a slow/cold first launch the server may not have bound the port yet, so the
+  // first load gets ERR_CONNECTION_REFUSED. Retry a few times instead of leaving
+  // the user stuck on a Chromium error page.
+  let loadRetries = 0;
+  mainWindow.webContents.on('did-fail-load', (_e, _code, _desc, validatedURL, isMainFrame) => {
+    if (!isMainFrame || !mainWindow || !String(validatedURL).startsWith(PROD_URL)) return;
+    if (loadRetries >= 15) return;
+    loadRetries += 1;
+    setTimeout(() => { if (mainWindow) mainWindow.loadURL(PROD_URL); }, 700);
+  });
 
   if (!serverProc) {
     const serverScript = path.join(WEB_STANDALONE, 'server.js');
@@ -149,14 +167,57 @@ app.on('window-all-closed', () => {
   // Intentionally stay alive in tray for Azan playback.
 });
 
-app.on('before-quit', () => {
+let shuttingDown = false;
+app.on('before-quit', (e) => {
   serverProc?.kill();
+  if (!deviceManager || shuttingDown) return;
+  // Let the device layer deliver STOP frames (so a casting speaker actually stops)
+  // and close the media server before we exit — but never block quit for long.
+  e.preventDefault();
+  shuttingDown = true;
+  const finish = () => { app.isQuitting = true; app.quit(); };
+  Promise.race([
+    Promise.resolve(deviceManager.shutdown()).catch(() => {}),
+    new Promise((r) => setTimeout(r, 2500)),
+  ]).then(finish, finish);
 });
 
 // ── Azan notification ─────────────────────────────────────────────────────────
 ipcMain.on('azan:notify', (_event, { title, body }) => {
   new Notification({ title, body }).show();
 });
+
+// ── LAN devices (Chromecast / DLNA / AirPlay / Alexa) ───────────────────────────
+function broadcastDevices(list) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('devices:changed', list);
+  }
+}
+
+async function initDevices() {
+  if (devicesInited) return;
+  devicesInited = true;
+  deviceManager = new DeviceManager();
+  deviceManager.onChange((list) => broadcastDevices(list));
+  // The LAN media server needs to serve the web app's bundled audio (azan files).
+  const publicDirs = [
+    path.join(__dirname, '../../web/public'), // dev
+    path.join(WEB_STANDALONE, 'public'),      // packaged (extraResources)
+  ];
+  try { await deviceManager.init({ publicDirs }); } catch (_) { /* non-fatal: CDN URLs still cast */ }
+}
+
+const ensureDevices = () => {
+  if (!deviceManager) throw new Error('Device manager is not ready yet.');
+  return deviceManager;
+};
+
+ipcMain.handle('devices:list',      () => (deviceManager ? deviceManager.list() : []));
+ipcMain.handle('devices:rescan',    () => (deviceManager ? deviceManager.rescan() : []));
+ipcMain.handle('devices:mediaBase', () => (deviceManager ? deviceManager.mediaBase() : null));
+ipcMain.handle('devices:play',      (_e, args) => ensureDevices().play(args || {}));
+ipcMain.handle('devices:stop',      (_e, args) => ensureDevices().stop(args || {}));
+ipcMain.handle('devices:setVolume', (_e, args) => ensureDevices().setVolume(args || {}));
 
 // ── Setup wizard IPC handlers ─────────────────────────────────────────────────
 
