@@ -1,14 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellRing, Volume2, X, Square, Radio, MapPin } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { useStoredLocation } from '@/lib/useStoredLocation';
-import { defaultParams, normalizeFiqh, methodByCountry } from '@/lib/sect';
+import { usePrayerParams } from '@/lib/usePrayerParams';
 import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
 import { builtInAzanPath } from '@/lib/castAudioSources';
 
@@ -71,25 +70,12 @@ export function AutoAzanScheduler() {
   const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
   const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
-  // Method/fiqh — must match what the hero uses so we fire on the same times.
-  const [rawFiqh]        = useLocalStorage<string>('isa:fiqh', 'hanafi');
-  const [methodOverride] = useLocalStorage<number>('isa:method', -1);
 
-  // Same location source as the overview-page hero so query keys are identical
-  // and both components share a single React Query cache entry.
-  const loc = useStoredLocation();
-
-  const { method, school } = useMemo(() => {
-    const fiqh = normalizeFiqh(rawFiqh);
-    const base = defaultParams(fiqh);
-    const countryMethod = methodByCountry(loc.country ?? '');
-    return {
-      method: methodOverride >= 0 ? methodOverride : (countryMethod ?? base.method),
-      school: base.school as 0 | 1,
-    };
-  }, [rawFiqh, methodOverride, loc.country]);
-
-  const byCoords = loc.hasCoords && loc.lat != null && loc.lng != null;
+  // Resolve the SAME method/school + location the prayer-times hero and the
+  // Overview hero use, so we fire at the exact moment their countdown hits zero
+  // (and share a single React Query cache entry via identical query keys).
+  const params = usePrayerParams();
+  const byCoords = params.byCoords;
 
   const [needsGesture, setNeedsGesture] = useState(false);
   const [firing, setFiring] = useState<null | { prayer: string; voiceId: string }>(null);
@@ -119,12 +105,12 @@ export function AutoAzanScheduler() {
   // Query key matches PrayerCountdownHero exactly so both share the same cache.
   const { data } = useQuery({
     queryKey: byCoords
-      ? ['timings', 'coords', loc.lat, loc.lng, method, school]
-      : ['timings', 'city', loc.city, loc.country],
+      ? ['timings', 'coords', params.lat, params.lng, params.method, params.school]
+      : ['timings', 'city', params.city, params.country],
     queryFn: () =>
-      byCoords && loc.lat != null && loc.lng != null
-        ? fetchTimingsByCoords(loc.lat, loc.lng, { method, school })
-        : fetchTimingsByCity(loc.city, loc.country),
+      byCoords && params.lat != null && params.lng != null
+        ? fetchTimingsByCoords(params.lat, params.lng, { method: params.method, school: params.school, label: params.label })
+        : fetchTimingsByCity(params.city, params.country),
     staleTime: 5 * 60 * 1000,
     enabled,
     retry: (failureCount, err) => {

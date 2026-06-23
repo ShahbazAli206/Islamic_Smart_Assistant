@@ -16,6 +16,7 @@ import {
 } from '@/lib/prayer';
 import { qiblaBearing } from '@/lib/qibla';
 import { useStoredLocation } from '@/lib/useStoredLocation';
+import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
@@ -59,7 +60,11 @@ const FADE_TL = {
 export default function Overview() {
   const { isDark } = useTheme();
   const loc = useStoredLocation();
-  const byCoords = typeof loc.lat === 'number' && typeof loc.lng === 'number';
+  // Resolve the SAME prayer-time inputs (method/school + pinned-mosque location)
+  // the prayer-times page and the Azan scheduler use, so all three show — and
+  // fire on — the identical next-prayer time. See usePrayerParams for why.
+  const params = usePrayerParams();
+  const byCoords = params.byCoords;
 
   // Live preference values for the "Your Preferences" banner.
   const [name]      = useLocalStorage<string>('isa:name', '');
@@ -69,12 +74,12 @@ export default function Overview() {
 
   const { data } = useQuery({
     queryKey: byCoords
-      ? ['timings', 'coords', loc.lat, loc.lng, loc.method]
-      : ['timings', 'city', loc.city, loc.country],
+      ? ['timings', 'coords', params.lat, params.lng, params.method, params.school]
+      : ['timings', 'city', params.city, params.country],
     queryFn: () =>
       byCoords
-        ? fetchTimingsByCoords(loc.lat!, loc.lng!, { method: loc.method ?? 3, label: loc.label })
-        : fetchTimingsByCity(loc.city, loc.country),
+        ? fetchTimingsByCoords(params.lat!, params.lng!, { method: params.method, school: params.school, label: params.label })
+        : fetchTimingsByCity(params.city, params.country),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -107,7 +112,7 @@ export default function Overview() {
     return total > 0 ? Math.min(100, Math.max(3, (elapsed / total) * 100)) : 0;
   }, [data, next, currentName, now]);
 
-  const bearing = byCoords ? qiblaBearing(loc.lat!, loc.lng!) : 256;
+  const bearing = byCoords ? qiblaBearing(params.lat!, params.lng!) : 256;
   const methodLabel = METHOD_LABELS[methodRaw >= 0 ? methodRaw : 3] ?? 'Muslim World League';
   const openPrefs = () => window.dispatchEvent(new Event('isa:edit-prefs'));
 
