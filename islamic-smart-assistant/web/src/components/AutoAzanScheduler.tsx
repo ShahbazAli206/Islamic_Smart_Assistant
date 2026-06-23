@@ -10,6 +10,7 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { defaultParams, normalizeFiqh, methodByCountry } from '@/lib/sect';
 import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
+import { builtInAzanPath } from '@/lib/castAudioSources';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -108,6 +109,12 @@ export function AutoAzanScheduler() {
   voiceRef.current = voice;
   const outputIdRef = useRef(outputId);
   outputIdRef.current = outputId;
+  // True once the <audio> element has been unlocked by a user gesture this page
+  // load — guards the muted-unlock play from running more than once.
+  const armedRef = useRef(false);
+  // True while an Azan is actually playing, so a stray gesture doesn't re-arm
+  // (which would reload the element's src) mid-playback.
+  const firingRef = useRef(false);
 
   // Query key matches PrayerCountdownHero exactly so both share the same cache.
   const { data } = useQuery({
@@ -152,16 +159,22 @@ export function AutoAzanScheduler() {
     revokeCustomUrl();
     const v = voiceRef.current;
     const { name: voiceLabel } = resolveVoiceInfo(v);
-    let src = `/audio/azan/${v}.mp3`;
+    // Resolve to the bundled file with its REAL extension (most voices are .m4a,
+    // not .mp3) via the shared voice table — guessing `${v}.mp3` 404s for those
+    // and the Azan silently fails to play.
+    let src: string;
     if (isCustomAzan(v)) {
       const url = await customAzanUrl(v);
       if (url) { customUrlRef.current = url; src = url; }
       else src = UNLOCK_SRC;
+    } else {
+      src = builtInAzanPath(v) ?? UNLOCK_SRC;
     }
     el.src = src;
     await setAudioOutput(el);
     try {
       await el.play();
+      firingRef.current = true;
       setFiring({ prayer, voiceId: v });
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
@@ -176,6 +189,27 @@ export function AutoAzanScheduler() {
       setNeedsGesture(true);
     }
   }, [setAudioOutput]);
+
+  // Unlock the <audio> element for autoplay using the current user gesture.
+  // Idempotent — the muted priming play runs at most once per page load — and
+  // safe to call from both the global gesture listener and the Enable button.
+  // On success it persists `unlocked` (so the prompt never returns on future
+  // loads) and hides any visible prompt.
+  const armAudio = useCallback(async (): Promise<boolean> => {
+    if (armedRef.current) return true;
+    if (firingRef.current) return false; // don't reload src mid-Azan
+    const el = audioRef.current;
+    if (!el) return false;
+    armedRef.current = true;
+    el.muted = true;
+    el.src = UNLOCK_SRC;
+    try { await el.play(); el.pause(); el.currentTime = 0; }
+    catch { armedRef.current = false; el.muted = false; return false; }
+    el.muted = false;
+    setUnlocked(true);
+    setNeedsGesture(false);
+    return true;
+  }, [setUnlocked]);
 
   // Show the Enable banner only ONCE per browser-tab session — the first time
   // the user lands while auto-Azan is enabled but not yet unlocked. We flag it
@@ -202,37 +236,26 @@ export function AutoAzanScheduler() {
     setNeedsGesture(true);
   }, [enabled, unlocked]);
 
-  // Once auto-Azan has ever been enabled, browsers still won't autoplay audio
-  // after a reload without a fresh user gesture. So we silently RE-ARM on the
-  // first interaction of each page load — any click, tap, or keypress unlocks
-  // the <audio> element for the rest of the session. The user is bound to touch
-  // the page before the next prayer, so the Azan plays on time with no extra
-  // "Enable" click. (If a prayer somehow arrives before ANY interaction, the
-  // one-tap fallback prompt in fire()'s catch still covers that rare case.)
+  // Browsers won't autoplay audio after a (re)load without a fresh user gesture,
+  // even if auto-Azan was unlocked in a previous session. So we silently arm on
+  // the FIRST interaction of each page load — any click, tap, or keypress primes
+  // the <audio> element for the rest of the session AND persists `unlocked`. We
+  // attach this whenever auto-Azan is enabled (not only once unlocked), so the
+  // very first interaction is enough for the Azan to play on time with no
+  // "Enable" click — and it permanently retires the Enable prompt. armAudio is
+  // idempotent, so leaving the listeners attached is harmless.
   useEffect(() => {
-    if (!enabled || !unlocked) return;
-    let done = false;
-    const arm = async () => {
-      if (done) return;
-      done = true;
-      cleanup();
-      const el = audioRef.current;
-      if (!el) return;
-      el.muted = true;
-      el.src = UNLOCK_SRC;
-      try { await el.play(); el.pause(); el.currentTime = 0; } catch {}
-      el.muted = false;
-    };
-    const cleanup = () => {
+    if (!enabled) return;
+    const arm = () => { void armAudio(); };
+    window.addEventListener('pointerdown', arm);
+    window.addEventListener('keydown', arm);
+    window.addEventListener('touchstart', arm);
+    return () => {
       window.removeEventListener('pointerdown', arm);
       window.removeEventListener('keydown', arm);
       window.removeEventListener('touchstart', arm);
     };
-    window.addEventListener('pointerdown', arm);
-    window.addEventListener('keydown', arm);
-    window.addEventListener('touchstart', arm);
-    return cleanup;
-  }, [enabled, unlocked]);
+  }, [enabled, armAudio]);
 
   // ── Core: poll every second, fire when a prayer time arrives ──
   useEffect(() => {
@@ -309,6 +332,7 @@ export function AutoAzanScheduler() {
     const el = audioRef.current;
     if (el) { el.pause(); el.currentTime = 0; }
     revokeCustomUrl();
+    firingRef.current = false;
     setFiring(null);
   };
 
@@ -317,20 +341,10 @@ export function AutoAzanScheduler() {
   const dismissPrompt = () => setNeedsGesture(false);
 
   const unlock = async () => {
-    const el = audioRef.current;
-    if (!el) return;
-    // A muted play registers a user gesture with the browser, unlocking future autoplay.
-    el.muted = true;
-    el.src = UNLOCK_SRC;
-    try {
-      await el.play();
-      el.pause();
-      el.currentTime = 0;
-      el.muted = false;
-    } catch {}
-
-    setUnlocked(true);
-    setNeedsGesture(false);
+    // Prime autoplay (idempotent — the global gesture listener fires on this same
+    // click's pointerdown, so armAudio has usually already run; this just no-ops).
+    // armAudio persists `unlocked` and hides the prompt, so it never returns.
+    await armAudio();
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -346,7 +360,7 @@ export function AutoAzanScheduler() {
 
   return (
     <>
-      <audio ref={audioRef} onEnded={() => { setFiring(null); revokeCustomUrl(); }} preload="auto" />
+      <audio ref={audioRef} onEnded={() => { firingRef.current = false; setFiring(null); revokeCustomUrl(); }} preload="auto" />
 
       <AnimatePresence>
         {/* ── Enable auto-Azan prompt ── */}
