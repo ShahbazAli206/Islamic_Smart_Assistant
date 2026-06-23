@@ -159,9 +159,9 @@ export default function Overview() {
           <div className="relative flex flex-col gap-4 sm:block">
             <div className="mx-auto w-full sm:max-w-[560px]">
               <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/50 px-4 py-2.5 text-emerald-950 backdrop-blur-sm shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
-                <Search size={18} className="text-emerald-900/40" />
-                <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm text-emerald-950 placeholder:text-emerald-900/40 focus:outline-none" />
-                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/[0.05] px-1.5 py-0.5 text-[11px] font-medium text-emerald-900/45">Ctrl /</span>
+                <Search size={18} className="text-emerald-950/80" />
+                <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm font-medium text-emerald-950 placeholder:text-emerald-950/70 focus:outline-none" />
+                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-900/10 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-950/75">Ctrl /</span>
                 <button aria-label="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-700/30 hover:bg-emerald-700 transition">
                   <Search size={15} />
                 </button>
@@ -173,14 +173,14 @@ export default function Overview() {
                   <MapPin size={18} className="text-emerald-600" />
                   <div className="leading-tight">
                     <p className="text-sm font-semibold">{loc.city}{loc.country ? `, ${loc.country}` : ''}</p>
-                    <p className="text-[11px] text-emerald-900/55">{data?.hijriDate ?? '—'}</p>
+                    <p className="text-[11px] font-medium text-emerald-950/80">{data?.hijriDate ?? '—'}</p>
                   </div>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
                   <Sun size={18} className="text-amber-500" />
                   <div className="leading-tight">
                     <p className="text-sm font-semibold">18°C</p>
-                    <p className="text-[11px] text-emerald-900/55">Clear</p>
+                    <p className="text-[11px] font-medium text-emerald-950/80">Clear</p>
                   </div>
                 </div>
               </div>
@@ -568,7 +568,7 @@ export default function Overview() {
             <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
             <div>
               <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
-              <p className={`text-xs ${c.muted}`}>Customize your experience</p>
+              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900/80'}`}>Customize your experience</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
@@ -581,10 +581,10 @@ export default function Overview() {
               <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
                 <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[11px] ${c.faint}`}>{p.label}</p>
-                  <p className="truncate text-sm font-semibold">{p.value}</p>
+                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-800'}`}>{p.label}</p>
+                  <p className={`truncate text-sm font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
                 </div>
-                <ChevronDown size={15} className={c.faint} />
+                <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
               </button>
             ))}
             <button onClick={openPrefs} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-700/30 transition hover:bg-emerald-700">
