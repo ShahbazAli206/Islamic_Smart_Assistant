@@ -527,7 +527,14 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                   {LANGUAGES.map((l) => (
                     <button
                       key={l.id}
-                      onClick={() => setDraftLang(l.id)}
+                      onClick={() => {
+                        setDraftLang(l.id);
+                        // Apply immediately — don't wait for Done so the rest
+                        // of the app (Quran ayah, player) updates in real time.
+                        const json = JSON.stringify(l.id);
+                        localStorage.setItem('isa:language', json);
+                        window.dispatchEvent(new StorageEvent('storage', { key: 'isa:language', newValue: json }));
+                      }}
                       className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition
                         ${draftLang === l.id
                           ? 'border-emerald-500 bg-emerald-50'
