@@ -66,7 +66,7 @@ const UNLOCK_SRC = '/audio/azan/makkah.mp3';
  *    A first-load "Enable auto-Azan" prompt resolves that.
  */
 export function AutoAzanScheduler() {
-  const [voice]    = useLocalStorage<string>('isa:azanVoice', 'makkah');
+  const [voice]    = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
   const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
   const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
@@ -388,7 +388,27 @@ export function AutoAzanScheduler() {
 
   return (
     <>
-      <audio ref={audioRef} onEnded={() => { firingRef.current = false; setFiring(null); revokeCustomUrl(); }} preload="auto" />
+      {/* onError: if the audio file fails to load/decode (e.g. .m4a codec rejected,
+           wrong MIME type), fall back to makkah.mp3 — the guaranteed-present MP3 —
+           rather than silently showing "Azan Playing" with no sound. */}
+      <audio
+        ref={audioRef}
+        onEnded={() => { firingRef.current = false; setFiring(null); revokeCustomUrl(); }}
+        onError={() => {
+          const el = audioRef.current;
+          if (!el || !firingRef.current) return; // not during an active azan — ignore
+          if (el.src.endsWith(UNLOCK_SRC) || el.src.endsWith('makkah.mp3')) {
+            // Even the fallback failed — give up, reset state.
+            firingRef.current = false;
+            setFiring(null);
+            return;
+          }
+          // The chosen voice failed; retry with the guaranteed-present fallback.
+          el.src = UNLOCK_SRC;
+          el.play().catch(() => { firingRef.current = false; setFiring(null); });
+        }}
+        preload="auto"
+      />
 
       <AnimatePresence>
         {/* ── Enable auto-Azan prompt ── */}

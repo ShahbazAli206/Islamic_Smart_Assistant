@@ -8,10 +8,11 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
-  Pencil, X,
+  Pencil, Scissors, X,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
+import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
   customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan, type CustomAzan,
 } from '@/lib/customAzan';
@@ -49,7 +50,7 @@ const VOICES: AzanVoice[] = [
     region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
-    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
+    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
   },
   {
     id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
@@ -146,7 +147,7 @@ const VOICES: AzanVoice[] = [
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
     local: '/audio/azan/makkah.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3',
-    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800', defaultPick: true,
+    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
   },
   {
     id: 'madinah', name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari',
@@ -313,7 +314,7 @@ export default function AzanPage() {
   const { isDark } = useTheme();
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'makkah');
+  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
   const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [favorites, setFavorites] = useLocalStorage<string[]>('isa:azanFavorites', []);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
@@ -340,6 +341,9 @@ export default function AzanPage() {
 
   // Built-in voices the user has hidden (deleted)
   const [hiddenVoices, setHiddenVoices] = useLocalStorage<string[]>('isa:hiddenVoices', []);
+
+  // Azan trimmer — trim any existing voice and save as a new custom clip
+  const [trimmingItem, setTrimmingItem] = useState<TrimTarget | null>(null);
 
   // Azan editor (add intro / outro to an existing voice)
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -436,6 +440,16 @@ export default function AzanPage() {
       if (selectedId === item.id) setSelectedId('makkah');
       setHiddenVoices((prev) => [...prev, item.id]);
     }
+  };
+
+  const openTrimmer = (item: Item) => {
+    const v = VOICES.find((x) => x.id === item.id);
+    setTrimmingItem({
+      id: item.id,
+      name: item.name,
+      local: v?.local,
+      remote: v?.remote ?? item.remoteUrl,
+    });
   };
 
   const openEditor = (item: Item) => {
@@ -925,6 +939,10 @@ export default function AzanPage() {
                         className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
                         <Pencil size={15} />
                       </button>
+                      <button onClick={() => openTrimmer(item)} title="Trim"
+                        className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
+                        <Scissors size={15} />
+                      </button>
                       <button onClick={() => deleteItem(item)} title="Delete"
                         className="w-10 h-10 grid place-items-center rounded-full border border-rose-100 text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition shrink-0">
                         <Trash2 size={15} />
@@ -1052,6 +1070,13 @@ export default function AzanPage() {
       />
 
       <AzanUploader open={uploaderOpen} onClose={() => setUploaderOpen(false)} onSaved={onSaved} />
+
+      <AzanTrimmer
+        open={trimmingItem !== null}
+        target={trimmingItem}
+        onClose={() => setTrimmingItem(null)}
+        onSaved={(meta) => { setCustomAzans((prev) => [meta, ...prev]); setSelectedId(meta.id); }}
+      />
 
       {/* ── Azan Editor modal — add intro / outro to any existing voice ── */}
       <input ref={editorFileRef} type="file" accept="audio/*" className="hidden" onChange={onEditorFilePick} />

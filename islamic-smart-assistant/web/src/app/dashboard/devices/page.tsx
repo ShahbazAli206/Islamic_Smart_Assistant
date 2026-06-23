@@ -623,7 +623,7 @@ export default function DevicesPage() {
   const [castError, setCastError] = useState<string | null>(null);
   const [castNote, setCastNote] = useState<string | null>(null);
   const [showCastHelp, setShowCastHelp] = useState(false);
-  const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'makkah');
+  const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
 
   // ── Desktop-only: real LAN devices (Chromecast / DLNA / AirPlay / Alexa) ──
   const lan = useDesktopDevices();

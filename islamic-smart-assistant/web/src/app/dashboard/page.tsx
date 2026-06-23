@@ -19,6 +19,7 @@ import { useStoredLocation } from '@/lib/useStoredLocation';
 import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { AyahDisplay } from '@/components/AyahDisplay';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -189,7 +190,7 @@ export default function Overview() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => window.dispatchEvent(new Event('isa:open-profile'))} className="relative shrink-0" aria-label="Open profile">
+              <button onClick={openPrefs} className="relative shrink-0" aria-label="Open preferences">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold ring-2 ring-white shadow-md">
                   {name ? name.trim().charAt(0).toUpperCase() : <User size={20} />}
                 </span>
@@ -224,14 +225,7 @@ export default function Overview() {
               />
             </div>
             <div className="relative">
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">۲۸</span>
-                <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</p>
-              </div>
-              <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
-                Verily, in the remembrance of Allah do hearts find rest.
-              </p>
-              <p className="mt-2 text-xs font-semibold text-black/75">Surah Ar-Ra&apos;d (13:28)</p>
+              <AyahDisplay variant="hero" />
             </div>
           </div>
           </div>
@@ -301,20 +295,16 @@ export default function Overview() {
               className={`relative overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-emerald-200/60'}`}
               style={{ background: isDark ? 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)' : 'linear-gradient(150deg,#eafaf1 0%,#e2f5ee 55%,#dbf1ec 100%)' }}
             >
-              {isDark ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-52 select-none opacity-95" />
-              ) : (
-                <>
-                  {/* light mode: watercolour dome-and-leaves background — sized
-                      down and object-contain so the whole illustration shows on
-                      the right instead of being cropped by object-cover. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/OverviewPage_Asr_Time_bg.png" alt="" className="pointer-events-none absolute bottom-0 right-0 h-[55%] w-[55%] select-none object-contain object-bottom" />
-                  {/* soft left wash so the countdown text stays legible over the art */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/70 via-white/25 to-transparent" />
-                </>
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={isDark ? '/masjid_img.png' : '/OverviewPage_Asr_Time_bg.png'}
+                alt=""
+                className="pointer-events-none absolute right-0 top-0 h-full w-[60%] select-none object-cover object-right"
+                style={{
+                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 30%, black 65%)',
+                  maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 30%, black 65%)',
+                }}
+              />
               <div className="relative">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600/15 text-emerald-600"><Moon size={17} /></span>
@@ -499,20 +489,7 @@ export default function Overview() {
               </div>
 
               <div className={`mt-4 ${isDark ? '' : '[text-shadow:0_1px_8px_rgba(255,255,255,0.85)]'}`}>
-                <p className="text-lg font-bold leading-tight">Surah Ar-Rahman</p>
-                <p className={`text-xs ${c.muted}`}>(55:1-3)</p>
-              </div>
-
-              {/* Verse panel — translucent like the first section's ayah card.
-                  Arabic + translation each flow on one line and wrap to two only
-                  when they run out of width. */}
-              <div className={`mt-4 rounded-2xl border px-4 py-3 backdrop-blur-md ${isDark ? 'border-white/15 bg-midnight-900/35' : 'border-white/60 bg-white/55'}`}>
-                <p dir="rtl" className={`font-arabic text-2xl leading-[1.7] ${isDark ? 'text-violet-100' : 'text-violet-900'}`}>
-                  الرَّحْمَٰنُ عَلَّمَ الْقُرْآنَ خَلَقَ الْإِنْسَانَ
-                </p>
-                <p className={`mt-2 text-[13px] font-medium leading-relaxed ${c.muted}`}>
-                  The Most Merciful · Taught the Qur&apos;an · Created man
-                </p>
+                <AyahDisplay variant="rail" isDark={isDark} />
               </div>
 
               <Link href="/dashboard/quran" className={`mt-5 inline-flex w-fit items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold backdrop-blur transition ${isDark ? 'border-violet-400/30 bg-violet-500/20 text-violet-100 hover:bg-violet-500/30' : 'border-violet-300/70 bg-white/70 text-violet-700 hover:bg-white'}`}>
