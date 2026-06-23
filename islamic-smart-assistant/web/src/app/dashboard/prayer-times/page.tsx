@@ -509,11 +509,6 @@ export default function PrayerTimesPage() {
             prayer-cards section that follows. */}
         <div className="relative z-20 px-6 sm:px-10 pb-8 space-y-5">
 
-        {/* decorative green-dome mosque (Masjid an-Nabawi) bleeding off the right edge */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/masjid-e-nabwi.png" alt="" aria-hidden
-          className="pointer-events-none select-none absolute right-0 bottom-0 w-[300px] xl:w-[360px] hidden xl:block -z-10 opacity-100" />
-
         {/* ── sect / madhab / method controls (dark translucent glass) ── */}
         <div className="relative z-10 rounded-2xl p-5"
           style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }}>
@@ -625,8 +620,13 @@ export default function PrayerTimesPage() {
             </p>
           </div>
 
-          {/* Nearby mosque list (no backdrop-blur, so the masjid-e-nabwi behind shows clearly) */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden lg:col-span-1">
+          {/* Nearby mosque list — the masjid-e-nabwi sits behind it (bottom-right).
+              `isolate` makes this card its own stacking context so the -z-10
+              image stays above the card background but below the list content. */}
+          <div className="relative isolate rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden lg:col-span-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/masjid-e-nabwi.png" alt="" aria-hidden
+              className="pointer-events-none select-none absolute right-0 bottom-0 -z-10 w-[200px] opacity-90" />
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="font-bold flex items-center gap-2 text-parchment"><Building2 size={16} className="text-gold-300" /> Nearby Mosques</h3>
               {loadingMosques && <Loader2 size={16} className="animate-spin text-gold-300" />}
