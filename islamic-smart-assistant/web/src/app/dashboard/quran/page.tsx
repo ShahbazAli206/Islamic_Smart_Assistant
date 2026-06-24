@@ -111,7 +111,7 @@ export default function QuranPage() {
             </div>
           </div>
 
-          <div className="hidden md:block" style={{ maxWidth: '80%' }}>
+          <div className="hidden md:block" style={{ maxWidth: '360px' }}>
             <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
               <div>
                 <div className="flex items-center gap-3">
