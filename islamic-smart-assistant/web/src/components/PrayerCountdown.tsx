@@ -18,6 +18,15 @@ function to12h(time: string): string {
   return `${h12}:${mStr} ${period}`;
 }
 
+function subtractMins(time: string, mins: number): string {
+  const [hStr, mStr] = time.split(':');
+  let total = parseInt(hStr, 10) * 60 + parseInt(mStr, 10) - mins;
+  if (total < 0) total += 24 * 60;
+  const h = Math.floor(total / 60) % 24;
+  const m = total % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 const ICONS: Record<keyof PrayerTimes, any> = {
   Fajr: Star, Sunrise: Sunrise, Dhuhr: Sun, Asr: Compass, Maghrib: Sunset, Isha: Moon,
 };
@@ -254,7 +263,7 @@ export function PrayerCountdownHero({
         >
           <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.06] pointer-events-none" />
           {isDark && <div aria-hidden className="absolute -top-24 -right-20 w-64 h-64 rounded-full bg-glow-emerald animate-aurora pointer-events-none" />}
-          <MihrabArch isDark={isDark} className="absolute right-1 bottom-0 h-[98%] w-auto pointer-events-none" />
+          <MihrabArch isDark={isDark} className="absolute right-1 bottom-0 h-[80%] w-auto pointer-events-none" />
 
           {/* hanging lantern (continuous float + glow) */}
           <div aria-hidden className="absolute left-4 top-3 pointer-events-none">
@@ -354,18 +363,18 @@ export function PrayerCountdownHero({
                 ? (isDark ? 'text-gold-200' : 'text-emerald-700')
                 : (isDark ? 'text-gold-300' : 'text-gold-600');
               const nameColor = isNext
-                ? (isDark ? 'text-parchment/80' : 'text-emerald-800')
-                : (isDark ? 'text-parchment/65' : 'text-emerald-900/55');
+                ? (isDark ? 'text-parchment' : 'text-emerald-950')
+                : (isDark ? 'text-parchment/85' : 'text-emerald-950');
               const endColor = isNext
-                ? (isDark ? 'text-parchment/65' : 'text-emerald-700/80')
-                : (isDark ? 'text-parchment/45' : 'text-emerald-900/45');
+                ? (isDark ? 'text-parchment/90' : 'text-emerald-950')
+                : (isDark ? 'text-parchment/75' : 'text-emerald-950');
               const domeColor = isNext
                 ? (isDark ? 'rgba(233,207,122,0.18)' : 'rgba(5,95,70,0.16)')
                 : (isDark ? 'rgba(221,185,75,0.16)' : 'rgba(201,162,39,0.14)');
               // Each prayer's window ends when the next one begins (Isha → next Fajr).
               const PORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as (keyof PrayerTimes)[];
               const endName: keyof PrayerTimes = name === 'Isha' ? 'Fajr' : PORDER[PORDER.indexOf(name) + 1];
-              const endTime = to12h(data.timings[endName]);
+              const endTime = to12h(subtractMins(data.timings[endName], 3));
               return (
                 <motion.div
                   key={name}
@@ -439,10 +448,10 @@ export function PrayerCountdownHero({
                     >
                       <Icon size={20} className={iconColor} />
                     </motion.div>
-                    <p className={`mt-3 text-2xl sm:text-3xl font-bold tracking-wide ${nameColor}`}>{name}</p>
+                    <p className={`mt-3 text-lg sm:text-xl font-bold tracking-wide ${nameColor}`}>{name}</p>
                     <p className="text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight">{to12h(data.timings[name])}</p>
-                    <p className={`mt-1.5 flex items-center gap-1.5 text-base font-semibold ${endColor}`}>
-                      <Clock size={13} className="shrink-0" /> Ends {endTime}
+                    <p className={`mt-1.5 flex items-center gap-1.5 text-sm font-semibold ${endColor}`}>
+                      <Clock size={12} className="shrink-0" /> Ends {endTime}
                     </p>
                   </motion.div>
                 </motion.div>
