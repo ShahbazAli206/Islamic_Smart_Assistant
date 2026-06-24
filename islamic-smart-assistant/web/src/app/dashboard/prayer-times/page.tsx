@@ -424,7 +424,7 @@ export default function PrayerTimesPage() {
       <div className="relative overflow-hidden">
         {/* full-cover background image — same as Overview hero */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
+        <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
         <div className="relative px-6 sm:px-10 pt-5 pb-3 flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -478,19 +478,18 @@ export default function PrayerTimesPage() {
             prayer-cards section that follows. */}
         <div className="relative z-20 px-6 sm:px-10 pb-8 space-y-5">
 
-        {/* ── sect / madhab / method controls (dark translucent glass) ── */}
-        <div className="relative z-10 rounded-2xl p-5"
-          style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.18)' }}>
+        {/* ── sect / madhab / method controls (light glass) ── */}
+        <div className="relative z-10 rounded-2xl p-5 border border-white/60 bg-white/60 backdrop-blur-sm">
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Sect</p>
+              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Sect</p>
               <div className="flex gap-2">
                 {(['sunni', 'shia'] as Sect[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => { setSect(s); setFiqh(FIQH_BY_SECT[s][0]); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
+                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {s === 'sunni' ? 'Sunni' : 'Fiqah Jafri'}
                   </button>
@@ -499,14 +498,14 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Madhab / Fiqh</p>
+              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Madhab / Fiqh</p>
               <div className="flex flex-wrap gap-2">
                 {fiqhOptions.map((f) => (
                   <button
                     key={f}
                     onClick={() => { setFiqh(f); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
+                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {FIQH_LABEL[f]}
                   </button>
@@ -515,7 +514,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-[#E9CF7A]/85' : 'text-black'}`}>Calculation method</p>
+              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Calculation method</p>
               <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} locationLabel={autoMethodLabel} />
             </div>
           </div>
