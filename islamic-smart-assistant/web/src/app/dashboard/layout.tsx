@@ -253,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {NAV.map((group) => (
             <div key={group.group}>
-              <p className={`mb-2 mt-1 uppercase tracking-[0.22em] font-extrabold ${isDark ? 'px-3 py-0.5 text-[11px]' : 'py-2.5 text-[12px]'} ${t.groupLabel} ${t.groupLabelBg}`}>
+              <p className={`mb-2 mt-1 text-center uppercase tracking-[0.22em] font-extrabold ${isDark ? 'px-3 py-0.5 text-[11px]' : 'py-2.5 text-[12px]'} ${t.groupLabel} ${t.groupLabelBg}`}>
                 {group.group}
               </p>
               <div className="space-y-1">

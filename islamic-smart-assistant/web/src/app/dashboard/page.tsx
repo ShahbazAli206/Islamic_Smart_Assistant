@@ -7,7 +7,7 @@ import Link from 'next/link';
 import {
   Search, MapPin, Sun, Sunrise, Sunset, Moon, Clock, ChevronDown,
   Compass, Bell, Play, BookOpen, Bookmark, Hand, CircleDot, Calendar, Star,
-  StickyNote, MoreHorizontal, Globe, GraduationCap, Calculator, SlidersHorizontal,
+  StickyNote, MoreHorizontal, Globe, GraduationCap, Calculator,
   User,
 } from 'lucide-react';
 import {
@@ -228,6 +228,58 @@ export default function Overview() {
               <AyahDisplay variant="hero" />
             </div>
           </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ───────────────────────── Your Preferences ───────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.04 }}
+        className={
+          isDark
+            ? 'relative overflow-hidden rounded-[26px] border border-white/10 p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]'
+            : `${cardCls} p-5`
+        }
+        style={
+          isDark
+            ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' }
+            : undefined
+        }
+      >
+        {isDark && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
+        )}
+        {!isDark && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src="/OverviewPage_your_preference_bg.png" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-right" />
+        )}
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
+            <div>
+              <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
+              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { icon: Globe,         label: 'Language',           value: LANG_LABELS[language] ?? language },
+              { icon: MapPin,        label: 'Location',           value: `${loc.city}${loc.country ? `, ${loc.country}` : ''}` },
+              { icon: GraduationCap, label: 'Sect',               value: SECT_LABELS[sect] ?? sect },
+              { icon: Calculator,    label: 'Calculation Method', value: methodLabel },
+            ].map((p) => (
+              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
+                  <p className={`truncate text-sm font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
+                </div>
+                <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
+              </button>
+            ))}
           </div>
         </div>
       </motion.section>
@@ -522,61 +574,6 @@ export default function Overview() {
         </div>
       </div>
 
-      {/* ───────────────────────── Your Preferences ───────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-        className={
-          isDark
-            ? 'relative overflow-hidden rounded-[26px] border border-white/10 p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]'
-            : `${cardCls} p-5`
-        }
-        style={
-          isDark
-            ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' }
-            : {
-                backgroundImage: 'url(/OverviewPage_your_preference_bg.png)',
-                backgroundSize: 'auto 72%',
-                backgroundPosition: 'right bottom',
-                backgroundRepeat: 'no-repeat',
-              }
-        }
-      >
-        {isDark && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
-        )}
-        <div className="relative">
-          <div className="flex items-center gap-3">
-            <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
-            <div>
-              <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
-              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
-            {[
-              { icon: Globe,         label: 'Language',           value: LANG_LABELS[language] ?? language },
-              { icon: MapPin,        label: 'Location',           value: `${loc.city}${loc.country ? `, ${loc.country}` : ''}` },
-              { icon: GraduationCap, label: 'Sect',               value: SECT_LABELS[sect] ?? sect },
-              { icon: Calculator,    label: 'Calculation Method', value: methodLabel },
-            ].map((p) => (
-              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
-                  <p className={`truncate text-sm font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
-                </div>
-                <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
-              </button>
-            ))}
-            <button onClick={openPrefs} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-700/30 transition hover:bg-emerald-700">
-              <SlidersHorizontal size={16} /> Edit Preferences
-            </button>
-          </div>
-        </div>
-      </motion.section>
     </div>
   );
 }
