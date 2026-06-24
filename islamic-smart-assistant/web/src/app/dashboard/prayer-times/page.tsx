@@ -36,19 +36,6 @@ const FEATURE_STRIP = [
   { icon: Sparkles, title: 'Smart Assistant',       sub: 'Here to guide you' },
 ];
 
-/** Small 5-petal flower used in the header's pastel decoration. */
-function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: number; color?: string; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
-      <g fill={color} opacity="0.9">
-        {[0, 72, 144, 216, 288].map((a) => (
-          <ellipse key={a} cx="12" cy="6" rx="3" ry="5.2" transform={`rotate(${a} 12 12)`} />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="2.6" fill="#F6D67A" />
-    </svg>
-  );
-}
 
 /** Custom, fully-styled Calculation-method dropdown (replaces the native <select>). */
 function MethodDropdown({
@@ -434,73 +421,55 @@ export default function PrayerTimesPage() {
           NB: overflow-hidden lives on the decorative layer below (not this
           wrapper) so the Calculation-method dropdown can overflow the hero
           without being clipped. */}
-      <div className="relative">
-        <div aria-hidden className="absolute inset-0 overflow-hidden">
-          {/* base colour for the left pastel area */}
-          <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
-
-          {/* RIGHT ~60%: the mosque image, shown clearly */}
-          <div className="absolute inset-y-0 right-0 w-[62%]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
-            {/* feather the image's left edge into the pastel base */}
-            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
-          </div>
-
-          {/* LEFT ~46%: soft mixed pastel colour blobs + small flowers */}
-          <div className="absolute inset-y-0 left-0 w-[46%] overflow-hidden">
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%', top: '6%', width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)' }} animate={{ x: [0, 22, 0], y: [0, 16, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '30%', top: '42%', width: 210, height: 210, background: 'radial-gradient(circle, rgba(134,239,172,0.42), transparent 70%)' }} animate={{ x: [0, -18, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%', top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%', width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
-            {/* floating flowers */}
-            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
-            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Flower size={18} color="#fcd34d" /></motion.div>
-            <motion.div className="absolute" style={{ left: '5%', top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
-            <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
-          </div>
-
-          {/* bottom blend into the page */}
-          <div className="absolute inset-x-0 bottom-0 h-28" style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #08160F)' : 'linear-gradient(to bottom, transparent, #FAF7EE)' }} />
-
-          {/* crescent moon over the mosque */}
-          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
-            animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="#F1D588" style={{ filter: 'drop-shadow(0 0 12px rgba(233,207,122,0.7))' }}>
-              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-            </svg>
-          </motion.div>
-        </div>
+      <div className="relative overflow-hidden">
+        {/* full-cover background image — same as Overview hero */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
         <div className="relative px-6 sm:px-10 pt-5 pb-3 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
+            <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
               <Sparkles size={12} /> Prayer Times
             </span>
-            <h1 className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap ${isDark ? 'text-white' : 'text-emerald-950'}`}
-              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}>
+            <h1 className="mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap text-black"
+              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
               Pick your mosque, anywhere on earth
             </h1>
-            {/* subtitle — bigger, on a dark translucent panel */}
-            <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
-              <p className="text-base sm:text-lg leading-relaxed text-white/90">
+            {/* subtitle — light glass panel matching Overview */}
+            <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <p className="text-base sm:text-lg leading-relaxed text-black/85">
                 Find a masjid on the map; times are calculated for its exact location using your sect &amp; madhab.
               </p>
             </div>
           </div>
 
-          {/* ayah — dark translucent panel */}
-          <div className="hidden md:block max-w-[22rem]">
-            <div className="rounded-2xl px-4 py-3.5 text-right"
-              style={{ background: isDark ? 'rgba(8,22,15,0.32)' : 'rgba(10,30,20,0.15)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.14)' }}>
-              <p className={`font-arabic text-2xl lg:text-3xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">
-                وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
-              </p>
-              <p className="mt-2 text-sm lg:text-base leading-relaxed font-medium text-white/90">
-                And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.
-              </p>
-              <p className="mt-1 text-xs font-bold text-[#F1D588]">Surah Al-Ankabut (29:45)</p>
+          {/* ayah — light glass card matching Overview hero exactly */}
+          <div className="hidden md:block">
+            <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/55 p-5 pr-[48%] backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+              {/* Quran-on-rehal image fills the right ~50% of the card */}
+              <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/quran-bg-overview-page.png"
+                  alt=""
+                  className="h-full w-full select-none object-cover"
+                  style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 16%)', maskImage: 'linear-gradient(to right, transparent 0%, black 16%)' }}
+                />
+              </div>
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                    ٤٥
+                  </span>
+                  <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
+                    وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
+                  </p>
+                </div>
+                <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
+                  And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.
+                </p>
+                <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Ankabut (29:45)</p>
+              </div>
             </div>
           </div>
         </div>
