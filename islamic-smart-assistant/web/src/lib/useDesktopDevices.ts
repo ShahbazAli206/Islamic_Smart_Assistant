@@ -50,13 +50,39 @@ function getApi(): DesktopDevicesApi | null {
   return (window as any).desktop?.devices ?? null;
 }
 
+const SESSION_ACTIVE_KEY = 'isa:lanActiveId';
+const SESSION_ACTIVE_LABEL_KEY = 'isa:lanActiveLabel';
+
+function readSession(): { id: string | null; label: string | null } {
+  try {
+    return {
+      id: sessionStorage.getItem(SESSION_ACTIVE_KEY),
+      label: sessionStorage.getItem(SESSION_ACTIVE_LABEL_KEY),
+    };
+  } catch { return { id: null, label: null }; }
+}
+function writeSession(id: string | null, label?: string) {
+  try {
+    if (id) { sessionStorage.setItem(SESSION_ACTIVE_KEY, id); sessionStorage.setItem(SESSION_ACTIVE_LABEL_KEY, label ?? id); }
+    else { sessionStorage.removeItem(SESSION_ACTIVE_KEY); sessionStorage.removeItem(SESSION_ACTIVE_LABEL_KEY); }
+  } catch { /* ignore */ }
+}
+
 export function useDesktopDevices() {
   const [supported, setSupported] = useState(false);
   const [devices, setDevices] = useState<LanDevice[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // activeId is persisted in sessionStorage so it survives page navigation.
+  const [activeId, setActiveIdState] = useState<string | null>(() => readSession().id);
+  const [activeLabel, setActiveLabelState] = useState<string | null>(() => readSession().label);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const apiRef = useRef<DesktopDevicesApi | null>(null);
+
+  const setActiveId = (id: string | null, label?: string) => {
+    setActiveIdState(id);
+    setActiveLabelState(id ? (label ?? id) : null);
+    writeSession(id, label);
+  };
 
   useEffect(() => {
     const api = getApi();
@@ -78,13 +104,14 @@ export function useDesktopDevices() {
     setBusyId(deviceId);
     try {
       await apiRef.current!.play({ deviceId, source, title: source.title });
-      setActiveId(deviceId);
+      setActiveId(deviceId, source.title);
     } catch (e) {
       setError(cleanErr(e));
       throw e;
     } finally {
       setBusyId(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stop = useCallback(async (deviceId: string) => {
@@ -94,8 +121,14 @@ export function useDesktopDevices() {
     } catch (e) {
       setError(cleanErr(e));
     } finally {
-      setActiveId((cur) => (cur === deviceId ? null : cur));
+      // Clear only if this device was the active one.
+      setActiveIdState((cur) => {
+        if (cur === deviceId) { writeSession(null); return null; }
+        return cur;
+      });
+      setActiveLabelState((cur) => (cur != null && readSession().id == null ? null : cur));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setVolume = useCallback(async (deviceId: string, level: number) => {
@@ -107,7 +140,7 @@ export function useDesktopDevices() {
   }, []);
 
   return {
-    supported, devices, activeId, busyId, error,
+    supported, devices, activeId, activeLabel, busyId, error,
     play, stop, setVolume, rescan,
     clearError: () => setError(null),
   };

@@ -158,7 +158,7 @@ function openOSBluetooth() {
     // Works on macOS 10.x – Sonoma; opens Bluetooth pane in System Preferences / Settings
     window.open('x-apple.systempreferences:com.apple.preferences.Bluetooth', '_blank');
   }
-  // Linux has no standard URL scheme — caller should show instructions instead
+  // Linux has no standard URL scheme  -  caller should show instructions instead
 }
 
 /** Open the OS network/Wi-Fi settings so the user can confirm the device and
@@ -170,7 +170,7 @@ function openOSWifi() {
   } else if (os === 'macos') {
     window.open('x-apple.systempreferences:com.apple.preference.network', '_blank');
   }
-  // Linux has no standard scheme — caller shows instructions instead.
+  // Linux has no standard scheme  -  caller shows instructions instead.
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -417,7 +417,7 @@ function MicPermModal({
                 <h2 className={`font-bold text-xl ${heading}`}>Allow Microphone Access</h2>
                 <p className={`text-sm mt-2 leading-relaxed ${sub}`}>
                   To show real device names like <strong>&quot;G04 pro&quot;</strong>, we need mic access
-                  once. The microphone closes immediately — no audio is ever captured or stored.
+                  once. The microphone closes immediately  -  no audio is ever captured or stored.
                 </p>
               </div>
               <button
@@ -513,7 +513,7 @@ function AddDeviceModal({
         <h2 className={`font-bold text-xl mb-5 ${heading}`}>Connect an Audio Device</h2>
         <div className="space-y-3">
 
-          {/* Browser native picker — Chrome 105+ */}
+          {/* Browser native picker  -  Chrome 105+ */}
           {pickerSupported && (
             <button
               onClick={() => { onPickAudio(); onClose(); }}
@@ -524,7 +524,7 @@ function AddDeviceModal({
               </span>
               <div className="flex-1">
                 <p className={`font-semibold ${heading}`}>Pick from device list</p>
-                <p className={`text-xs mt-0.5 ${sub}`}>Browser&apos;s built-in picker — shows all connected audio devices</p>
+                <p className={`text-xs mt-0.5 ${sub}`}>Browser&apos;s built-in picker  -  shows all connected audio devices</p>
               </div>
               <ChevronRight size={18} className="text-emerald-500 shrink-0" />
             </button>
@@ -548,11 +548,11 @@ function AddDeviceModal({
                   <RefreshCw size={13} /> Rescan now
                 </button>
 
-                {/* New device — OS-specific pairing */}
+                {/* New device  -  OS-specific pairing */}
                 <p className={`text-xs mt-3 ${sub}`}>New device? Pair it first:</p>
 
                 {os === 'linux' ? (
-                  /* Linux has no URL scheme — show inline steps */
+                  /* Linux has no URL scheme  -  show inline steps */
                   <div className={`mt-2 rounded-xl p-3 text-xs leading-relaxed ${innerBox}`}>
                     <p className="font-semibold mb-1">Open your desktop&apos;s Bluetooth manager:</p>
                     {LINUX_BT_STEPS.map((s) => (
@@ -581,7 +581,7 @@ function AddDeviceModal({
               </span>
               <div>
                 <p className={`font-semibold ${heading}`}>Wired / USB Device</p>
-                <p className={`text-xs mt-0.5 ${sub}`}>Plug it in, then click Rescan — it appears automatically.</p>
+                <p className={`text-xs mt-0.5 ${sub}`}>Plug it in, then click Rescan  -  it appears automatically.</p>
               </div>
             </div>
           </div>
@@ -635,16 +635,41 @@ export default function DevicesPage() {
   // with a public stream as fallback if the device can't reach our LAN server.
   const azanLanSource = useMemo(() => {
     const path = azanLocalPath(selectedAzanVoice) ?? '/audio/azan/makkah.mp3';
-    const name = azanVoiceName(selectedAzanVoice) ?? 'Makkah — Haramain';
-    return { kind: 'lan' as const, path, title: `Adhan — ${name}`, fallbackUrl: resolveAzanCastUrl(selectedAzanVoice).url };
+    const name = azanVoiceName(selectedAzanVoice) ?? 'Makkah  -  Haramain';
+    return { kind: 'lan' as const, path, title: `Adhan  -  ${name}`, fallbackUrl: resolveAzanCastUrl(selectedAzanVoice).url };
   }, [selectedAzanVoice]);
+
+  // Multi-select: which devices are selected per purpose.
+  const [azanDeviceIds, setAzanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
+  const [recitationDeviceIds, setRecitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
 
   const playAzanOnLan = (id: string) => lan.play(id, azanLanSource).catch(() => {});
   const playRecitationOnLan = (id: string) =>
-    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Surah Al-Fatihah — Mishary Alafasy' }).catch(() => {});
+    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Surah Al-Fatihah  -  Mishary Alafasy' }).catch(() => {});
+  // Test Sound: plays a short clip then auto-stops after 3 s so user can verify the device works.
+  const testSoundOnLan = (id: string) => {
+    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Test Sound' })
+      .then(() => setTimeout(() => lan.stop(id).catch(() => {}), 3_000))
+      .catch(() => {});
+  };
   const setDefaultCastDevice = (d: LanDevice) => {
     if (castDeviceId === d.id) { setCastDeviceId(''); setCastDeviceName(''); }
     else { setCastDeviceId(d.id); setCastDeviceName(d.name); }
+  };
+  const toggleAzanDevice = (d: LanDevice) => {
+    const next = azanDeviceIds.includes(d.id)
+      ? azanDeviceIds.filter((x) => x !== d.id)
+      : [...azanDeviceIds, d.id];
+    setAzanDeviceIds(next);
+    // Keep the primary single-device key in sync with the first selected device.
+    const primary = next[0] ?? '';
+    setCastDeviceId(primary);
+    setCastDeviceName(primary ? (lan.devices.find((x) => x.id === primary)?.name ?? '') : '');
+  };
+  const toggleRecitationDevice = (id: string) => {
+    setRecitationDeviceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   };
 
   // ── Linked devices on the account (real, from the backend) ──
@@ -687,7 +712,7 @@ export default function DevicesPage() {
     } catch (e: any) {
       const status = e?.response?.status;
       if (status === 401 || status === 403) {
-        // Not signed in — fold into the "No devices found" empty state (no scary error).
+        // Not signed in  -  fold into the "No devices found" empty state (no scary error).
         setNeedsAuth(true);
         setLinked([]);
       } else {
@@ -860,7 +885,7 @@ export default function DevicesPage() {
     setCastNote(null);
     setCastBusy(true);
     try {
-      await cast.castAudio(RECITATION_CAST_TEST_URL, 'Surah Al-Fatihah — Mishary Alafasy');
+      await cast.castAudio(RECITATION_CAST_TEST_URL, 'Surah Al-Fatihah  -  Mishary Alafasy');
     } catch (e: any) {
       setCastError(e?.message ?? 'Casting failed.');
     } finally {
@@ -1074,7 +1099,7 @@ export default function DevicesPage() {
             </div>
           </motion.div>
 
-          {/* audio quality card — LIGHT ONLY */}
+          {/* audio quality card  -  LIGHT ONLY */}
           {!isDark && (
             <motion.div
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
@@ -1196,7 +1221,7 @@ export default function DevicesPage() {
                   <div>
                     <h3 className={`font-bold ${T.heading}`}>Detected on this PC</h3>
                     <p className={`text-xs ${T.sub}`}>
-                      {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected — select your preferred device.
+                      {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected  -  select your preferred device.
                     </p>
                   </div>
                 </div>
@@ -1259,7 +1284,7 @@ export default function DevicesPage() {
                           {isGroupActive ? <SignalBars active /> : <ChevronRight size={18} className={T.faint} />}
                         </button>
 
-                        {/* Mode pills — only for multi-mode devices (e.g. Stereo | Hands-Free) */}
+                        {/* Mode pills  -  only for multi-mode devices (e.g. Stereo | Hands-Free) */}
                         {group.modes.length > 1 && (
                           <div className="flex flex-wrap gap-1.5 pl-14">
                             {group.modes.map((mode) => (
@@ -1294,7 +1319,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
               )}
             </motion.div>
 
-            {/* ── Devices on your network (DESKTOP ONLY — real LAN scan) ── */}
+            {/* ── Devices on your network (DESKTOP ONLY  -  real LAN scan) ── */}
             {lan.supported && (
               <motion.div
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -1307,7 +1332,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                     </span>
                     <div>
                       <h3 className={`font-bold ${T.heading}`}>Devices on your network</h3>
-                      <p className={`text-sm ${T.sub}`}>Found on your Wi-Fi by the desktop app — connect and play Azan or tilawat directly.</p>
+                      <p className={`text-sm ${T.sub}`}>Found on your Wi-Fi by the desktop app  -  connect and play Azan or tilawat directly.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1343,13 +1368,29 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                       const castable = d.capabilities?.cast;
                       const active = lan.activeId === d.id;
                       const busy = lan.busyId === d.id;
-                      const isDefault = castDeviceId === d.id;
+                      const isAzanDevice = azanDeviceIds.includes(d.id);
+                      const isRecitationDevice = recitationDeviceIds.includes(d.id);
                       return (
                         <motion.div
                           key={d.id}
                           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
                           className={`rounded-2xl p-4 flex flex-col gap-3 ${active ? T.deviceSel : T.deviceCard}`}
                         >
+                          {/* Now-Playing banner  -  persists across navigation via sessionStorage */}
+                          {active && (
+                            <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+                              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)' }}>
+                              <MiniEq />
+                              <p className="flex-1 text-xs font-bold text-emerald-600 truncate">
+                                Now Playing{lan.activeLabel ? ` - ${lan.activeLabel}` : ''}
+                              </p>
+                              <button onClick={() => lan.stop(d.id)}
+                                className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700 transition">
+                                <X size={12} /> Stop
+                              </button>
+                            </div>
+                          )}
+
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-start gap-3 min-w-0">
                               <span className={`w-11 h-11 shrink-0 grid place-items-center rounded-xl ${castable ? (isDark ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md') : (isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500')}`}>
@@ -1361,7 +1402,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                               </div>
                             </div>
                             {castable ? (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${active ? 'bg-emerald-100 text-emerald-700' : (isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600')}`}>
                                 {active ? <MiniEq /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />}
                                 {active ? 'Playing' : 'Ready'}
                               </span>
@@ -1374,6 +1415,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
 
                           {castable ? (
                             <>
+                              {/* Play controls */}
                               <div className="flex flex-wrap items-center gap-2">
                                 <button onClick={() => playAzanOnLan(d.id)} disabled={busy}
                                   className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}>
@@ -1383,14 +1425,14 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                                   className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}>
                                   {busy ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Recitation
                                 </button>
-                                {active && (
-                                  <button onClick={() => lan.stop(d.id)}
-                                    className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost}`}>
-                                    <X size={14} /> Stop
-                                  </button>
-                                )}
+                                <button onClick={() => testSoundOnLan(d.id)} disabled={busy}
+                                  title="Plays a short clip to confirm the device is working"
+                                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}>
+                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Activity size={14} />} Test Sound
+                                </button>
                               </div>
 
+                              {/* Volume slider (shown when playing) */}
                               {active && (
                                 <div className="flex items-center gap-2 max-w-xs">
                                   <Volume2 size={14} className={T.faint} />
@@ -1403,20 +1445,29 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                                 </div>
                               )}
 
-                              <button
-                                onClick={() => setDefaultCastDevice(d)}
-                                className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isDefault ? 'text-emerald-600' : T.faint} hover:underline`}
-                              >
-                                <Bell size={12} /> {isDefault ? 'Default for auto-Azan ✓' : 'Use for auto-Azan'}
-                              </button>
+                              {/* Multi-select purpose toggles */}
+                              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-900/[0.07]">
+                                <button
+                                  onClick={() => toggleAzanDevice(d)}
+                                  className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-2.5 py-1 transition ${isAzanDevice ? 'bg-emerald-600 text-white' : (isDark ? 'bg-white/5 text-parchment/55 hover:bg-white/10' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100')}`}
+                                >
+                                  <Bell size={11} /> Auto-Azan{isAzanDevice ? ' ✓' : ''}
+                                </button>
+                                <button
+                                  onClick={() => toggleRecitationDevice(d.id)}
+                                  className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-2.5 py-1 transition ${isRecitationDevice ? 'bg-violet-600 text-white' : (isDark ? 'bg-white/5 text-parchment/55 hover:bg-white/10' : 'bg-violet-50 text-violet-700 hover:bg-violet-100')}`}
+                                >
+                                  <Volume2 size={11} /> Recitation{isRecitationDevice ? ' ✓' : ''}
+                                </button>
+                              </div>
                             </>
                           ) : (
                             <p className={`text-xs ${T.faint} leading-relaxed`}>
                               {d.kind === 'airplay'
-                                ? 'AirPlay device detected. Direct casting needs AirPlay 2 pairing (not supported yet) — use a Chromecast/Google Home, a DLNA speaker, or Bluetooth.'
+                                ? 'AirPlay device detected. Direct casting needs AirPlay 2 pairing (not supported yet)  -  use a Chromecast/Google Home, a DLNA speaker, or Bluetooth.'
                                 : d.kind === 'alexa'
                                 ? 'Amazon Echo detected. Playing to Alexa needs a published Alexa Skill (cloud), not a local connection.'
-                                : 'This device was found but can’t be controlled directly.'}
+                                : 'This device was found but can\'t be controlled directly.'}
                             </p>
                           )}
                         </motion.div>
@@ -1439,7 +1490,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   </span>
                   <div>
                     <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
-                    <p className={`text-sm ${T.sub}`}>{lan.supported ? 'Or use your browser’s built-in casting (Chrome picker).' : 'Stream Azan & Quran audio to your smart devices on the same Wi-Fi.'}</p>
+                    <p className={`text-sm ${T.sub}`}>{lan.supported ? "Or use your browser's built-in casting (Chrome picker)." : 'Stream Azan & Quran audio to your smart devices on the same Wi-Fi.'}</p>
                   </div>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${castPill}`}>
@@ -1481,12 +1532,12 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                     {cast.state === 'no_sdk' ? (
                       <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
                         Your current browser can&apos;t reach Cast devices. Open this page in
-                        desktop <strong>Chrome</strong>, <strong>Edge</strong> or <strong>Brave</strong> — Safari, Firefox and phone
+                        desktop <strong>Chrome</strong>, <strong>Edge</strong> or <strong>Brave</strong>  -  Safari, Firefox and phone
                         browsers don&apos;t support Google Cast.
                       </p>
                     ) : cast.state === 'no_devices' ? (
                       <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                        Power on your Chromecast / Google Home / Nest on the <strong>same Wi-Fi</strong> as this computer — devices appear on their own, no rescan needed. The steps below help if yours doesn&apos;t show up.
+                        Power on your Chromecast / Google Home / Nest on the <strong>same Wi-Fi</strong> as this computer  -  devices appear on their own, no rescan needed. The steps below help if yours doesn&apos;t show up.
                       </p>
                     ) : cast.state === 'connected' ? (
                       <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
@@ -1593,12 +1644,12 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   <p className={`font-semibold mb-2 ${T.heading}`}>How to connect Chromecast / Google Home / Nest</p>
                   <ol className="space-y-1.5 list-decimal list-inside">
                     <li>Power on the device and put it on the <strong>same Wi-Fi</strong> as this computer (not a Guest network; turn off any VPN).</li>
-                    <li>Use <strong>desktop Chrome, Edge or Brave</strong> — Safari, Firefox and phone browsers can&apos;t cast.</li>
-                    <li>Click <strong>“Connect a device”</strong> above. Chrome opens its own picker and <em>lists your devices there</em> — for privacy the browser, not this page, shows them.</li>
+                    <li>Use <strong>desktop Chrome, Edge or Brave</strong>  -  Safari, Firefox and phone browsers can&apos;t cast.</li>
+                    <li>Click <strong>“Connect a device”</strong> above. Chrome opens its own picker and <em>lists your devices there</em>  -  for privacy the browser, not this page, shows them.</li>
                     <li>Choose your device in that picker to approve the connection, then press <strong>Cast Adhan</strong> or <strong>Cast recitation</strong>.</li>
                   </ol>
                   <p className={`mt-2 ${T.faint}`}>
-                    Still not showing? Some routers block discovery — turn off <em>AP/client isolation</em> in your router, or the device may be in use by another app/phone. Casting needs no in-browser permission to grant; it&apos;s purely a network/Wi-Fi matter.
+                    Still not showing? Some routers block discovery  -  turn off <em>AP/client isolation</em> in your router, or the device may be in use by another app/phone. Casting needs no in-browser permission to grant; it&apos;s purely a network/Wi-Fi matter.
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     {detectOS() === 'linux' ? (
@@ -1650,7 +1701,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                     <Info size={14} className="shrink-0 mt-0.5 text-slate-500" />
                     <p className="text-xs text-emerald-900/55">
                       <strong>Other device types:</strong> Bluetooth speakers &amp; earbuds work through
-                      the list above — pair them in Windows first, then pick them. Amazon Alexa/Echo needs
+                      the list above  -  pair them in Windows first, then pick them. Amazon Alexa/Echo needs
                       a published Alexa Skill, and some devices need a companion app.
                     </p>
                   </div>
@@ -1706,7 +1757,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   ))}
                 </div>
               ) : linked.length === 0 ? (
-                /* No devices — the requested empty state (covers both "none linked" and "not signed in") */
+                /* No devices  -  the requested empty state (covers both "none linked" and "not signed in") */
                 <div className={`rounded-2xl border border-dashed px-5 py-8 text-center ${isDark ? 'border-white/12 bg-white/[0.02]' : 'border-emerald-900/12 bg-emerald-50/30'}`}>
                   <span className={`mx-auto w-12 h-12 grid place-items-center rounded-2xl ${isDark ? 'bg-white/5 text-parchment/60' : 'bg-white text-emerald-600 shadow-sm'}`}>
                     {needsAuth ? <LogIn size={22} /> : <MonitorSmartphone size={22} />}
@@ -1714,8 +1765,8 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   <p className={`font-bold mt-3 ${T.heading}`}>No devices found</p>
                   <p className={`text-sm ${T.sub} mt-1 max-w-md mx-auto`}>
                     {needsAuth
-                      ? 'Sign in to sync your devices — your phone, tablet and desktop apps will appear here so azan & recitations stay in step across all of them.'
-                      : 'You haven’t linked any devices yet. Link this one to get started — your phone and tablet apps will appear here too.'}
+                      ? 'Sign in to sync your devices  -  your phone, tablet and desktop apps will appear here so azan & recitations stay in step across all of them.'
+                      : "You haven't linked any devices yet. Link this one to get started - your phone and tablet apps will appear here too."}
                   </p>
                   <button onClick={linkThisDevice} disabled={linking} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 mt-4 text-sm font-semibold ${T.primary} disabled:opacity-70`}>
                     {linking ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
@@ -1802,7 +1853,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
             </div>
           </div>
 
-          {/* ════════ RIGHT SIDEBAR — LIGHT ONLY ════════ */}
+          {/* ════════ RIGHT SIDEBAR  -  LIGHT ONLY ════════ */}
           {!isDark && (
             <aside className="space-y-5">
               {/* Quick Actions */}
