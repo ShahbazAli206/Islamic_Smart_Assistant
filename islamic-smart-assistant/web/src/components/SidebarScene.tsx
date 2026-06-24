@@ -1,21 +1,5 @@
 'use client';
 
-/**
- * Layered, animated backdrop for the dashboard sidebar — themed *separately*
- * for dark and light mode to match the Noor design:
- *
- *   • a base gradient (deep forest-green at night, warm parchment by day)
- *   • slowly drifting "aurora" glow blobs — the moving shades
- *   • a faded arabesque pattern tucked into the top-right corner
- *   • twinkling stars + a glowing crescent (dark) / drifting birds (light)
- *   • a hand-drawn mosque skyline silhouette anchored to the bottom
- *
- * Purely decorative: non-interactive and hidden from assistive tech. Sits at
- * z-0 behind the sidebar's relative/z-10 content.
- */
-
-// Fixed star field (percentage-based so it scales with the rail and stays
-// stable across SSR/CSR — no Math.random hydration mismatch). Dark mode only.
 const STARS = [
   { x: '18%', y: '15%', r: 2,   o: 0.85, d: 0   },
   { x: '33%', y: '9%',  r: 1.5, o: 0.6,  d: 0.6 },
@@ -30,13 +14,31 @@ const STARS = [
 export function SidebarScene({ isDark }: { isDark: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-      {/* ── base gradient ── */}
+
+      {/* ── full-height background image (visible through glass overlay) ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/quran-bg-card.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 60%',
+          opacity: isDark ? 0.30 : 0.48,
+          mixBlendMode: isDark ? 'normal' : 'multiply',
+          filter: isDark
+            ? 'brightness(0.42) contrast(1.05) saturate(1.15)'
+            : 'saturate(1.20) brightness(0.90)',
+          WebkitMaskImage: 'linear-gradient(to top,#000 20%,rgba(0,0,0,0.60) 58%,rgba(0,0,0,0.20) 100%)',
+          maskImage:       'linear-gradient(to top,#000 20%,rgba(0,0,0,0.60) 58%,rgba(0,0,0,0.20) 100%)',
+        }}
+      />
+
+      {/* ── semi-transparent glass gradient overlay ── */}
       <div
         className="absolute inset-0 transition-[background] duration-700"
         style={{
           background: isDark
-            ? 'linear-gradient(165deg,#10332a 0%,#0a2019 42%,#06120d 100%)'
-            : 'linear-gradient(165deg,rgba(252,250,242,0.78) 0%,rgba(243,241,227,0.78) 55%,rgba(233,238,222,0.78) 100%)',
+            ? 'linear-gradient(165deg,rgba(16,51,42,0.88) 0%,rgba(10,32,25,0.88) 42%,rgba(6,18,13,0.90) 100%)'
+            : 'linear-gradient(165deg,rgba(252,250,242,0.72) 0%,rgba(243,241,227,0.70) 55%,rgba(233,238,222,0.68) 100%)',
         }}
       />
 
@@ -46,7 +48,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         style={{
           background: isDark
             ? 'radial-gradient(circle,rgba(16,185,129,0.32),transparent 70%)'
-            : 'radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)',
+            : 'radial-gradient(circle,rgba(52,211,153,0.18),transparent 70%)',
         }}
       />
       <div
@@ -54,7 +56,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         style={{
           background: isDark
             ? 'radial-gradient(circle,rgba(201,162,39,0.20),transparent 70%)'
-            : 'radial-gradient(circle,rgba(221,185,75,0.22),transparent 70%)',
+            : 'radial-gradient(circle,rgba(221,185,75,0.16),transparent 70%)',
         }}
       />
       <div
@@ -62,7 +64,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         style={{
           background: isDark
             ? 'radial-gradient(circle,rgba(20,140,100,0.30),transparent 70%)'
-            : 'radial-gradient(circle,rgba(120,180,140,0.22),transparent 70%)',
+            : 'radial-gradient(circle,rgba(120,180,140,0.18),transparent 70%)',
         }}
       />
 
@@ -70,7 +72,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
       <div
         className="pattern-bg absolute -top-8 right-0 w-60 h-60 animate-spin-slow"
         style={{
-          opacity: isDark ? 0.45 : 0.55,
+          opacity: isDark ? 0.45 : 0.40,
           WebkitMaskImage: 'radial-gradient(circle at 100% 0%,#000 0%,transparent 72%)',
           maskImage: 'radial-gradient(circle at 100% 0%,#000 0%,transparent 72%)',
         }}
@@ -104,31 +106,12 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         </>
       )}
 
-      {/* ── mosque panorama anchored to the bottom, hazing out toward the top ──
-          In light mode `multiply` drops the image's pale sky into the parchment
-          so only the green domes / minarets remain (watercolour feel). In dark
-          mode it's darkened + tinted and seated with a deep-green overlay. */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-[62%] bg-no-repeat"
-        style={{
-          backgroundImage: 'url(/quran-bg-card.png)',
-          backgroundSize: '143% auto',
-          backgroundPosition: 'left bottom',
-          opacity: isDark ? 0.55 : 0.52,
-          mixBlendMode: isDark ? 'normal' : 'multiply',
-          filter: isDark
-            ? 'brightness(0.5) contrast(1.05) saturate(1.15)'
-            : 'saturate(1.10) brightness(0.95)',
-          WebkitMaskImage: 'linear-gradient(to top,#000 45%,transparent 100%)',
-          maskImage: 'linear-gradient(to top,#000 45%,transparent 100%)',
-        }}
-      />
+      {/* ── dark-mode bottom vignette to seat the scene ── */}
       {isDark && (
         <div
-          className="absolute inset-x-0 bottom-0 h-[62%]"
+          className="absolute inset-0"
           style={{
-            background:
-              'linear-gradient(to top,rgba(6,18,13,0.55) 0%,rgba(6,18,13,0.25) 45%,transparent 75%)',
+            background: 'linear-gradient(to top,rgba(6,18,13,0.65) 0%,rgba(6,18,13,0.30) 40%,transparent 70%)',
           }}
         />
       )}

@@ -89,7 +89,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const t = isDark
     ? {
         text:        'text-parchment',
-        groupLabel:  'text-emerald-100/50',
+        groupLabel:  'text-emerald-100/55',
+        groupLabelBg: '',
         itemBase:    'text-emerald-50/80 hover:bg-white/[0.11] hover:text-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.45)] hover:ring-1 hover:ring-white/[0.13] hover:backdrop-blur-sm',
         itemActive:  'bg-gradient-to-r from-emerald-500/35 to-emerald-700/15 text-white ring-1 ring-emerald-400/35 shadow-[0_6px_30px_rgba(0,0,0,0.55),0_0_18px_rgba(52,211,153,0.18),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-sm',
         brandSub:    'text-emerald-100/70',
@@ -110,7 +111,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     : {
         text:        'text-emerald-950',
-        groupLabel:  'text-emerald-900/80',
+        groupLabel:  'text-emerald-900',
+        groupLabelBg: 'bg-emerald-800/[0.10] border border-emerald-700/20 rounded-xl -mx-1 px-4 backdrop-blur-sm',
         itemBase:    'text-emerald-950 hover:bg-white/80 hover:text-emerald-950 hover:shadow-[0_4px_18px_rgba(16,185,129,0.20)] hover:ring-1 hover:ring-emerald-300/70 hover:backdrop-blur-sm',
         itemActive:  'bg-gradient-to-r from-white/95 to-emerald-50/85 text-emerald-950 ring-1 ring-emerald-500/25 shadow-[0_6px_26px_rgba(16,185,129,0.24),0_0_14px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(255,255,255,1)] backdrop-blur-sm',
         brandSub:    'text-emerald-800/70',
@@ -243,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           <div className="leading-tight">
             <p className="font-display text-lg font-bold">Noor</p>
-            <p className={`text-[10px] uppercase tracking-widest ${t.brandSub}`}>Smart Assistant</p>
+            <p className={`${isDark ? 'text-[10px]' : 'text-[11px] font-bold'} uppercase tracking-widest ${t.brandSub}`}>Smart Assistant</p>
           </div>
         </Link>
 
@@ -251,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="relative z-10 flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {NAV.map((group) => (
             <div key={group.group}>
-              <p className={`px-3 mb-1 text-[11px] uppercase tracking-[0.20em] font-bold ${t.groupLabel}`}>
+              <p className={`mb-2 mt-1 uppercase tracking-[0.22em] font-extrabold ${isDark ? 'px-3 py-0.5 text-[11px]' : 'py-2.5 text-[12px]'} ${t.groupLabel} ${t.groupLabelBg}`}>
                 {group.group}
               </p>
               <div className="space-y-1">
