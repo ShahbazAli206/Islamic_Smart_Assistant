@@ -445,18 +445,8 @@ export default function PrayerTimesPage() {
 
           {/* ayah — light glass card matching Overview hero exactly */}
           <div className="hidden md:block">
-            <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/55 p-5 pr-[48%] backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
-              {/* Quran-on-rehal image fills the right ~50% of the card */}
-              <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/quran-bg-overview-page.png"
-                  alt=""
-                  className="h-full w-full select-none object-cover"
-                  style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 16%)', maskImage: 'linear-gradient(to right, transparent 0%, black 16%)' }}
-                />
-              </div>
-              <div className="relative">
+            <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+              <div>
                 <div className="flex items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
                     ٤٥
