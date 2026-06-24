@@ -431,7 +431,7 @@ export default function PrayerTimesPage() {
             <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
               <Sparkles size={12} /> Prayer Times
             </span>
-            <h1 className="mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] whitespace-nowrap text-black"
+            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black"
               style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
               Pick your mosque, anywhere on earth
             </h1>
