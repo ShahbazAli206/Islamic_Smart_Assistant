@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, Music2, FileAudio, Sparkles } from 'lucide-react';
+import { UploadCloud, Music2, FileAudio, Sparkles, BookOpen } from 'lucide-react';
 import { Admin } from '@/lib/api';
 
 /** Audio assets page — drag-and-drop upload of custom Azan packs plus the bundled defaults. */
@@ -22,13 +22,51 @@ export default function AudioPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* page header */}
-      <div>
-        <p className="chip-gold mb-2"><Sparkles size={12}/> Library</p>
-        <h1 className="h-display text-4xl font-bold">Audio assets</h1>
-        <p className="text-ink/60 mt-1">Upload custom Azan packs. Files are stored on cloud storage and pushed to devices instantly.</p>
+    <div className="-m-5 sm:-m-8 min-h-full text-ink page-light">
+      {/* ── hero section ── */}
+      <div className="relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
+
+        <div className="relative px-6 sm:px-10 pt-8 pb-8 flex flex-wrap items-start justify-between gap-6">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
+              <Sparkles size={12} /> Islamic Library
+            </span>
+            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black"
+              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
+              Audio Assets
+            </h1>
+            <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <p className="text-base sm:text-lg leading-relaxed text-black/85">
+                Upload custom Azan packs. Files are stored on cloud storage and pushed to devices instantly.
+              </p>
+            </div>
+          </div>
+
+          {/* ayah card */}
+          <div className="hidden md:block" style={{ maxWidth: '360px' }}>
+            <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                    ١
+                  </span>
+                  <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
+                    اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ
+                  </p>
+                </div>
+                <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
+                  Read in the name of your Lord who created.
+                </p>
+                <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-&apos;Alaq (96:1)</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div className="px-6 sm:px-10 py-8 space-y-6">
 
       {/* drag-and-drop upload zone — the whole label is clickable to open the hidden file input */}
       <motion.label
@@ -90,6 +128,7 @@ export default function AudioPage() {
             </div>
           </motion.div>
         ))}
+      </div>
       </div>
     </div>
   );

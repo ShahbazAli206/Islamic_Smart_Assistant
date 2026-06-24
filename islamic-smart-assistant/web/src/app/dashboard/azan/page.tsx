@@ -345,6 +345,14 @@ export default function AzanPage() {
   // Azan trimmer — trim any existing voice and save as a new custom clip
   const [trimmingItem, setTrimmingItem] = useState<TrimTarget | null>(null);
 
+  // Toast shown after a delete action.
+  const [deleteToast, setDeleteToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!deleteToast) return;
+    const t = setTimeout(() => setDeleteToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [deleteToast]);
+
   // Azan editor (add intro / outro to an existing voice)
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editorExtraFile, setEditorExtraFile] = useState<File | null>(null);
@@ -440,6 +448,7 @@ export default function AzanPage() {
       if (selectedId === item.id) setSelectedId('makkah');
       setHiddenVoices((prev) => [...prev, item.id]);
     }
+    setDeleteToast(item.name);
   };
 
   const openTrimmer = (item: Item) => {
@@ -599,7 +608,7 @@ export default function AzanPage() {
         art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true, remoteUrl: r.url,
       }));
     return [...builtin, ...custom, ...remote];
-  }, [customAzans, remoteCustoms]);
+  }, [customAzans, remoteCustoms, hiddenVoices]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -643,77 +652,63 @@ export default function AzanPage() {
       style={isDark ? { background: '#070b09' } : undefined}
     >
 
-      {/* ════════ HEADER (full-bleed, animated mosque background) ════════ */}
+      {/* ════════ HEADER ════════ */}
       <header className="relative overflow-hidden">
-        {/* Background layers: optional video → animated mosque image → overlays → particles */}
-        <div aria-hidden className="absolute inset-0">
-          {/* Ken-burns mosque image (always animates) */}
-          <motion.div
-            className="absolute inset-0 bg-cover bg-right-top"
-            style={{ backgroundImage: "url('/hero-bg.jpg')" }}
-            animate={{ scale: [1.08, 1.16, 1.08], x: [0, -14, 0] }}
-            transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          {/* Optional looping video — drop /azan/mosque-loop.mp4 to activate (transparent until present) */}
-          <video
-            autoPlay loop muted playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-            poster="/hero-bg.jpg"
-          >
-            <source src="/azan/mosque-loop.mp4" type="video/mp4" />
-          </video>
-          {/* Legibility overlays — light cream wash only behind the left-hand text; the image stays clear elsewhere */}
-          <div className="absolute inset-0" style={{ background: isDark
-            ? 'linear-gradient(90deg,#070b09 0%,rgba(7,11,9,0.88) 16%,rgba(7,11,9,0.46) 40%,transparent 66%)'
-            : 'linear-gradient(90deg,#FAF7EE 0%,rgba(250,247,238,0.82) 16%,rgba(250,247,238,0.28) 38%,transparent 62%)' }} />
-          <div className="absolute inset-0" style={{ background: isDark
-            ? 'linear-gradient(180deg,transparent 0%,transparent 62%,#070b09 100%)'
-            : 'linear-gradient(180deg,transparent 0%,transparent 68%,rgba(250,247,238,0.9) 100%)' }} />
-          {/* Drifting colour auroras */}
-          <motion.div className="absolute -top-20 right-1/4 w-72 h-72 rounded-full"
-            style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.18) 0%,transparent 70%)' }}
-            animate={{ x: [0, 40, 0], y: [0, 24, 0] }} transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }} />
-          <motion.div className="absolute top-10 right-10 w-60 h-60 rounded-full"
-            style={{ background: 'radial-gradient(circle,rgba(212,175,55,0.2) 0%,transparent 70%)' }}
-            animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }} />
-          {/* Floating light specks */}
-          {[
-            { l: '30%', t: '20%', d: 9 }, { l: '52%', t: '40%', d: 12 }, { l: '70%', t: '18%', d: 10 },
-            { l: '84%', t: '52%', d: 14 }, { l: '44%', t: '64%', d: 11 }, { l: '62%', t: '30%', d: 13 },
-          ].map((p, i) => (
-            <motion.span key={i}
-              className="absolute w-1.5 h-1.5 rounded-full bg-gold-300/70"
-              style={{ left: p.l, top: p.t }}
-              animate={{ y: [0, -22, 0], opacity: [0.2, 0.9, 0.2] }}
-              transition={{ duration: p.d, repeat: Infinity, ease: 'easeInOut', delay: i * 0.8 }} />
-          ))}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
         <div className="relative px-5 sm:px-8 pt-7 pb-5">
           {/* — title row — */}
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <motion.div initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <h1 className="font-display font-bold text-4xl sm:text-5xl text-emerald-950 leading-none">Azan Voices</h1>
-              <p className="text-emerald-900/60 mt-2 text-sm sm:text-base">Beautiful voices for every prayer time</p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-              className="flex items-center gap-2.5"
-            >
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setUploaderOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 shadow-md hover:bg-white transition"
-              >
-                <UploadCloud size={16} /> Upload Azan
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setAutoplay(!autoplay)}
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-md transition
-                  ${autoplay ? 'bg-emerald-600 text-white shadow-glow-emerald hover:bg-emerald-700' : 'bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 hover:bg-white'}`}
-              >
-                {autoplay ? <><BellRing size={16} /> Auto-Azan: ON</> : <><BellOff size={16} /> Auto-Azan: OFF</>}
-              </motion.button>
-            </motion.div>
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
+                <Bell size={12} /> Azan Voices
+              </span>
+              <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black"
+                style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
+                Azan Voices
+              </h1>
+              <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+                <p className="text-base sm:text-lg leading-relaxed text-black/85">
+                  Beautiful voices for every prayer time. Choose your favorite and set it as your Azan.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                  <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setUploaderOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 shadow-md hover:bg-white transition"
+                  >
+                    <UploadCloud size={16} /> Upload Azan
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setAutoplay(!autoplay)}
+                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-md transition
+                      ${autoplay ? 'bg-emerald-600 text-white shadow-glow-emerald hover:bg-emerald-700' : 'bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 hover:bg-white'}`}
+                  >
+                    {autoplay ? <><BellRing size={16} /> Auto-Azan: ON</> : <><BellOff size={16} /> Auto-Azan: OFF</>}
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+
+            {/* right: Azan ayah */}
+            <div className="hidden md:block" style={{ maxWidth: '360px' }}>
+              <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                      ٩
+                    </span>
+                    <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
+                      يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا نُودِيَ لِلصَّلَاةِ مِن يَوْمِ الْجُمُعَةِ فَاسْعَوْا إِلَىٰ ذِكْرِ اللَّهِ
+                    </p>
+                  </div>
+                  <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
+                    O you who have believed, when the call to prayer is made on Friday, then proceed to the remembrance of Allah.
+                  </p>
+                  <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Jumu&apos;ah (62:9)</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* — feature chips — */}
@@ -722,14 +717,14 @@ export default function AzanPage() {
               <motion.div key={title}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.07 }}
                 whileHover={{ y: -3 }}
-                className="flex items-center gap-3 rounded-2xl bg-white/80 backdrop-blur-md border border-white/70 shadow-sm px-3.5 py-3"
+                className="flex items-center gap-3 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm px-3.5 py-3"
               >
                 <span className="inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
                   <Icon size={17} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-emerald-950 leading-none">{title}</p>
-                  <p className="text-[11px] text-emerald-900/55 mt-1 leading-none truncate">{sub}</p>
+                  <p className="text-sm font-bold text-black leading-none">{title}</p>
+                  <p className="text-[11px] text-black/55 mt-1 leading-none truncate">{sub}</p>
                 </div>
               </motion.div>
             ))}
@@ -1068,6 +1063,30 @@ export default function AzanPage() {
         onEnded={() => { setActiveId(null); revokeCustomUrl(); }}
         onError={() => { setActiveId(null); revokeCustomUrl(); setError('Audio failed to load. Try a different voice or run download_assets.py for offline files.'); }}
       />
+
+      {/* ── Delete success toast ── */}
+      <AnimatePresence>
+        {deleteToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.94 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+            className="fixed top-5 right-5 z-[300] flex items-center gap-3 rounded-2xl bg-white border border-emerald-200 shadow-xl px-4 py-3 max-w-xs"
+          >
+            <span className="inline-flex w-8 h-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <CheckCircle2 size={17} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-emerald-950 leading-tight truncate">{deleteToast}</p>
+              <p className="text-xs text-emerald-700/65 leading-tight">Deleted successfully</p>
+            </div>
+            <button onClick={() => setDeleteToast(null)} className="ml-1 shrink-0 text-emerald-900/30 hover:text-emerald-700 transition">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AzanUploader open={uploaderOpen} onClose={() => setUploaderOpen(false)} onSaved={onSaved} />
 
