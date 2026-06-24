@@ -12,20 +12,6 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { DUAS, DUA_GROUP_LABELS, type Dua, type DuaGroup, type DuaSection } from '@/lib/duas-data';
 import { HADEES_BOOKS, HADEES_CDN } from '@/lib/hadees-books';
 
-// ── Flower SVG (same pattern as other pages) ────────────────────────────────
-function Flower({ size = 18, color = '#f9a8d4' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-      <g fill={color} opacity="0.9">
-        {[0, 72, 144, 216, 288].map((a) => (
-          <ellipse key={a} cx="12" cy="6" rx="3" ry="5.2" transform={`rotate(${a} 12 12)`} />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="2.6" fill="#F6D67A" />
-    </svg>
-  );
-}
-
 // ── Tab definition ───────────────────────────────────────────────────────────
 type Tab = 'duas' | 'hadees' | 'masail' | 'calculators';
 const TABS: { id: Tab; label: string; icon: typeof BookMarked; color: string }[] = [
@@ -1268,97 +1254,74 @@ export default function IslamicLibraryPage() {
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
 
       {/* ── Full-bleed header ── */}
-      <div className="relative">
-        <div aria-hidden className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(120deg,#0c2418 0%,#08160f 72%)' : 'linear-gradient(120deg,#fdf8ec 0%,#f4ead7 72%)' }} />
-
-          <div className="absolute inset-y-0 right-0 w-[62%]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/islamic_Library_bg.png" alt="" className="w-full h-full object-cover object-center" style={isDark ? { filter: 'brightness(0.82)' } : undefined} />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${isDark ? '#08160f' : '#f4ead7'} 0%, transparent 26%)` }} />
-          </div>
-
-          <div className="absolute inset-y-0 left-0 w-[46%] overflow-hidden">
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '2%', top: '6%', width: 190, height: 190, background: 'radial-gradient(circle, rgba(253,224,71,0.45), transparent 70%)' }} animate={{ x: [0, 22, 0], y: [0, 16, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '30%', top: '42%', width: 210, height: 210, background: 'radial-gradient(circle, rgba(134,239,172,0.42), transparent 70%)' }} animate={{ x: [0, -18, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '6%', top: '54%', width: 170, height: 170, background: 'radial-gradient(circle, rgba(147,197,253,0.42), transparent 70%)' }} animate={{ x: [0, 16, 0], y: [0, -14, 0] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute rounded-full blur-3xl" style={{ left: '40%', top: '2%', width: 160, height: 160, background: 'radial-gradient(circle, rgba(251,207,232,0.48), transparent 70%)' }} animate={{ x: [0, -14, 0], y: [0, 18, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
-            <motion.div className="absolute" style={{ left: '13%', top: '24%' }} animate={{ y: [0, -8, 0], rotate: [0, 12, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}><Flower size={22} color="#f9a8d4" /></motion.div>
-            <motion.div className="absolute" style={{ left: '35%', top: '64%' }} animate={{ y: [0, -10, 0], rotate: [0, -10, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Flower size={18} color="#fcd34d" /></motion.div>
-            <motion.div className="absolute" style={{ left: '5%', top: '74%' }} animate={{ y: [0, -7, 0], rotate: [0, 14, 0] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Flower size={16} color="#86efac" /></motion.div>
-            <motion.div className="absolute" style={{ left: '44%', top: '36%' }} animate={{ y: [0, -9, 0], rotate: [0, -12, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}><Flower size={20} color="#93c5fd" /></motion.div>
-          </div>
-
-
-          <motion.div aria-hidden className="absolute hidden lg:block" style={{ right: '20%', top: 26 }}
-            animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="#F1D588" style={{ filter: 'drop-shadow(0 0 12px rgba(233,207,122,0.7))' }}>
-              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-            </svg>
-          </motion.div>
-        </div>
+      <div className="relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/islamic_Library_bg.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
         <div className="relative px-6 sm:px-10 pt-8 pb-3 flex flex-wrap items-start justify-between gap-6">
           <div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur border ${isDark ? 'border-gold-300/50 bg-black/30 text-gold-200' : 'border-gold-500/40 bg-white/70 text-emerald-800'}`}>
+            <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
               <Library size={12} /> Islamic Library
             </span>
-            <h1 className={`mt-4 font-display font-bold text-2xl sm:text-3xl xl:text-4xl 2xl:text-5xl leading-[1.05] ${isDark ? 'text-white' : 'text-emerald-950'}`}
-              style={{ textShadow: isDark ? '0 2px 16px rgba(0,0,0,0.6)' : '0 1px 8px rgba(255,255,255,0.7)' }}>
+            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black"
+              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
               Advanced Islamic Features
             </h1>
-            <div className="mt-3 inline-block max-w-md rounded-xl px-4 py-2.5"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.2)' }}>
-              <p className="text-base sm:text-lg leading-relaxed text-white/90">
+            <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <p className="text-base sm:text-lg leading-relaxed text-black/85">
                 Duas · Hadees Library · Islamic Masail · Calculators
               </p>
-              <p className="mt-1 text-xs text-white/55">Hanafi | Deoband | Authentic Sources</p>
+              <p className="mt-1 text-xs text-black/55">Hanafi | Deoband | Authentic Sources</p>
             </div>
           </div>
 
-          <div className="hidden md:block max-w-[17rem]">
-            <div className="rounded-2xl px-4 py-4 text-right"
-              style={{ background: isDark ? 'rgba(8,22,15,0.78)' : 'rgba(10,30,20,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(233,207,122,0.22)' }}>
+          {/* ayah card — rotating */}
+          <div className="hidden md:block" style={{ maxWidth: '360px' }}>
+            <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
               <AnimatePresence mode="wait">
                 <motion.div key={heroIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.5 }}>
-                  <p className={`font-arabic text-xl lg:text-2xl leading-[1.9] ${isDark ? 'text-[#E9CF7A]' : 'text-black'}`} dir="rtl">{HERO_AYAT[heroIdx].ar}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed font-medium text-white/90">&ldquo;{HERO_AYAT[heroIdx].en}&rdquo;</p>
-                  <p className="mt-1 text-xs font-bold text-[#F1D588]">{HERO_AYAT[heroIdx].ref}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                      {HERO_AYAT[heroIdx].ref.split(':')[1]?.trim() ?? '١'}
+                    </span>
+                    <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">{HERO_AYAT[heroIdx].ar}</p>
+                  </div>
+                  <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">&ldquo;{HERO_AYAT[heroIdx].en}&rdquo;</p>
+                  <p className="mt-2 text-xs font-semibold text-black/75">({HERO_AYAT[heroIdx].ref})</p>
                 </motion.div>
               </AnimatePresence>
-              <div className="mt-2 flex items-center justify-end gap-1.5">
+              <div className="mt-3 flex items-center gap-1.5">
                 {HERO_AYAT.map((_, i) => (
                   <button key={i} onClick={() => setHeroIdx(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === heroIdx ? 'w-6 bg-gold-300' : 'w-1.5 bg-white/30'}`} />
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === heroIdx ? 'w-6 bg-emerald-500' : 'w-1.5 bg-black/20'}`} />
                 ))}
               </div>
             </div>
           </div>
         </div>
-      {/* ── Tab navigation cards — inside hero so background image extends here ── */}
-      <div className="relative px-6 sm:px-10 pb-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold text-left transition-all duration-200 ${
-                  active
-                    ? 'bg-emerald-600 border border-emerald-400/50 text-white shadow-glow-emerald scale-[1.02]'
-                    : isDark
-                      ? 'bg-white/[0.09] border border-white/[0.14] backdrop-blur-md text-parchment/85 hover:bg-white/[0.15] hover:scale-[1.01]'
+
+        {/* ── Tab navigation cards — inside hero so background image extends here ── */}
+        <div className="relative px-6 sm:px-10 pb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold text-left transition-all duration-200 ${
+                    active
+                      ? 'bg-emerald-600 border border-emerald-400/50 text-white shadow-glow-emerald scale-[1.02]'
                       : 'bg-white/40 border border-white/60 backdrop-blur-md text-emerald-950 shadow-sm hover:bg-white/60 hover:scale-[1.01]'
-                }`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-black/20' : isDark ? 'bg-white/[0.10]' : 'bg-white/60'}`}>
-                  <Icon size={18} className={active ? 'text-white' : tab.color} />
-                </div>
-                <span className="leading-snug">{tab.label}</span>
-              </button>
-            );
-          })}
+                  }`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-black/20' : 'bg-white/60'}`}>
+                    <Icon size={18} className={active ? 'text-white' : tab.color} />
+                  </div>
+                  <span className="leading-snug">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
       </div>{/* closes hero section */}
 
       {/* ── Tab content ── */}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Home, User, Smartphone, Music2, Settings,
+  Home, User, Smartphone, Settings,
   BookOpen, Bell, Clock, Menu, X, AlarmClock, Compass,
   Moon, Sun, ChevronRight, RefreshCw, Library, SlidersHorizontal,
   Square, Radio,
@@ -37,7 +37,6 @@ const NAV = [
     items: [
       { href: '/dashboard/profile',   label: 'Profile',   icon: User,       color: 'text-indigo-500' },
       { href: '/dashboard/devices',   label: 'Devices',   icon: Smartphone, color: 'text-cyan-600' },
-      { href: '/dashboard/audio',     label: 'Audio',     icon: Music2,     color: 'text-fuchsia-500' },
       { href: '/dashboard/settings',  label: 'Settings',  icon: Settings,   color: 'text-slate-500' },
     ],
   },

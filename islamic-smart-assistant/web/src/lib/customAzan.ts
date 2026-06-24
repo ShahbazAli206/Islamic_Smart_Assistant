@@ -10,12 +10,15 @@
 export const CUSTOM_AZAN_PREFIX = 'custom:';
 export const isCustomAzan = (id: string) => id.startsWith(CUSTOM_AZAN_PREFIX);
 
+export type AudioType = 'azan' | 'durood' | 'dua';
+
 /** Lightweight metadata persisted in localStorage; the audio Blob lives in IndexedDB. */
 export type CustomAzan = {
   id: string;        // `custom:<uuid>`
   name: string;
   createdAt: number;
   durationSec: number;
+  audioType?: AudioType;
 };
 
 const DB_NAME = 'isa-azan';
