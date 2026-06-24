@@ -335,33 +335,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {azanMini && (
           <div className="relative z-10 mt-1 px-1">
             <div
-              className="flex items-center gap-2 rounded-2xl px-3 py-2"
-              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}
+              className="flex items-center gap-2 rounded-2xl px-3 py-2 backdrop-blur-sm"
+              style={isDark
+                ? { background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }
+                : { background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(16,185,129,0.35)', boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}
             >
               <motion.div
                 animate={{ scale: [1, 1.18, 1], opacity: [0.75, 1, 0.75] }}
                 transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                 className="shrink-0"
               >
-                <Radio size={13} className="text-emerald-500" />
+                <Radio size={13} className={isDark ? 'text-emerald-400' : 'text-emerald-600'} />
               </motion.div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Azan Playing</p>
-                <p className={`text-xs font-semibold truncate leading-snug mt-0.5 ${isDark ? 'text-parchment/80' : 'text-emerald-950'}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-widest leading-none ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>Azan Playing</p>
+                <p className={`text-xs font-bold truncate leading-snug mt-0.5 ${isDark ? 'text-parchment/80' : 'text-emerald-950'}`}>
                   {azanMini.prayer} Prayer
                 </p>
               </div>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('isa:azan-expand'))}
                 title="Show full popup"
-                className="shrink-0 p-1 rounded-full hover:bg-emerald-500/20 text-emerald-500 transition"
+                className={`shrink-0 p-1 rounded-full transition ${isDark ? 'hover:bg-emerald-500/20 text-emerald-400' : 'hover:bg-emerald-100 text-emerald-700'}`}
               >
                 <Bell size={13} />
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('isa:azan-stop'))}
                 title="Stop Azan"
-                className="shrink-0 p-1 rounded-full hover:bg-rose-500/15 text-rose-400 transition"
+                className={`shrink-0 p-1 rounded-full transition ${isDark ? 'hover:bg-rose-500/15 text-rose-400' : 'hover:bg-rose-50 text-rose-500'}`}
               >
                 <Square size={12} fill="currentColor" />
               </button>
