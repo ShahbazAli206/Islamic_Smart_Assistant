@@ -110,10 +110,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     : {
         text:        'text-emerald-950',
-        groupLabel:  'text-emerald-700/65',
-        itemBase:    'text-emerald-900/75 hover:bg-white/80 hover:text-emerald-950 hover:shadow-[0_4px_18px_rgba(16,185,129,0.20)] hover:ring-1 hover:ring-emerald-300/70 hover:backdrop-blur-sm',
-        itemActive:  'bg-gradient-to-r from-white/95 to-emerald-50/85 text-emerald-900 ring-1 ring-emerald-500/25 shadow-[0_6px_26px_rgba(16,185,129,0.24),0_0_14px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(255,255,255,1)] backdrop-blur-sm',
-        brandSub:    'text-emerald-800/60',
+        groupLabel:  'text-emerald-900/80',
+        itemBase:    'text-emerald-950 hover:bg-white/80 hover:text-emerald-950 hover:shadow-[0_4px_18px_rgba(16,185,129,0.20)] hover:ring-1 hover:ring-emerald-300/70 hover:backdrop-blur-sm',
+        itemActive:  'bg-gradient-to-r from-white/95 to-emerald-50/85 text-emerald-950 ring-1 ring-emerald-500/25 shadow-[0_6px_26px_rgba(16,185,129,0.24),0_0_14px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(255,255,255,1)] backdrop-blur-sm',
+        brandSub:    'text-emerald-800/70',
         logoBox:     'bg-emerald-600/10 border-emerald-700/20',
         profile:     'bg-white/80 border-emerald-700/12 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]',
         profileName: 'text-emerald-950',
@@ -197,7 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Sidebar: off-canvas drawer on mobile, fixed rail from lg up ── */}
       <aside
-        className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 z-50 w-72 shrink-0 ${t.text} ${t.sidebarBorder} p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${
+        className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 z-50 w-72 shrink-0 ${t.text} ${t.sidebarBorder} p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${!isDark ? 'backdrop-blur-md' : ''} ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={isDark
@@ -258,7 +258,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items.map((n) => {
                   // Exact-match highlight for the current route.
                   const active = pathname === n.href;
-                  const cls = `group relative flex w-full items-center gap-3 pl-4 pr-3 py-2.5 rounded-2xl text-[15px] text-left transition-all duration-200 ${
+                  const cls = `group relative flex w-full items-center gap-3 pl-4 pr-3 ${isDark ? 'py-2.5' : 'py-3'} rounded-2xl ${isDark ? 'text-[15px]' : 'text-[16px]'} text-left transition-all duration-200 ${
                     active ? t.itemActive : t.itemBase
                   }`;
                   const inner = (
@@ -271,7 +271,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-full ${t.activePill}`}
                         />
                       )}
-                      <n.icon size={18} className={`shrink-0 ${active ? t.activeIcon : n.color}`} />
+                      <n.icon size={isDark ? 18 : 20} className={`shrink-0 ${active ? t.activeIcon : n.color}`} />
                       <span className="font-semibold tracking-[0.01em]">{n.label}</span>
                     </>
                   );

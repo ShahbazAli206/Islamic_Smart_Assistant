@@ -36,7 +36,7 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
         style={{
           background: isDark
             ? 'linear-gradient(165deg,#10332a 0%,#0a2019 42%,#06120d 100%)'
-            : 'linear-gradient(165deg,#fcfaf2 0%,#f3f1e3 55%,#e9eede 100%)',
+            : 'linear-gradient(165deg,rgba(252,250,242,0.78) 0%,rgba(243,241,227,0.78) 55%,rgba(233,238,222,0.78) 100%)',
         }}
       />
 
@@ -109,23 +109,23 @@ export function SidebarScene({ isDark }: { isDark: boolean }) {
           so only the green domes / minarets remain (watercolour feel). In dark
           mode it's darkened + tinted and seated with a deep-green overlay. */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[46%] bg-no-repeat"
+        className="absolute inset-x-0 bottom-0 h-[62%] bg-no-repeat"
         style={{
           backgroundImage: 'url(/quran-bg-card.png)',
           backgroundSize: '143% auto',
           backgroundPosition: 'left bottom',
-          opacity: isDark ? 0.55 : 0.92,
+          opacity: isDark ? 0.55 : 0.52,
           mixBlendMode: isDark ? 'normal' : 'multiply',
           filter: isDark
             ? 'brightness(0.5) contrast(1.05) saturate(1.15)'
-            : 'saturate(1.05)',
-          WebkitMaskImage: 'linear-gradient(to top,#000 58%,transparent 100%)',
-          maskImage: 'linear-gradient(to top,#000 58%,transparent 100%)',
+            : 'saturate(1.10) brightness(0.95)',
+          WebkitMaskImage: 'linear-gradient(to top,#000 45%,transparent 100%)',
+          maskImage: 'linear-gradient(to top,#000 45%,transparent 100%)',
         }}
       />
       {isDark && (
         <div
-          className="absolute inset-x-0 bottom-0 h-[46%]"
+          className="absolute inset-x-0 bottom-0 h-[62%]"
           style={{
             background:
               'linear-gradient(to top,rgba(6,18,13,0.55) 0%,rgba(6,18,13,0.25) 45%,transparent 75%)',
