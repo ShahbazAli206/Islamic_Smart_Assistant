@@ -925,7 +925,7 @@ export default function AzanPage() {
                     </div>
 
                     {/* actions */}
-                    <div className="mt-4 flex items-center gap-2">
+                    <div className="mt-4 flex items-center gap-2 flex-wrap">
                       <button onClick={() => toggleFav(item.id)} title="Favorite"
                         className={`w-10 h-10 grid place-items-center rounded-full border transition shrink-0
                           ${isFav ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-emerald-900/10 text-emerald-900/40 hover:text-rose-500 hover:border-rose-200'}`}>
@@ -949,7 +949,7 @@ export default function AzanPage() {
                       </button>
                       <button
                         onClick={() => setSelectedId(item.id)}
-                        className={`flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition
+                        className={`flex-1 min-w-[7rem] whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition
                           ${isSelected ? 'bg-emerald-600 text-white shadow-glow-emerald' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'}`}
                       >
                         {isSelected ? <><CheckCircle2 size={16} /> Selected</> : 'Set as Default'}
