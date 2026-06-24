@@ -172,6 +172,107 @@ const STATS = [
   { Icon: Heart,       title: 'User Favorites',  sub: 'Save your favorites' },
 ];
 
+// ── Supplementary audio types ────────────────────────────────────────────────
+
+export type SuppPos = 'before' | 'after' | 'both';
+
+type SuppTrack = {
+  id: string;
+  name: string;
+  arabic: string;
+  subtitle: string;
+  duration: string;
+  art: string;
+  accent: string;
+  local: string;
+};
+
+const DUROOD_TRACKS: SuppTrack[] = [
+  {
+    id: 'durood-ibrahim',
+    name: 'Durood Ibrahim',
+    arabic: 'الصلاة الإبراهيمية',
+    subtitle: 'Standard Salawat — recited in every Salah',
+    duration: '0:45',
+    art: '/azan/madinah.svg',
+    accent: 'from-emerald-500 to-teal-600',
+    local: '/audio/durood/durood-ibrahim.mp3',
+  },
+  {
+    id: 'durood-taj',
+    name: 'Durood-e-Taj',
+    arabic: 'صلاة التاج',
+    subtitle: 'Crown of Salawat — Sufi tradition',
+    duration: '1:20',
+    art: '/azan/madinah.svg',
+    accent: 'from-gold-500 to-amber-600',
+    local: '/audio/durood/durood-taj.mp3',
+  },
+  {
+    id: 'durood-sharif',
+    name: 'Durood Sharif',
+    arabic: 'الصلاة الشريفة',
+    subtitle: 'Classic short Salawat recitation',
+    duration: '0:30',
+    art: '/azan/madinah.svg',
+    accent: 'from-violet-500 to-purple-600',
+    local: '/audio/durood/durood-sharif.mp3',
+  },
+  {
+    id: 'durood-nariya',
+    name: 'Durood Nariya',
+    arabic: 'الصلاة النارية',
+    subtitle: 'Powerful Salawat for relief & blessing',
+    duration: '0:55',
+    art: '/azan/madinah.svg',
+    accent: 'from-sky-500 to-blue-600',
+    local: '/audio/durood/durood-nariya.mp3',
+  },
+];
+
+const DUA_TRACKS: SuppTrack[] = [
+  {
+    id: 'dua-after-azan',
+    name: 'Dua After Azan',
+    arabic: 'دعاء بعد الأذان',
+    subtitle: 'Standard dua — Sahih al-Bukhari 614',
+    duration: '0:35',
+    art: '/azan/makkah.svg',
+    accent: 'from-rose-500 to-pink-600',
+    local: '/audio/dua/dua-after-azan.mp3',
+  },
+  {
+    id: 'dua-after-azan-full',
+    name: 'Dua After Azan (Full)',
+    arabic: 'الدعاء الكامل',
+    subtitle: 'Complete dua with Salawat included',
+    duration: '1:05',
+    art: '/azan/makkah.svg',
+    accent: 'from-fuchsia-500 to-violet-600',
+    local: '/audio/dua/dua-after-azan-full.mp3',
+  },
+  {
+    id: 'dua-iqamah',
+    name: 'Dua for Iqamah',
+    arabic: 'دعاء الإقامة',
+    subtitle: 'Response to Iqamah (Hanafi & Shafi\'i)',
+    duration: '0:20',
+    art: '/azan/makkah.svg',
+    accent: 'from-amber-500 to-orange-600',
+    local: '/audio/dua/dua-iqamah.mp3',
+  },
+  {
+    id: 'dua-fajr',
+    name: 'Dua — Fajr Azan',
+    arabic: 'دعاء أذان الفجر',
+    subtitle: 'Includes as-salātu khayrum minan-nawm',
+    duration: '0:40',
+    art: '/azan/makkah.svg',
+    accent: 'from-indigo-500 to-blue-600',
+    local: '/audio/dua/dua-fajr.mp3',
+  },
+];
+
 // Deterministic waveform bar heights for a given seed (SSR-stable, no Math.random).
 function waveBars(seed: number, count = 38): number[] {
   return Array.from({ length: count }, (_, i) => {
@@ -300,6 +401,82 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
   );
 }
 
+// ── Supplementary track card ──────────────────────────────────────────────────
+
+function SuppCard({
+  track, isPlaying, isSelected, accent, onPlay, onSelect,
+}: {
+  track: SuppTrack; isPlaying: boolean; isSelected: boolean;
+  accent: 'emerald' | 'rose';
+  onPlay: () => void; onSelect: () => void;
+}) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      className={`relative rounded-2xl border p-3.5 bg-white shadow-sm transition hover:shadow-md
+        ${isSelected
+          ? accent === 'rose'
+            ? 'border-rose-400 ring-1 ring-rose-300'
+            : 'border-emerald-500 ring-1 ring-emerald-400'
+          : 'border-emerald-900/8'}`}
+    >
+      {isSelected && (
+        <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full grid place-items-center shadow-sm
+          ${accent === 'rose' ? 'bg-rose-500' : 'bg-emerald-500'}`}>
+          <CheckCircle2 size={11} className="text-white" />
+        </span>
+      )}
+
+      {/* Avatar + play */}
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${track.accent} overflow-hidden ring-2 ring-white shadow-md`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={track.art} alt="" className="w-full h-full object-cover opacity-75" />
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }}
+            onClick={onPlay}
+            className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full grid place-items-center shadow-md transition
+              ${isPlaying ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
+          >
+            {isPlaying
+              ? <Pause size={12} fill="currentColor" />
+              : <Play  size={12} fill="currentColor" className="ml-px" />}
+          </motion.button>
+        </div>
+
+        <div className="min-w-0 flex-1 pl-0.5 pb-1">
+          <h4 className="font-bold text-sm text-emerald-950 leading-tight truncate">{track.name}</h4>
+          <p className="text-[11px] text-emerald-900/55 truncate mt-0.5">{track.subtitle}</p>
+          {track.duration && <p className="text-[10px] font-mono text-emerald-900/35 mt-0.5">{track.duration}</p>}
+        </div>
+      </div>
+
+      {/* Arabic name */}
+      <p dir="rtl" className="mt-2 font-arabic text-sm text-emerald-900/60 text-right leading-relaxed truncate">
+        {track.arabic}
+      </p>
+
+      {/* Select / deselect */}
+      <button
+        onClick={onSelect}
+        className={`mt-2.5 w-full py-2 rounded-xl text-[12px] font-semibold transition ${
+          isSelected
+            ? accent === 'rose'
+              ? 'bg-rose-500 text-white shadow-sm'
+              : 'bg-emerald-600 text-white shadow-sm'
+            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+        }`}
+      >
+        {isSelected ? '✓ Selected' : 'Select'}
+      </button>
+    </motion.div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 type Item = {
@@ -341,6 +518,12 @@ export default function AzanPage() {
 
   // Built-in voices the user has hidden (deleted)
   const [hiddenVoices, setHiddenVoices] = useLocalStorage<string[]>('isa:hiddenVoices', []);
+
+  // Durood Sharif & Dua supplementary selections (optional).
+  const [duroodId,  setDuroodId]  = useLocalStorage<string | null>('isa:duroodId',  null);
+  const [duroodPos, setDuroodPos] = useLocalStorage<SuppPos>('isa:duroodPos', 'after');
+  const [duaId,     setDuaId]     = useLocalStorage<string | null>('isa:duaId',    null);
+  const [duaPos,    setDuaPos]    = useLocalStorage<SuppPos>('isa:duaPos',    'after');
 
   // Azan trimmer — trim any existing voice and save as a new custom clip
   const [trimmingItem, setTrimmingItem] = useState<TrimTarget | null>(null);
@@ -572,6 +755,18 @@ export default function AzanPage() {
       .catch((e) => { setActiveId(null); setError(`Couldn't play ${item.name}: ${e?.message ?? 'playback blocked'}`); });
   };
 
+  const playSupp = (track: SuppTrack) => {
+    const el = audioRef.current;
+    if (!el) return;
+    setError(null);
+    if (activeId === track.id) { el.pause(); setActiveId(null); return; }
+    el.pause();
+    revokeCustomUrl();
+    el.src = track.local;
+    el.play().then(() => setActiveId(track.id))
+      .catch((e) => { setActiveId(null); setError(`Couldn't play "${track.name}". Place the mp3 at ${track.local} or run download_assets.py.`); });
+  };
+
   const playItem = (item: Item) => {
     if (item.remoteUrl) { playRemote(item); return; }
     if (item.isCustom) {
@@ -648,16 +843,16 @@ export default function AzanPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'azan-dark text-parchment' : ''}`}
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'azan-dark text-parchment' : 'text-ink page-light'}`}
       style={isDark ? { background: '#070b09' } : undefined}
     >
 
       {/* ════════ HEADER ════════ */}
-      <header className="relative overflow-hidden">
+      <header className="relative overflow-hidden min-h-[340px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
-        <div className="relative px-5 sm:px-8 pt-7 pb-5">
+        <div className="relative px-5 sm:px-8 pt-8 pb-10">
           {/* — title row — */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -1036,6 +1231,157 @@ export default function AzanPage() {
         {error && (
           <div className="mt-5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3">{error}</div>
         )}
+
+        {/* ══════ Durood Sharif & Dua ══════ */}
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-2xl select-none">🌿</span>
+            <div>
+              <h2 className={`font-display font-bold text-xl ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
+                Durood Sharif &amp; Dua
+              </h2>
+              <p className={`text-sm ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/50'}`}>
+                Optional — plays alongside your Azan automatically
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* ── Durood panel ── */}
+            <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl select-none">📿</span>
+                <h3 className={`font-bold text-base ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Durood Sharif</h3>
+                {duroodId && (
+                  <span className="ml-auto text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className={`text-xs mb-4 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
+                Blessings upon the Prophet ﷺ
+              </p>
+
+              {/* Position picker — only shown when a track is selected */}
+              <AnimatePresence>
+                {duroodId && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4"
+                  >
+                    <p className={`text-[11px] font-semibold mb-2 ${isDark ? 'text-emerald-100/60' : 'text-emerald-900/55'}`}>Play position</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {(['before', 'after', 'both'] as const).map((pos) => (
+                        <button key={pos} onClick={() => setDuroodPos(pos)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                            duroodPos === pos
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                              : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                          }`}
+                        >
+                          {pos === 'before' ? '⏮ Before Azan' : pos === 'after' ? 'After Azan ⏭' : '⏮ Before & After ⏭'}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* None option */}
+              <button
+                onClick={() => setDuroodId(null)}
+                className={`mb-3 w-full py-2 rounded-xl text-xs font-semibold border transition ${
+                  !duroodId
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                    : 'border-dashed border-emerald-200 text-emerald-900/40 hover:border-emerald-300 hover:text-emerald-700'
+                }`}
+              >
+                {!duroodId ? '✓ None (skip Durood)' : 'None — skip Durood'}
+              </button>
+
+              {/* Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {DUROOD_TRACKS.map((track) => (
+                  <SuppCard
+                    key={track.id} track={track} accent="emerald"
+                    isPlaying={activeId === track.id}
+                    isSelected={duroodId === track.id}
+                    onPlay={() => playSupp(track)}
+                    onSelect={() => setDuroodId(duroodId === track.id ? null : track.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ── Dua panel ── */}
+            <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl select-none">🤲</span>
+                <h3 className={`font-bold text-base ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Dua after Azan</h3>
+                {duaId && (
+                  <span className="ml-auto text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-full px-2.5 py-0.5">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className={`text-xs mb-4 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
+                Supplication after the call to prayer
+              </p>
+
+              {/* Position picker */}
+              <AnimatePresence>
+                {duaId && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4"
+                  >
+                    <p className={`text-[11px] font-semibold mb-2 ${isDark ? 'text-emerald-100/60' : 'text-emerald-900/55'}`}>Play position</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {(['before', 'after', 'both'] as const).map((pos) => (
+                        <button key={pos} onClick={() => setDuaPos(pos)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                            duaPos === pos
+                              ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
+                              : 'border-rose-200 text-rose-700 hover:bg-rose-50'
+                          }`}
+                        >
+                          {pos === 'before' ? '⏮ Before Azan' : pos === 'after' ? 'After Azan ⏭' : '⏮ Before & After ⏭'}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* None option */}
+              <button
+                onClick={() => setDuaId(null)}
+                className={`mb-3 w-full py-2 rounded-xl text-xs font-semibold border transition ${
+                  !duaId
+                    ? 'bg-rose-50 border-rose-300 text-rose-700'
+                    : 'border-dashed border-emerald-200 text-emerald-900/40 hover:border-emerald-300 hover:text-emerald-700'
+                }`}
+              >
+                {!duaId ? '✓ None (skip Dua)' : 'None — skip Dua'}
+              </button>
+
+              {/* Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {DUA_TRACKS.map((track) => (
+                  <SuppCard
+                    key={track.id} track={track} accent="rose"
+                    isPlaying={activeId === track.id}
+                    isSelected={duaId === track.id}
+                    onPlay={() => playSupp(track)}
+                    onSelect={() => setDuaId(duaId === track.id ? null : track.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
 
         {/* ── Bottom stats ── */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
