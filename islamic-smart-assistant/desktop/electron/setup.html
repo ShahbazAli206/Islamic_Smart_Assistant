@@ -121,12 +121,20 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
 .detect-btn:hover:not(:disabled){background:#2d6b56;border-color:#2d6b56}
 .detect-btn:disabled{opacity:.55;cursor:default}
 
-.status-bar{font-size:11px;margin-top:8px;padding:7px 10px;border-radius:3px}
+.status-bar{font-size:11px;margin-top:8px;padding:7px 10px;border-radius:3px;line-height:1.5}
 .status-bar.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
 .status-bar.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
 .status-bar.info   {background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
 .status-bar.loading{background:#fafafa;color:#555;border:1px solid #e5e7eb}
 .loc-result{margin-top:14px;display:none}
+
+.btn-sm{
+  display:inline-block;padding:3px 10px;border:1px solid #999;
+  background:#e8e8e8;font-size:11px;cursor:pointer;border-radius:2px;
+  font-family:'Segoe UI',sans-serif;margin-top:6px;margin-right:4px}
+.btn-sm:hover{background:#d5d5d5}
+.btn-sm.primary{background:#1a4a3a;color:#fff;border-color:#1a4a3a}
+.btn-sm.primary:hover{background:#2d6b56}
 
 /* Summary */
 .summary{border:1px solid #e0e0e0;border-radius:4px;overflow:hidden}
@@ -266,6 +274,10 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
               <div class="loc-tab-icon">🌐</div>
               <div class="loc-tab-lbl">Detect by IP</div>
             </div>
+            <div class="loc-tab" id="tab-gps" onclick="switchTab('gps')">
+              <div class="loc-tab-icon">📍</div>
+              <div class="loc-tab-lbl">Use GPS</div>
+            </div>
             <div class="loc-tab" id="tab-manual" onclick="switchTab('manual')">
               <div class="loc-tab-icon">✏️</div>
               <div class="loc-tab-lbl">Enter Manually</div>
@@ -277,6 +289,13 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
             <button class="detect-btn" id="btnDetectIp" onclick="doDetectIp()">🔍 Detect Location via IP</button>
             <div class="status-bar info" id="statusIp">Click the button above to auto-detect your city and country.</div>
           </div>
+
+          <!-- GPS pane -->
+          <div class="loc-pane" id="pane-gps">
+            <button class="detect-btn" id="btnDetectGps" onclick="doDetectGps()">📍 Detect Location via GPS</button>
+            <div class="status-bar info" id="statusGps">Uses Windows Location Services to find your precise location.</div>
+          </div>
+
           <!-- Manual pane -->
           <div class="loc-pane" id="pane-manual">
             <div class="field-row" style="margin-top:4px">
@@ -501,14 +520,23 @@ function doCancel() { window.setup.cancel(); }
 // ── Location tab ─────────────────────────────────────────
 function switchTab(tab) {
   curTab = tab;
-  ['ip','manual'].forEach(t => {
+  ['ip','gps','manual'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
     document.getElementById(`pane-${t}`).classList.toggle('active', t===tab);
   });
-  if (tab !== 'manual') {
+  if (tab === 'manual') {
     document.getElementById('locResult').style.display = 'none';
   }
   document.getElementById('btnNext').disabled = !locOk;
+}
+
+// Open Windows / macOS Location Settings
+async function openLocSettings() {
+  try {
+    await window.setup.openLocationSettings();
+  } catch(e) {
+    alert('Please open Windows Settings → Privacy & Security → Location manually.');
+  }
 }
 
 // IP detection
@@ -516,22 +544,89 @@ async function doDetectIp() {
   const btn = document.getElementById('btnDetectIp');
   const st  = document.getElementById('statusIp');
   btn.disabled = true;
-  st.className='status-bar loading'; st.textContent='⏳ Detecting location via IP address…';
+  st.className='status-bar loading'; st.innerHTML='⏳ Detecting location via IP address…';
   try {
     const r = await window.setup.detectIp();
     if (r && r.city) {
       loc = { city:r.city, country:r.country, lat:r.lat, lng:r.lng };
       locOk = true;
       st.className='status-bar success';
-      st.textContent=`✓ Detected: ${r.city}, ${r.country}`;
+      st.innerHTML=`✓ Detected: ${r.city}, ${r.country}`;
       showLocResult();
-    } else { throw new Error(r?.message||'No location data'); }
+    } else { throw new Error(r?.message||'No location data returned'); }
   } catch(e) {
     st.className='status-bar error';
-    st.textContent=`✗ Failed: ${e.message}. Try GPS or enter manually.`;
+    st.innerHTML=`✗ Could not detect your location via IP.<br>
+      Check your internet connection or disable any active VPN.<br>
+      <button class="btn-sm" onclick="doDetectIp()">🔄 Retry</button>
+      <button class="btn-sm primary" onclick="openLocSettings()">⚙️ Open Windows Location Settings</button>`;
   }
   btn.disabled = false;
   document.getElementById('btnNext').disabled = !locOk;
+}
+
+// GPS detection (uses Windows Location Services via navigator.geolocation)
+async function doDetectGps() {
+  const btn = document.getElementById('btnDetectGps');
+  const st  = document.getElementById('statusGps');
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    st.className='status-bar error';
+    st.innerHTML='GPS is not available in this environment. Use IP detection instead.';
+    btn.disabled = false;
+    return;
+  }
+
+  st.className='status-bar loading'; st.innerHTML='⏳ Requesting GPS location from Windows…';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        st.className='status-bar loading'; st.innerHTML='⏳ Looking up city from coordinates…';
+        const r = await window.setup.reverseGeocode(lat, lng);
+        if (r && r.city) {
+          loc = { city: r.city, country: r.country, lat, lng };
+          locOk = true;
+          st.className='status-bar success';
+          st.innerHTML=`✓ Detected: ${r.city}, ${r.country}`;
+          showLocResult();
+        } else {
+          loc = { city: '', country: '', lat, lng };
+          st.className='status-bar info';
+          st.innerHTML='GPS coordinates found. Please confirm your city below.';
+          showLocResult();
+        }
+      } catch {
+        st.className='status-bar error';
+        st.innerHTML='GPS found but city lookup failed. Please enter your city manually.';
+      }
+      btn.disabled = false;
+      document.getElementById('btnNext').disabled = !locOk;
+    },
+    (err) => {
+      btn.disabled = false;
+      if (err.code === 1) {
+        // PERMISSION_DENIED — Windows Location Services is off or blocked
+        st.className='status-bar error';
+        st.innerHTML=`✗ Windows Location access is disabled.<br>
+          Enable it to use GPS detection, then click Retry.<br>
+          <button class="btn-sm primary" onclick="openLocSettings()">⚙️ Open Windows Location Settings</button>
+          <button class="btn-sm" onclick="doDetectGps()" style="margin-top:4px">🔄 Retry</button>`;
+      } else if (err.code === 3) {
+        st.className='status-bar error';
+        st.innerHTML=`✗ GPS request timed out.<br>
+          <button class="btn-sm" onclick="doDetectGps()">🔄 Retry</button>
+          <button class="btn-sm primary" onclick="openLocSettings()">⚙️ Open Location Settings</button>`;
+      } else {
+        st.className='status-bar error';
+        st.innerHTML=`✗ GPS unavailable: ${err.message}. Try IP detection instead.`;
+      }
+      document.getElementById('btnNext').disabled = !locOk;
+    },
+    { timeout: 15000 }
+  );
 }
 
 // Manual entry

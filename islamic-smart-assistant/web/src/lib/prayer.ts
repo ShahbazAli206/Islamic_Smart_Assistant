@@ -142,17 +142,41 @@ export async function fetchTimingsByCoords(
   };
 }
 
-/** Detect approximate location from IP using a free geolocation API. */
+/** Detect approximate location from IP using a free geolocation API.
+ *  Tries three providers in order so a single outage doesn't block detection. */
 export async function detectLocationByIP(): Promise<{ city: string; country: string; lat: number; lng: number }> {
-  const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
-  if (!res.ok) throw new Error('IP geolocation failed');
-  const data = await res.json();
-  return {
-    city: data.city ?? '',
-    country: data.country_name ?? '',
-    lat: data.latitude ?? 0,
-    lng: data.longitude ?? 0,
-  };
+  // 1. ipapi.co
+  try {
+    const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+    if (res.ok) {
+      const d = await res.json();
+      if (d.city && (d.country_name || d.country)) {
+        return { city: d.city, country: d.country_name ?? d.country ?? '', lat: d.latitude ?? 0, lng: d.longitude ?? 0 };
+      }
+    }
+  } catch { /* fall through */ }
+
+  // 2. ipinfo.io
+  try {
+    const res2 = await fetch('https://ipinfo.io/json', { cache: 'no-store' });
+    if (res2.ok) {
+      const d2 = await res2.json();
+      if (d2.city && d2.country) {
+        const [lat, lng] = (d2.loc || '0,0').split(',').map(Number);
+        return { city: d2.city, country: d2.country, lat, lng };
+      }
+    }
+  } catch { /* fall through */ }
+
+  // 3. ip-api.com
+  const res3 = await fetch('https://ip-api.com/json/?fields=status,city,country,lat,lon', { cache: 'no-store' });
+  if (res3.ok) {
+    const d3 = await res3.json();
+    if (d3.status === 'success') {
+      return { city: d3.city, country: d3.country, lat: d3.lat, lng: d3.lon };
+    }
+  }
+  throw new Error('IP geolocation failed. Check your internet connection.');
 }
 
 const TIME_RE = /^\d{2}:\d{2}$/;

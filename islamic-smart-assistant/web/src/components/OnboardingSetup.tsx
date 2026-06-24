@@ -46,9 +46,11 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
   const [draftLang,    setDraftLang]    = useState<Language>('ur');
   const [draftName,    setDraftName]    = useState('');
 
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError,   setGeoError]   = useState('');
-  const [geoSuccess, setGeoSuccess] = useState(false);
+  const [geoLoading,    setGeoLoading]    = useState(false);
+  const [geoError,      setGeoError]      = useState('');
+  const [geoSuccess,    setGeoSuccess]    = useState(false);
+  const [gpsDenied,     setGpsDenied]     = useState(false);
+  const [ipFailed,      setIpFailed]      = useState(false);
 
   // Validation of the city/country combination before leaving the location step.
   const [validating, setValidating] = useState(false);
@@ -152,12 +154,15 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
 
   const detectLocation = () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGeoError('Geolocation is not supported by your browser. Try "Detect by IP" instead.');
+      setGeoError('Geolocation is not supported by your browser.');
+      setGpsDenied(true);
       return;
     }
     setGeoLoading(true);
     setGeoError('');
     setGeoSuccess(false);
+    setGpsDenied(false);
+    setIpFailed(false);
 
     navigator.geolocation.getCurrentPosition(
       async ({ coords: { latitude: lat, longitude: lng } }) => {
@@ -182,9 +187,15 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
           setGeoLoading(false);
         }
       },
-      () => {
+      (err) => {
         setGeoLoading(false);
-        setGeoError('Permission denied — try "Detect by IP" or type your city and country below.');
+        if (err.code === 1) {
+          // PERMISSION_DENIED
+          setGpsDenied(true);
+          setGeoError('Browser blocked GPS access. Use "Detect by IP" or type your city below.');
+        } else {
+          setGeoError('GPS unavailable. Try "Detect by IP" or type your city below.');
+        }
       },
       { timeout: 10_000 },
     );
@@ -194,6 +205,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     setGeoLoading(true);
     setGeoError('');
     setGeoSuccess(false);
+    setIpFailed(false);
     try {
       const loc = await detectLocationByIP();
       if (loc.city && loc.country) {
@@ -204,10 +216,12 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         setDraftLng(loc.lng);
         setLocDirty(true);
       } else {
+        setIpFailed(true);
         setGeoError('Could not detect your city from IP. Please type it manually.');
       }
     } catch {
-      setGeoError('IP detection failed. Please type your city and country below.');
+      setIpFailed(true);
+      setGeoError('IP detection failed. Check your internet connection.');
     } finally {
       setGeoLoading(false);
     }
@@ -435,7 +449,31 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                   </div>
                 )}
 
-                {geoError && (
+                {/* GPS blocked — show how-to-enable hint */}
+                {gpsDenied && !geoSuccess && (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 leading-relaxed space-y-1.5">
+                    <p className="font-semibold flex items-center gap-1.5"><AlertTriangle size={13} /> GPS access blocked by your browser</p>
+                    <p>To enable it: click the lock/info icon in your browser's address bar → <strong>Site settings</strong> → set <strong>Location</strong> to "Allow". Then click "Use GPS" again.</p>
+                    <p>Alternatively, use <strong>Detect by IP</strong> — it works without any browser permission.</p>
+                  </div>
+                )}
+
+                {/* IP detection failed — show retry */}
+                {ipFailed && !geoSuccess && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-800 leading-relaxed space-y-1.5">
+                    <p className="font-semibold flex items-center gap-1.5"><AlertTriangle size={13} /> IP detection failed</p>
+                    <p>Check your internet connection or disable any active VPN, then try again.</p>
+                    <button
+                      onClick={detectByIP}
+                      disabled={geoLoading}
+                      className="mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-60 transition"
+                    >
+                      <Compass size={12} /> Retry IP Detection
+                    </button>
+                  </div>
+                )}
+
+                {geoError && !gpsDenied && !ipFailed && (
                   <p className="text-xs text-rose-600 leading-relaxed">{geoError}</p>
                 )}
 

@@ -225,7 +225,7 @@ ipcMain.handle('setup:getAppDataPath', () => app.getPath('userData'));
 
 ipcMain.handle('setup:detectIp', async () => {
   // Use Electron's net.fetch() (Chromium networking — no certificate issues).
-  // Try ipinfo.io first; fall back to ip-api.com.
+  // Try three services in order; each is wrapped so a failure continues to the next.
   try {
     const r = await net.fetch('https://ipinfo.io/json');
     const j = await r.json();
@@ -235,12 +235,31 @@ ipcMain.handle('setup:detectIp', async () => {
     }
   } catch (_) { /* fall through */ }
 
-  const r2 = await net.fetch('https://ip-api.com/json/?fields=status,city,country,lat,lon');
-  const j2 = await r2.json();
-  if (j2.status === 'success') {
-    return { city: j2.city, country: j2.country, lat: j2.lat, lng: j2.lon };
+  try {
+    const r2 = await net.fetch('https://ip-api.com/json/?fields=status,city,country,lat,lon');
+    const j2 = await r2.json();
+    if (j2.status === 'success') {
+      return { city: j2.city, country: j2.country, lat: j2.lat, lng: j2.lon };
+    }
+  } catch (_) { /* fall through */ }
+
+  try {
+    const r3 = await net.fetch('https://get.geojs.io/v1/ip/geo.json');
+    const j3 = await r3.json();
+    if (j3.city && j3.country) {
+      return { city: j3.city, country: j3.country, lat: parseFloat(j3.latitude || '0'), lng: parseFloat(j3.longitude || '0') };
+    }
+  } catch (_) { /* fall through */ }
+
+  throw new Error('Could not detect location. Check your internet connection or try GPS detection.');
+});
+
+ipcMain.handle('setup:openLocationSettings', async () => {
+  if (process.platform === 'win32') {
+    await shell.openExternal('ms-settings:privacy-location');
+  } else if (process.platform === 'darwin') {
+    await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices');
   }
-  throw new Error('Could not detect location automatically. Please enter your city manually.');
 });
 
 ipcMain.handle('setup:reverseGeocode', async (_event, lat, lng) => {

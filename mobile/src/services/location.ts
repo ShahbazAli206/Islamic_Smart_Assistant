@@ -58,14 +58,45 @@ async function reverseGeocode(lat: number, lng: number): Promise<{ city?: string
 }
 
 async function ipLocation(timezone: string): Promise<ResolvedLocation> {
-  // Free tier: ipapi.co, ipinfo.io, ip-api.com (no key for low volume). Pick one.
-  const r = await axios.get('https://ipapi.co/json/', { timeout: 8000 });
-  return {
-    lat: r.data.latitude,
-    lng: r.data.longitude,
-    timezone: r.data.timezone || timezone,
-    city: r.data.city,
-    country: r.data.country_code,
-    detected_via: 'ip',
-  };
+  // Try three services in order so a single outage doesn't block detection.
+  try {
+    const r = await axios.get('https://ipapi.co/json/', { timeout: 8000 });
+    if (r.data?.latitude && r.data?.city) {
+      return {
+        lat: r.data.latitude,
+        lng: r.data.longitude,
+        timezone: r.data.timezone || timezone,
+        city: r.data.city,
+        country: r.data.country_code,
+        detected_via: 'ip',
+      };
+    }
+  } catch { /* fall through */ }
+
+  try {
+    const r2 = await axios.get('https://ipinfo.io/json', { timeout: 8000 });
+    if (r2.data?.city && r2.data?.country) {
+      const [lat, lng] = (r2.data.loc || '0,0').split(',').map(Number);
+      return {
+        lat, lng,
+        timezone: r2.data.timezone || timezone,
+        city: r2.data.city,
+        country: r2.data.country,
+        detected_via: 'ip',
+      };
+    }
+  } catch { /* fall through */ }
+
+  const r3 = await axios.get('https://ip-api.com/json/?fields=status,city,country,countryCode,lat,lon,timezone', { timeout: 8000 });
+  if (r3.data?.status === 'success') {
+    return {
+      lat: r3.data.lat,
+      lng: r3.data.lon,
+      timezone: r3.data.timezone || timezone,
+      city: r3.data.city,
+      country: r3.data.countryCode,
+      detected_via: 'ip',
+    };
+  }
+  throw new Error('IP location detection failed. Check your internet connection.');
 }
