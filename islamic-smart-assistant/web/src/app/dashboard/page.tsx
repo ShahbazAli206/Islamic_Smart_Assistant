@@ -271,11 +271,11 @@ export default function Overview() {
               { icon: GraduationCap, label: 'Sect',               value: SECT_LABELS[sect] ?? sect },
               { icon: Calculator,    label: 'Calculation Method', value: methodLabel },
             ].map((p) => (
-              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-black/25 backdrop-blur-sm' : c.soft} px-4 py-3 text-left transition hover:border-emerald-400`}>
+              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'} px-4 py-3 text-left transition hover:border-emerald-400`}>
                 <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[11px] ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
-                  <p className={`truncate text-sm font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
+                  <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
+                  <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
                 </div>
                 <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
               </button>
@@ -297,7 +297,7 @@ export default function Overview() {
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-100 text-violet-600"><Clock size={20} /></span>
                   <div>
                     <h2 className="text-lg font-bold leading-tight">Prayer Times</h2>
-                    <p className={`text-sm ${c.muted}`}>Today, {data?.hijriDate ?? '—'}</p>
+                    <p className={`text-sm ${isDark ? c.muted : 'text-emerald-900'}`}>Today, {data?.hijriDate ?? '—'}</p>
                   </div>
                 </div>
                 <ChevronDown size={18} className={c.faint} />
@@ -362,7 +362,7 @@ export default function Overview() {
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600/15 text-emerald-600"><Moon size={17} /></span>
                   <div>
                     <h2 className="text-base font-bold leading-tight">{currentName ?? 'Prayer'} Time Left</h2>
-                    <p className={`text-sm font-medium ${c.muted}`}>Stay mindful of your time</p>
+                    <p className={`text-sm font-medium ${isDark ? c.muted : 'text-emerald-900'}`}>Stay mindful of your time</p>
                   </div>
                 </div>
 
@@ -442,7 +442,7 @@ export default function Overview() {
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-100 text-rose-500"><Bell size={18} /></span>
                 <div>
                   <h3 className="text-base font-bold leading-tight">Azan Voices</h3>
-                  <p className={`text-xs ${c.muted}`}>Listen to beautiful Azan</p>
+                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Listen to beautiful Azan</p>
                 </div>
               </div>
               <ul className="mt-4 flex-1 space-y-2.5">
@@ -472,12 +472,12 @@ export default function Overview() {
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><BookOpen size={18} /></span>
                 <div>
                   <h3 className="text-base font-bold leading-tight">Recitation Scheduler</h3>
-                  <p className={`text-xs ${c.muted}`}>Your daily Quran recitation</p>
+                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Your daily Quran recitation</p>
                 </div>
               </div>
               <div className={`mt-4 flex items-center justify-between rounded-2xl border ${c.divider} ${c.soft} px-4 py-3`}>
                 <div>
-                  <p className={`text-xs ${c.muted}`}>Daily Goal</p>
+                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Daily Goal</p>
                   <p className="text-2xl font-bold leading-tight">20 <span className={`text-sm font-medium ${c.muted}`}>minutes</span></p>
                 </div>
                 <div className="relative grid h-12 w-12 place-items-center">
