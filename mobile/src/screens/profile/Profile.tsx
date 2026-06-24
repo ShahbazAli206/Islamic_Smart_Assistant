@@ -153,7 +153,7 @@ export function ProfileScreen() {
                 onPress={() => handleSectSelect(sect)}
               >
                 <Text style={[s.rowChipText, { color: active ? theme.emerald : theme.text }]}>
-                  {sect === 'sunni' ? 'Sunni' : 'Shia'}
+                  {sect === 'sunni' ? 'Sunni' : 'Fiqah Jafri'}
                 </Text>
               </Pressable>
             );

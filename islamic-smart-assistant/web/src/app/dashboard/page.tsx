@@ -34,11 +34,11 @@ const PRAYER_META: Record<keyof PrayerTimes, { icon: any; tint: string; badge: s
 };
 
 const SECT_LABELS: Record<string, string> = {
-  hanafi: 'Hanafi', shafii: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', shia: 'Shia (Jafari)',
+  hanafi: 'Hanafi', shafii: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', shia: 'Fiqah Jafri',
 };
 const LANG_LABELS: Record<string, string> = { ur: 'Urdu', en: 'English', none: 'Arabic only' };
 const METHOD_LABELS: Record<number, string> = {
-  0: 'Shia (Jafari)', 1: 'University of Karachi', 2: 'ISNA',
+  0: 'Fiqah Jafri', 1: 'University of Karachi', 2: 'ISNA',
   3: 'Muslim World League', 4: 'Umm al-Qura, Makkah', 5: 'Egyptian Authority', 7: 'Tehran',
 };
 

@@ -40,7 +40,7 @@ export const METHOD_LABELS: { id: number; label: string }[] = [
   { id: 10, label: 'Qatar' },
   { id: 11, label: 'Singapore' },
   { id: 13, label: 'Diyanet (Turkey)' },
-  { id: 0, label: 'Shia Ithna-Ashari' },
+  { id: 0, label: 'Fiqah Jafri' },
   { id: 7, label: 'Institute of Geophysics, Tehran' },
 ];
 

@@ -32,7 +32,7 @@ const LANGUAGES = [
 
 const SECTS = [
   { value: 'sunni', label: 'Sunni' },
-  { value: 'shia', label: 'Shia' },
+  { value: 'shia', label: 'Fiqah Jafri' },
 ] as const;
 
 // Fiqh schools affect prayer-time calculation, so we offer the relevant set per sect.

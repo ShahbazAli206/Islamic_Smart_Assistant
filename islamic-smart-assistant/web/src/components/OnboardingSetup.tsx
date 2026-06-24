@@ -15,7 +15,7 @@ export const SECTS: { id: Sect; label: string; arabic: string; desc: string; met
   { id: 'shafii',  label: "Shafi'i",        arabic: 'شافعي', desc: "Imam Al-Shafi'i · SE Asia, East Africa",   method: 3 },
   { id: 'maliki',  label: 'Maliki',         arabic: 'مالكي', desc: 'Imam Malik · North & West Africa',         method: 3 },
   { id: 'hanbali', label: 'Hanbali',        arabic: 'حنبلي', desc: 'Imam Ibn Hanbal · Gulf region',            method: 4 },
-  { id: 'shia',    label: 'Shia (Jafari)', arabic: 'جعفري', desc: 'Jafari school · Iran, Iraq',                method: 7 },
+  { id: 'shia',    label: 'Fiqah Jafri', arabic: 'جعفري', desc: 'Jafari school · Iran, Iraq',                method: 7 },
 ];
 
 export const LANGUAGES: { id: Language; label: string; native: string }[] = [

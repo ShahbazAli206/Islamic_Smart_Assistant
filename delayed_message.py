@@ -102,7 +102,7 @@ Used for:
 User selects:
 
 * Sunni
-* Shia
+* Fiqah Jafri
 
 Fiqh methods:
 
@@ -512,7 +512,7 @@ Used for:
 User selects:
 
 * Sunni
-* Shia
+* Fiqah Jafri
 
 Fiqh methods:
 

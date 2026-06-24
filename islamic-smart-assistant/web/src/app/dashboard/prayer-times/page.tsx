@@ -523,7 +523,7 @@ export default function PrayerTimesPage() {
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
                       ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white/80 hover:bg-[rgba(255,255,255,0.15)]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
-                    {s === 'sunni' ? 'Sunni' : 'Shia'}
+                    {s === 'sunni' ? 'Sunni' : 'Fiqah Jafri'}
                   </button>
                 ))}
               </div>

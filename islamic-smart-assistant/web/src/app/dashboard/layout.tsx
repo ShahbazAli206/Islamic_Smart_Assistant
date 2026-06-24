@@ -7,6 +7,7 @@ import {
   Home, User, Smartphone, Music2, Settings,
   BookOpen, Bell, Clock, Menu, X, AlarmClock, Compass,
   Moon, Sun, ChevronRight, RefreshCw, Library, SlidersHorizontal,
+  Square, Radio,
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { motion } from 'framer-motion';
@@ -139,6 +140,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [quickOpen,  setQuickOpen]  = useState(false);
   const [quickFocus, setQuickFocus] = useState<QuickSection | undefined>();
   const openQuick = (section?: QuickSection) => { setQuickFocus(section); setQuickOpen(true); };
+
+  // Mini Azan indicator: shown in sidebar when the big popup is minimized.
+  const [azanMini, setAzanMini] = useState<{ prayer: string } | null>(null);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setAzanMini(detail ? { prayer: detail.prayer } : null);
+    };
+    window.addEventListener('isa:azan-minimized', handler);
+    return () => window.removeEventListener('isa:azan-minimized', handler);
+  }, []);
 
   return (
     <div className="min-h-screen lg:flex">
@@ -318,6 +330,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="relative z-10 mt-1 px-2">
           <AzanOffTag onClick={() => openQuick('azan')} className="w-full justify-center" />
         </div>
+
+        {/* ── Mini Azan indicator — appears when big popup is dismissed ── */}
+        {azanMini && (
+          <div className="relative z-10 mt-1 px-1">
+            <div
+              className="flex items-center gap-2 rounded-2xl px-3 py-2"
+              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.18, 1], opacity: [0.75, 1, 0.75] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="shrink-0"
+              >
+                <Radio size={13} className="text-emerald-500" />
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Azan Playing</p>
+                <p className={`text-xs font-semibold truncate leading-snug mt-0.5 ${isDark ? 'text-parchment/80' : 'text-emerald-950'}`}>
+                  {azanMini.prayer} Prayer
+                </p>
+              </div>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('isa:azan-expand'))}
+                title="Show full popup"
+                className="shrink-0 p-1 rounded-full hover:bg-emerald-500/20 text-emerald-500 transition"
+              >
+                <Bell size={13} />
+              </button>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('isa:azan-stop'))}
+                title="Stop Azan"
+                className="shrink-0 p-1 rounded-full hover:bg-rose-500/15 text-rose-400 transition"
+              >
+                <Square size={12} fill="currentColor" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── Quick actions: notifications · theme toggle · sync · settings ── */}
         <div className={`relative z-10 mt-1 flex items-center justify-around border-t pt-3 ${t.divider}`}>

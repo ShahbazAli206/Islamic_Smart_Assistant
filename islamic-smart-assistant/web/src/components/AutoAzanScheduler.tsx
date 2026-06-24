@@ -79,6 +79,9 @@ export function AutoAzanScheduler() {
 
   const [needsGesture, setNeedsGesture] = useState(false);
   const [firing, setFiring] = useState<null | { prayer: string; voiceId: string }>(null);
+  // When the user clicks X on the big popup, the Azan keeps playing but the
+  // popup collapses into a mini sidebar indicator until they expand or stop it.
+  const [minimized, setMinimized] = useState(false);
   // A prayer that tried to fire but was blocked by the browser's autoplay policy.
   const [pendingPrayer, setPendingPrayer] = useState<string | null>(null);
 
@@ -362,7 +365,32 @@ export function AutoAzanScheduler() {
     const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
     if (id && api) { try { api.stop({ deviceId: id }); } catch { /* ignore */ } }
     setFiring(null);
+    setMinimized(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
+    }
   };
+
+  // Hides the full popup but keeps Azan playing — shows mini sidebar indicator.
+  const minimize = () => {
+    setMinimized(true);
+    if (typeof window !== 'undefined' && firing) {
+      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: { prayer: firing.prayer, voiceId: firing.voiceId } }));
+    }
+  };
+
+  // Listen for external stop/expand events dispatched by the sidebar mini indicator.
+  useEffect(() => {
+    const onStop   = () => stop();
+    const onExpand = () => setMinimized(false);
+    window.addEventListener('isa:azan-stop',   onStop);
+    window.addEventListener('isa:azan-expand', onExpand);
+    return () => {
+      window.removeEventListener('isa:azan-stop',   onStop);
+      window.removeEventListener('isa:azan-expand', onExpand);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // X just hides the banner — the "seen" flag is already set when it showed, so
   // it won't return this session. Does NOT disable azan, only stops the prompt.
@@ -393,7 +421,10 @@ export function AutoAzanScheduler() {
            rather than silently showing "Azan Playing" with no sound. */}
       <audio
         ref={audioRef}
-        onEnded={() => { firingRef.current = false; setFiring(null); revokeCustomUrl(); }}
+        onEnded={() => {
+          firingRef.current = false; setFiring(null); setMinimized(false); revokeCustomUrl();
+          if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
+        }}
         onError={() => {
           const el = audioRef.current;
           if (!el || !firingRef.current) return; // not during an active azan — ignore
@@ -453,8 +484,8 @@ export function AutoAzanScheduler() {
           </motion.div>
         )}
 
-        {/* ── Azan playing popup ── */}
-        {firing && (() => {
+        {/* ── Azan playing popup (hidden when minimized to sidebar) ── */}
+        {firing && !minimized && (() => {
           const info = resolveVoiceInfo(firing.voiceId);
           return (
             <motion.div
@@ -488,9 +519,9 @@ export function AutoAzanScheduler() {
                     </motion.div>
                     <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Azan Playing</span>
                   </div>
-                  <button onClick={stop}
+                  <button onClick={minimize}
                     className="p-1.5 rounded-full bg-emerald-900/5 hover:bg-emerald-900/10 text-emerald-900/40 hover:text-emerald-800 transition"
-                    title="Stop & dismiss">
+                    title="Minimize to sidebar">
                     <X size={14} />
                   </button>
                 </div>

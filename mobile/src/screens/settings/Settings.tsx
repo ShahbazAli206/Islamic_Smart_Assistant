@@ -42,7 +42,7 @@ export function SettingsScreen() {
     ? (user.location.city ?? `${user.location.lat.toFixed(2)}°, ${user.location.lng.toFixed(2)}°`)
     : 'Not set';
 
-  const sectLabel = user.sect ? (user.sect === 'sunni' ? 'Sunni' : 'Shia') : '—';
+  const sectLabel = user.sect ? (user.sect === 'sunni' ? 'Sunni' : 'Fiqah Jafri') : '—';
   const fiqhLabels: Record<string, string> = {
     hanafi: 'Hanafi', shafi: 'Shafi\'i', maliki: 'Maliki', hanbali: 'Hanbali', jafari: 'Ja\'fari',
   };
