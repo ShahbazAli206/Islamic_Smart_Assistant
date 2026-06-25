@@ -306,26 +306,29 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
 // ── Uploaded supplementary track card ────────────────────────────────────────
 
 function UploadedCard({
-  meta, isPlaying, isSelected, accent, onPlay, onSelect, onDelete,
+  meta, isPlaying, accent, onPlay, onDelete,
+  isBefore, isAfter, onToggleBefore, onToggleAfter,
 }: {
-  meta: CustomAzan; isPlaying: boolean; isSelected: boolean;
+  meta: CustomAzan; isPlaying: boolean;
   accent: 'emerald' | 'rose';
-  onPlay: () => void; onSelect: () => void; onDelete: () => void;
+  onPlay: () => void; onDelete: () => void;
+  isBefore: boolean; isAfter: boolean;
+  onToggleBefore: () => void; onToggleAfter: () => void;
 }) {
   const initials = meta.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-  const g      = accent === 'rose' ? 'from-rose-400 to-pink-600'      : 'from-emerald-400 to-teal-600';
-  const ring   = accent === 'rose' ? 'ring-rose-300'                  : 'ring-emerald-400';
-  const selBg  = accent === 'rose' ? 'bg-rose-500'                    : 'bg-emerald-600';
+  const g = accent === 'rose' ? 'from-rose-400 to-pink-600' : 'from-emerald-400 to-teal-600';
+  const active = isBefore || isAfter;
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -2 }}
-      className={`relative rounded-2xl border p-3.5 bg-white shadow-sm transition hover:shadow-md
-        ${isSelected ? `border-transparent ring-2 ${ring}` : 'border-emerald-900/8'}`}
+      className={`relative rounded-2xl border p-3.5 bg-white shadow-sm transition hover:shadow-md ${
+        active ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-emerald-900/8'
+      }`}
     >
-      {isSelected && (
-        <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full grid place-items-center shadow-sm ${selBg}`}>
+      {active && (
+        <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-600 grid place-items-center shadow-sm">
           <CheckCircle2 size={11} className="text-white" />
         </span>
       )}
@@ -353,13 +356,29 @@ function UploadedCard({
         </div>
       </div>
 
-      <button onClick={onSelect}
-        className={`mt-3 w-full py-2 rounded-xl text-[12px] font-semibold transition ${
-          isSelected ? `${selBg} text-white shadow-sm` : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-        }`}
-      >
-        {isSelected ? '✓ Selected' : 'Select'}
-      </button>
+      {/* Before / After toggle buttons */}
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
+        <button
+          onClick={onToggleBefore}
+          className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
+            isBefore
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+          }`}
+        >
+          ⏮ Before
+        </button>
+        <button
+          onClick={onToggleAfter}
+          className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
+            isAfter
+              ? 'bg-amber-500 text-white shadow-sm'
+              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+          }`}
+        >
+          After ⏭
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -423,6 +442,24 @@ export default function AzanPage() {
   // User-uploaded supplementary clips
   const [customDuroods, setCustomDuroods] = useLocalStorage<CustomAzan[]>('isa:customDuroods', []);
   const [customDuas,    setCustomDuas]    = useLocalStorage<CustomAzan[]>('isa:customDuas',    []);
+
+  // Multi-select before/after Azan queues (also read by the Settings page)
+  const [preAzanQueue,  setPreAzanQueue]  = useLocalStorage<{id:string;name:string;audioType:string}[]>('isa:preAzanQueue',  []);
+  const [postAzanQueue, setPostAzanQueue] = useLocalStorage<{id:string;name:string;audioType:string}[]>('isa:postAzanQueue', []);
+
+  const togglePreAzan = (item: CustomAzan) =>
+    setPreAzanQueue(prev =>
+      prev.some(x => x.id === item.id)
+        ? prev.filter(x => x.id !== item.id)
+        : [...prev, { id: item.id, name: item.name, audioType: item.audioType ?? 'dua' }]
+    );
+
+  const togglePostAzan = (item: CustomAzan) =>
+    setPostAzanQueue(prev =>
+      prev.some(x => x.id === item.id)
+        ? prev.filter(x => x.id !== item.id)
+        : [...prev, { id: item.id, name: item.name, audioType: item.audioType ?? 'dua' }]
+    );
 
   // Upload type picker state
   const [uploadType, setUploadType] = useState<AudioType | null>(null);
@@ -644,6 +681,8 @@ export default function AzanPage() {
     setCustomDuroods((prev) => prev.filter((c) => c.id !== id));
     Azan.deleteVoice(id).catch(() => {});
     if (duroodId === id) setDuroodId(null);
+    setPreAzanQueue(prev => prev.filter(x => x.id !== id));
+    setPostAzanQueue(prev => prev.filter(x => x.id !== id));
     setDeleteToast('Durood deleted');
   };
 
@@ -653,6 +692,8 @@ export default function AzanPage() {
     setCustomDuas((prev) => prev.filter((c) => c.id !== id));
     Azan.deleteVoice(id).catch(() => {});
     if (duaId === id) setDuaId(null);
+    setPreAzanQueue(prev => prev.filter(x => x.id !== id));
+    setPostAzanQueue(prev => prev.filter(x => x.id !== id));
     setDeleteToast('Dua deleted');
   };
 
@@ -1223,46 +1264,22 @@ export default function AzanPage() {
                   </span>
                 )}
               </div>
-              <p className={`text-xs mb-4 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
-                Blessings upon the Prophet ﷺ
+              <p className={`text-xs mb-3 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
+                Blessings upon the Prophet ﷺ — select each clip individually to play before or after Azan
               </p>
 
-              {/* Position picker — only shown when a track is selected */}
-              <AnimatePresence>
-                {duroodId && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4"
-                  >
-                    <p className={`text-[11px] font-semibold mb-2 ${isDark ? 'text-emerald-100/60' : 'text-emerald-900/55'}`}>Play position</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {(['before', 'after', 'both'] as const).map((pos) => (
-                        <button key={pos} onClick={() => setDuroodPos(pos)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                            duroodPos === pos
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                              : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                          }`}
-                        >
-                          {pos === 'before' ? '⏮ Before Azan' : pos === 'after' ? 'After Azan ⏭' : '⏮ Before & After ⏭'}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* None option */}
-              <button
-                onClick={() => setDuroodId(null)}
-                className={`mb-3 w-full py-2 rounded-xl text-xs font-semibold border transition ${
-                  !duroodId
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                    : 'border-dashed border-emerald-200 text-emerald-900/40 hover:border-emerald-300 hover:text-emerald-700'
-                }`}
-              >
-                {!duroodId ? '✓ None (skip Durood)' : 'None — skip Durood'}
-              </button>
+              {/* Active queue summary */}
+              {(preAzanQueue.some(x => customDuroods.some(d => d.id === x.id)) ||
+                postAzanQueue.some(x => customDuroods.some(d => d.id === x.id))) && (
+                <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+                  isDark ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/40'
+                         : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                }`}>
+                  <CheckCircle2 size={12} />
+                  {preAzanQueue.filter(x => customDuroods.some(d => d.id === x.id)).length} before ·{' '}
+                  {postAzanQueue.filter(x => customDuroods.some(d => d.id === x.id)).length} after Azan active
+                </div>
+              )}
 
               {/* Cards / empty state */}
               <AnimatePresence mode="wait">
@@ -1273,9 +1290,11 @@ export default function AzanPage() {
                         <UploadedCard
                           key={track.id} meta={track} accent="emerald"
                           isPlaying={activeId === track.id}
-                          isSelected={duroodId === track.id}
+                          isBefore={preAzanQueue.some(x => x.id === track.id)}
+                          isAfter={postAzanQueue.some(x => x.id === track.id)}
                           onPlay={() => previewCustom(track)}
-                          onSelect={() => setDuroodId(duroodId === track.id ? null : track.id)}
+                          onToggleBefore={() => togglePreAzan(track)}
+                          onToggleAfter={() => togglePostAzan(track)}
                           onDelete={() => deleteDurood(track.id)}
                         />
                       ))}
@@ -1311,46 +1330,22 @@ export default function AzanPage() {
                   </span>
                 )}
               </div>
-              <p className={`text-xs mb-4 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
-                Supplication after the call to prayer
+              <p className={`text-xs mb-3 ${isDark ? 'text-emerald-100/45' : 'text-emerald-900/50'}`}>
+                Supplication after the call to prayer — select each clip individually to play before or after Azan
               </p>
 
-              {/* Position picker */}
-              <AnimatePresence>
-                {duaId && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-4"
-                  >
-                    <p className={`text-[11px] font-semibold mb-2 ${isDark ? 'text-emerald-100/60' : 'text-emerald-900/55'}`}>Play position</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {(['before', 'after', 'both'] as const).map((pos) => (
-                        <button key={pos} onClick={() => setDuaPos(pos)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                            duaPos === pos
-                              ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
-                              : 'border-rose-200 text-rose-700 hover:bg-rose-50'
-                          }`}
-                        >
-                          {pos === 'before' ? '⏮ Before Azan' : pos === 'after' ? 'After Azan ⏭' : '⏮ Before & After ⏭'}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* None option */}
-              <button
-                onClick={() => setDuaId(null)}
-                className={`mb-3 w-full py-2 rounded-xl text-xs font-semibold border transition ${
-                  !duaId
-                    ? 'bg-rose-50 border-rose-300 text-rose-700'
-                    : 'border-dashed border-emerald-200 text-emerald-900/40 hover:border-emerald-300 hover:text-emerald-700'
-                }`}
-              >
-                {!duaId ? '✓ None (skip Dua)' : 'None — skip Dua'}
-              </button>
+              {/* Active queue summary */}
+              {(preAzanQueue.some(x => customDuas.some(d => d.id === x.id)) ||
+                postAzanQueue.some(x => customDuas.some(d => d.id === x.id))) && (
+                <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+                  isDark ? 'bg-rose-900/30 text-rose-300 border border-rose-700/40'
+                         : 'bg-rose-50 text-rose-700 border border-rose-200'
+                }`}>
+                  <CheckCircle2 size={12} />
+                  {preAzanQueue.filter(x => customDuas.some(d => d.id === x.id)).length} before ·{' '}
+                  {postAzanQueue.filter(x => customDuas.some(d => d.id === x.id)).length} after Azan active
+                </div>
+              )}
 
               {/* Cards / empty state */}
               <AnimatePresence mode="wait">
@@ -1361,9 +1356,11 @@ export default function AzanPage() {
                         <UploadedCard
                           key={track.id} meta={track} accent="rose"
                           isPlaying={activeId === track.id}
-                          isSelected={duaId === track.id}
+                          isBefore={preAzanQueue.some(x => x.id === track.id)}
+                          isAfter={postAzanQueue.some(x => x.id === track.id)}
                           onPlay={() => previewCustom(track)}
-                          onSelect={() => setDuaId(duaId === track.id ? null : track.id)}
+                          onToggleBefore={() => togglePreAzan(track)}
+                          onToggleAfter={() => togglePostAzan(track)}
                           onDelete={() => deleteDua(track.id)}
                         />
                       ))}
