@@ -420,14 +420,14 @@ export default function RecitationSchedulerPage() {
 
       <div className="px-6 sm:px-10 pb-10 space-y-6">
       {/* ════════ YOUR SCHEDULES ════════ */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-200/60 shadow-card-soft p-5 sm:p-6"
-        style={{ background: 'linear-gradient(135deg, #FFFBF0 0%, #FFF6E0 55%, #FFF9EC 100%)' }}>
+      <div className={`relative overflow-hidden rounded-3xl border shadow-card-soft p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-amber-200/60'}`}
+        style={isDark ? undefined : { background: 'linear-gradient(135deg, #FFFBF0 0%, #FFF6E0 55%, #FFF9EC 100%)' }}>
         {/* Subtle Quran background image */}
         <div aria-hidden className="absolute inset-0 bg-cover bg-right pointer-events-none"
-          style={{ backgroundImage: "url('/quran-bg-card.png')", opacity: 0.18 }} />
+          style={{ backgroundImage: "url('/quran-bg-card.png')", opacity: isDark ? 0.06 : 0.18 }} />
         <div className="relative">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-bold text-xl text-emerald-950">Your Schedules</h2>
+          <h2 className={`font-display font-bold text-xl ${isDark ? 'text-white' : 'text-emerald-950'}`}>Your Schedules</h2>
           <motion.button onClick={openCreate} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white font-semibold text-sm px-5 py-2.5 shadow-glow-emerald hover:bg-emerald-700 transition">
             <Plus size={15} /> New Schedule
@@ -436,12 +436,12 @@ export default function RecitationSchedulerPage() {
 
         {schedules.length === 0 ? (
           <div className="flex items-center gap-4 py-3">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-amber-100/80 border border-amber-200/60 flex items-center justify-center animate-float">
+            <div className={`w-12 h-12 shrink-0 rounded-2xl border flex items-center justify-center animate-float ${isDark ? 'bg-white/10 border-white/15' : 'bg-amber-100/80 border-amber-200/60'}`}>
               <AlarmClock size={22} className="text-emerald-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-display text-base font-bold text-emerald-950">No recitation scheduled yet</h3>
-              <p className="text-emerald-900/55 text-xs mt-0.5">Create your first schedule and Noor will recite the Quran at the time you choose.</p>
+              <h3 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-emerald-950'}`}>No recitation scheduled yet</h3>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>Create your first schedule and Noor will recite the Quran at the time you choose.</p>
             </div>
           </div>
         ) : (
@@ -457,7 +457,7 @@ export default function RecitationSchedulerPage() {
                   <motion.div
                     key={s.id} layout
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
-                    className={`group relative overflow-hidden rounded-2xl bg-parchment/70 border border-emerald-900/8 shadow-sm transition ${s.enabled ? '' : 'opacity-60'}`}
+                    className={`group relative overflow-hidden rounded-2xl border shadow-sm transition ${isDark ? 'bg-white/[0.06] border-white/10' : 'bg-parchment/70 border-emerald-900/8'} ${s.enabled ? '' : 'opacity-60'}`}
                   >
                     {/* animated accent rail */}
                     <div className="absolute left-0 inset-y-0 w-1.5 overflow-hidden">
@@ -476,8 +476,8 @@ export default function RecitationSchedulerPage() {
                           <AlarmClock size={22} />
                         </motion.div>
                         <div className="leading-tight">
-                          <p className="font-display text-2xl font-bold text-emerald-950">{formatTime(s.time)}</p>
-                          <p className="text-xs text-emerald-900/50 flex items-center gap-1"><RIcon size={11} /> {shortRecurrence(s)}</p>
+                          <p className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-emerald-950'}`}>{formatTime(s.time)}</p>
+                          <p className={`text-xs flex items-center gap-1 ${isDark ? 'text-white/50' : 'text-emerald-900/50'}`}><RIcon size={11} /> {shortRecurrence(s)}</p>
                         </div>
                       </div>
 
@@ -489,7 +489,7 @@ export default function RecitationSchedulerPage() {
                           </span>
                           {s.surahs.length > 1 && <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold px-2 py-0.5">+{s.surahs.length - 1} more</span>}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-emerald-900/55">
+                        <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>
                           <span className="inline-flex items-center gap-1.5"><Mic2 size={12} className="text-emerald-600" /> {recName}</span>
                           <span className="inline-flex items-center gap-1.5"><Languages size={12} className="text-emerald-600" /> {transName}</span>
                           <span className="inline-flex items-center gap-1.5"><VolIcon v={s.volume} className="text-emerald-600" /> {Math.round(s.volume * 100)}%</span>
@@ -500,14 +500,14 @@ export default function RecitationSchedulerPage() {
                       <div className="flex items-center gap-1 shrink-0 self-start sm:self-center">
                         {isPreviewing && <div className="mr-1"><EqualiserBars active /></div>}
                         <button onClick={() => (isPreviewing ? stopPreview() : startPreview(s.surahs, s.id))} title="Play now"
-                          className={`p-2.5 rounded-xl transition ${isPreviewing ? 'bg-rose-50 text-rose-600' : 'hover:bg-emerald-50 text-emerald-700'}`}>
+                          className={`p-2.5 rounded-xl transition ${isPreviewing ? 'bg-rose-50 text-rose-600' : isDark ? 'hover:bg-white/10 text-emerald-400' : 'hover:bg-emerald-50 text-emerald-700'}`}>
                           {isPreviewing ? <Square size={17} /> : <Play size={17} />}
                         </button>
                         <button onClick={() => toggleEnabled(s.id)} title={s.enabled ? 'Pause' : 'Enable'}
-                          className={`p-2.5 rounded-xl transition ${s.enabled ? 'text-emerald-700 hover:bg-emerald-50' : 'text-emerald-900/30 hover:bg-emerald-50'}`}>
+                          className={`p-2.5 rounded-xl transition ${s.enabled ? isDark ? 'text-emerald-400 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-50' : isDark ? 'text-white/30 hover:bg-white/10' : 'text-emerald-900/30 hover:bg-emerald-50'}`}>
                           <Power size={17} />
                         </button>
-                        <button onClick={() => openEdit(s)} title="Edit" className="p-2.5 rounded-xl hover:bg-emerald-50 text-emerald-900/60"><Pencil size={16} /></button>
+                        <button onClick={() => openEdit(s)} title="Edit" className={`p-2.5 rounded-xl transition ${isDark ? 'hover:bg-white/10 text-white/60' : 'hover:bg-emerald-50 text-emerald-900/60'}`}><Pencil size={16} /></button>
                         <button
                           onClick={() => (confirmDeleteId === s.id ? removeSchedule(s.id) : setConfirmDeleteId(s.id))}
                           onBlur={() => setConfirmDeleteId((c) => (c === s.id ? null : c))}
@@ -529,8 +529,9 @@ export default function RecitationSchedulerPage() {
       {/* ════════ BENEFITS + TODAY'S GOAL ════════ */}
       <div className="grid lg:grid-cols-[1.7fr_1fr] gap-4">
         {/* Benefits */}
-        <div className="rounded-3xl border border-amber-200/50 p-6" style={{ background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF6E0 100%)' }}>
-          <h2 className="flex items-center gap-2 font-display font-bold text-lg text-emerald-950 mb-5">
+        <div className={`rounded-3xl border p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-amber-200/50'}`}
+          style={isDark ? undefined : { background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF6E0 100%)' }}>
+          <h2 className={`flex items-center gap-2 font-display font-bold text-lg mb-5 ${isDark ? 'text-white' : 'text-emerald-950'}`}>
             <BookOpen size={18} className="text-gold-600" /> Benefits of Listening to Quran
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -539,13 +540,13 @@ export default function RecitationSchedulerPage() {
                 <motion.span
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
-                  className="inline-flex w-12 h-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm border border-emerald-100"
+                  className={`inline-flex w-12 h-12 items-center justify-center rounded-2xl shadow-sm border ${isDark ? 'bg-white/[0.08] text-emerald-300 border-emerald-500/20' : 'bg-white text-emerald-600 border-emerald-100'}`}
                 >
                   <Icon size={22} />
                 </motion.span>
                 <div>
-                  <p className="text-sm font-bold text-emerald-950 leading-tight">{title}</p>
-                  <p className="text-[11px] text-emerald-900/50 leading-tight mt-0.5">{sub}</p>
+                  <p className={`text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-emerald-950'}`}>{title}</p>
+                  <p className={`text-[11px] leading-tight mt-0.5 ${isDark ? 'text-white/50' : 'text-emerald-900/50'}`}>{sub}</p>
                 </div>
               </div>
             ))}
