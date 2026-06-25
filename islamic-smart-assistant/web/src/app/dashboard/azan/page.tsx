@@ -8,7 +8,7 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap, Compass,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
-  Pencil, Scissors, X,
+  Pencil, Scissors, X, AlertTriangle,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
@@ -385,6 +385,13 @@ export default function AzanPage() {
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Auto-dismiss the error popup after 7 s.
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 7000);
+    return () => clearTimeout(t);
+  }, [error]);
 
   // Smart Azan Settings (persisted) — the first maps to the real auto-azan flag.
   const [diffVoices, setDiffVoices] = useLocalStorage<boolean>('isa:azanDiffVoices', false);
@@ -1138,10 +1145,6 @@ export default function AzanPage() {
           </motion.div>
         </div>
 
-        {error && (
-          <div className="mt-5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3">{error}</div>
-        )}
-
         {/* ══════ Durood Sharif & Dua ══════ */}
         <div className="mt-8">
           <div className="flex items-center gap-3 mb-5">
@@ -1384,6 +1387,47 @@ export default function AzanPage() {
             <button onClick={() => setDeleteToast(null)} className="ml-1 shrink-0 text-emerald-900/30 hover:text-emerald-700 transition">
               <X size={14} />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Playback error popup ── */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, x: 32, scale: 0.94 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 32, scale: 0.94 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+            className="fixed top-5 right-5 z-[299] w-[300px] rounded-2xl overflow-hidden shadow-2xl border border-rose-200 bg-white"
+          >
+            {/* coloured top strip */}
+            <div className="flex items-center gap-2.5 bg-rose-500 px-4 py-3">
+              <span className="w-7 h-7 shrink-0 grid place-items-center rounded-full bg-white/20">
+                <AlertTriangle size={14} className="text-white" />
+              </span>
+              <p className="flex-1 text-sm font-bold text-white leading-tight">Playback Error</p>
+              <button
+                onClick={() => setError(null)}
+                aria-label="Dismiss"
+                className="shrink-0 w-6 h-6 grid place-items-center rounded-full bg-white/15 text-white hover:bg-white/30 transition"
+              >
+                <X size={13} />
+              </button>
+            </div>
+            {/* body */}
+            <div className="px-4 py-3 space-y-2">
+              <p className="text-xs text-rose-800/80 leading-relaxed line-clamp-3">
+                {/* strip raw URLs from the browser error message */}
+                {error.replace(/https?:\/\/\S+/g, '').trim()}
+              </p>
+              <div className="flex items-start gap-1.5 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2">
+                <span className="text-amber-500 mt-0.5 shrink-0">💡</span>
+                <p className="text-[11px] text-amber-800/80 leading-relaxed">
+                  Tap one voice at a time — wait for it to start before switching to another.
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
