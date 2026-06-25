@@ -134,6 +134,8 @@ export function AutoAzanScheduler() {
   const [duaPos]         = useLocalStorage<SuppPos>('isa:duaPos', 'after');
   const [customDuroods]  = useLocalStorage<CustomAzan[]>('isa:customDuroods', []);
   const [customDuas]     = useLocalStorage<CustomAzan[]>('isa:customDuas', []);
+  const [preAzanQueue]   = useLocalStorage<{id:string;name:string;audioType:string}[]>('isa:preAzanQueue',  []);
+  const [postAzanQueue]  = useLocalStorage<{id:string;name:string;audioType:string}[]>('isa:postAzanQueue', []);
 
   const params = usePrayerParams();
   const byCoords = params.byCoords;
@@ -162,8 +164,10 @@ export function AutoAzanScheduler() {
   const duroodPosRef     = useRef(duroodPos);     duroodPosRef.current = duroodPos;
   const duaIdRef         = useRef(duaId);         duaIdRef.current = duaId;
   const duaPosRef        = useRef(duaPos);        duaPosRef.current = duaPos;
-  const customDuroodsRef = useRef(customDuroods); customDuroodsRef.current = customDuroods;
-  const customDuasRef    = useRef(customDuas);    customDuasRef.current = customDuas;
+  const customDuroodsRef  = useRef(customDuroods); customDuroodsRef.current = customDuroods;
+  const customDuasRef     = useRef(customDuas);    customDuasRef.current = customDuas;
+  const preAzanQueueRef   = useRef(preAzanQueue);  preAzanQueueRef.current = preAzanQueue;
+  const postAzanQueueRef  = useRef(postAzanQueue); postAzanQueueRef.current = postAzanQueue;
 
   // Sequential audio queue — each item is a src string played in order
   const playQueueRef    = useRef<string[]>([]);
@@ -315,20 +319,32 @@ export function AutoAzanScheduler() {
     };
 
     const queue: string[] = [];
-    const dId  = duroodIdRef.current;
-    const dPos = duroodPosRef.current;
-    const qaId  = duaIdRef.current;
-    const qaPos = duaPosRef.current;
 
-    // Before durood
-    if (dId && (dPos === 'before' || dPos === 'both')) {
-      const src = await resolveSupp(dId);
-      if (abortRef.current) { extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); extraUrlsRef.current = []; return; }
-      if (src) queue.push(src);
-    }
-    // Before dua
-    if (qaId && (qaPos === 'before' || qaPos === 'both')) {
-      const src = await resolveSupp(qaId);
+    // Prefer the multi-select queue; fall back to legacy duroodId/duaId single-select
+    const preQ  = preAzanQueueRef.current;
+    const postQ = postAzanQueueRef.current;
+    const hasNewQueue = preQ.length > 0 || postQ.length > 0;
+
+    const preIds: string[] = hasNewQueue ? preQ.map(x => x.id) : (() => {
+      const dId = duroodIdRef.current; const dPos = duroodPosRef.current;
+      const qaId = duaIdRef.current;  const qaPos = duaPosRef.current;
+      return [
+        ...(dId  && (dPos  === 'before' || dPos  === 'both') ? [dId]  : []),
+        ...(qaId && (qaPos === 'before' || qaPos === 'both') ? [qaId] : []),
+      ];
+    })();
+
+    const postIds: string[] = hasNewQueue ? postQ.map(x => x.id) : (() => {
+      const dId = duroodIdRef.current; const dPos = duroodPosRef.current;
+      const qaId = duaIdRef.current;  const qaPos = duaPosRef.current;
+      return [
+        ...(dId  && (dPos  === 'after' || dPos  === 'both') ? [dId]  : []),
+        ...(qaId && (qaPos === 'after' || qaPos === 'both') ? [qaId] : []),
+      ];
+    })();
+
+    for (const id of preIds) {
+      const src = await resolveSupp(id);
       if (abortRef.current) { extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); extraUrlsRef.current = []; return; }
       if (src) queue.push(src);
     }
@@ -336,14 +352,8 @@ export function AutoAzanScheduler() {
     // Main azan
     queue.push(mainSrc);
 
-    // After durood
-    if (dId && (dPos === 'after' || dPos === 'both')) {
-      const src = await resolveSupp(dId);
-      if (src) queue.push(src);
-    }
-    // After dua
-    if (qaId && (qaPos === 'after' || qaPos === 'both')) {
-      const src = await resolveSupp(qaId);
+    for (const id of postIds) {
+      const src = await resolveSupp(id);
       if (src) queue.push(src);
     }
 

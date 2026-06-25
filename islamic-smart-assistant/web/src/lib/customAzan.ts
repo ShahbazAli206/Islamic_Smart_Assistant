@@ -10,6 +10,15 @@
 export const CUSTOM_AZAN_PREFIX = 'custom:';
 export const isCustomAzan = (id: string) => id.startsWith(CUSTOM_AZAN_PREFIX);
 
+export const BUILTIN_PREFIX = 'builtin:';
+export const isBuiltinClip = (id: string) => id.startsWith(BUILTIN_PREFIX);
+
+const BUILTIN_PATHS: Record<string, string> = {
+  'builtin:asalatu-wasalamu': '/audio/Asalatu_Wasalamu_Alaika_Ya_Rasool_Allah,%20Drood.mp3',
+  'builtin:darood-ibrahimi': '/audio/Darood_e_Ibrahimi%20Drood.mp3',
+  'builtin:dua-after-azan': '/audio/Dua_After_Azan.mp3',
+};
+
 export type AudioType = 'azan' | 'durood' | 'dua';
 
 /** Lightweight metadata persisted in localStorage; the audio Blob lives in IndexedDB. */
@@ -23,6 +32,15 @@ export type CustomAzan = {
   badge?: 'popular' | 'new';
   tags?: string[];
 };
+
+export const BUILT_IN_DUROODS: CustomAzan[] = [
+  { id: 'builtin:asalatu-wasalamu', name: 'Asalatu Wasalamu Alaika Ya Rasool Allah', createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
+  { id: 'builtin:darood-ibrahimi',  name: 'Darood-e-Ibrahimi',                        createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
+];
+
+export const BUILT_IN_DUAS: CustomAzan[] = [
+  { id: 'builtin:dua-after-azan', name: 'Dua After Azan', createdAt: 0, durationSec: 0, audioType: 'dua', badge: 'popular' },
+];
 
 const DB_NAME = 'isa-azan';
 const STORE = 'clips';
@@ -75,10 +93,11 @@ export function deleteAzanClip(id: string): Promise<void> {
 }
 
 /**
- * Object URL for a custom clip's audio, or null if it's missing. The CALLER is
- * responsible for URL.revokeObjectURL() once playback is done.
+ * Returns a playable URL for any clip — built-in (public path) or custom (IndexedDB
+ * object URL). For custom IDs the CALLER is responsible for URL.revokeObjectURL().
  */
 export async function customAzanUrl(id: string): Promise<string | null> {
+  if (isBuiltinClip(id)) return BUILTIN_PATHS[id] ?? null;
   const blob = await getAzanClip(id);
   return blob ? URL.createObjectURL(blob) : null;
 }

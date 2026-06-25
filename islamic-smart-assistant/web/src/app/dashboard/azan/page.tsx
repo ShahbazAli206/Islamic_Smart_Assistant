@@ -14,7 +14,9 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
 import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
-  customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan, type CustomAzan, type AudioType,
+  customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan,
+  BUILT_IN_DUROODS, BUILT_IN_DUAS,
+  type CustomAzan, type AudioType,
 } from '@/lib/customAzan';
 import { formatClock, decodeAudioFile, encodeWavFromSegments, type WavSegment } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
@@ -308,12 +310,14 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
 function UploadedCard({
   meta, isPlaying, accent, onPlay, onDelete,
   isBefore, isAfter, onToggleBefore, onToggleAfter,
+  readOnly = false,
 }: {
   meta: CustomAzan; isPlaying: boolean;
   accent: 'emerald' | 'rose';
   onPlay: () => void; onDelete: () => void;
   isBefore: boolean; isAfter: boolean;
   onToggleBefore: () => void; onToggleAfter: () => void;
+  readOnly?: boolean;
 }) {
   const initials = meta.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
   const g = accent === 'rose' ? 'from-rose-400 to-pink-600' : 'from-emerald-400 to-teal-600';
@@ -333,10 +337,16 @@ function UploadedCard({
         </span>
       )}
 
-      <button onClick={onDelete} title="Delete"
-        className="absolute top-2.5 right-2.5 p-1.5 rounded-full text-emerald-900/20 hover:text-rose-500 hover:bg-rose-50 transition">
-        <Trash2 size={12} />
-      </button>
+      {readOnly ? (
+        <span className="absolute top-2.5 right-2.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 leading-tight">
+          Built-in
+        </span>
+      ) : (
+        <button onClick={onDelete} title="Delete"
+          className="absolute top-2.5 right-2.5 p-1.5 rounded-full text-emerald-900/20 hover:text-rose-500 hover:bg-rose-50 transition">
+          <Trash2 size={12} />
+        </button>
+      )}
 
       <div className="flex items-center gap-3 pr-6">
         <div className="relative shrink-0">
@@ -815,8 +825,8 @@ export default function AzanPage() {
     const fromAll = allItems.find((it) => it.id === activeId)?.name;
     if (fromAll) return fromAll;
     return (
-      customDuroods.find((c) => c.id === activeId)?.name ??
-      customDuas.find((c) => c.id === activeId)?.name ??
+      [...BUILT_IN_DUROODS, ...customDuroods].find((c) => c.id === activeId)?.name ??
+      [...BUILT_IN_DUAS, ...customDuas].find((c) => c.id === activeId)?.name ??
       null
     );
   }, [activeId, allItems, customDuroods, customDuas]);
@@ -1269,54 +1279,61 @@ export default function AzanPage() {
               </p>
 
               {/* Active queue summary */}
-              {(preAzanQueue.some(x => customDuroods.some(d => d.id === x.id)) ||
-                postAzanQueue.some(x => customDuroods.some(d => d.id === x.id))) && (
-                <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
-                  isDark ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/40'
-                         : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                }`}>
-                  <CheckCircle2 size={12} />
-                  {preAzanQueue.filter(x => customDuroods.some(d => d.id === x.id)).length} before ·{' '}
-                  {postAzanQueue.filter(x => customDuroods.some(d => d.id === x.id)).length} after Azan active
-                </div>
-              )}
+              {(() => {
+                const allDuroods = [...BUILT_IN_DUROODS, ...customDuroods];
+                const beforeCount = preAzanQueue.filter(x => allDuroods.some(d => d.id === x.id)).length;
+                const afterCount  = postAzanQueue.filter(x => allDuroods.some(d => d.id === x.id)).length;
+                return (beforeCount > 0 || afterCount > 0) ? (
+                  <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+                    isDark ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/40'
+                           : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    <CheckCircle2 size={12} />
+                    {beforeCount} before · {afterCount} after Azan active
+                  </div>
+                ) : null;
+              })()}
 
-              {/* Cards / empty state */}
-              <AnimatePresence mode="wait">
-                {customDuroods.length > 0 ? (
-                  <motion.div key="cards" layout className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <AnimatePresence>
-                      {customDuroods.map((track) => (
-                        <UploadedCard
-                          key={track.id} meta={track} accent="emerald"
-                          isPlaying={activeId === track.id}
-                          isBefore={preAzanQueue.some(x => x.id === track.id)}
-                          isAfter={postAzanQueue.some(x => x.id === track.id)}
-                          onPlay={() => previewCustom(track)}
-                          onToggleBefore={() => togglePreAzan(track)}
-                          onToggleAfter={() => togglePostAzan(track)}
-                          onDelete={() => deleteDurood(track.id)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                ) : (
-                  <motion.div key="empty"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center py-8 rounded-2xl border-2 border-dashed border-emerald-200 text-center"
-                  >
-                    <span className="text-3xl mb-2 select-none">📿</span>
-                    <p className={`text-sm font-semibold ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/55'}`}>No Durood uploaded yet</p>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-emerald-100/35' : 'text-emerald-900/35'}`}>Click Upload and choose Durood Sharif</p>
-                    <button
-                      onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
-                      className="mt-3 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
-                    >
-                      Upload Durood
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Cards — built-ins always shown first, then user uploads */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <AnimatePresence>
+                  {BUILT_IN_DUROODS.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="emerald" readOnly
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => {}}
+                    />
+                  ))}
+                  {customDuroods.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="emerald"
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => deleteDurood(track.id)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+              {customDuroods.length === 0 && (
+                <button
+                  onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
+                  className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
+                    isDark ? 'border-emerald-700/50 text-emerald-400 hover:bg-emerald-900/30'
+                           : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                  }`}
+                >
+                  + Upload your own Durood
+                </button>
+              )}
             </div>
 
             {/* ── Dua panel ── */}
@@ -1335,54 +1352,61 @@ export default function AzanPage() {
               </p>
 
               {/* Active queue summary */}
-              {(preAzanQueue.some(x => customDuas.some(d => d.id === x.id)) ||
-                postAzanQueue.some(x => customDuas.some(d => d.id === x.id))) && (
-                <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
-                  isDark ? 'bg-rose-900/30 text-rose-300 border border-rose-700/40'
-                         : 'bg-rose-50 text-rose-700 border border-rose-200'
-                }`}>
-                  <CheckCircle2 size={12} />
-                  {preAzanQueue.filter(x => customDuas.some(d => d.id === x.id)).length} before ·{' '}
-                  {postAzanQueue.filter(x => customDuas.some(d => d.id === x.id)).length} after Azan active
-                </div>
-              )}
+              {(() => {
+                const allDuas = [...BUILT_IN_DUAS, ...customDuas];
+                const beforeCount = preAzanQueue.filter(x => allDuas.some(d => d.id === x.id)).length;
+                const afterCount  = postAzanQueue.filter(x => allDuas.some(d => d.id === x.id)).length;
+                return (beforeCount > 0 || afterCount > 0) ? (
+                  <div className={`mb-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+                    isDark ? 'bg-rose-900/30 text-rose-300 border border-rose-700/40'
+                           : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    <CheckCircle2 size={12} />
+                    {beforeCount} before · {afterCount} after Azan active
+                  </div>
+                ) : null;
+              })()}
 
-              {/* Cards / empty state */}
-              <AnimatePresence mode="wait">
-                {customDuas.length > 0 ? (
-                  <motion.div key="cards" layout className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <AnimatePresence>
-                      {customDuas.map((track) => (
-                        <UploadedCard
-                          key={track.id} meta={track} accent="rose"
-                          isPlaying={activeId === track.id}
-                          isBefore={preAzanQueue.some(x => x.id === track.id)}
-                          isAfter={postAzanQueue.some(x => x.id === track.id)}
-                          onPlay={() => previewCustom(track)}
-                          onToggleBefore={() => togglePreAzan(track)}
-                          onToggleAfter={() => togglePostAzan(track)}
-                          onDelete={() => deleteDua(track.id)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                ) : (
-                  <motion.div key="empty"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center py-8 rounded-2xl border-2 border-dashed border-rose-200 text-center"
-                  >
-                    <span className="text-3xl mb-2 select-none">🤲</span>
-                    <p className={`text-sm font-semibold ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/55'}`}>No Dua uploaded yet</p>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-emerald-100/35' : 'text-emerald-900/35'}`}>Click Upload and choose Dua</p>
-                    <button
-                      onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
-                      className="mt-3 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition"
-                    >
-                      Upload Dua
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Cards — built-ins always shown first, then user uploads */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <AnimatePresence>
+                  {BUILT_IN_DUAS.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="rose" readOnly
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => {}}
+                    />
+                  ))}
+                  {customDuas.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="rose"
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => deleteDua(track.id)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+              {customDuas.length === 0 && (
+                <button
+                  onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
+                  className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
+                    isDark ? 'border-rose-700/50 text-rose-400 hover:bg-rose-900/20'
+                           : 'border-rose-200 text-rose-500 hover:bg-rose-50'
+                  }`}
+                >
+                  + Upload your own Dua
+                </button>
+              )}
             </div>
 
           </div>
