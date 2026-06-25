@@ -202,7 +202,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
       await putAzanClip(id, blob);
       if (isCustomAzan(target.id)) await deleteAzanClip(target.id).catch(() => {});
       const replacedId = target.id;
-      Azan.uploadVoice(blob, { name: savedName, durationMs: Math.round(trimmedDur * 1000) }).catch(() => {});
+      Azan.uploadVoice(blob, { name: savedName, durationMs: Math.round(trimmedDur * 1000), audioType: 'azan' }).catch(() => {});
       onSaved({ id, name: savedName, createdAt: Date.now(), durationSec: Math.round(trimmedDur * 10) / 10, badge: target.badge, tags: target.tags }, replacedId);
       handleClose();
     } catch (e) {
