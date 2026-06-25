@@ -548,6 +548,8 @@ export default function AzanPage() {
       name: item.name,
       local: v?.local,
       remote: v?.remote ?? item.remoteUrl,
+      badge: item.badge,
+      tags: item.tags,
     });
   };
 
@@ -715,6 +717,7 @@ export default function AzanPage() {
       id: c.id, name: c.name, subtitle: 'Your upload', region: 'Custom',
       lang: 'Custom', style: 'Custom', duration: formatClock(c.durationSec),
       art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true,
+      badge: c.badge, tags: c.tags,
     }));
     // Backend-synced customs — skip any matching a local upload (same name +
     // duration) so the uploader's own clip isn't listed twice on this device.
@@ -1546,9 +1549,13 @@ export default function AzanPage() {
         onClose={() => setTrimmingItem(null)}
         onSaved={(meta, replacedId) => {
           setCustomAzans((prev) => {
-            const filtered = replacedId ? prev.filter((x) => x.id !== replacedId) : prev;
+            const filtered = replacedId && isCustomAzan(replacedId) ? prev.filter((x) => x.id !== replacedId) : prev;
             return [meta, ...filtered];
           });
+          // If the original was a built-in voice, hide it from the list.
+          if (replacedId && !isCustomAzan(replacedId)) {
+            setHiddenVoices((prev) => prev.includes(replacedId) ? prev : [...prev, replacedId]);
+          }
           setSelectedId(meta.id);
         }}
       />

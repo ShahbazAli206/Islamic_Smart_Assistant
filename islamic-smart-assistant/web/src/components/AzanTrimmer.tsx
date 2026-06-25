@@ -14,6 +14,9 @@ export type TrimTarget = {
   local?: string;
   /** Public URL fallback (built-in remote or backend-synced custom). */
   remote?: string;
+  /** Carried from the original voice so the trimmed clip inherits them. */
+  badge?: 'popular' | 'new';
+  tags?: string[];
 };
 
 type Props = {
@@ -238,9 +241,10 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
       const savedName = name.trim() || target.name;
       const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       await putAzanClip(id, blob);
-      // If the original was a custom clip, delete it now so the trimmed version replaces it.
-      const replacedId = isCustomAzan(target.id) ? target.id : undefined;
-      if (replacedId) await deleteAzanClip(replacedId).catch(() => {});
+      // If the original was a custom clip, delete it from IndexedDB.
+      if (isCustomAzan(target.id)) await deleteAzanClip(target.id).catch(() => {});
+      // Always pass the original id so the parent can hide built-in voices too.
+      const replacedId = target.id;
       // Best-effort backend sync — never blocks the local save.
       Azan.uploadVoice(blob, {
         name: savedName,
@@ -251,6 +255,8 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
         name: savedName,
         createdAt: Date.now(),
         durationSec: Math.round(trimmedDur * 10) / 10,
+        badge: target.badge,
+        tags: target.tags,
       }, replacedId);
       handleClose();
     } catch (e) {

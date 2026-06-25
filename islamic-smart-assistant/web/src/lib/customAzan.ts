@@ -19,6 +19,9 @@ export type CustomAzan = {
   createdAt: number;
   durationSec: number;
   audioType?: AudioType;
+  /** Carried over from the original built-in voice when created by trimming. */
+  badge?: 'popular' | 'new';
+  tags?: string[];
 };
 
 const DB_NAME = 'isa-azan';
