@@ -196,9 +196,7 @@ export default function SettingsPage() {
             />
           ))}
         </div>
-        <p className="mt-3 text-xs text-black/40">
-          {SECTS.find((s) => s.id === activeSectId)?.desc ?? ''}
-        </p>
+
       </SectionCard>
 
       {/* ── Translation Language ── */}

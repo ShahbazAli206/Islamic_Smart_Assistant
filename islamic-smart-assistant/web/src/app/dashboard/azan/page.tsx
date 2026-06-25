@@ -771,7 +771,7 @@ export default function AzanPage() {
               <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
                 <Bell size={12} /> Azan Voices
               </span>
-              <div className="mt-4 inline-block rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
+              <div className="mt-4 w-fit rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
                 <h1 className="font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black">
                   Azan Voices
                 </h1>
