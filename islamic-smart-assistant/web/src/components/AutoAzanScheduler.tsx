@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellRing, Volume2, X, Square, Radio, MapPin } from 'lucide-react';
+import { BellRing, X, Square, Radio, MapPin } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { usePrayerParams } from '@/lib/usePrayerParams';
-import { customAzanUrl, isCustomAzan } from '@/lib/customAzan';
+import { customAzanUrl, isCustomAzan, type CustomAzan } from '@/lib/customAzan';
 import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
@@ -50,72 +50,126 @@ function waveHeights(count = 30): number[] {
 }
 const WAVE = waveHeights();
 
-// A guaranteed-present built-in file used only for the MUTED autoplay-unlock
-// plays — a `custom:` voice id isn't a valid path, and content is irrelevant
-// when muted, so we always unlock with this.
 const UNLOCK_SRC = '/audio/azan/makkah.mp3';
 
-/**
- * Polls every second and plays the user's chosen Azan the moment a prayer
- * time arrives — reliable even across tab-sleeps and query refetches.
- *
- * Limits of running this in a browser:
- *  - The page must be open in a tab. (To survive a closed tab, the backend cron
- *    would push a notification + the device app would play it.)
- *  - Browsers block autoplay until there's been one user gesture on the page.
- *    A first-load "Enable auto-Azan" prompt resolves that.
- */
+// ── Prayer announcement (TTS) helpers ────────────────────────────────────────
+
+const LANG_CODES: Record<string, string> = {
+  en: 'en-US', ar: 'ar-SA', ur: 'ur-PK', fr: 'fr-FR',
+  tr: 'tr-TR', id: 'id-ID', ms: 'ms-MY', bn: 'bn-BD',
+  de: 'de-DE', es: 'es-ES', hi: 'hi-IN',
+};
+
+const PRAYER_NAMES_I18N: Record<string, Record<string, string>> = {
+  ar: { Fajr: 'الفجر',  Dhuhr: 'الظهر',  Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' },
+  ur: { Fajr: 'فجر',    Dhuhr: 'ظہر',    Asr: 'عصر',   Maghrib: 'مغرب',   Isha: 'عشاء'   },
+  fr: { Fajr: 'Fajr',   Dhuhr: 'Dhohr',  Asr: 'Asr',   Maghrib: 'Maghrib', Isha: 'Icha'  },
+  tr: { Fajr: 'Sabah',  Dhuhr: 'Öğle',   Asr: 'İkindi',Maghrib: 'Akşam',   Isha: 'Yatsı' },
+  id: { Fajr: 'Subuh',  Dhuhr: 'Zuhur',  Asr: 'Ashar', Maghrib: 'Magrib',  Isha: 'Isya'  },
+  ms: { Fajr: 'Subuh',  Dhuhr: 'Zohor',  Asr: 'Asar',  Maghrib: 'Maghrib', Isha: 'Isyak' },
+  bn: { Fajr: 'ফজর',   Dhuhr: 'জোহর',   Asr: 'আসর',  Maghrib: 'মাগরিব', Isha: 'এশা'   },
+  hi: { Fajr: 'फजर',   Dhuhr: 'जुहर',   Asr: 'असर',  Maghrib: 'मगरिब',  Isha: 'ईशा'   },
+};
+
+function getAnnouncementText(prayer: string, lang: string): string {
+  const p = PRAYER_NAMES_I18N[lang]?.[prayer] ?? prayer;
+  switch (lang) {
+    case 'ar': return `حان وقت صلاة ${p}`;
+    case 'ur': return `${p} کی نماز کا وقت آ گیا`;
+    case 'fr': return `Il est l'heure de la prière de ${p}`;
+    case 'tr': return `${p} namazı vakti geldi`;
+    case 'id': return `Waktu sholat ${p} telah tiba`;
+    case 'ms': return `Waktu solat ${p} telah tiba`;
+    case 'bn': return `${p} নামাযের সময় হয়েছে`;
+    case 'hi': return `${p} की नमाज़ का वक्त हो गया है`;
+    case 'de': return `Es ist Zeit für das ${p}-Gebet`;
+    case 'es': return `Es hora de la oración de ${p}`;
+    default:   return `${p} prayer time`;
+  }
+}
+
+/** Speak `text` via the browser's TTS engine, resolving when done/cancelled/error. */
+function speakTTS(text: string, lang: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) { resolve(); return; }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang;
+    utter.rate = 0.88;
+    utter.pitch = 1.05;
+    utter.onend   = () => resolve();
+    utter.onerror = () => resolve();
+    window.speechSynthesis.speak(utter);
+  });
+}
+
+type SuppPos = 'before' | 'after' | 'both';
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export function AutoAzanScheduler() {
   const [voice]    = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
   const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
   const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
 
-  // Resolve the SAME method/school + location the prayer-times hero and the
-  // Overview hero use, so we fire at the exact moment their countdown hits zero
-  // (and share a single React Query cache entry via identical query keys).
+  // Prayer announcement + durood/dua sequencing
+  const [announce]       = useLocalStorage<boolean>('isa:azanAnnounce', true);
+  const [language]       = useLocalStorage<string>('isa:language', 'en');
+  const [duroodId]       = useLocalStorage<string | null>('isa:duroodId', null);
+  const [duroodPos]      = useLocalStorage<SuppPos>('isa:duroodPos', 'after');
+  const [duaId]          = useLocalStorage<string | null>('isa:duaId', null);
+  const [duaPos]         = useLocalStorage<SuppPos>('isa:duaPos', 'after');
+  const [customDuroods]  = useLocalStorage<CustomAzan[]>('isa:customDuroods', []);
+  const [customDuas]     = useLocalStorage<CustomAzan[]>('isa:customDuas', []);
+
   const params = usePrayerParams();
   const byCoords = params.byCoords;
 
   const [needsGesture, setNeedsGesture] = useState(false);
   const [firing, setFiring] = useState<null | { prayer: string; voiceId: string }>(null);
-  // When the user clicks X on the big popup, the Azan keeps playing but the
-  // popup collapses into a mini sidebar indicator until they expand or stop it.
   const [minimized, setMinimized] = useState(false);
-  // A prayer that tried to fire but was blocked by the browser's autoplay policy.
   const [pendingPrayer, setPendingPrayer] = useState<string | null>(null);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-  /** Key = "YYYY-M-D:Prayer" — never double-play. */
-  const firedRef = useRef<Set<string>>(new Set());
-  // Object URL for a custom clip currently loaded into the element (revoked when done).
-  const customUrlRef = useRef<string | null>(null);
-  const revokeCustomUrl = () => {
+  const audioRef         = useRef<HTMLAudioElement>(null);
+  const firedRef         = useRef<Set<string>>(new Set());
+  const customUrlRef     = useRef<string | null>(null);
+  const revokeCustomUrl  = () => {
     if (customUrlRef.current) { URL.revokeObjectURL(customUrlRef.current); customUrlRef.current = null; }
   };
 
-  const voiceRef = useRef(voice);
-  voiceRef.current = voice;
-  const outputIdRef = useRef(outputId);
-  outputIdRef.current = outputId;
-  // True once the <audio> element has been unlocked by a user gesture this page
-  // load — guards the muted-unlock play from running more than once.
-  const armedRef = useRef(false);
-  // True while an Azan is actually playing, so a stray gesture doesn't re-arm
-  // (which would reload the element's src) mid-playback.
-  const firingRef = useRef(false);
-  // Desktop only: a LAN device (Chromecast/DLNA) chosen as the Azan output.
+  const voiceRef    = useRef(voice);   voiceRef.current = voice;
+  const outputIdRef = useRef(outputId); outputIdRef.current = outputId;
+  const armedRef    = useRef(false);
+  const firingRef   = useRef(false);
+
+  // Refs for announcement / durood / dua — always fresh in callbacks
+  const announceRef      = useRef(announce);      announceRef.current = announce;
+  const languageRef      = useRef(language);      languageRef.current = language;
+  const duroodIdRef      = useRef(duroodId);      duroodIdRef.current = duroodId;
+  const duroodPosRef     = useRef(duroodPos);     duroodPosRef.current = duroodPos;
+  const duaIdRef         = useRef(duaId);         duaIdRef.current = duaId;
+  const duaPosRef        = useRef(duaPos);        duaPosRef.current = duaPos;
+  const customDuroodsRef = useRef(customDuroods); customDuroodsRef.current = customDuroods;
+  const customDuasRef    = useRef(customDuas);    customDuasRef.current = customDuas;
+
+  // Sequential audio queue — each item is a src string played in order
+  const playQueueRef    = useRef<string[]>([]);
+  // Extra object URLs created for durood/dua blobs — revoked when queue finishes
+  const extraUrlsRef    = useRef<string[]>([]);
+  // Abort flag — set by stop(); checked after every await in fire()
+  const abortRef        = useRef(false);
+  // Currently-firing prayer name (needed inside advanceQueueRef for pending state)
+  const firingPrayerRef = useRef<string | null>(null);
+
   const [castDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
   const castDeviceIdRef = useRef(castDeviceId);
   castDeviceIdRef.current = castDeviceId;
-  // When the azan is cast to a device there's no local <audio> 'ended' event, so
-  // we auto-clear the "Azan Playing" popup after a typical adhan length.
   const castClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearCastTimer = () => {
     if (castClearTimerRef.current) { clearTimeout(castClearTimerRef.current); castClearTimerRef.current = null; }
   };
 
-  // Query key matches PrayerCountdownHero exactly so both share the same cache.
   const { data } = useQuery({
     queryKey: byCoords
       ? ['timings', 'coords', params.lat, params.lng, params.method, params.school]
@@ -132,8 +186,6 @@ export function AutoAzanScheduler() {
     },
   });
 
-  // Route audio to the selected output device, falling back to default speakers
-  // if the device is unavailable (e.g. Bluetooth disconnected).
   const setAudioOutput = useCallback(async (el: HTMLAudioElement) => {
     if (!outputIdRef.current || !('setSinkId' in el)) return;
     try {
@@ -142,31 +194,61 @@ export function AutoAzanScheduler() {
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2_000)),
       ]);
     } catch {
-      // Device unavailable — reset to default (laptop speakers).
       try { await (el as any).setSinkId(''); } catch {}
     }
   }, []);
 
+  // ── Sequential audio queue ─────────────────────────────────────────────────
+  // Defined as a ref-based function so it can self-reference without useCallback
+  // circular deps. Fresh closure on every render → always captures current state.
+  const advanceQueueRef = useRef<() => void>(() => {});
+  advanceQueueRef.current = () => {
+    const el = audioRef.current;
+    if (!el || abortRef.current) return;
+    const src = playQueueRef.current.shift();
+    if (!src) {
+      // Entire sequence finished
+      firingRef.current = false;
+      firingPrayerRef.current = null;
+      setFiring(null);
+      setMinimized(false);
+      extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      extraUrlsRef.current = [];
+      revokeCustomUrl();
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
+      return;
+    }
+    el.src = src;
+    el.play().catch((err: Error) => {
+      if (err?.name === 'NotAllowedError') {
+        // Autoplay blocked — put src back and show Enable prompt
+        playQueueRef.current.unshift(src);
+        const p = firingPrayerRef.current;
+        if (p) { setPendingPrayer(p); setNeedsGesture(true); }
+      } else {
+        // Other failure (codec, 404) — skip to next item
+        advanceQueueRef.current();
+      }
+    });
+  };
+
+  // ── fire() — build and start the full playback sequence ───────────────────
   const fire = useCallback(async (prayer: string) => {
     const el = audioRef.current;
     if (!el) return;
     el.muted = false;
+    abortRef.current = false;
+    firingPrayerRef.current = prayer;
     clearCastTimer();
-
-    // Resolve the audio source. Built-in voices map to a bundled file; a custom
-    // voice loads its trimmed clip from IndexedDB as an object URL (falling back
-    // to a built-in if the clip is missing, e.g. cleared site data).
     revokeCustomUrl();
+    extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    extraUrlsRef.current = [];
+    playQueueRef.current = [];
+
     const v = voiceRef.current;
     const { name: voiceLabel } = resolveVoiceInfo(v);
-    // Resolve to the bundled file with its REAL extension (most voices are .m4a,
-    // not .mp3) via the shared voice table — guessing `${v}.mp3` 404s for those
-    // and the Azan silently fails to play.
-    let src: string;
 
-    // Desktop: if the user picked a LAN device (Chromecast/DLNA) as the Azan
-    // output, play it THERE instead of the laptop speakers. Falls back to local
-    // playback if the device is unreachable or the voice has no bundled file.
+    // LAN device (Chromecast/DLNA) — cast the main azan and return
     const lanPath = azanLocalPath(v);
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
     if (castDeviceIdRef.current && desktopApi && lanPath) {
@@ -177,53 +259,96 @@ export function AutoAzanScheduler() {
           title: `Adhan — ${voiceLabel}`,
         });
         setFiring({ prayer, voiceId: v });
-        // No local 'ended' event fires for a device cast — auto-clear the popup
-        // after ~4 min (longer than any adhan) unless the user stops it sooner.
+        firingRef.current = true;
         clearCastTimer();
         castClearTimerRef.current = setTimeout(() => setFiring(null), 4 * 60_000);
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel} on your device`, silent: true });
         }
-        return; // played on the chosen device — skip local speakers
+        return;
       } catch {
-        /* device unreachable — fall through to local playback below */
+        // Device unreachable — fall through to local playback
       }
     }
+
+    // Resolve main azan src
+    let mainSrc: string;
     if (isCustomAzan(v)) {
       const url = await customAzanUrl(v);
-      if (url) { customUrlRef.current = url; src = url; }
-      else src = UNLOCK_SRC;
+      if (url) { customUrlRef.current = url; mainSrc = url; }
+      else mainSrc = UNLOCK_SRC;
     } else {
-      src = azanLocalPath(v) ?? UNLOCK_SRC;
+      mainSrc = azanLocalPath(v) ?? UNLOCK_SRC;
     }
-    el.src = src;
+
+    // Show popup immediately (even during TTS announcement)
+    setFiring({ prayer, voiceId: v });
+    firingRef.current = true;
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel}`, silent: true });
+    }
+
+    // ── 1. TTS announcement ──
+    if (announceRef.current) {
+      const lang = languageRef.current;
+      await speakTTS(getAnnouncementText(prayer, lang), LANG_CODES[lang] ?? 'en-US');
+      if (abortRef.current) return;
+    }
+
+    // ── 2. Build ordered audio queue ──
+    const resolveSupp = async (id: string): Promise<string | null> => {
+      const url = await customAzanUrl(id);
+      if (url) extraUrlsRef.current.push(url);
+      return url;
+    };
+
+    const queue: string[] = [];
+    const dId  = duroodIdRef.current;
+    const dPos = duroodPosRef.current;
+    const qaId  = duaIdRef.current;
+    const qaPos = duaPosRef.current;
+
+    // Before durood
+    if (dId && (dPos === 'before' || dPos === 'both')) {
+      const src = await resolveSupp(dId);
+      if (abortRef.current) { extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); extraUrlsRef.current = []; return; }
+      if (src) queue.push(src);
+    }
+    // Before dua
+    if (qaId && (qaPos === 'before' || qaPos === 'both')) {
+      const src = await resolveSupp(qaId);
+      if (abortRef.current) { extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); extraUrlsRef.current = []; return; }
+      if (src) queue.push(src);
+    }
+
+    // Main azan
+    queue.push(mainSrc);
+
+    // After durood
+    if (dId && (dPos === 'after' || dPos === 'both')) {
+      const src = await resolveSupp(dId);
+      if (src) queue.push(src);
+    }
+    // After dua
+    if (qaId && (qaPos === 'after' || qaPos === 'both')) {
+      const src = await resolveSupp(qaId);
+      if (src) queue.push(src);
+    }
+
+    if (abortRef.current) {
+      extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      extraUrlsRef.current = [];
+      return;
+    }
+
+    playQueueRef.current = queue;
     await setAudioOutput(el);
-    try {
-      await el.play();
-      firingRef.current = true;
-      setFiring({ prayer, voiceId: v });
-      if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel}`, silent: true });
-        }
-      }
-    } catch {
-      // Blocked because no user gesture has happened yet on THIS page load.
-      // Keep the saved "enabled" state intact — just show a one-tap prompt for
-      // this single prayer; the global re-arm listener below unlocks the rest.
-      setPendingPrayer(prayer);
-      setNeedsGesture(true);
-    }
+    advanceQueueRef.current();
   }, [setAudioOutput]);
 
-  // Unlock the <audio> element for autoplay using the current user gesture.
-  // Idempotent — the muted priming play runs at most once per page load — and
-  // safe to call from both the global gesture listener and the Enable button.
-  // On success it persists `unlocked` (so the prompt never returns on future
-  // loads) and hides any visible prompt.
   const armAudio = useCallback(async (): Promise<boolean> => {
     if (armedRef.current) return true;
-    if (firingRef.current) return false; // don't reload src mid-Azan
+    if (firingRef.current) return false;
     const el = audioRef.current;
     if (!el) return false;
     armedRef.current = true;
@@ -237,22 +362,41 @@ export function AutoAzanScheduler() {
     return true;
   }, [setUnlocked]);
 
-  // Show the Enable banner only ONCE per browser-tab session — the first time
-  // the user lands while auto-Azan is enabled but not yet unlocked. We flag it
-  // as "seen" the instant it shows (not only on dismiss), so reloads and in-app
-  // navigation never re-show it. sessionStorage (not localStorage) is the right
-  // fit: it survives reloads but clears when the tab closes, so a genuinely new
-  // visit gets one fresh chance to enable.
-  //
-  // We read both flags straight from storage rather than trusting `unlocked`,
-  // because useLocalStorage returns its default (false) on the very first render
-  // and only reads localStorage one tick later — without this, an already-unlocked
-  // user would see a one-frame flash of the banner on every reload.
+  const stop = () => {
+    abortRef.current = true;
+    // Cancel any in-progress TTS
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    playQueueRef.current = [];
+    extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    extraUrlsRef.current = [];
+    const el = audioRef.current;
+    if (el) { el.pause(); el.currentTime = 0; }
+    revokeCustomUrl();
+    firingRef.current = false;
+    firingPrayerRef.current = null;
+    clearCastTimer();
+    const id = castDeviceIdRef.current;
+    const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
+    if (id && api) { try { api.stop({ deviceId: id }); } catch {} }
+    setFiring(null);
+    setMinimized(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
+    }
+  };
+
+  const minimize = () => {
+    setMinimized(true);
+    if (typeof window !== 'undefined' && firing) {
+      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: { prayer: firing.prayer, voiceId: firing.voiceId } }));
+    }
+  };
+
   useEffect(() => {
     if (!enabled) { setNeedsGesture(false); return; }
     if (typeof window === 'undefined') return;
-    // Never show this toast when the first-visit onboarding modal already asks about
-    // auto-Azan. If onboarding has been completed the user already made their choice.
     try { if (!window.localStorage.getItem('isa:setupDone')) return; } catch {}
     let alreadyUnlocked = unlocked;
     try { alreadyUnlocked = alreadyUnlocked || window.localStorage.getItem('isa:azanUnlocked') === 'true'; } catch {}
@@ -262,14 +406,6 @@ export function AutoAzanScheduler() {
     setNeedsGesture(true);
   }, [enabled, unlocked]);
 
-  // Browsers won't autoplay audio after a (re)load without a fresh user gesture,
-  // even if auto-Azan was unlocked in a previous session. So we silently arm on
-  // the FIRST interaction of each page load — any click, tap, or keypress primes
-  // the <audio> element for the rest of the session AND persists `unlocked`. We
-  // attach this whenever auto-Azan is enabled (not only once unlocked), so the
-  // very first interaction is enough for the Azan to play on time with no
-  // "Enable" click — and it permanently retires the Enable prompt. armAudio is
-  // idempotent, so leaving the listeners attached is harmless.
   useEffect(() => {
     if (!enabled) return;
     const arm = () => { void armAudio(); };
@@ -283,15 +419,11 @@ export function AutoAzanScheduler() {
     };
   }, [enabled, armAudio]);
 
-  // ── Core: poll every second, fire when a prayer time arrives ──
+  // ── Core scheduler: poll every second, fire at prayer time ────────────────
   useEffect(() => {
     if (!enabled || !data) return;
-
     const { timings, timezone } = data;
 
-    // Resolve prayer time HH:MM to an absolute UTC millisecond timestamp.
-    // MUST use the location's timezone (from AlAdhan meta), not the user's local
-    // clock — otherwise Isha 22:45 in China fires at 22:45 Pakistan time, 3h late.
     const prayerMs = (h: number, m: number, refNow: Date): number => {
       if (timezone) {
         const loc = DateTime.fromJSDate(refNow).setZone(timezone);
@@ -302,8 +434,6 @@ export function AutoAzanScheduler() {
       return pt.getTime();
     };
 
-    // dateKey uses the location's calendar date, not the user's local date, so
-    // we never double-fire when the user and the prayer location are in different days.
     const locationDateKey = (refNow: Date): string => {
       if (timezone) {
         const loc = DateTime.fromJSDate(refNow).setZone(timezone);
@@ -312,8 +442,6 @@ export function AutoAzanScheduler() {
       return `${refNow.getFullYear()}-${refNow.getMonth()}-${refNow.getDate()}`;
     };
 
-    // Mark already-passed prayers as fired so we only trigger future ones.
-    // Use 60 s threshold so a tab-sleep that delayed the interval still catches up.
     const now = new Date();
     const initKey = locationDateKey(now);
     for (const name of AZAN_PRAYERS) {
@@ -329,18 +457,14 @@ export function AutoAzanScheduler() {
     const tick = () => {
       const now = new Date();
       const dateKey = locationDateKey(now);
-
       for (const name of AZAN_PRAYERS) {
         const key = `${dateKey}:${name}`;
         if (firedRef.current.has(key)) continue;
-
         const parts = timings[name]?.split(':');
         if (!parts || parts.length < 2) continue;
         const [h, m] = parts.map(Number);
         if (isNaN(h) || isNaN(m)) continue;
-
         const diff = now.getTime() - prayerMs(h, m, now);
-        // 60 s window survives browser tab throttling; still only fires once per prayer.
         if (diff >= 0 && diff < 60_000) {
           firedRef.current.add(key);
           fire(name);
@@ -349,37 +473,11 @@ export function AutoAzanScheduler() {
       }
     };
 
-    tick(); // check immediately (page might open right at prayer time)
+    tick();
     const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
   }, [enabled, data, fire]);
 
-  const stop = () => {
-    const el = audioRef.current;
-    if (el) { el.pause(); el.currentTime = 0; }
-    revokeCustomUrl();
-    firingRef.current = false;
-    clearCastTimer();
-    // Also stop playback on the LAN device if the Azan was cast there.
-    const id = castDeviceIdRef.current;
-    const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    if (id && api) { try { api.stop({ deviceId: id }); } catch { /* ignore */ } }
-    setFiring(null);
-    setMinimized(false);
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
-    }
-  };
-
-  // Hides the full popup but keeps Azan playing — shows mini sidebar indicator.
-  const minimize = () => {
-    setMinimized(true);
-    if (typeof window !== 'undefined' && firing) {
-      window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: { prayer: firing.prayer, voiceId: firing.voiceId } }));
-    }
-  };
-
-  // Listen for external stop/expand events dispatched by the sidebar mini indicator.
   useEffect(() => {
     const onStop   = () => stop();
     const onExpand = () => setMinimized(false);
@@ -392,21 +490,13 @@ export function AutoAzanScheduler() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // X just hides the banner — the "seen" flag is already set when it showed, so
-  // it won't return this session. Does NOT disable azan, only stops the prompt.
   const dismissPrompt = () => setNeedsGesture(false);
 
   const unlock = async () => {
-    // Prime autoplay (idempotent — the global gesture listener fires on this same
-    // click's pointerdown, so armAudio has usually already run; this just no-ops).
-    // armAudio persists `unlocked` and hides the prompt, so it never returns.
     await armAudio();
-
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
-
-    // If a prayer was blocked while waiting for gesture, play it now.
     if (pendingPrayer) {
       const p = pendingPrayer;
       setPendingPrayer(null);
@@ -416,27 +506,23 @@ export function AutoAzanScheduler() {
 
   return (
     <>
-      {/* onError: if the audio file fails to load/decode (e.g. .m4a codec rejected,
-           wrong MIME type), fall back to makkah.mp3 — the guaranteed-present MP3 —
-           rather than silently showing "Azan Playing" with no sound. */}
       <audio
         ref={audioRef}
         onEnded={() => {
-          firingRef.current = false; setFiring(null); setMinimized(false); revokeCustomUrl();
-          if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('isa:azan-minimized', { detail: null }));
+          // Advance to the next item in the sequence (durood → dua → done)
+          advanceQueueRef.current();
         }}
         onError={() => {
           const el = audioRef.current;
-          if (!el || !firingRef.current) return; // not during an active azan — ignore
-          if (el.src.endsWith(UNLOCK_SRC) || el.src.endsWith('makkah.mp3')) {
-            // Even the fallback failed — give up, reset state.
-            firingRef.current = false;
-            setFiring(null);
+          if (!el || !firingRef.current) return;
+          // If the guaranteed fallback also failed, skip to next queue item
+          if (el.src.includes('makkah.mp3') || el.src === UNLOCK_SRC) {
+            advanceQueueRef.current();
             return;
           }
-          // The chosen voice failed; retry with the guaranteed-present fallback.
+          // First failure: try the fallback, then continue queue
           el.src = UNLOCK_SRC;
-          el.play().catch(() => { firingRef.current = false; setFiring(null); });
+          el.play().catch(() => advanceQueueRef.current());
         }}
         preload="auto"
       />
@@ -484,7 +570,7 @@ export function AutoAzanScheduler() {
           </motion.div>
         )}
 
-        {/* ── Azan playing popup (hidden when minimized to sidebar) ── */}
+        {/* ── Azan playing popup ── */}
         {firing && !minimized && (() => {
           const info = resolveVoiceInfo(firing.voiceId);
           return (
@@ -503,11 +589,8 @@ export function AutoAzanScheduler() {
                 boxShadow: '0 24px 50px rgba(6,40,28,0.22), 0 0 0 1px rgba(16,185,129,0.08)',
               }}
             >
-              {/* top gold accent bar */}
               <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-gold-400 to-emerald-600" />
-
               <div className="p-4 pb-5">
-                {/* header row */}
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex items-center gap-2">
                     <motion.div
@@ -526,7 +609,6 @@ export function AutoAzanScheduler() {
                   </button>
                 </div>
 
-                {/* prayer badge */}
                 <div className="mb-3">
                   <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
                     style={{ background: 'rgba(180,131,24,0.12)', border: '1px solid rgba(180,131,24,0.28)', color: '#92670A' }}>
@@ -534,7 +616,6 @@ export function AutoAzanScheduler() {
                   </span>
                 </div>
 
-                {/* voice info */}
                 <p className="text-emerald-950 font-bold text-base leading-snug">{info.name}</p>
                 <div className="flex items-center gap-2 mt-0.5 mb-4">
                   <p className="text-emerald-900/60 text-xs">{info.subtitle}</p>
@@ -548,7 +629,6 @@ export function AutoAzanScheduler() {
                   )}
                 </div>
 
-                {/* animated waveform */}
                 <div className="flex items-center gap-[2.5px] h-10 mb-4 px-1">
                   {WAVE.map((h, i) => (
                     <motion.span
@@ -566,7 +646,6 @@ export function AutoAzanScheduler() {
                   ))}
                 </div>
 
-                {/* stop button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}

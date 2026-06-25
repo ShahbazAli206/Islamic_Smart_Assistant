@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   MapPin, Globe, BellRing, BellOff, Check, Loader2, Settings,
-  Activity, Volume2, Clock, Calendar, Heart, ChevronRight, Sparkles,
+  Activity, Volume2, Clock, Calendar, Heart, ChevronRight, Sparkles, Mic2,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { SECTS, LANGUAGES } from '@/components/OnboardingSetup';
@@ -114,6 +114,7 @@ export default function SettingsPage() {
   const [azanOn,   setAzanOn]    = useLocalStorage<boolean>('isa:azanAutoplay', true);
 
   // Smart Azan Settings toggles
+  const [azanAnnounce,       setAzanAnnounce]       = useLocalStorage<boolean>('isa:azanAnnounce', true);
   const [azanAutoplayBefore, setAzanAutoplayBefore] = useLocalStorage<boolean>('isa:azanAutoplayBefore', true);
   const [azanDiffVoices,     setAzanDiffVoices]     = useLocalStorage<boolean>('isa:azanDifferentVoices', true);
   const [azanVolumeAuto,     setAzanVolumeAuto]      = useLocalStorage<boolean>('isa:azanVolumeAuto', true);
@@ -226,6 +227,15 @@ export default function SettingsPage() {
 
         {/* Toggle rows */}
         <div className="bg-white px-6">
+          <AzanRow
+            icon={<Mic2 size={16} />}
+            title="Prayer announcement"
+            sub="Speak prayer name before Azan"
+            on={azanAnnounce}
+            onToggle={() => { const n = !azanAnnounce; setAzanAnnounce(n); persist('isa:azanAnnounce', n); }}
+            iconBg={azanAnnounce ? 'bg-emerald-100' : 'bg-slate-100'}
+            iconColor={azanAnnounce ? 'text-emerald-600' : 'text-slate-400'}
+          />
           <AzanRow
             icon={<Clock size={16} />}
             title="Auto play before prayer"
