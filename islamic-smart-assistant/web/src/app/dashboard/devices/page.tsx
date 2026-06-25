@@ -1481,18 +1481,14 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                             <>
                               {/* Play controls */}
                               <div className="flex flex-wrap items-center gap-2">
-                                <button onClick={() => playAzanOnLan(d.id)} disabled={busy}
+                                <button onClick={() => testSoundOnLan(d.id)} disabled={busy}
+                                  title="Plays a short beep to confirm the device is working"
                                   className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}>
-                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />} Play Adhan
+                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />} Test device
                                 </button>
                                 <button onClick={() => playRecitationOnLan(d.id)} disabled={busy}
                                   className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}>
                                   {busy ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Recitation
-                                </button>
-                                <button onClick={() => testSoundOnLan(d.id)} disabled={busy}
-                                  title="Plays a short clip to confirm the device is working"
-                                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}>
-                                  {busy ? <Loader2 size={14} className="animate-spin" /> : <Activity size={14} />} Test Sound
                                 </button>
                               </div>
 
@@ -1542,7 +1538,8 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
               </motion.div>
             )}
 
-            {/* ── Cast ── */}
+            {/* ── Cast ── (only shown when no LAN devices are detected) */}
+            {(!lan.supported || lan.devices.length === 0) && (
             <motion.div
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
               className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
@@ -1779,6 +1776,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                 </div>
               )}
             </motion.div>
+            )}
 
             {/* ── Other devices on your account ── */}
             <motion.div
