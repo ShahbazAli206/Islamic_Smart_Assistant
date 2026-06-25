@@ -182,6 +182,14 @@ app.on('before-quit', (e) => {
   ]).then(finish, finish);
 });
 
+// ── Shell: open OS-level URLs (Bluetooth settings, Wi-Fi settings, etc.) ──────
+ipcMain.handle('shell:openExternal', (_event, url) => {
+  // Allowlist: only ms-settings: and apple system preference URLs are permitted.
+  if (typeof url === 'string' && (url.startsWith('ms-settings:') || url.startsWith('x-apple.systempreferences:'))) {
+    return shell.openExternal(url);
+  }
+});
+
 // ── Azan notification ─────────────────────────────────────────────────────────
 ipcMain.on('azan:notify', (_event, { title, body }) => {
   new Notification({ title, body }).show();
