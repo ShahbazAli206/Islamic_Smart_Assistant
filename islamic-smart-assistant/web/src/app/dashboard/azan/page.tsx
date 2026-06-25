@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, Loader2, Download, CheckCircle2, Bell, Sparkles, Volume2,
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
-  ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap,
+  ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap, Compass,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
   Pencil, Scissors, X,
 } from 'lucide-react';
@@ -160,8 +160,6 @@ const VOICES: AzanVoice[] = [
 
 const FEATURES = [
   { Icon: Headphones, title: 'Hi-Fi Audio',   sub: 'Crystal clear sound' },
-  { Icon: Download,   title: 'Offline Ready',  sub: 'Download & listen' },
-  { Icon: Zap,        title: 'Auto Play',      sub: 'Smart automation' },
   { Icon: Globe2,     title: 'Global Voices',  sub: "World's best reciters" },
 ];
 
@@ -826,8 +824,8 @@ export default function AzanPage() {
             </div>
           </div>
 
-          {/* — feature chips — */}
-          <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-3xl">
+          {/* — feature + qibla row — */}
+          <div className="mt-5 flex flex-wrap gap-3">
             {FEATURES.map(({ Icon, title, sub }, i) => (
               <motion.div key={title}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.07 }}
@@ -843,75 +841,48 @@ export default function AzanPage() {
                 </div>
               </motion.div>
             ))}
-          </div>
 
-          {/* — Qibla banner — */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}
-            className="relative mt-5"
-          >
-            <div
-              className={`relative rounded-3xl overflow-hidden shadow-xl ${
-                isDark
-                  ? 'border border-emerald-700/30 shadow-emerald-950/20'
-                  : 'border border-white/60 bg-white/60 backdrop-blur-sm shadow-[0_8px_30px_-12px_rgba(16,40,30,0.15)]'
-              }`}
-              style={isDark ? { background: 'linear-gradient(120deg,#0a3a2b 0%,#072a1f 55%,#051e16 100%)' } : undefined}
+            {/* Qibla direction chip */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }}
+              whileHover={{ y: -3 }}
+              className="flex items-center gap-3 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm px-3.5 py-3"
             >
-            {isDark && <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.08]" />}
-            {isDark && <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-300/40 to-transparent" />}
-            <div className="relative flex flex-col lg:flex-row lg:items-center gap-5 px-6 py-5 pr-6 lg:pr-52">
-              {/* Qibla direction */}
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}>Qibla Direction</p>
-                  <p className={`font-bold text-lg leading-tight ${isDark ? 'text-white' : 'text-black'}`}>
-                    {qibBearing != null ? `${Math.round(qibBearing)}°` : '—'}
-                    <span className={`font-medium text-sm ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}> from your location</span>
-                  </p>
-                </div>
-                <Link href="/dashboard/qibla"
-                  className={`ml-1 inline-flex items-center gap-1.5 rounded-full font-semibold text-xs px-4 py-2 transition shadow-sm ${
-                    isDark
-                      ? 'bg-white/95 text-emerald-800 hover:bg-white'
-                      : 'bg-white/90 border border-emerald-200 text-emerald-800 hover:bg-white'
-                  }`}>
-                  View on Map
-                </Link>
+              <span className="inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+                <Compass size={17} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] text-black/55 uppercase tracking-wide font-semibold leading-none">Qibla Direction</p>
+                <p className="text-sm font-bold text-black leading-tight mt-0.5">
+                  {qibBearing != null ? `${Math.round(qibBearing)}°` : '—'}
+                  <span className="text-black/55 font-medium text-xs"> from your location</span>
+                </p>
               </div>
+              <Link href="/dashboard/qibla"
+                className="ml-1 inline-flex items-center rounded-full bg-white/90 border border-emerald-200 text-emerald-800 font-semibold text-xs px-3 py-1.5 hover:bg-white transition shadow-sm">
+                View on Map
+              </Link>
+            </motion.div>
 
-              <div className={`hidden lg:block w-px h-12 ${isDark ? 'bg-white/15' : 'bg-black/10'}`} />
-
-              {/* Current location */}
-              <div className="flex items-center gap-4">
-                <span className={`inline-flex w-10 h-10 items-center justify-center rounded-full ${
-                  isDark
-                    ? 'bg-white/10 border border-white/20 text-gold-200'
-                    : 'bg-emerald-50 border border-emerald-100 text-emerald-600'
-                }`}>
-                  <MapPin size={18} />
-                </span>
-                <div>
-                  <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}>Current Location</p>
-                  <p className={`font-bold text-base leading-tight ${isDark ? 'text-white' : 'text-black'}`}>{loc.hasCoords ? loc.label : 'Not set'}</p>
-                </div>
-                <Link href="/dashboard/prayer-times"
-                  className={`ml-1 inline-flex items-center gap-1.5 rounded-full font-semibold text-xs px-4 py-2 transition ${
-                    isDark
-                      ? 'border border-white/30 text-white hover:bg-white/10'
-                      : 'border border-emerald-200 text-emerald-800 bg-white/80 hover:bg-white'
-                  }`}>
-                  Change
-                </Link>
+            {/* Current location chip */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }}
+              whileHover={{ y: -3 }}
+              className="flex items-center gap-3 rounded-2xl bg-white/60 backdrop-blur-md border border-white/60 shadow-sm px-3.5 py-3"
+            >
+              <span className="inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+                <MapPin size={17} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] text-black/55 uppercase tracking-wide font-semibold leading-none">Current Location</p>
+                <p className="text-sm font-bold text-black leading-tight mt-0.5 truncate">{loc.hasCoords ? loc.label : 'Not set'}</p>
               </div>
-            </div>
-            </div>
-
-            {/* Compass — outside the clipped banner so it pokes out top & bottom */}
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block z-10">
-              <MiniCompass bearing={qibBearing} isDark={isDark} />
-            </div>
-          </motion.div>
+              <Link href="/dashboard/prayer-times"
+                className="ml-1 inline-flex items-center rounded-full border border-emerald-200 text-emerald-800 bg-white/80 font-semibold text-xs px-3 py-1.5 hover:bg-white transition">
+                Change
+              </Link>
+            </motion.div>
+          </div>
         </div>
       </header>
 
