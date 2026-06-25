@@ -765,18 +765,70 @@ export default function AzanPage() {
     { Icon: Clock,   title: 'Weekend mode',             sub: 'Custom schedule',     on: weekend,    set: () => setWeekend(!weekend) },
   ];
 
+  // Name of whichever audio item is currently playing (azan / durood / dua).
+  const nowPlayingName = useMemo(() => {
+    if (!activeId) return null;
+    const fromAll = allItems.find((it) => it.id === activeId)?.name;
+    if (fromAll) return fromAll;
+    return (
+      customDuroods.find((c) => c.id === activeId)?.name ??
+      customDuas.find((c) => c.id === activeId)?.name ??
+      null
+    );
+  }, [activeId, allItems, customDuroods, customDuas]);
+
   return (
     <div
-      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'azan-dark text-parchment' : 'text-ink page-light'}`}
+      className="-m-5 sm:-m-8 min-h-full"
       style={isDark ? { background: '#070b09' } : undefined}
     >
 
-      {/* ════════ HEADER ════════ */}
-      <header className="relative overflow-hidden min-h-[440px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
+      {/* ── Now-Playing pill (top-right, fixed) ── */}
+      <AnimatePresence>
+        {activeId && nowPlayingName && (
+          <motion.div
+            key="now-playing"
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.92 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+            className="fixed top-4 right-4 z-[300] flex items-center gap-3 rounded-2xl border border-emerald-200/70 bg-white/95 backdrop-blur-lg shadow-xl shadow-emerald-900/15 px-4 py-3 max-w-[280px]"
+          >
+            {/* animated speaker dot */}
+            <span className="relative shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600">
+              <motion.span
+                animate={{ scale: [1, 1.35, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 rounded-full bg-emerald-500 opacity-40"
+              />
+              <Volume2 size={14} className="relative text-white" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider leading-none">Now Playing</p>
+              <p className="text-sm font-bold text-emerald-950 leading-snug mt-0.5 truncate">{nowPlayingName}</p>
+            </div>
+            <button
+              onClick={() => { audioRef.current?.pause(); setActiveId(null); }}
+              title="Stop"
+              className="shrink-0 w-8 h-8 rounded-full border border-emerald-100 hover:border-rose-200 bg-emerald-50 hover:bg-rose-50 text-emerald-700 hover:text-rose-600 grid place-items-center transition"
+            >
+              <Square size={13} fill="currentColor" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <div className="relative px-5 sm:px-8 pt-12 pb-14">
+      {/* ════════ HEADER ════════ — same appearance in both light and dark mode */}
+      <header className="relative overflow-hidden min-h-[374px]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero-bg.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full select-none object-cover"
+          style={{ objectPosition: 'center 30%' }}
+        />
+
+        <div className="relative px-5 sm:px-8 pt-8 pb-10">
           {/* — title row — */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -893,7 +945,8 @@ export default function AzanPage() {
         </div>
       </header>
 
-      {/* ════════ CONTENT ════════ */}
+      {/* ════════ CONTENT ════════ — theme classes applied here only, not to header */}
+      <div className={isDark ? 'azan-dark text-parchment' : 'text-ink page-light'}>
       <div className="px-5 sm:px-8 pb-10">
 
         {/* auto-azan note */}
@@ -1597,6 +1650,7 @@ export default function AzanPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>{/* end theme wrapper */}
     </div>
   );
 }
