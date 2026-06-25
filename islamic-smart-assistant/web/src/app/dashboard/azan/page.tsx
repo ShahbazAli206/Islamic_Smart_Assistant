@@ -8,7 +8,7 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap, Compass,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
-  Pencil, Scissors, X, AlertTriangle,
+  Pencil, Scissors, Square, X, AlertTriangle,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
