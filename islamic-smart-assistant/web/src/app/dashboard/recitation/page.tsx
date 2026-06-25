@@ -332,10 +332,11 @@ export default function RecitationSchedulerPage() {
             <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
               <Bell size={12} /> Recitation Alarm
             </span>
-            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black"
-              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
-              Quran Recitation
-            </h1>
+            <div className="mt-4 w-fit rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
+              <h1 className="font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black">
+                Quran Recitation
+              </h1>
+            </div>
             <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
               <p className="text-base sm:text-lg leading-relaxed text-black/85">
                 Schedule your daily recitation. Let the words of Allah bring peace to your heart.
@@ -568,28 +569,6 @@ export default function RecitationSchedulerPage() {
         </div>
       </div>
 
-      {/* ════════ INSPIRING HADEES ════════ */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-300/40 shadow-card-soft p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6"
-        style={{ background: 'linear-gradient(135deg,#FFF8E8 0%,#FFF3D4 55%,#FFFBF0 100%)' }}>
-        <div className="flex-1">
-          <h2 className="flex items-center gap-2 font-display font-bold text-lg text-emerald-950 mb-4">
-            <Sparkles size={18} className="text-gold-600" /> Inspiring Hadees
-          </h2>
-          <p className="font-arabic text-2xl text-emerald-900 leading-[2] mb-3" dir="rtl">
-            مَنْ قَرَأَ حَرْفًا مِنْ كِتَابِ اللَّهِ فَلَهُ بِهِ حَسَنَةٌ، وَالْحَسَنَةُ بِعَشْرِ أَمْثَالِهَا
-          </p>
-          <p className="text-emerald-900/70 text-sm leading-relaxed">
-            &ldquo;Whoever reads a letter from the Book of Allah will get a reward for it, and the reward is multiplied tenfold.&rdquo;
-          </p>
-          <p className="text-emerald-900/45 text-xs mt-1.5">(Tirmidhi 2910)</p>
-        </div>
-        <div className="shrink-0 relative w-44 h-40 grid place-items-center">
-          <span aria-hidden className="absolute inset-0 m-auto w-32 h-32 animate-spin-slow opacity-60" style={{ background: 'conic-gradient(from 0deg, transparent, rgba(16,185,129,0.08), transparent)' }} />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/recitation/rehal.svg" alt="Quran on a rehal stand" className="relative w-40 animate-float" />
-        </div>
-      </div>
-
       {/* ════════ QUICK ACTIONS ════════ */}
       <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.05] backdrop-blur-md' : 'border-emerald-200/50 bg-white/60 backdrop-blur-md shadow-card-soft'}`}>
         <h2 className={`font-display font-bold text-lg mb-4 ${isDark ? 'text-white' : 'text-emerald-950'}`}>Quick Actions</h2>
@@ -627,43 +606,6 @@ export default function RecitationSchedulerPage() {
               ? <Link key={label} href={href} className="block">{inner}</Link>
               : <div key={label}>{inner}</div>;
           })}
-        </div>
-      </div>
-
-      {/* ════════ FEATURE HIGHLIGHTS — bottom banner ════════ */}
-      <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-emerald-200/40 bg-white/50 backdrop-blur-md shadow-sm'}`}>
-        <h2 className={`font-display font-bold text-base mb-4 ${isDark ? 'text-white/70' : 'text-emerald-900/70'}`}>Everything you need for your Quran journey</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {FEATURES.map(({ Icon, title, sub }, i) => (
-            <motion.div
-              key={`bottom-${title}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: [0, -(2 + i % 3), 0], x: [0, (i % 2 === 0 ? -2 : 2), 0] }}
-              transition={{
-                opacity: { delay: 0.1 + i * 0.05, duration: 0.4 },
-                y: { delay: 0.8 + i * 0.55, duration: 3.5 + i * 0.4, repeat: Infinity, ease: 'easeInOut' },
-                x: { delay: 0.5 + i * 0.65, duration: 5 + i * 0.3, repeat: Infinity, ease: 'easeInOut' },
-              }}
-              whileHover={{ y: -6, scale: 1.04, transition: { duration: 0.2 } }}
-              className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 cursor-default
-                ${isDark
-                  ? 'bg-white/[0.08] border border-white/[0.11] backdrop-blur-sm'
-                  : 'bg-white/60 border border-emerald-200/60 backdrop-blur-sm shadow-sm'}`}
-            >
-              <motion.span
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 2.2 + i * 0.35, repeat: Infinity, ease: 'easeInOut', delay: 0.6 + i * 0.45 }}
-                className={`inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-xl border
-                  ${isDark ? 'bg-emerald-400/20 text-emerald-300 border-emerald-400/25' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}
-              >
-                <Icon size={16} />
-              </motion.span>
-              <div className="min-w-0">
-                <p className={`text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-emerald-950'}`}>{title}</p>
-                <p className={`text-[11px] leading-tight mt-0.5 truncate ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>{sub}</p>
-              </div>
-            </motion.div>
-          ))}
         </div>
       </div>
 
