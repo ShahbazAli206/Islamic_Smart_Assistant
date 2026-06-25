@@ -1504,9 +1504,9 @@ export default function AzanPage() {
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] w-[320px] rounded-3xl bg-white shadow-2xl ring-1 ring-black/[0.06] overflow-hidden"
             >
-              <div className="bg-mosque-gradient px-6 py-5 text-parchment">
-                <h3 className="font-display font-bold text-lg">What are you uploading?</h3>
-                <p className="text-emerald-100/70 text-sm mt-0.5">Choose the type of audio</p>
+              <div className="bg-mosque-gradient px-6 py-5">
+                <h3 className="font-display font-bold text-lg text-white">What are you uploading?</h3>
+                <p className="text-white/65 text-sm mt-0.5">Choose the type of audio</p>
               </div>
               <div className="p-4 space-y-2.5">
                 {([
