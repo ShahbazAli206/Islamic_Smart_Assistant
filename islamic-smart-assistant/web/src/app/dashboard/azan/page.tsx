@@ -760,11 +760,11 @@ export default function AzanPage() {
     >
 
       {/* ════════ HEADER ════════ */}
-      <header className="relative overflow-hidden min-h-[340px]">
+      <header className="relative overflow-hidden min-h-[440px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
-        <div className="relative px-5 sm:px-8 pt-8 pb-10">
+        <div className="relative px-5 sm:px-8 pt-12 pb-14">
           {/* — title row — */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
