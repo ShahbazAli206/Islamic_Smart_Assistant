@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Square, Scissors, Loader2, Check } from 'lucide-react';
 import { decodeAudioFile, computePeaks, encodeWavClip, formatClock } from '@/lib/audioTrim';
-import { putAzanClip, getAzanClip, isCustomAzan, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
+import { putAzanClip, getAzanClip, deleteAzanClip, isCustomAzan, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
 
 export type TrimTarget = {
@@ -20,7 +20,8 @@ type Props = {
   open: boolean;
   target: TrimTarget | null;
   onClose: () => void;
-  onSaved: (meta: CustomAzan) => void;
+  /** replacedId is the original target.id when the trimmed clip replaces it (e.g. a custom azan). */
+  onSaved: (meta: CustomAzan, replacedId?: string) => void;
 };
 
 const BUCKETS = 240;
@@ -42,6 +43,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [playHead, setPlayHead] = useState(0); // 0–1 fraction within the selected region
   const [error, setError] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,7 +63,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const reset = useCallback(() => {
     setLoading(false); setLoadError(null); setBuffer(null); setPeaks([]);
     setDuration(0); setStart(0); setEnd(0); setName('');
-    setSaving(false); setPlaying(false); setError(null);
+    setSaving(false); setPlaying(false); setPlayHead(0); setError(null);
     revokeUrl();
   }, []);
 
@@ -89,7 +91,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
     const load = async () => {
       reset();
       setLoading(true);
-      setName(`${target.name} (trimmed)`);
+      setName(target.name);
       try {
         let blob: Blob | null = null;
 
@@ -211,37 +213,45 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const playSelection = () => {
     const el = previewRef.current;
     if (!el || !objUrlRef.current) return;
-    if (playing) { el.pause(); setPlaying(false); return; }
+    if (playing) { el.pause(); setPlaying(false); setPlayHead(0); return; }
     if (el.src !== objUrlRef.current) el.src = objUrlRef.current;
     try { el.currentTime = start; } catch { /* not seekable yet */ }
+    setPlayHead(0);
     el.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
   };
   const onPreviewTime = () => {
     const el = previewRef.current;
-    if (el && el.currentTime >= end) { el.pause(); el.currentTime = start; setPlaying(false); }
+    if (!el) return;
+    const selLen = end - start;
+    if (selLen > 0) setPlayHead(Math.min(1, Math.max(0, (el.currentTime - start) / selLen)));
+    if (el.currentTime >= end) { el.pause(); el.currentTime = start; setPlaying(false); setPlayHead(0); }
   };
 
   const save = async () => {
-    if (!buffer) return;
+    if (!buffer || !target) return;
     if (end - start < MIN_LEN) { setError('Selection is too short (minimum 1 second).'); return; }
     setSaving(true);
     setError(null);
     try {
       const blob = encodeWavClip(buffer, start, end);
       const trimmedDur = end - start;
+      const savedName = name.trim() || target.name;
       const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       await putAzanClip(id, blob);
+      // If the original was a custom clip, delete it now so the trimmed version replaces it.
+      const replacedId = isCustomAzan(target.id) ? target.id : undefined;
+      if (replacedId) await deleteAzanClip(replacedId).catch(() => {});
       // Best-effort backend sync — never blocks the local save.
       Azan.uploadVoice(blob, {
-        name: name.trim() || 'Trimmed Azan',
+        name: savedName,
         durationMs: Math.round(trimmedDur * 1000),
       }).catch(() => {});
       onSaved({
         id,
-        name: name.trim() || 'Trimmed Azan',
+        name: savedName,
         createdAt: Date.now(),
         durationSec: Math.round(trimmedDur * 10) / 10,
-      });
+      }, replacedId);
       handleClose();
     } catch (e) {
       setError(`Save failed. ${e instanceof Error ? e.message : ''}`);
@@ -344,6 +354,23 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
                       {/* dimmed regions outside the selection */}
                       <div className="absolute inset-y-0 left-0 bg-white/55" style={{ width: `${sPct}%` }} />
                       <div className="absolute inset-y-0 right-0 bg-white/55" style={{ width: `${100 - ePct}%` }} />
+                      {/* played-region overlay — lightens already-played bars */}
+                      {playing && playHead > 0 && (
+                        <div
+                          className="absolute inset-y-0 bg-white/40 pointer-events-none"
+                          style={{ left: `${sPct}%`, width: `${(ePct - sPct) * playHead}%` }}
+                        />
+                      )}
+                      {/* playhead line */}
+                      {(playing || playHead > 0) && (
+                        <div
+                          className="absolute inset-y-0 w-[2px] bg-emerald-400 pointer-events-none z-10 rounded-full"
+                          style={{
+                            left: `${sPct + (ePct - sPct) * playHead}%`,
+                            boxShadow: '0 0 6px 1px rgba(16,185,129,0.55)',
+                          }}
+                        />
+                      )}
                       {/* handles */}
                       {(['start', 'end'] as const).map((which) => (
                         <div
@@ -360,9 +387,22 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
                       ))}
                     </div>
 
+                    {/* playback progress bar */}
+                    <div className="mt-2 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-none"
+                        style={{ width: `${playing ? playHead * 100 : 0}%` }}
+                      />
+                    </div>
+
                     {/* time readout + duration chip */}
-                    <div className="flex items-center justify-between mt-2 text-xs text-ink/60">
-                      <span>{formatClock(start)} – {formatClock(end)}</span>
+                    <div className="flex items-center justify-between mt-1.5 text-xs">
+                      <span className="tabular-nums text-ink/60">
+                        {playing
+                          ? <><span className="font-semibold text-emerald-700">{formatClock(start + playHead * (end - start))}</span><span className="text-ink/40"> / {formatClock(end - start)}</span></>
+                          : <span>{formatClock(start)} – {formatClock(end)}</span>
+                        }
+                      </span>
                       <span className="chip text-xs">Keeping {formatClock(end - start)}</span>
                     </div>
 
@@ -398,7 +438,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
               </button>
             </div>
 
-            <audio ref={previewRef} onTimeUpdate={onPreviewTime} onEnded={() => setPlaying(false)} preload="auto" />
+            <audio ref={previewRef} onTimeUpdate={onPreviewTime} onEnded={() => { setPlaying(false); setPlayHead(0); }} preload="auto" />
           </motion.div>
         </div>
       )}

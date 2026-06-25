@@ -1491,7 +1491,13 @@ export default function AzanPage() {
         open={trimmingItem !== null}
         target={trimmingItem}
         onClose={() => setTrimmingItem(null)}
-        onSaved={(meta) => { setCustomAzans((prev) => [meta, ...prev]); setSelectedId(meta.id); }}
+        onSaved={(meta, replacedId) => {
+          setCustomAzans((prev) => {
+            const filtered = replacedId ? prev.filter((x) => x.id !== replacedId) : prev;
+            return [meta, ...filtered];
+          });
+          setSelectedId(meta.id);
+        }}
       />
 
       {/* ── Azan Editor modal — add intro / outro to any existing voice ── */}
