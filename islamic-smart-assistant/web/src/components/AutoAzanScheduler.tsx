@@ -531,6 +531,18 @@ export function AutoAzanScheduler() {
   const dismissPrompt = () => setNeedsGesture(false);
 
   const unlock = async () => {
+    // armAudio() bails out when firingRef is true (it avoids interrupting
+    // active playback).  But if audio was blocked mid-fire (NotAllowedError)
+    // the audio element is already paused — reset firing state so the arm
+    // can proceed, then re-fire the pending prayer.
+    if (pendingPrayer && firingRef.current) {
+      firingRef.current = false;
+      abortRef.current  = true;
+      playQueueRef.current = [];
+      extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      extraUrlsRef.current = [];
+      abortRef.current = false;
+    }
     await armAudio();
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -566,8 +578,10 @@ export function AutoAzanScheduler() {
       />
 
       <AnimatePresence>
-        {/* ── Enable auto-Azan prompt ── */}
-        {needsGesture && enabled && !firing && (
+        {/* ── Enable auto-Azan prompt ──
+            Show when needsGesture is set AND either nothing is firing yet,
+            OR audio was blocked while firing (pendingPrayer is set). */}
+        {needsGesture && enabled && (!firing || pendingPrayer) && (
           <motion.div
             key="azan-unlock"
             initial={{ opacity: 0, x: 40, scale: 0.95 }}
@@ -632,13 +646,15 @@ export function AutoAzanScheduler() {
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex items-center gap-2">
                     <motion.div
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                      animate={pendingPrayer ? { scale: 1, opacity: 0.5 } : { scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 1.5, repeat: pendingPrayer ? 0 : Infinity, ease: 'easeInOut' }}
                       className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center"
                     >
                       <Radio size={13} className="text-emerald-600" />
                     </motion.div>
-                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Azan Playing</span>
+                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                      {pendingPrayer ? 'Azan Ready' : 'Azan Playing'}
+                    </span>
                   </div>
                   <button onClick={minimize}
                     className="p-1.5 rounded-full bg-emerald-900/5 hover:bg-emerald-900/10 text-emerald-900/40 hover:text-emerald-800 transition"
@@ -667,16 +683,29 @@ export function AutoAzanScheduler() {
                   )}
                 </div>
 
+                {/* ── Tap-to-play: shown when mobile browser blocked autoplay ── */}
+                {pendingPrayer && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                    onClick={unlock}
+                    className="w-full mb-3 flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold text-white transition"
+                    style={{ background: 'linear-gradient(135deg,#065f46,#047857)' }}
+                  >
+                    <BellRing size={15} />
+                    Tap to Play Azan
+                  </motion.button>
+                )}
+
                 <div className="flex items-center gap-[2.5px] h-10 mb-4 px-1">
                   {WAVE.map((h, i) => (
                     <motion.span
                       key={i}
-                      className="rounded-full bg-emerald-500"
+                      className={`rounded-full ${pendingPrayer ? 'bg-emerald-200' : 'bg-emerald-500'}`}
                       style={{ width: 2.5, height: `${Math.round(h * 100)}%` }}
-                      animate={{ scaleY: [1, 0.28 + h * 0.55, 1] }}
+                      animate={pendingPrayer ? { scaleY: 1 } : { scaleY: [1, 0.28 + h * 0.55, 1] }}
                       transition={{
                         duration: 0.65 + (i % 5) * 0.13,
-                        repeat: Infinity,
+                        repeat: pendingPrayer ? 0 : Infinity,
                         ease: 'easeInOut',
                         delay: (i % 7) * 0.055,
                       }}
