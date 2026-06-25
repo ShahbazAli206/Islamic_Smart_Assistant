@@ -327,13 +327,63 @@ export default function SettingsPage() {
               />
             )}
 
-            <AzanRow
-              icon={<Mic2 size={16} />} title="Prayer announcement" sub="Speak prayer name before Azan"
-              on={azanAnnounce} isDark={isDark}
-              iconBg={azanAnnounce ? 'bg-emerald-100' : 'bg-slate-100'}
-              iconColor={azanAnnounce ? 'text-emerald-600' : 'text-slate-400'}
-              onToggle={() => { const n = !azanAnnounce; setAzanAnnounce(n); persist('isa:azanAnnounce', n); }}
-            />
+            {/* Prayer announcement row — inline so we can add the Test button */}
+            <div className={`flex items-center gap-3.5 py-3 border-b ${isDark ? 'border-white/5' : 'border-emerald-50'}`}>
+              <span className={`w-9 h-9 shrink-0 grid place-items-center rounded-xl ${
+                isDark ? 'bg-white/10 text-emerald-400'
+                       : `${azanAnnounce ? 'bg-emerald-100' : 'bg-slate-100'} ${azanAnnounce ? 'text-emerald-600' : 'text-slate-400'}`
+              }`}>
+                <Mic2 size={16} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold leading-tight ${
+                  azanAnnounce ? isDark ? 'text-emerald-50' : 'text-emerald-950'
+                               : isDark ? 'text-white/40'   : 'text-emerald-950/50'
+                }`}>Prayer announcement</p>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-white/30' : 'text-emerald-900/45'}`}>
+                  Speak prayer name before Azan
+                </p>
+              </div>
+              {/* Test button — speaks a sample announcement in the user's language */}
+              <button
+                onClick={() => {
+                  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+                  const LANG_CODES_TTS: Record<string, string> = {
+                    en:'en-US', ar:'ar-SA', ur:'ur-PK', fr:'fr-FR', tr:'tr-TR',
+                    id:'id-ID', ms:'ms-MY', bn:'bn-BD', de:'de-DE', es:'es-ES', hi:'hi-IN',
+                  };
+                  const SAMPLE: Record<string, string> = {
+                    en: 'Fajr prayer time',
+                    ar: 'حان وقت صلاة الفجر',
+                    ur: 'فجر کی نماز کا وقت آ گیا',
+                    fr: "Il est l'heure de la prière de Fajr",
+                    tr: 'Sabah namazı vakti geldi',
+                    id: 'Waktu sholat Subuh telah tiba',
+                    ms: 'Waktu solat Subuh telah tiba',
+                    bn: 'ফজর নামাযের সময় হয়েছে',
+                    hi: 'फजर की नमाज़ का वक्त हो गया है',
+                    de: 'Es ist Zeit für das Sabah-Gebet',
+                    es: 'Es hora de la oración de Fajr',
+                  };
+                  window.speechSynthesis.cancel();
+                  setTimeout(() => {
+                    const u = new SpeechSynthesisUtterance(SAMPLE[language] ?? 'Fajr prayer time');
+                    u.lang = LANG_CODES_TTS[language] ?? 'en-US';
+                    u.rate = 0.88;
+                    u.pitch = 1.05;
+                    window.speechSynthesis.speak(u);
+                  }, 100);
+                }}
+                className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border transition ${
+                  isDark
+                    ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                    : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                Test
+              </button>
+              <Toggle on={azanAnnounce} onToggle={() => { const n = !azanAnnounce; setAzanAnnounce(n); persist('isa:azanAnnounce', n); }} isDark={isDark} />
+            </div>
             <AzanRow
               icon={<Clock size={16} />} title="Auto play before prayer" sub="2 min before adhan"
               on={azanAutoplayBefore} isDark={isDark}
