@@ -14,7 +14,7 @@ import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
 import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
-  customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan, type CustomAzan,
+  customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan, type CustomAzan, type AudioType,
 } from '@/lib/customAzan';
 import { formatClock, decodeAudioFile, encodeWavFromSegments, type WavSegment } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
@@ -176,102 +176,6 @@ const STATS = [
 
 export type SuppPos = 'before' | 'after' | 'both';
 
-type SuppTrack = {
-  id: string;
-  name: string;
-  arabic: string;
-  subtitle: string;
-  duration: string;
-  art: string;
-  accent: string;
-  local: string;
-};
-
-const DUROOD_TRACKS: SuppTrack[] = [
-  {
-    id: 'durood-ibrahim',
-    name: 'Durood Ibrahim',
-    arabic: 'الصلاة الإبراهيمية',
-    subtitle: 'Standard Salawat — recited in every Salah',
-    duration: '0:45',
-    art: '/azan/madinah.svg',
-    accent: 'from-emerald-500 to-teal-600',
-    local: '/audio/durood/durood-ibrahim.mp3',
-  },
-  {
-    id: 'durood-taj',
-    name: 'Durood-e-Taj',
-    arabic: 'صلاة التاج',
-    subtitle: 'Crown of Salawat — Sufi tradition',
-    duration: '1:20',
-    art: '/azan/madinah.svg',
-    accent: 'from-gold-500 to-amber-600',
-    local: '/audio/durood/durood-taj.mp3',
-  },
-  {
-    id: 'durood-sharif',
-    name: 'Durood Sharif',
-    arabic: 'الصلاة الشريفة',
-    subtitle: 'Classic short Salawat recitation',
-    duration: '0:30',
-    art: '/azan/madinah.svg',
-    accent: 'from-violet-500 to-purple-600',
-    local: '/audio/durood/durood-sharif.mp3',
-  },
-  {
-    id: 'durood-nariya',
-    name: 'Durood Nariya',
-    arabic: 'الصلاة النارية',
-    subtitle: 'Powerful Salawat for relief & blessing',
-    duration: '0:55',
-    art: '/azan/madinah.svg',
-    accent: 'from-sky-500 to-blue-600',
-    local: '/audio/durood/durood-nariya.mp3',
-  },
-];
-
-const DUA_TRACKS: SuppTrack[] = [
-  {
-    id: 'dua-after-azan',
-    name: 'Dua After Azan',
-    arabic: 'دعاء بعد الأذان',
-    subtitle: 'Standard dua — Sahih al-Bukhari 614',
-    duration: '0:35',
-    art: '/azan/makkah.svg',
-    accent: 'from-rose-500 to-pink-600',
-    local: '/audio/dua/dua-after-azan.mp3',
-  },
-  {
-    id: 'dua-after-azan-full',
-    name: 'Dua After Azan (Full)',
-    arabic: 'الدعاء الكامل',
-    subtitle: 'Complete dua with Salawat included',
-    duration: '1:05',
-    art: '/azan/makkah.svg',
-    accent: 'from-fuchsia-500 to-violet-600',
-    local: '/audio/dua/dua-after-azan-full.mp3',
-  },
-  {
-    id: 'dua-iqamah',
-    name: 'Dua for Iqamah',
-    arabic: 'دعاء الإقامة',
-    subtitle: 'Response to Iqamah (Hanafi & Shafi\'i)',
-    duration: '0:20',
-    art: '/azan/makkah.svg',
-    accent: 'from-amber-500 to-orange-600',
-    local: '/audio/dua/dua-iqamah.mp3',
-  },
-  {
-    id: 'dua-fajr',
-    name: 'Dua — Fajr Azan',
-    arabic: 'دعاء أذان الفجر',
-    subtitle: 'Includes as-salātu khayrum minan-nawm',
-    duration: '0:40',
-    art: '/azan/makkah.svg',
-    accent: 'from-indigo-500 to-blue-600',
-    local: '/audio/dua/dua-fajr.mp3',
-  },
-];
 
 // Deterministic waveform bar heights for a given seed (SSR-stable, no Math.random).
 function waveBars(seed: number, count = 38): number[] {
@@ -401,74 +305,59 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
   );
 }
 
-// ── Supplementary track card ──────────────────────────────────────────────────
+// ── Uploaded supplementary track card ────────────────────────────────────────
 
-function SuppCard({
-  track, isPlaying, isSelected, accent, onPlay, onSelect,
+function UploadedCard({
+  meta, isPlaying, isSelected, accent, onPlay, onSelect, onDelete,
 }: {
-  track: SuppTrack; isPlaying: boolean; isSelected: boolean;
+  meta: CustomAzan; isPlaying: boolean; isSelected: boolean;
   accent: 'emerald' | 'rose';
-  onPlay: () => void; onSelect: () => void;
+  onPlay: () => void; onSelect: () => void; onDelete: () => void;
 }) {
+  const initials = meta.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  const g      = accent === 'rose' ? 'from-rose-400 to-pink-600'      : 'from-emerald-400 to-teal-600';
+  const ring   = accent === 'rose' ? 'ring-rose-300'                  : 'ring-emerald-400';
+  const selBg  = accent === 'rose' ? 'bg-rose-500'                    : 'bg-emerald-600';
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -2 }}
       className={`relative rounded-2xl border p-3.5 bg-white shadow-sm transition hover:shadow-md
-        ${isSelected
-          ? accent === 'rose'
-            ? 'border-rose-400 ring-1 ring-rose-300'
-            : 'border-emerald-500 ring-1 ring-emerald-400'
-          : 'border-emerald-900/8'}`}
+        ${isSelected ? `border-transparent ring-2 ${ring}` : 'border-emerald-900/8'}`}
     >
       {isSelected && (
-        <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full grid place-items-center shadow-sm
-          ${accent === 'rose' ? 'bg-rose-500' : 'bg-emerald-500'}`}>
+        <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full grid place-items-center shadow-sm ${selBg}`}>
           <CheckCircle2 size={11} className="text-white" />
         </span>
       )}
 
-      {/* Avatar + play */}
-      <div className="flex items-center gap-3">
+      <button onClick={onDelete} title="Delete"
+        className="absolute top-2.5 right-2.5 p-1.5 rounded-full text-emerald-900/20 hover:text-rose-500 hover:bg-rose-50 transition">
+        <Trash2 size={12} />
+      </button>
+
+      <div className="flex items-center gap-3 pr-6">
         <div className="relative shrink-0">
-          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${track.accent} overflow-hidden ring-2 ring-white shadow-md`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={track.art} alt="" className="w-full h-full object-cover opacity-75" />
+          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${g} flex items-center justify-center ring-2 ring-white shadow-md`}>
+            <span className="text-white text-sm font-bold">{initials || '?'}</span>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }}
-            onClick={onPlay}
+          <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} onClick={onPlay}
             className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full grid place-items-center shadow-md transition
               ${isPlaying ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
           >
-            {isPlaying
-              ? <Pause size={12} fill="currentColor" />
-              : <Play  size={12} fill="currentColor" className="ml-px" />}
+            {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-px" />}
           </motion.button>
         </div>
-
-        <div className="min-w-0 flex-1 pl-0.5 pb-1">
-          <h4 className="font-bold text-sm text-emerald-950 leading-tight truncate">{track.name}</h4>
-          <p className="text-[11px] text-emerald-900/55 truncate mt-0.5">{track.subtitle}</p>
-          {track.duration && <p className="text-[10px] font-mono text-emerald-900/35 mt-0.5">{track.duration}</p>}
+        <div className="min-w-0 flex-1 pb-1">
+          <h4 className="font-bold text-sm text-emerald-950 leading-tight truncate pr-2">{meta.name}</h4>
+          <p className="text-[10px] font-mono text-emerald-900/35 mt-0.5">{formatClock(meta.durationSec)}</p>
         </div>
       </div>
 
-      {/* Arabic name */}
-      <p dir="rtl" className="mt-2 font-arabic text-sm text-emerald-900/60 text-right leading-relaxed truncate">
-        {track.arabic}
-      </p>
-
-      {/* Select / deselect */}
-      <button
-        onClick={onSelect}
-        className={`mt-2.5 w-full py-2 rounded-xl text-[12px] font-semibold transition ${
-          isSelected
-            ? accent === 'rose'
-              ? 'bg-rose-500 text-white shadow-sm'
-              : 'bg-emerald-600 text-white shadow-sm'
-            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+      <button onClick={onSelect}
+        className={`mt-3 w-full py-2 rounded-xl text-[12px] font-semibold transition ${
+          isSelected ? `${selBg} text-white shadow-sm` : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
         }`}
       >
         {isSelected ? '✓ Selected' : 'Select'}
@@ -524,6 +413,14 @@ export default function AzanPage() {
   const [duroodPos, setDuroodPos] = useLocalStorage<SuppPos>('isa:duroodPos', 'after');
   const [duaId,     setDuaId]     = useLocalStorage<string | null>('isa:duaId',    null);
   const [duaPos,    setDuaPos]    = useLocalStorage<SuppPos>('isa:duaPos',    'after');
+
+  // User-uploaded supplementary clips
+  const [customDuroods, setCustomDuroods] = useLocalStorage<CustomAzan[]>('isa:customDuroods', []);
+  const [customDuas,    setCustomDuas]    = useLocalStorage<CustomAzan[]>('isa:customDuas',    []);
+
+  // Upload type picker state
+  const [uploadType, setUploadType] = useState<AudioType | null>(null);
+  const [typePicker, setTypePicker] = useState(false);
 
   // Azan trimmer — trim any existing voice and save as a new custom clip
   const [trimmingItem, setTrimmingItem] = useState<TrimTarget | null>(null);
@@ -715,9 +612,36 @@ export default function AzanPage() {
   };
 
   const onSaved = (meta: CustomAzan) => {
-    setCustomAzans((prev) => [meta, ...prev]);
-    setSelectedId(meta.id);
+    if (uploadType === 'durood') {
+      setCustomDuroods((prev) => [meta, ...prev]);
+      if (!duroodId) setDuroodId(meta.id);
+    } else if (uploadType === 'dua') {
+      setCustomDuas((prev) => [meta, ...prev]);
+      if (!duaId) setDuaId(meta.id);
+    } else {
+      setCustomAzans((prev) => [meta, ...prev]);
+      setSelectedId(meta.id);
+    }
     setUploaderOpen(false);
+    setUploadType(null);
+  };
+
+  const deleteDurood = async (id: string) => {
+    if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
+    await deleteAzanClip(id);
+    setCustomDuroods((prev) => prev.filter((c) => c.id !== id));
+    Azan.deleteVoice(id).catch(() => {});
+    if (duroodId === id) setDuroodId(null);
+    setDeleteToast('Durood deleted');
+  };
+
+  const deleteDua = async (id: string) => {
+    if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
+    await deleteAzanClip(id);
+    setCustomDuas((prev) => prev.filter((c) => c.id !== id));
+    Azan.deleteVoice(id).catch(() => {});
+    if (duaId === id) setDuaId(null);
+    setDeleteToast('Dua deleted');
   };
 
   const toggleFav = (id: string) =>
@@ -753,18 +677,6 @@ export default function AzanPage() {
     el.src = item.remoteUrl;
     el.play().then(() => setActiveId(item.id))
       .catch((e) => { setActiveId(null); setError(`Couldn't play ${item.name}: ${e?.message ?? 'playback blocked'}`); });
-  };
-
-  const playSupp = (track: SuppTrack) => {
-    const el = audioRef.current;
-    if (!el) return;
-    setError(null);
-    if (activeId === track.id) { el.pause(); setActiveId(null); return; }
-    el.pause();
-    revokeCustomUrl();
-    el.src = track.local;
-    el.play().then(() => setActiveId(track.id))
-      .catch((e) => { setActiveId(null); setError(`Couldn't play "${track.name}". Place the mp3 at ${track.local} or run download_assets.py.`); });
   };
 
   const playItem = (item: Item) => {
@@ -869,10 +781,10 @@ export default function AzanPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2.5">
                   <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setUploaderOpen(true)}
+                    onClick={() => setTypePicker(true)}
                     className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 shadow-md hover:bg-white transition"
                   >
-                    <UploadCloud size={16} /> Upload Azan
+                    <UploadCloud size={16} /> Upload
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
                     onClick={() => setAutoplay(!autoplay)}
@@ -1300,18 +1212,40 @@ export default function AzanPage() {
                 {!duroodId ? '✓ None (skip Durood)' : 'None — skip Durood'}
               </button>
 
-              {/* Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {DUROOD_TRACKS.map((track) => (
-                  <SuppCard
-                    key={track.id} track={track} accent="emerald"
-                    isPlaying={activeId === track.id}
-                    isSelected={duroodId === track.id}
-                    onPlay={() => playSupp(track)}
-                    onSelect={() => setDuroodId(duroodId === track.id ? null : track.id)}
-                  />
-                ))}
-              </div>
+              {/* Cards / empty state */}
+              <AnimatePresence mode="wait">
+                {customDuroods.length > 0 ? (
+                  <motion.div key="cards" layout className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <AnimatePresence>
+                      {customDuroods.map((track) => (
+                        <UploadedCard
+                          key={track.id} meta={track} accent="emerald"
+                          isPlaying={activeId === track.id}
+                          isSelected={duroodId === track.id}
+                          onPlay={() => previewCustom(track)}
+                          onSelect={() => setDuroodId(duroodId === track.id ? null : track.id)}
+                          onDelete={() => deleteDurood(track.id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div key="empty"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-8 rounded-2xl border-2 border-dashed border-emerald-200 text-center"
+                  >
+                    <span className="text-3xl mb-2 select-none">📿</span>
+                    <p className={`text-sm font-semibold ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/55'}`}>No Durood uploaded yet</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-emerald-100/35' : 'text-emerald-900/35'}`}>Click Upload and choose Durood Sharif</p>
+                    <button
+                      onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
+                      className="mt-3 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
+                    >
+                      Upload Durood
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* ── Dua panel ── */}
@@ -1366,18 +1300,40 @@ export default function AzanPage() {
                 {!duaId ? '✓ None (skip Dua)' : 'None — skip Dua'}
               </button>
 
-              {/* Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {DUA_TRACKS.map((track) => (
-                  <SuppCard
-                    key={track.id} track={track} accent="rose"
-                    isPlaying={activeId === track.id}
-                    isSelected={duaId === track.id}
-                    onPlay={() => playSupp(track)}
-                    onSelect={() => setDuaId(duaId === track.id ? null : track.id)}
-                  />
-                ))}
-              </div>
+              {/* Cards / empty state */}
+              <AnimatePresence mode="wait">
+                {customDuas.length > 0 ? (
+                  <motion.div key="cards" layout className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <AnimatePresence>
+                      {customDuas.map((track) => (
+                        <UploadedCard
+                          key={track.id} meta={track} accent="rose"
+                          isPlaying={activeId === track.id}
+                          isSelected={duaId === track.id}
+                          onPlay={() => previewCustom(track)}
+                          onSelect={() => setDuaId(duaId === track.id ? null : track.id)}
+                          onDelete={() => deleteDua(track.id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div key="empty"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-8 rounded-2xl border-2 border-dashed border-rose-200 text-center"
+                  >
+                    <span className="text-3xl mb-2 select-none">🤲</span>
+                    <p className={`text-sm font-semibold ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/55'}`}>No Dua uploaded yet</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-emerald-100/35' : 'text-emerald-900/35'}`}>Click Upload and choose Dua</p>
+                    <button
+                      onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
+                      className="mt-3 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition"
+                    >
+                      Upload Dua
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
           </div>
@@ -1434,7 +1390,60 @@ export default function AzanPage() {
         )}
       </AnimatePresence>
 
-      <AzanUploader open={uploaderOpen} onClose={() => setUploaderOpen(false)} onSaved={onSaved} />
+      {/* ── Upload type picker ── */}
+      <AnimatePresence>
+        {typePicker && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[190] bg-black/40 backdrop-blur-sm"
+              onClick={() => setTypePicker(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] w-[320px] rounded-3xl bg-white shadow-2xl ring-1 ring-black/[0.06] overflow-hidden"
+            >
+              <div className="bg-mosque-gradient px-6 py-5 text-parchment">
+                <h3 className="font-display font-bold text-lg">What are you uploading?</h3>
+                <p className="text-emerald-100/70 text-sm mt-0.5">Choose the type of audio</p>
+              </div>
+              <div className="p-4 space-y-2.5">
+                {([
+                  { type: 'azan'   as AudioType, emoji: '🔔', label: 'Azan',          sub: 'Call to prayer audio'          },
+                  { type: 'durood' as AudioType, emoji: '📿', label: 'Durood Sharif',  sub: 'Blessings on the Prophet ﷺ'  },
+                  { type: 'dua'    as AudioType, emoji: '🤲', label: 'Dua',            sub: 'Supplication after Azan'      },
+                ]).map(({ type, emoji, label, sub }) => (
+                  <button
+                    key={type}
+                    onClick={() => { setUploadType(type); setTypePicker(false); setUploaderOpen(true); }}
+                    className="w-full flex items-center gap-3.5 rounded-2xl border border-emerald-900/8 bg-emerald-50/40 px-4 py-3.5 text-left hover:bg-emerald-50 hover:border-emerald-300 transition"
+                  >
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <div>
+                      <p className="font-bold text-sm text-emerald-950">{label}</p>
+                      <p className="text-xs text-emerald-900/55">{sub}</p>
+                    </div>
+                  </button>
+                ))}
+                <button onClick={() => setTypePicker(false)}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold text-emerald-900/45 hover:text-emerald-900/80 transition">
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AzanUploader
+        open={uploaderOpen}
+        onClose={() => { setUploaderOpen(false); setUploadType(null); }}
+        onSaved={onSaved}
+        audioType={uploadType ?? 'azan'}
+      />
 
       <AzanTrimmer
         open={trimmingItem !== null}

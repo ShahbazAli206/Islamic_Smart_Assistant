@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2, Plus } from 'lucide-react';
 import { decodeAudioFile, computePeaks, encodeWavFromSegments, formatClock } from '@/lib/audioTrim';
-import { putAzanClip, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
+import { putAzanClip, CUSTOM_AZAN_PREFIX, type CustomAzan, type AudioType } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onSaved: (meta: CustomAzan) => void;
+  audioType?: AudioType;
 };
 
 const BUCKETS = 240;       // waveform resolution (bars)
@@ -23,7 +24,14 @@ const MAX_FILE_MB = 25;    // soft cap on the upload size
  * On save it encodes the slice to WAV (lib/audioTrim) and stores it in IndexedDB
  * (lib/customAzan), then hands the metadata back to the page via onSaved.
  */
-export function AzanUploader({ open, onClose, onSaved }: Props) {
+export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Props) {
+  const TYPE_CFG: Record<AudioType, { title: string; desc: string; btn: string }> = {
+    azan:   { title: 'Upload custom Azan',   desc: 'Add your own audio, then trim it to the part you want.', btn: 'Save Azan'   },
+    durood: { title: 'Upload Durood Sharif', desc: 'Upload a clip to play with your Azan.',                  btn: 'Save Durood' },
+    dua:    { title: 'Upload Dua',           desc: 'Upload a supplication to play after your Azan.',          btn: 'Save Dua'    },
+  };
+  const cfg = TYPE_CFG[audioType];
+
   const [file, setFile] = useState<File | null>(null);
   const [decoding, setDecoding] = useState(false);
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
@@ -247,12 +255,13 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
       // Also persist to the backend so the clip is saved to the database and
       // available on this user's other devices (web / desktop / mobile).
       // Best-effort: a failure (offline / signed out) never blocks the local save.
-      Azan.uploadVoice(blob, { name: name.trim() || 'Custom Azan', durationMs: totalDur * 1000 }).catch(() => {});
+      Azan.uploadVoice(blob, { name: name.trim() || 'Custom Azan', durationMs: totalDur * 1000, audioType }).catch(() => {});
       onSaved({
         id,
         name: name.trim() || 'Custom Azan',
         createdAt: Date.now(),
         durationSec: Math.round(totalDur * 10) / 10,
+        audioType,
       });
       handleClose();
     } catch (e) {
@@ -295,8 +304,8 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
                   <UploadCloud size={24} className="text-gold-300" />
                 </span>
                 <div>
-                  <h2 className="font-display text-2xl font-bold">Upload custom Azan</h2>
-                  <p className="text-emerald-100/75 text-sm">Add your own audio, then trim it to the part you want.</p>
+                  <h2 className="font-display text-2xl font-bold">{cfg.title}</h2>
+                  <p className="text-emerald-100/75 text-sm">{cfg.desc}</p>
                 </div>
               </div>
             </div>
@@ -455,7 +464,7 @@ export function AzanUploader({ open, onClose, onSaved }: Props) {
                 disabled={!buffer || saving}
                 className="btn-primary py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <><Check size={16} /> Save Azan</>}
+                {saving ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <><Check size={16} /> {cfg.btn}</>}
               </button>
             </div>
 
