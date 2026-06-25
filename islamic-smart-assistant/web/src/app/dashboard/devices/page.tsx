@@ -152,25 +152,37 @@ function detectOS(): OS {
 
 function openOSBluetooth() {
   const os = detectOS();
-  if (os === 'windows') {
-    window.location.href = 'ms-settings:bluetooth';
-  } else if (os === 'macos') {
-    // Works on macOS 10.x – Sonoma; opens Bluetooth pane in System Preferences / Settings
-    window.open('x-apple.systempreferences:com.apple.preferences.Bluetooth', '_blank');
-  }
-  // Linux has no standard URL scheme  -  caller should show instructions instead
+  try {
+    const eApi = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
+    if (os === 'windows') {
+      // window.location.href would navigate the Electron window — use shell.openExternal or window.open instead.
+      if (eApi && typeof eApi.openExternal === 'function') {
+        eApi.openExternal('ms-settings:bluetooth');
+      } else {
+        window.open('ms-settings:bluetooth');
+      }
+    } else if (os === 'macos') {
+      window.open('x-apple.systempreferences:com.apple.preferences.Bluetooth', '_blank');
+    }
+  } catch { /* OS may not support this URL scheme */ }
 }
 
 /** Open the OS network/Wi-Fi settings so the user can confirm the device and
  *  this computer are on the SAME Wi-Fi (the #1 reason a Cast device won't show). */
 function openOSWifi() {
   const os = detectOS();
-  if (os === 'windows') {
-    window.location.href = 'ms-settings:network-wifi';
-  } else if (os === 'macos') {
-    window.open('x-apple.systempreferences:com.apple.preference.network', '_blank');
-  }
-  // Linux has no standard scheme  -  caller shows instructions instead.
+  try {
+    const eApi = typeof window !== 'undefined' ? (window as any).electronAPI : undefined;
+    if (os === 'windows') {
+      if (eApi && typeof eApi.openExternal === 'function') {
+        eApi.openExternal('ms-settings:network-wifi');
+      } else {
+        window.open('ms-settings:network-wifi');
+      }
+    } else if (os === 'macos') {
+      window.open('x-apple.systempreferences:com.apple.preference.network', '_blank');
+    }
+  } catch { /* OS may not support this URL scheme */ }
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -618,6 +630,15 @@ export default function DevicesPage() {
   const minutesListened =
     listenLog.ymd === todayYMD() ? Math.floor(listenLog.seconds / 60) : 0;
 
+  // ── Error toast (replaces silent errors and prevents the app from crashing) ──
+  const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
+  const showToast = (msg: string) => setToast({ msg, id: Date.now() });
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast?.id]);
+
   const cast = useGoogleCast();
   const [castBusy, setCastBusy] = useState(false);
   const [castError, setCastError] = useState<string | null>(null);
@@ -630,6 +651,7 @@ export default function DevicesPage() {
   const [castDeviceId, setCastDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
   const [, setCastDeviceName] = useLocalStorage<string>('isa:castDeviceName', '');
   const [lanVol, setLanVol] = useState(0.6);
+  const [lanScanning, setLanScanning] = useState(false);
 
   // Bundled file path for the selected azan (served to the device over the LAN),
   // with a public stream as fallback if the device can't reach our LAN server.
@@ -643,14 +665,20 @@ export default function DevicesPage() {
   const [azanDeviceIds, setAzanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
   const [recitationDeviceIds, setRecitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
 
-  const playAzanOnLan = (id: string) => lan.play(id, azanLanSource).catch(() => {});
+  const rescanLan = async () => {
+    setLanScanning(true);
+    try { await Promise.resolve(lan.rescan()); } catch (e: any) { showToast(`Rescan failed: ${e?.message ?? e}`); } finally { setLanScanning(false); }
+  };
+
+  const playAzanOnLan = (id: string) =>
+    lan.play(id, azanLanSource).catch((e: any) => showToast(`Couldn't play Adhan: ${e?.message ?? e}`));
   const playRecitationOnLan = (id: string) =>
-    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Surah Al-Fatihah  -  Mishary Alafasy' }).catch(() => {});
-  // Test Sound: plays a short clip then auto-stops after 3 s so user can verify the device works.
+    lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Surah Al-Fatihah  -  Mishary Alafasy' })
+      .catch((e: any) => showToast(`Couldn't play recitation: ${e?.message ?? e}`));
   const testSoundOnLan = (id: string) => {
     lan.play(id, { kind: 'url', url: RECITATION_CAST_TEST_URL, title: 'Test Sound' })
       .then(() => setTimeout(() => lan.stop(id).catch(() => {}), 3_000))
-      .catch(() => {});
+      .catch((e: any) => showToast(`Test sound failed: ${e?.message ?? e}`));
   };
   const setDefaultCastDevice = (d: LanDevice) => {
     if (castDeviceId === d.id) { setCastDeviceId(''); setCastDeviceName(''); }
@@ -873,10 +901,11 @@ export default function DevicesPage() {
       }
       await audio.play();
     } catch (e: any) {
-      setError(
+      const msg =
         `Couldn't play the test on "${selectedOutputLabel}": ${e?.message ?? e}. ` +
-          `If this is your earbuds, make sure they're Connected in Windows.`,
-      );
+        `If this is your earbuds, make sure they're Connected in Windows.`;
+      setError(msg);
+      showToast(msg);
     }
   };
 
@@ -887,7 +916,9 @@ export default function DevicesPage() {
     try {
       await cast.castAudio(RECITATION_CAST_TEST_URL, 'Surah Al-Fatihah  -  Mishary Alafasy');
     } catch (e: any) {
-      setCastError(e?.message ?? 'Casting failed.');
+      const msg = e?.message ?? 'Casting failed.';
+      setCastError(msg);
+      showToast(msg);
     } finally {
       setCastBusy(false);
     }
@@ -902,10 +933,24 @@ export default function DevicesPage() {
       if (r.note) setCastNote(r.note);
       await cast.castAudio(r.url, r.title);
     } catch (e: any) {
-      setCastError(e?.message ?? 'Casting failed.');
+      const msg = e?.message ?? 'Casting failed.';
+      setCastError(msg);
+      showToast(msg);
     } finally {
       setCastBusy(false);
     }
+  };
+
+  const safeStopCasting = () => {
+    try { cast.stopCasting(); } catch (e: any) { showToast(`Stop failed: ${e?.message ?? e}`); }
+  };
+
+  const safePauseResume = () => {
+    try { cast.pauseResume(); } catch (e: any) { showToast(`Pause/resume failed: ${e?.message ?? e}`); }
+  };
+
+  const safeSetVolume = (v: number) => {
+    try { cast.setVolume(v); } catch (e: any) { showToast(`Volume change failed: ${e?.message ?? e}`); }
   };
 
   const pickWithBrowserUI = async () => {
@@ -1010,6 +1055,25 @@ export default function DevicesPage() {
             onRescan={refreshList}
             isDark={isDark}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── Error toast popup ── */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-start gap-3 max-w-sm w-[calc(100%-2rem)] rounded-2xl bg-rose-600 text-white px-4 py-3.5 shadow-2xl"
+          >
+            <AlertTriangle size={17} className="shrink-0 mt-0.5" />
+            <p className="flex-1 text-sm leading-snug">{toast.msg}</p>
+            <button onClick={() => setToast(null)} className="shrink-0 opacity-70 hover:opacity-100 transition" aria-label="Dismiss">
+              <X size={15} />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -1337,8 +1401,8 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs ${T.faint}`}>{lan.devices.length} found</span>
-                    <button onClick={lan.rescan} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${T.ghost}`}>
-                      <RefreshCw size={13} /> Rescan
+                    <button onClick={rescanLan} disabled={lanScanning} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${T.ghost} disabled:opacity-60`}>
+                      <RefreshCw size={13} className={lanScanning ? 'animate-spin' : ''} /> {lanScanning ? 'Scanning…' : 'Rescan'}
                     </button>
                   </div>
                 </div>
@@ -1384,7 +1448,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                               <p className="flex-1 text-xs font-bold text-emerald-600 truncate">
                                 Now Playing{lan.activeLabel ? ` - ${lan.activeLabel}` : ''}
                               </p>
-                              <button onClick={() => lan.stop(d.id)}
+                              <button onClick={() => lan.stop(d.id).catch((e: any) => showToast(`Stop failed: ${e?.message ?? e}`))}
                                 className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700 transition">
                                 <X size={12} /> Stop
                               </button>
@@ -1438,7 +1502,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                                   <Volume2 size={14} className={T.faint} />
                                   <input
                                     type="range" min={0} max={1} step={0.05} value={lanVol}
-                                    onChange={(e) => { const v = parseFloat(e.target.value); setLanVol(v); lan.setVolume(d.id, v); }}
+                                    onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) { setLanVol(v); lan.setVolume(d.id, v).catch(() => {}); } }}
                                     className="flex-1 accent-emerald-500 cursor-pointer" aria-label="Device volume"
                                   />
                                   <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(lanVol * 100)}%</span>
@@ -1563,7 +1627,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                       )}
                       {cast.state === 'connecting' && (
                         <button
-                          onClick={() => { cast.stopCasting(); cast.clearError(); }}
+                          onClick={() => { safeStopCasting(); cast.clearError(); }}
                           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
                         >
                           <X size={15} /> Cancel
@@ -1589,7 +1653,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                       )}
                       {cast.state === 'connected' && cast.mediaState !== 'idle' && (
                         <button
-                          onClick={cast.pauseResume}
+                          onClick={safePauseResume}
                           className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${T.ghost}`}
                           aria-label={cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
                         >
@@ -1599,7 +1663,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                       )}
                       {cast.state === 'connected' && (
                         <button
-                          onClick={cast.stopCasting}
+                          onClick={safeStopCasting}
                           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
                         >
                           <X size={15} /> Stop casting
@@ -1610,12 +1674,12 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                     {/* Volume control while connected */}
                     {cast.state === 'connected' && (
                       <div className="flex items-center gap-2 mt-3 max-w-xs">
-                        <button onClick={() => cast.setVolume(cast.volume > 0 ? 0 : 0.5)} className={T.sub} aria-label="Toggle mute">
+                        <button onClick={() => safeSetVolume(cast.volume > 0 ? 0 : 0.5)} className={T.sub} aria-label="Toggle mute">
                           {cast.volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
                         </button>
                         <input
                           type="range" min={0} max={1} step={0.05} value={cast.volume}
-                          onChange={(e) => cast.setVolume(parseFloat(e.target.value))}
+                          onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) safeSetVolume(v); }}
                           className="flex-1 accent-emerald-500 cursor-pointer"
                           aria-label="Cast device volume"
                         />

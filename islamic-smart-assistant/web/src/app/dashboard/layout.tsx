@@ -18,6 +18,7 @@ import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { ProfileModal } from '@/components/ProfileModal';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { QuickSettingsPopup, AzanOffTag, type QuickSection } from '@/components/QuickSettings';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Sidebar navigation, grouped into sections ('Worship', 'Account'). Each item
 // carries its route, label, icon, and an accent colour used when inactive.
@@ -81,6 +82,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.removeEventListener('isa:edit-prefs', openPrefs);
       window.removeEventListener('isa:open-profile', openProfile);
     };
+  }, []);
+
+  // Catch unhandled promise rejections so they show a console warning rather than
+  // crashing the Electron renderer process.
+  useEffect(() => {
+    const handler = (e: PromiseRejectionEvent) => {
+      e.preventDefault();
+      console.error('[UnhandledRejection]', e.reason);
+    };
+    window.addEventListener('unhandledrejection', handler);
+    return () => window.removeEventListener('unhandledrejection', handler);
   }, []);
 
   // Theme-specific class fragments for the sidebar surfaces. Written as full
@@ -421,7 +433,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* ── Routed page content ── */}
-      <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">{children}</main>
+      <main className="flex-1 min-w-0 p-5 sm:p-8 overflow-y-auto">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
 
       {/* Always-on background workers, mounted once for the whole dashboard:
           fire the Azan / run scheduled Surahs regardless of the active route.

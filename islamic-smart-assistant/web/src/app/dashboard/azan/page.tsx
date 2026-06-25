@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Play, Pause, Download, CheckCircle2, Bell, Sparkles, Volume2,
+  Play, Pause, Loader2, Download, CheckCircle2, Bell, Sparkles, Volume2,
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
@@ -379,7 +379,8 @@ export default function AzanPage() {
   const loc = useStoredLocation();
   const { isDark } = useTheme();
 
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId]   = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
   const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [favorites, setFavorites] = useLocalStorage<string[]>('isa:azanFavorites', []);
@@ -489,10 +490,12 @@ export default function AzanPage() {
     if (!el) return;
     setError(null);
     if (activeId === v.id) { el.pause(); setActiveId(null); return; }
+    if (loadingId === v.id) return;
+    setLoadingId(v.id);
     revokeCustomUrl();
     el.src = availability[v.id] ? v.local : v.remote;
-    el.play().then(() => setActiveId(v.id))
-      .catch((e) => { setActiveId(null); setError(`Couldn't play ${v.name}: ${e?.message ?? 'browser blocked playback'}`); });
+    el.play().then(() => { setActiveId(v.id); setLoadingId(null); })
+      .catch((e) => { setActiveId(null); setLoadingId(null); setError(`Couldn't play ${v.name}: ${e?.message ?? 'browser blocked playback'}`); });
   };
 
   const previewCustom = async (meta: CustomAzan) => {
@@ -500,14 +503,16 @@ export default function AzanPage() {
     if (!el) return;
     setError(null);
     if (activeId === meta.id) { el.pause(); setActiveId(null); return; }
+    if (loadingId === meta.id) return;
+    setLoadingId(meta.id);
     el.pause();
     revokeCustomUrl();
     const url = await customAzanUrl(meta.id);
-    if (!url) { setError(`"${meta.name}" couldn't be found in this browser's storage.`); return; }
+    if (!url) { setLoadingId(null); setError(`"${meta.name}" couldn't be found in this browser's storage.`); return; }
     customUrlRef.current = url;
     el.src = url;
-    el.play().then(() => setActiveId(meta.id))
-      .catch((e) => { setActiveId(null); setError(`Couldn't play ${meta.name}: ${e?.message ?? 'browser blocked playback'}`); });
+    el.play().then(() => { setActiveId(meta.id); setLoadingId(null); })
+      .catch((e) => { setActiveId(null); setLoadingId(null); setError(`Couldn't play ${meta.name}: ${e?.message ?? 'browser blocked playback'}`); });
   };
 
   const deleteCustom = async (id: string) => {
@@ -672,11 +677,13 @@ export default function AzanPage() {
     if (!el || !item.remoteUrl) return;
     setError(null);
     if (activeId === item.id) { el.pause(); setActiveId(null); return; }
+    if (loadingId === item.id) return;
+    setLoadingId(item.id);
     el.pause();
     revokeCustomUrl();
     el.src = item.remoteUrl;
-    el.play().then(() => setActiveId(item.id))
-      .catch((e) => { setActiveId(null); setError(`Couldn't play ${item.name}: ${e?.message ?? 'playback blocked'}`); });
+    el.play().then(() => { setActiveId(item.id); setLoadingId(null); })
+      .catch((e) => { setActiveId(null); setLoadingId(null); setError(`Couldn't play ${item.name}: ${e?.message ?? 'playback blocked'}`); });
   };
 
   const playItem = (item: Item) => {
@@ -847,14 +854,13 @@ export default function AzanPage() {
               className="relative rounded-3xl overflow-hidden border border-emerald-700/30 shadow-xl shadow-emerald-950/20"
               style={{ background: isDark
                 ? 'linear-gradient(120deg,#0a3a2b 0%,#072a1f 55%,#051e16 100%)'
-                : 'linear-gradient(120deg,#0b6b4f 0%,#065f46 55%,#064e3b 100%)' }}
+                : 'transparent' }}
             >
             <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.08]" />
             <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-300/40 to-transparent" />
             <div className="relative flex flex-col lg:flex-row lg:items-center gap-5 px-6 py-5 pr-6 lg:pr-52">
               {/* Qibla direction */}
               <div className="flex items-center gap-4">
-                <motion.span className="text-3xl" animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>🕋</motion.span>
                 <div>
                   <p className="text-emerald-100/70 text-xs font-semibold uppercase tracking-wide">Qibla Direction</p>
                   <p className="text-white font-bold text-lg leading-tight">
@@ -951,7 +957,8 @@ export default function AzanPage() {
             <div className={`grid gap-4 ${view === 'grid' ? 'sm:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
             <AnimatePresence mode="popLayout">
               {(showAllCards ? filtered : filtered.slice(0, 6)).map((item, i) => {
-                const isPlaying = activeId === item.id;
+                const isPlaying  = activeId  === item.id;
+                const isLoading  = loadingId === item.id;
                 const isSelected = selectedId === item.id;
                 const isFav = favorites.includes(item.id);
                 const isLocal = item.isCustom ? true : availability[item.id];
@@ -1005,12 +1012,17 @@ export default function AzanPage() {
                         </div>
                         {/* play overlay */}
                         <motion.button
-                          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}
+                          whileHover={{ scale: isLoading ? 1 : 1.1 }} whileTap={{ scale: isLoading ? 1 : 0.92 }}
                           onClick={() => playItem(item)}
+                          disabled={isLoading}
                           className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full grid place-items-center shadow-lg transition
-                            ${isPlaying ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
+                            ${isPlaying  ? 'bg-emerald-600 text-white'
+                            : isLoading  ? 'bg-emerald-100 text-emerald-500 cursor-default'
+                            : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
                         >
-                          {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                          {isLoading  ? <Loader2 size={16} className="animate-spin" />
+                           : isPlaying ? <Pause size={16} fill="currentColor" />
+                           : <Play size={16} fill="currentColor" className="ml-0.5" />}
                         </motion.button>
                       </div>
 
@@ -1363,8 +1375,8 @@ export default function AzanPage() {
 
       <audio
         ref={audioRef}
-        onEnded={() => { setActiveId(null); revokeCustomUrl(); }}
-        onError={() => { setActiveId(null); revokeCustomUrl(); setError('Audio failed to load. Try a different voice or run download_assets.py for offline files.'); }}
+        onEnded={() => { setActiveId(null); setLoadingId(null); revokeCustomUrl(); }}
+        onError={() => { setActiveId(null); setLoadingId(null); revokeCustomUrl(); setError('Audio failed to load. Try a different voice or run download_assets.py for offline files.'); }}
       />
 
       {/* ── Delete success toast ── */}
