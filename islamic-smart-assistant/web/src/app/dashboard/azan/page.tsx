@@ -44,13 +44,20 @@ type AzanVoice = {
 };
 
 const VOICES: AzanVoice[] = [
-  // ── Top 3: Popular + Most Listened ───────────────────────────────────────
+  // ── Top 5: Popular + Most Listened ───────────────────────────────────────
+  {
+    id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
+    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
+    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700', defaultPick: true,
+  },
   {
     id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
     region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
-    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
+    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
   },
   {
     id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
@@ -60,20 +67,27 @@ const VOICES: AzanVoice[] = [
     art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
   },
   {
+    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
+    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+  },
+  {
+    id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
+    region: 'Azerbaijan', lang: 'Arabic', style: 'Melodic', duration: '4:23',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/azan/seyyid-taleh-boradigahi.m4a', remote: '/audio/azan/seyyid-taleh-boradigahi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
+  },
+
+  // ── Remaining ─────────────────────────────────────────────────────────────
+  {
     id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
     region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
     art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
-  },
-
-  // ── Next 3: Popular only ──────────────────────────────────────────────────
-  {
-    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
-    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
-    badge: 'popular',
-    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
   },
   {
     id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
@@ -90,8 +104,6 @@ const VOICES: AzanVoice[] = [
     remote: 'https://www.islamcan.com/audio/adhan/azan1.mp3',
     art: '/azan/pakistan.svg', accent: 'from-rose-500 to-amber-500',
   },
-
-  // ── Remaining: no badge ───────────────────────────────────────────────────
   {
     id: 'turkey', name: 'Turkish — Istanbul', subtitle: 'Hafiz Mustafa Özcan',
     region: 'Türkiye', lang: 'Turkish', style: 'Traditional', duration: '4:21',
@@ -131,18 +143,6 @@ const VOICES: AzanVoice[] = [
     art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
   },
   {
-    id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
-    region: 'Azerbaijan', lang: 'Arabic', style: 'Melodic', duration: '4:23',
-    local: '/audio/azan/seyyid-taleh-boradigahi.m4a', remote: '/audio/azan/seyyid-taleh-boradigahi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
-  },
-  {
-    id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
-    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
-    local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
-    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
-  },
-  {
     id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
     local: '/audio/azan/makkah.mp3',
@@ -154,7 +154,7 @@ const VOICES: AzanVoice[] = [
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:12',
     local: '/audio/azan/madinah.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3',
-    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700', defaultPick: true,
+    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
   },
 ];
 
@@ -379,7 +379,7 @@ export default function AzanPage() {
 
   const [activeId, setActiveId]   = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
+  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'beautiful-azan');
   const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [favorites, setFavorites] = useLocalStorage<string[]>('isa:azanFavorites', []);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
@@ -1021,13 +1021,8 @@ export default function AzanPage() {
                       ${isSelected ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-emerald-900/8'}`}
                   >
                     {/* badge + extra tags */}
-                    {(item.badge || item.tags?.length || item.isCustom) && (
+                    {(item.badge || item.tags?.length) && (
                       <div className="absolute -top-2.5 left-5 flex gap-1.5 flex-wrap">
-                        {item.isCustom && (
-                          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-violet-500 text-white shadow-sm">
-                            Custom
-                          </span>
-                        )}
                         {item.badge && (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm
                             ${item.badge === 'popular' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-amber-950'}`}>
