@@ -851,42 +851,56 @@ export default function AzanPage() {
             className="relative mt-5"
           >
             <div
-              className="relative rounded-3xl overflow-hidden border border-emerald-700/30 shadow-xl shadow-emerald-950/20"
-              style={{ background: isDark
-                ? 'linear-gradient(120deg,#0a3a2b 0%,#072a1f 55%,#051e16 100%)'
-                : 'transparent' }}
+              className={`relative rounded-3xl overflow-hidden shadow-xl ${
+                isDark
+                  ? 'border border-emerald-700/30 shadow-emerald-950/20'
+                  : 'border border-white/60 bg-white/60 backdrop-blur-sm shadow-[0_8px_30px_-12px_rgba(16,40,30,0.15)]'
+              }`}
+              style={isDark ? { background: 'linear-gradient(120deg,#0a3a2b 0%,#072a1f 55%,#051e16 100%)' } : undefined}
             >
-            <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.08]" />
-            <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-300/40 to-transparent" />
+            {isDark && <div aria-hidden className="absolute inset-0 pattern-bg opacity-[0.08]" />}
+            {isDark && <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-300/40 to-transparent" />}
             <div className="relative flex flex-col lg:flex-row lg:items-center gap-5 px-6 py-5 pr-6 lg:pr-52">
               {/* Qibla direction */}
               <div className="flex items-center gap-4">
                 <div>
-                  <p className="text-emerald-100/70 text-xs font-semibold uppercase tracking-wide">Qibla Direction</p>
-                  <p className="text-white font-bold text-lg leading-tight">
+                  <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}>Qibla Direction</p>
+                  <p className={`font-bold text-lg leading-tight ${isDark ? 'text-white' : 'text-black'}`}>
                     {qibBearing != null ? `${Math.round(qibBearing)}°` : '—'}
-                    <span className="text-emerald-100/70 font-medium text-sm"> from your location</span>
+                    <span className={`font-medium text-sm ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}> from your location</span>
                   </p>
                 </div>
                 <Link href="/dashboard/qibla"
-                  className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-white/95 text-emerald-800 font-semibold text-xs px-4 py-2 hover:bg-white transition shadow-sm">
+                  className={`ml-1 inline-flex items-center gap-1.5 rounded-full font-semibold text-xs px-4 py-2 transition shadow-sm ${
+                    isDark
+                      ? 'bg-white/95 text-emerald-800 hover:bg-white'
+                      : 'bg-white/90 border border-emerald-200 text-emerald-800 hover:bg-white'
+                  }`}>
                   View on Map
                 </Link>
               </div>
 
-              <div className="hidden lg:block w-px h-12 bg-white/15" />
+              <div className={`hidden lg:block w-px h-12 ${isDark ? 'bg-white/15' : 'bg-black/10'}`} />
 
               {/* Current location */}
               <div className="flex items-center gap-4">
-                <span className="inline-flex w-10 h-10 items-center justify-center rounded-full bg-white/10 border border-white/20 text-gold-200">
+                <span className={`inline-flex w-10 h-10 items-center justify-center rounded-full ${
+                  isDark
+                    ? 'bg-white/10 border border-white/20 text-gold-200'
+                    : 'bg-emerald-50 border border-emerald-100 text-emerald-600'
+                }`}>
                   <MapPin size={18} />
                 </span>
                 <div>
-                  <p className="text-emerald-100/70 text-xs font-semibold uppercase tracking-wide">Current Location</p>
-                  <p className="text-white font-bold text-base leading-tight">{loc.hasCoords ? loc.label : 'Not set'}</p>
+                  <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-100/70' : 'text-black/55'}`}>Current Location</p>
+                  <p className={`font-bold text-base leading-tight ${isDark ? 'text-white' : 'text-black'}`}>{loc.hasCoords ? loc.label : 'Not set'}</p>
                 </div>
                 <Link href="/dashboard/prayer-times"
-                  className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-white/30 text-white font-semibold text-xs px-4 py-2 hover:bg-white/10 transition">
+                  className={`ml-1 inline-flex items-center gap-1.5 rounded-full font-semibold text-xs px-4 py-2 transition ${
+                    isDark
+                      ? 'border border-white/30 text-white hover:bg-white/10'
+                      : 'border border-emerald-200 text-emerald-800 bg-white/80 hover:bg-white'
+                  }`}>
                   Change
                 </Link>
               </div>

@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { MapPin, Globe, BellRing, BellOff, Check, Loader2, Settings } from 'lucide-react';
+import {
+  MapPin, Globe, BellRing, BellOff, Check, Loader2, Settings,
+  Activity, Volume2, Clock, Calendar, Heart, ChevronRight, Sparkles,
+} from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { SECTS, LANGUAGES } from '@/components/OnboardingSetup';
 import { setLocationByCity } from '@/lib/location';
@@ -67,12 +71,54 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
+// ── Smart Azan row ─────────────────────────────────────────────────────────
+
+function AzanRow({
+  icon,
+  title,
+  sub,
+  on,
+  onToggle,
+  last = false,
+  iconColor = 'text-emerald-600',
+  iconBg = 'bg-emerald-100',
+}: {
+  icon: React.ReactNode;
+  title: string;
+  sub: string;
+  on: boolean;
+  onToggle: () => void;
+  last?: boolean;
+  iconColor?: string;
+  iconBg?: string;
+}) {
+  return (
+    <div className={`flex items-center gap-4 py-4 ${!last ? 'border-b border-emerald-50' : ''}`}>
+      <span className={`w-9 h-9 shrink-0 grid place-items-center rounded-xl ${iconBg} ${iconColor}`}>
+        {icon}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-semibold leading-tight ${on ? 'text-emerald-950' : 'text-emerald-950/60'}`}>{title}</p>
+        <p className="text-xs text-emerald-900/45 mt-0.5">{sub}</p>
+      </div>
+      <Toggle on={on} onToggle={onToggle} />
+    </div>
+  );
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const [fiqh,     setFiqhState] = useLocalStorage<string>('isa:fiqh',         'hanafi');
   const [language, setLanguage]  = useLocalStorage<string>('isa:language',     'en');
   const [azanOn,   setAzanOn]    = useLocalStorage<boolean>('isa:azanAutoplay', true);
+
+  // Smart Azan Settings toggles
+  const [azanAutoplayBefore, setAzanAutoplayBefore] = useLocalStorage<boolean>('isa:azanAutoplayBefore', true);
+  const [azanDiffVoices,     setAzanDiffVoices]     = useLocalStorage<boolean>('isa:azanDifferentVoices', true);
+  const [azanVolumeAuto,     setAzanVolumeAuto]      = useLocalStorage<boolean>('isa:azanVolumeAuto', true);
+  const [azanWeekend,        setAzanWeekend]         = useLocalStorage<boolean>('isa:azanWeekendMode', false);
+  const [savedVoice]                                  = useLocalStorage<string>('isa:azanVoice', '');
 
   const [city,    setCity]    = useState('');
   const [country, setCountry] = useState('');
@@ -127,6 +173,7 @@ export default function SettingsPage() {
   };
 
   const activeSectId = FROM_FIQH[fiqh] ?? 'hanafi';
+  const favCount = savedVoice ? 1 : 0;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -140,6 +187,96 @@ export default function SettingsPage() {
           <p className="text-sm text-black/50">Manage your preferences</p>
         </div>
       </div>
+
+      {/* ── Smart Azan Settings ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="rounded-2xl overflow-hidden shadow-[0_4px_24px_-6px_rgba(16,185,129,0.22)] border border-emerald-200"
+      >
+        {/* Card header — rich gradient band */}
+        <div
+          className="relative overflow-hidden px-6 py-5"
+          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 55%, #047857 100%)' }}
+        >
+          {/* subtle arabesque pattern overlay */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 0L25 8H15L20 0zM20 40L15 32H25L20 40zM0 20L8 15V25L0 20zM40 20L32 25V15L40 20z'/%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+          <div className="relative flex items-center gap-3">
+            <motion.span
+              className="w-10 h-10 grid place-items-center rounded-xl bg-white/15 text-white shrink-0"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Activity size={20} />
+            </motion.span>
+            <div>
+              <h2 className="font-bold text-white text-[17px] leading-tight">Smart Azan Settings</h2>
+              <p className="text-emerald-200/70 text-xs mt-0.5">Personalise every call to prayer</p>
+            </div>
+            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/20 text-emerald-200 text-[11px] font-semibold px-2.5 py-1">
+              <Sparkles size={11} /> Smart
+            </span>
+          </div>
+        </div>
+
+        {/* Toggle rows */}
+        <div className="bg-white px-6">
+          <AzanRow
+            icon={<Clock size={16} />}
+            title="Auto play before prayer"
+            sub="2 min before adhan"
+            on={azanAutoplayBefore}
+            onToggle={() => { const n = !azanAutoplayBefore; setAzanAutoplayBefore(n); persist('isa:azanAutoplayBefore', n); }}
+          />
+          <AzanRow
+            icon={<Volume2 size={16} />}
+            title="Different voices"
+            sub="For each prayer"
+            on={azanDiffVoices}
+            onToggle={() => { const n = !azanDiffVoices; setAzanDiffVoices(n); persist('isa:azanDifferentVoices', n); }}
+          />
+          <AzanRow
+            icon={<Activity size={16} />}
+            title="Volume control"
+            sub="Auto adjust"
+            on={azanVolumeAuto}
+            onToggle={() => { const n = !azanVolumeAuto; setAzanVolumeAuto(n); persist('isa:azanVolumeAuto', n); }}
+          />
+          <AzanRow
+            icon={<Calendar size={16} />}
+            title="Weekend mode"
+            sub="Custom schedule"
+            on={azanWeekend}
+            onToggle={() => { const n = !azanWeekend; setAzanWeekend(n); persist('isa:azanWeekendMode', n); }}
+            iconBg={azanWeekend ? 'bg-emerald-100' : 'bg-slate-100'}
+            iconColor={azanWeekend ? 'text-emerald-600' : 'text-slate-400'}
+            last
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="bg-white px-6 pb-5">
+          <Link
+            href="/dashboard/azan"
+            className="group mt-1 flex items-center justify-center gap-2.5 w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)' }}
+          >
+            <Settings size={15} className="opacity-80" />
+            Advanced Settings
+            <ChevronRight size={15} className="ml-auto opacity-60 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+          {favCount > 0 && (
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-rose-400 font-semibold">
+              <Heart size={12} fill="currentColor" /> {favCount} favorite saved
+            </p>
+          )}
+        </div>
+      </motion.div>
 
       {/* ── Location ── */}
       <SectionCard title="Location" icon={<MapPin size={16} />}>
@@ -196,7 +333,6 @@ export default function SettingsPage() {
             />
           ))}
         </div>
-
       </SectionCard>
 
       {/* ── Translation Language ── */}

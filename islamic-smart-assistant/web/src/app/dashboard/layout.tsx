@@ -384,18 +384,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* ── Quick actions: notifications · theme toggle · sync · settings ── */}
         <div className={`relative z-10 mt-1 flex items-center justify-around border-t pt-3 ${t.divider}`}>
-          {/* Notifications — clears its unread dot on click. */}
-          <button
-            onClick={() => setHasNotif(false)}
-            aria-label="Notifications"
-            className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${t.circleBtn}`}
-          >
-            <Bell size={18} />
-            {hasNotif && (
-              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-orange-400" />
-            )}
-          </button>
-
           {/* Theme toggle — the accented, glowing button. */}
           <button
             onClick={toggle}
