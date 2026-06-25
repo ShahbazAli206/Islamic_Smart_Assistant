@@ -288,7 +288,7 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: 'spring', damping: 24, stiffness: 220 }}
-            className="relative w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border border-white/40 bg-white/80 backdrop-blur-2xl shadow-2xl"
+            className="relative w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border border-white/[0.08] bg-[#0a1a12]/92 backdrop-blur-2xl shadow-2xl shadow-black/60"
           >
             <div className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full bg-glow-emerald opacity-50" />
 
@@ -319,17 +319,17 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) onPickFile(f); }}
                   className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center cursor-pointer transition
-                    ${dragOver ? 'border-emerald-500 bg-emerald-50/70' : 'border-emerald-200 bg-white/60 hover:border-emerald-400'}`}
+                    ${dragOver ? 'border-emerald-400 bg-emerald-900/30' : 'border-white/15 bg-white/[0.04] hover:border-emerald-500 hover:bg-white/[0.07]'}`}
                 >
                   {decoding ? (
-                    <><Loader2 size={28} className="text-emerald-600 animate-spin" /><p className="text-sm text-ink/60">Reading audio…</p></>
+                    <><Loader2 size={28} className="text-emerald-400 animate-spin" /><p className="text-sm text-white/60">Reading audio…</p></>
                   ) : (
                     <>
-                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                        <Music2 size={26} className="text-emerald-500" />
+                      <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center">
+                        <Music2 size={26} className="text-emerald-400" />
                       </div>
-                      <p className="font-semibold">Drop an audio file or click to browse</p>
-                      <p className="text-xs text-ink/50">mp3, wav, m4a, ogg · up to {MAX_FILE_MB} MB</p>
+                      <p className="font-semibold text-white">Drop an audio file or click to browse</p>
+                      <p className="text-xs text-white/45">mp3, wav, m4a, ogg · up to {MAX_FILE_MB} MB</p>
                     </>
                   )}
                   <input
@@ -343,27 +343,27 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
               {buffer && (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5">Name</label>
+                    <label className="block text-sm font-semibold mb-1.5 text-white/80">Name</label>
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. My local masjid Azan"
-                      className="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white/80 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="w-full px-3 py-2.5 rounded-xl border border-white/15 bg-white/10 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="flex items-center gap-1.5 text-sm font-semibold"><Scissors size={14} className="text-emerald-600" /> Trim</label>
-                      <button onClick={() => { revokeUrl(); resetState(); }} className="text-xs text-ink/55 hover:text-ink underline">Choose another file</button>
+                      <label className="flex items-center gap-1.5 text-sm font-semibold text-white/80"><Scissors size={14} className="text-emerald-400" /> Trim</label>
+                      <button onClick={() => { revokeUrl(); resetState(); }} className="text-xs text-white/45 hover:text-white/80 underline">Choose another file</button>
                     </div>
 
                     {/* waveform + draggable handles */}
-                    <div ref={containerRef} className="relative h-28 rounded-xl border border-emerald-100 bg-white/60 overflow-hidden select-none touch-none">
+                    <div ref={containerRef} className="relative h-28 rounded-xl border border-white/10 bg-white/[0.05] overflow-hidden select-none touch-none">
                       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
                       {/* dimmed regions outside the selection */}
-                      <div className="absolute inset-y-0 left-0 bg-white/55" style={{ width: `${sPct}%` }} />
-                      <div className="absolute inset-y-0 right-0 bg-white/55" style={{ width: `${100 - ePct}%` }} />
+                      <div className="absolute inset-y-0 left-0 bg-black/45" style={{ width: `${sPct}%` }} />
+                      <div className="absolute inset-y-0 right-0 bg-black/45" style={{ width: `${100 - ePct}%` }} />
                       {/* handles */}
                       {(['start', 'end'] as const).map((which) => (
                         <div
@@ -380,9 +380,9 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between mt-2 text-xs text-ink/60">
+                    <div className="flex items-center justify-between mt-2 text-xs text-white/50">
                       <span>{formatClock(start)} – {formatClock(end)}</span>
-                      <span className="chip text-xs">Selected {formatClock(end - start)}</span>
+                      <span className="bg-white/10 border border-white/15 text-white/70 rounded-full px-2.5 py-0.5 text-[11px] font-medium">Selected {formatClock(end - start)}</span>
                     </div>
 
                     <button
@@ -396,49 +396,49 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
 
                   {/* ── optional intro / outro sound ── */}
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-semibold mb-1.5">
-                      <Music2 size={14} className="text-emerald-600" /> Add a sound (intro / outro)
-                      <span className="text-ink/40 font-normal">— optional</span>
+                    <label className="flex items-center gap-1.5 text-sm font-semibold mb-1.5 text-white/80">
+                      <Music2 size={14} className="text-emerald-400" /> Add a sound (intro / outro)
+                      <span className="text-white/35 font-normal">— optional</span>
                     </label>
 
                     {!extraBuffer ? (
                       <button
                         onClick={() => extraInputRef.current?.click()}
                         disabled={extraDecoding}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-emerald-200 bg-white/70 text-emerald-800 hover:border-emerald-400 hover:bg-white transition disabled:opacity-60"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-white/15 bg-white/[0.06] text-emerald-300 hover:border-emerald-500 hover:bg-white/10 transition disabled:opacity-60"
                       >
                         {extraDecoding ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
                         {extraDecoding ? 'Reading…' : 'Add another sound'}
                       </button>
                     ) : (
-                      <div className="rounded-xl border border-emerald-100 bg-white/60 p-3 space-y-3">
+                      <div className="rounded-xl border border-white/10 bg-white/[0.05] p-3 space-y-3">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 shrink-0"><Music2 size={15} /></span>
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 border border-white/15 text-emerald-400 shrink-0"><Music2 size={15} /></span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold truncate">{extraName || 'Added sound'}</p>
-                            <p className="text-xs text-ink/55">{formatClock(extraDur)}</p>
+                            <p className="text-sm font-semibold truncate text-white">{extraName || 'Added sound'}</p>
+                            <p className="text-xs text-white/45">{formatClock(extraDur)}</p>
                           </div>
-                          <button onClick={previewExtra} className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-700" title="Preview added sound">
+                          <button onClick={previewExtra} className="p-2 rounded-lg hover:bg-white/10 text-emerald-400 transition" title="Preview added sound">
                             {extraPlaying ? <Square size={15} /> : <Play size={15} />}
                           </button>
-                          <button onClick={removeExtra} className="p-2 rounded-lg hover:bg-rose-50 text-rose-600" title="Remove added sound">
+                          <button onClick={removeExtra} className="p-2 rounded-lg hover:bg-rose-900/30 text-rose-400 transition" title="Remove added sound">
                             <X size={15} />
                           </button>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-ink/55">Position:</span>
+                          <span className="text-xs text-white/45">Position:</span>
                           {(['start', 'end'] as const).map((pos) => (
                             <button
                               key={pos}
                               onClick={() => setExtraPos(pos)}
                               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
-                                ${extraPos === pos ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-emerald-200 text-emerald-700 hover:border-emerald-400'}`}
+                                ${extraPos === pos ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white/[0.06] border-white/15 text-emerald-300 hover:border-emerald-500'}`}
                             >
                               {pos === 'start' ? 'At start (intro)' : 'At end (outro)'}
                             </button>
                           ))}
                         </div>
-                        <p className="text-[11px] text-ink/45">
+                        <p className="text-[11px] text-white/35">
                           Plays {extraPos === 'start' ? 'before' : 'after'} the trimmed Azan and is baked into the saved file
                           (total {formatClock((end - start) + extraDur)}).
                         </p>
@@ -453,12 +453,12 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
                 </>
               )}
 
-              {error && <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{error}</p>}
+              {error && <p className="text-sm text-rose-300 bg-rose-900/30 border border-rose-500/30 rounded-xl px-3 py-2">{error}</p>}
             </div>
 
             {/* footer */}
-            <div className="shrink-0 border-t border-emerald-100/70 bg-white/70 backdrop-blur px-6 sm:px-8 py-4 flex items-center justify-end gap-2">
-              <button onClick={handleClose} className="btn-ghost py-2.5 px-5">Cancel</button>
+            <div className="shrink-0 border-t border-white/[0.08] bg-black/20 backdrop-blur px-6 sm:px-8 py-4 flex items-center justify-end gap-2">
+              <button onClick={handleClose} className="py-2.5 px-5 rounded-full text-sm font-semibold text-white/60 hover:text-white hover:bg-white/10 border border-white/10 hover:border-white/20 transition">Cancel</button>
               <button
                 onClick={save}
                 disabled={!buffer || saving}
