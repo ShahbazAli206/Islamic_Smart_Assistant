@@ -93,13 +93,25 @@ function speakTTS(text: string, lang: string): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) { resolve(); return; }
     window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = lang;
-    utter.rate = 0.88;
-    utter.pitch = 1.05;
-    utter.onend   = () => resolve();
-    utter.onerror = () => resolve();
-    window.speechSynthesis.speak(utter);
+    // Chrome fires onend immediately (without speaking) if speak() is called right
+    // after cancel() — wait one tick to let the cancellation flush.
+    setTimeout(() => {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang;
+      utter.rate = 0.88;
+      utter.pitch = 1.05;
+      // Chrome pauses speechSynthesis when the tab is in the background.
+      // Poll every 5 s and call resume() to keep it alive.
+      const keepAlive = setInterval(() => {
+        if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      }, 5000);
+      const done = () => { clearInterval(keepAlive); resolve(); };
+      utter.onend   = done;
+      utter.onerror = done;
+      window.speechSynthesis.speak(utter);
+    }, 150);
   });
 }
 
@@ -442,6 +454,13 @@ export function AutoAzanScheduler() {
       return `${refNow.getFullYear()}-${refNow.getMonth()}-${refNow.getDate()}`;
     };
 
+    // Embed the location in every fired-set key so switching cities never
+    // silences a prayer whose bare dateKey was already stored for a different
+    // location.  Coords rounded to 2 dp (~11 km) to survive minor GPS drift.
+    const locKey = byCoords
+      ? `${Number(params.lat ?? 0).toFixed(2)},${Number(params.lng ?? 0).toFixed(2)}`
+      : `${(params.city ?? '').toLowerCase()},${(params.country ?? '').toLowerCase()}`;
+
     const now = new Date();
     const initKey = locationDateKey(now);
     for (const name of AZAN_PRAYERS) {
@@ -450,22 +469,24 @@ export function AutoAzanScheduler() {
       const [h, m] = parts.map(Number);
       if (isNaN(h) || isNaN(m)) continue;
       if (now.getTime() - prayerMs(h, m, now) > 60_000) {
-        firedRef.current.add(`${initKey}:${name}`);
+        firedRef.current.add(`${locKey}:${initKey}:${name}`);
       }
     }
 
-    const tick = () => {
+    // windowMs: 60 s for the regular interval; caller can pass a wider value
+    // when catching up after the tab was hidden (e.g. mobile screen-lock).
+    const tick = (windowMs = 60_000) => {
       const now = new Date();
       const dateKey = locationDateKey(now);
       for (const name of AZAN_PRAYERS) {
-        const key = `${dateKey}:${name}`;
+        const key = `${locKey}:${dateKey}:${name}`;
         if (firedRef.current.has(key)) continue;
         const parts = timings[name]?.split(':');
         if (!parts || parts.length < 2) continue;
         const [h, m] = parts.map(Number);
         if (isNaN(h) || isNaN(m)) continue;
         const diff = now.getTime() - prayerMs(h, m, now);
-        if (diff >= 0 && diff < 60_000) {
+        if (diff >= 0 && diff < windowMs) {
           firedRef.current.add(key);
           fire(name);
           break;
@@ -474,8 +495,25 @@ export function AutoAzanScheduler() {
     };
 
     tick();
-    const id = setInterval(tick, 1_000);
-    return () => clearInterval(id);
+    const id = setInterval(() => tick(), 1_000);
+
+    // Mobile / background-tab recovery: the 1-second interval is suspended by
+    // the browser while the screen is locked or the tab is hidden.  When the
+    // page becomes visible again, run an immediate wide-window check (10 min)
+    // so a prayer that occurred while the app was hidden is still played.
+    const onVisible = () => {
+      if (typeof document !== 'undefined' && !document.hidden) tick(10 * 60_000);
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisible);
+    }
+
+    return () => {
+      clearInterval(id);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisible);
+      }
+    };
   }, [enabled, data, fire]);
 
   useEffect(() => {
