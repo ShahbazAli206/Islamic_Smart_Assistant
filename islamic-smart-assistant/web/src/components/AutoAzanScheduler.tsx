@@ -88,16 +88,23 @@ function getAnnouncementText(prayer: string, lang: string): string {
   }
 }
 
-/** Speak `text` via the browser's TTS engine, resolving when done/cancelled/error. */
-function speakTTS(text: string, lang: string): Promise<void> {
+/** Speak `text` via the browser's TTS engine, resolving when done/cancelled/error.
+ *  Falls back to English when the OS has no voice for the requested language. */
+function speakTTS(text: string, lang: string, fallbackText = 'Prayer time'): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) { resolve(); return; }
     window.speechSynthesis.cancel();
     // Chrome fires onend immediately (without speaking) if speak() is called right
     // after cancel() — wait one tick to let the cancellation flush.
     setTimeout(() => {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = lang;
+      // getVoices() returns [] before the list loads — treat that as "try anyway".
+      // If voices ARE known and none match the target language, fall back to English
+      // so the user hears something instead of silence.
+      const voices = window.speechSynthesis.getVoices();
+      const langPrefix = lang.split('-')[0];
+      const hasVoice = voices.length === 0 || voices.some(v => v.lang.startsWith(langPrefix));
+      const utter = new SpeechSynthesisUtterance(hasVoice ? text : fallbackText);
+      utter.lang = hasVoice ? lang : 'en-US';
       utter.rate = 0.88;
       utter.pitch = 1.05;
       // Chrome pauses speechSynthesis when the tab is in the background.
@@ -327,7 +334,11 @@ export function AutoAzanScheduler() {
     // ── 1. TTS announcement ──
     if (announceRef.current) {
       const lang = languageRef.current;
-      await speakTTS(getAnnouncementText(prayer, lang), LANG_CODES[lang] ?? 'en-US');
+      await speakTTS(
+        getAnnouncementText(prayer, lang),
+        LANG_CODES[lang] ?? 'en-US',
+        `${prayer} prayer time`,
+      );
       if (abortRef.current) return;
     }
 
