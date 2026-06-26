@@ -330,10 +330,11 @@ export default function SettingsPage() {
       <div className="px-6 sm:px-10 py-6 flex flex-col gap-4">
 
         {/* ── Main 2-col grid (items-start so Smart Azan card doesn't stretch) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-          {/* ══ Left: Smart Azan Settings ══ */}
-          <motion.div
+          {/* ══ Left: Smart Azan Settings + Auto Azan ══ */}
+          <div className="flex flex-col gap-4">
+            <motion.div
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className={`rounded-xl overflow-hidden border shadow-[0_4px_20px_-4px_rgba(16,185,129,0.22)] ${
               isDark ? 'border-emerald-800/40' : 'border-emerald-200'
@@ -486,7 +487,24 @@ export default function SettingsPage() {
                 </p>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+
+            {/* ── Auto Azan (below Smart Azan Settings, same column) ── */}
+            <SectionCard
+            title="Auto Azan"
+            isDark={isDark}
+            icon={azanOn ? <BellRing size={16} /> : <BellOff size={16} className="text-rose-500" />}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <p className={`text-sm leading-relaxed ${isDark ? 'text-white/50' : 'text-black/60'}`}>
+                {azanOn
+                  ? 'Azan plays automatically at prayer times in this browser tab.'
+                  : 'Turn on to hear the call to prayer at Fajr, Dhuhr, Asr, Maghrib & Isha.'}
+              </p>
+              <Toggle on={azanOn} onToggle={toggleAzan} isDark={isDark} />
+            </div>
+            </SectionCard>
+          </div>
 
           {/* ══ Right: stacked cards ══ */}
           <div className="flex flex-col gap-3">
@@ -629,22 +647,6 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-
-        {/* ── Auto Azan (below the 2-col grid) ── */}
-        <SectionCard
-          title="Auto Azan"
-          isDark={isDark}
-          icon={azanOn ? <BellRing size={16} /> : <BellOff size={16} className="text-rose-500" />}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <p className={`text-sm leading-relaxed ${isDark ? 'text-white/50' : 'text-black/60'}`}>
-              {azanOn
-                ? 'Azan plays automatically at prayer times in this browser tab.'
-                : 'Turn on to hear the call to prayer at Fajr, Dhuhr, Asr, Maghrib & Isha.'}
-            </p>
-            <Toggle on={azanOn} onToggle={toggleAzan} isDark={isDark} />
-          </div>
-        </SectionCard>
 
         {/* ── Coming Soon ── */}
         <div>
