@@ -46,7 +46,7 @@ type AzanVoice = {
 };
 
 const VOICES: AzanVoice[] = [
-  // ── Top 5: Popular + Most Listened ───────────────────────────────────────
+  // ── ★ Popular · 🎧 Most Listened (shown by default) ──────────────────────
   {
     id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
     region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
@@ -62,6 +62,13 @@ const VOICES: AzanVoice[] = [
     art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
   },
   {
+    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
+    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
+    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+  },
+  {
     id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
     region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44',
     badge: 'popular', tags: ['Most Listened'],
@@ -69,11 +76,11 @@ const VOICES: AzanVoice[] = [
     art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
   },
   {
-    id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
-    region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
+    id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
+    region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
     badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
+    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
   },
   {
     id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
@@ -83,14 +90,27 @@ const VOICES: AzanVoice[] = [
     art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
   },
 
-  // ── Remaining ─────────────────────────────────────────────────────────────
+  // ── Sacred Mosques ────────────────────────────────────────────────────────
   {
-    id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
-    region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
-    badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
-    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
+    id: 'masjid-al-haram', name: 'Masjid Al-Haram', subtitle: 'The Grand Mosque, Makkah',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46',
+    local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a',
+    art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
   },
+  {
+    id: 'makkah-abdallah-ahmad', name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter',
+    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:29',
+    local: '/audio/azan/makkah-abdallah-ahmad.m4a', remote: '/audio/azan/makkah-abdallah-ahmad.m4a',
+    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
+  },
+  {
+    id: 'islam-sobhi', name: 'Islam Sobhi', subtitle: 'القارئ اسلام صبحي',
+    region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18',
+    local: '/audio/azan/islam-sobhi.m4a', remote: '/audio/azan/islam-sobhi.m4a',
+    art: '/azan/egypt.svg', accent: 'from-rose-500 to-pink-600',
+  },
+
+  // ── More Voices ───────────────────────────────────────────────────────────
   {
     id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
@@ -125,24 +145,6 @@ const VOICES: AzanVoice[] = [
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:09',
     local: '/audio/azan/madinah-adhan.m4a', remote: '/audio/azan/madinah-adhan.m4a',
     art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
-  },
-  {
-    id: 'islam-sobhi', name: 'Islam Sobhi', subtitle: 'القارئ اسلام صبحي',
-    region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18',
-    local: '/audio/azan/islam-sobhi.m4a', remote: '/audio/azan/islam-sobhi.m4a',
-    art: '/azan/egypt.svg', accent: 'from-rose-500 to-pink-600',
-  },
-  {
-    id: 'makkah-abdallah-ahmad', name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:29',
-    local: '/audio/azan/makkah-abdallah-ahmad.m4a', remote: '/audio/azan/makkah-abdallah-ahmad.m4a',
-    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
-  },
-  {
-    id: 'masjid-al-haram', name: 'Masjid Al-Haram', subtitle: 'The Grand Mosque, Makkah',
-    region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46',
-    local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a',
-    art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
   },
   {
     id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
