@@ -1938,8 +1938,8 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
             </aside>
           )}
         </div>
-        </div>{/* closes max-w-[1500px] container */}
-      </div>{/* closes page content px-5 sm:px-8 section */}
-    </div>{/* closes outer -m-5 sm:-m-8 wrapper */}
+        </div>
+      </div>
+    </div>
   );
 }
