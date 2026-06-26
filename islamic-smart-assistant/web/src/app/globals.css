@@ -76,6 +76,15 @@ body {
   }
 }
 
+/* ── Dashboard UI scale ────────────────────────────────────────────────────
+   Applies to the dashboard layout wrapper (sidebar + all /dashboard pages).
+   Equivalent to pressing Ctrl+- once in a browser — shrinks every element
+   (cards, headings, sidebar, spacing) uniformly to 85 % without touching
+   the landing page or any other route outside the dashboard shell. */
+.dashboard-zoom {
+  zoom: 0.85;
+}
+
 /* Scrollbar polish */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.30); border-radius: 8px; }
