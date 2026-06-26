@@ -14,6 +14,16 @@ import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
+/** Top-5 featured voices shown at the top of the Azan voices page.
+ *  Used by the "Different voices for each prayer" feature. */
+const TOP_5_VOICES = [
+  'beautiful-azan',
+  'hafiz-ahmed-raza-qadri',
+  'mevlan-kurtishi',
+  'egzon-ibrahimi',
+  'abdul-rahman-mossad',
+];
+
 const VOICE_NAMES: Record<string, { name: string; subtitle: string; region: string }> = {
   'hafiz-ahmed-raza-qadri':    { name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan', region: 'Pakistan' },
   'egzon-ibrahimi':            { name: 'Egzon Ibrahimi',          subtitle: 'Balkan melodic Azan', region: 'Kosovo' },
@@ -289,8 +299,8 @@ export function AutoAzanScheduler() {
     playQueueRef.current = [];
 
     // useLocalStorage only syncs cross-tab via StorageEvent — same-tab writes from
-    // the Azan page never reach AutoAzanScheduler's React state. Read the latest
-    // values directly from localStorage so fire() always uses what the user set.
+    // the Azan / Settings page never reach AutoAzanScheduler's React state. Read
+    // all playback-relevant values directly from localStorage at fire time.
     let freshPreQ  = preAzanQueueRef.current;
     let freshPostQ = postAzanQueueRef.current;
     let freshDuroodId  = duroodIdRef.current;
@@ -298,15 +308,32 @@ export function AutoAzanScheduler() {
     let freshDuaId  = duaIdRef.current;
     let freshDuaPos = duaPosRef.current;
     let freshVoice  = voiceRef.current;
+    let freshLang   = languageRef.current;
+    let freshVolumeAuto = true;
+    let freshDiffVoices = false;
     try {
-      const p = localStorage.getItem('isa:preAzanQueue');   if (p) freshPreQ  = JSON.parse(p);
-      const q = localStorage.getItem('isa:postAzanQueue');  if (q) freshPostQ = JSON.parse(q);
-      const d = localStorage.getItem('isa:duroodId');       if (d) freshDuroodId  = JSON.parse(d);
-      const dp = localStorage.getItem('isa:duroodPos');     if (dp) freshDuroodPos = JSON.parse(dp);
-      const da = localStorage.getItem('isa:duaId');         if (da) freshDuaId  = JSON.parse(da);
-      const dap = localStorage.getItem('isa:duaPos');       if (dap) freshDuaPos = JSON.parse(dap);
-      const vr = localStorage.getItem('isa:azanVoice');     if (vr) freshVoice = JSON.parse(vr);
+      const p = localStorage.getItem('isa:preAzanQueue');        if (p)  freshPreQ  = JSON.parse(p);
+      const q = localStorage.getItem('isa:postAzanQueue');       if (q)  freshPostQ = JSON.parse(q);
+      const d = localStorage.getItem('isa:duroodId');            if (d)  freshDuroodId  = JSON.parse(d);
+      const dp = localStorage.getItem('isa:duroodPos');          if (dp) freshDuroodPos = JSON.parse(dp);
+      const da = localStorage.getItem('isa:duaId');              if (da) freshDuaId  = JSON.parse(da);
+      const dap = localStorage.getItem('isa:duaPos');            if (dap) freshDuaPos = JSON.parse(dap);
+      const vr = localStorage.getItem('isa:azanVoice');          if (vr) freshVoice = JSON.parse(vr);
+      const lr = localStorage.getItem('isa:language');           if (lr) freshLang  = JSON.parse(lr);
+      const va = localStorage.getItem('isa:azanVolumeAuto');     if (va !== null) freshVolumeAuto = JSON.parse(va);
+      const dv = localStorage.getItem('isa:azanDifferentVoices');if (dv !== null) freshDiffVoices = JSON.parse(dv);
     } catch {}
+
+    // Volume control: set to 95% when the setting is ON.
+    if (freshVolumeAuto) el.volume = 0.95;
+
+    // Different voices: each of the 5 prayers gets a different voice from the top
+    // 5 featured voices — selected voice always plays for Fajr (index 0).
+    if (freshDiffVoices) {
+      const pool = [freshVoice, ...TOP_5_VOICES.filter((id) => id !== freshVoice)].slice(0, 5);
+      const idx = AZAN_PRAYERS.indexOf(prayer as keyof PrayerTimes);
+      freshVoice = pool[idx >= 0 ? idx : 0] ?? freshVoice;
+    }
 
     const v = freshVoice;
     const { name: voiceLabel } = resolveVoiceInfo(v);
@@ -357,8 +384,7 @@ export function AutoAzanScheduler() {
 
     // ── 1. TTS announcement ──
     if (announceRef.current) {
-      const lang = languageRef.current;
-      await speakTTS(getAnnouncementText(prayer, lang), LANG_CODES[lang] ?? 'en-US');
+      await speakTTS(getAnnouncementText(prayer, freshLang), LANG_CODES[freshLang] ?? 'en-US');
       if (abortRef.current) return;
     }
 
@@ -532,14 +558,24 @@ export function AutoAzanScheduler() {
       ? `${Number(params.lat ?? 0).toFixed(2)},${Number(params.lng ?? 0).toFixed(2)}`
       : `${(params.city ?? '').toLowerCase()},${(params.country ?? '').toLowerCase()}`;
 
+    // Read offset once at setup time (re-read inside tick for live changes).
+    const readOffsetMs = (): number => {
+      try {
+        const pb = localStorage.getItem('isa:azanAutoplayBefore');
+        return pb !== null && JSON.parse(pb) ? -2 * 60_000 : 0;
+      } catch { return 0; }
+    };
+
     const now = new Date();
     const initKey = locationDateKey(now);
+    const initOffset = readOffsetMs();
     for (const name of AZAN_PRAYERS) {
       const parts = timings[name]?.split(':');
       if (!parts || parts.length < 2) continue;
       const [h, m] = parts.map(Number);
       if (isNaN(h) || isNaN(m)) continue;
-      if (now.getTime() - prayerMs(h, m, now) > 60_000) {
+      // Pre-mark prayers whose fire-time (with offset) is already >60 s in the past
+      if (now.getTime() - (prayerMs(h, m, now) + initOffset) > 60_000) {
         firedRef.current.add(`${locKey}:${initKey}:${name}`);
       }
     }
@@ -548,6 +584,19 @@ export function AutoAzanScheduler() {
     // when catching up after the tab was hidden (e.g. mobile screen-lock).
     const tick = (windowMs = 60_000) => {
       const now = new Date();
+
+      // Weekend mode: skip auto-Azan on Saturday (6) and Sunday (0).
+      try {
+        const wm = localStorage.getItem('isa:azanWeekendMode');
+        if (wm !== null && JSON.parse(wm)) {
+          const day = now.getDay();
+          if (day === 0 || day === 6) return;
+        }
+      } catch {}
+
+      // Auto play before prayer: shift the fire window 2 minutes early.
+      const offsetMs = readOffsetMs();
+
       const dateKey = locationDateKey(now);
       for (const name of AZAN_PRAYERS) {
         const key = `${locKey}:${dateKey}:${name}`;
@@ -556,7 +605,7 @@ export function AutoAzanScheduler() {
         if (!parts || parts.length < 2) continue;
         const [h, m] = parts.map(Number);
         if (isNaN(h) || isNaN(m)) continue;
-        const diff = now.getTime() - prayerMs(h, m, now);
+        const diff = now.getTime() - (prayerMs(h, m, now) + offsetMs);
         if (diff >= 0 && diff < windowMs) {
           firedRef.current.add(key);
           fire(name);

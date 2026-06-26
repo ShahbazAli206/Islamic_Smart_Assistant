@@ -409,6 +409,13 @@ export default function SettingsPage() {
                 <button
                   onClick={() => {
                     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+                    // useLocalStorage doesn't sync same-tab writes — QuickSettings
+                    // changes isa:language in localStorage but the React state here
+                    // stays stale. Always read directly from localStorage.
+                    const currentLang = (() => {
+                      try { return JSON.parse(localStorage.getItem('isa:language') ?? '"en"') as string; }
+                      catch { return 'en'; }
+                    })();
                     const LANG_CODES_TTS: Record<string, string> = {
                       en:'en-US', ar:'ar-SA', ur:'ur-PK', fr:'fr-FR', tr:'tr-TR',
                       id:'id-ID', ms:'ms-MY', bn:'bn-BD', de:'de-DE', es:'es-ES', hi:'hi-IN',
@@ -429,22 +436,17 @@ export default function SettingsPage() {
                     window.speechSynthesis.cancel();
                     const doSpeak = () => {
                       const voices = window.speechSynthesis.getVoices();
-                      const wantedCode = LANG_CODES_TTS[language] ?? 'en-US';
+                      const wantedCode = LANG_CODES_TTS[currentLang] ?? 'en-US';
                       const langPrefix = wantedCode.split('-')[0];
-                      // Explicitly setting u.voice is far more reliable than u.lang
-                      // alone — Chrome often silently drops utterances when only lang
-                      // is set and the browser has to guess which voice to use.
                       const matched = voices.find(v => v.lang === wantedCode)
                         || voices.find(v => v.lang.startsWith(langPrefix));
-                      const u = new SpeechSynthesisUtterance(SAMPLE[language] ?? 'Fajr prayer time');
+                      const u = new SpeechSynthesisUtterance(SAMPLE[currentLang] ?? 'Fajr prayer time');
                       u.lang = wantedCode;
                       if (matched) u.voice = matched;
                       u.rate = 0.88;
                       u.pitch = 1.05;
                       window.speechSynthesis.speak(u);
                     };
-                    // getVoices() is async on first load in Chrome — wait for the
-                    // voiceschanged event so we can assign u.voice explicitly.
                     setTimeout(() => {
                       const voices = window.speechSynthesis.getVoices();
                       if (voices.length > 0) {
@@ -455,7 +457,7 @@ export default function SettingsPage() {
                           doSpeak();
                         };
                         window.speechSynthesis.addEventListener('voiceschanged', onReady);
-                        setTimeout(doSpeak, 800); // fallback if event never fires
+                        setTimeout(doSpeak, 800);
                       }
                     }, 150);
                   }}
