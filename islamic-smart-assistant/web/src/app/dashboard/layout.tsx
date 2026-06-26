@@ -164,7 +164,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden lg:flex dashboard-zoom">
+    <div className="min-h-screen lg:h-[calc(100vh/0.85)] lg:overflow-hidden lg:flex dashboard-zoom">
       {/* ── Mobile top bar: hamburger + brand + quick-access (hidden on lg+) ── */}
       {/* mobile top bar with menu button (hidden on lg+) */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-mosque-gradient text-parchment px-4 py-3 shadow-md">
