@@ -1027,7 +1027,7 @@ export default function DevicesPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 p-5 sm:p-8 min-h-full relative overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment' : 'text-ink'}`}
       style={
         isDark
           ? {
@@ -1077,112 +1077,71 @@ export default function DevicesPage() {
         )}
       </AnimatePresence>
 
-      {/* dark ambient decor */}
-      {isDark && (
-        <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
-          <div
-            className="absolute -top-24 right-1/4 w-80 h-80 rounded-full animate-aurora"
-            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute top-1/3 -left-20 w-72 h-72 rounded-full animate-float-y"
-            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)' }}
-          />
-        </div>
-      )}
+      {/* ── Hero section — same visual treatment as Prayer Times page ── */}
+      <div className="relative overflow-hidden">
+        {/* full-cover background image — same as Prayer Times / Overview hero */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
-      <div className="relative max-w-[1500px] mx-auto space-y-5">
+        <div className="relative px-6 sm:px-10 pt-5 pb-8 flex flex-wrap items-start justify-between gap-4">
 
-        {/* ════════ TOP ROW ════════ */}
-        <div className={`grid gap-5 ${isDark ? 'lg:grid-cols-[1fr_1.45fr]' : 'lg:grid-cols-[1fr_1.25fr_0.85fr]'}`}>
-
-          {/* header card */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className={`relative overflow-hidden p-6 flex items-center gap-4 ${T.card}`}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-y-0 right-0 w-1/2 bg-cover bg-center opacity-[0.07]"
-              style={{ backgroundImage: "url('/backgound-image2.png')" }}
-            />
-            <div className="relative shrink-0">
-              <motion.span
-                aria-hidden className="absolute inset-0 rounded-2xl"
-                animate={{ boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 10px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)'] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeOut' }}
-              />
-              <span className={`relative inline-flex w-16 h-16 items-center justify-center rounded-2xl shadow-lg ${isDark ? 'bg-[#0e2018] text-gold-300 border border-gold-400/40' : 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white'}`}>
-                <Volume2 size={30} />
-              </span>
-            </div>
-            <div className="relative min-w-0">
-              <h1 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-none">
-                <span className={T.heading}>Devices &amp; </span>
-                {isDark
-                  ? <span className="bg-gold-gradient bg-clip-text text-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }}>Outputs</span>
-                  : <span className="text-emerald-600">Outputs</span>}
-              </h1>
-              <p className={`${T.sub} mt-2 text-sm`}>Choose where Azan &amp; Quran audio plays with the best quality.</p>
-            </div>
-          </motion.div>
-
-          {/* ayah card */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}
-            className={`relative overflow-hidden p-6 flex items-center gap-4 ${T.card}`}
-          >
-            {isDark && (
-              <div
-                aria-hidden className="absolute inset-0"
-                style={{ background: 'radial-gradient(420px 200px at 78% 60%, rgba(16,185,129,0.18), transparent 70%)' }}
-              />
-            )}
-            <button
-              onClick={() => setAyahFav((v) => !v)}
-              aria-label="Favourite ayah"
-              className={`absolute top-4 right-4 w-8 h-8 grid place-items-center rounded-full transition ${ayahFav ? 'text-gold-400' : isDark ? 'text-parchment/35 hover:text-gold-300' : 'text-emerald-900/30 hover:text-gold-500'}`}
-            >
-              <Star size={16} fill={ayahFav ? 'currentColor' : 'none'} />
-            </button>
-            <div className="relative flex-1 min-w-0">
-              <p className={`font-arabic text-xl sm:text-2xl leading-[1.9] ${isDark ? 'text-gold-200' : 'text-emerald-900'}`} dir="rtl">
-                وَإِذَا قُرِئَ ٱلْقُرْآنُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟ لَعَلَّكُمْ تُرْحَمُونَ
+          {/* left: badge + heading + subtitle */}
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
+              <Volume2 size={12} /> Devices &amp; Outputs
+            </span>
+            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] text-black"
+              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
+              Choose where Azan &amp; Quran audio plays
+            </h1>
+            <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <p className="text-base sm:text-lg leading-relaxed text-black/85">
+                Every call to prayer — on the best speaker in the room, at perfect quality.
               </p>
-              <p className={`${T.sub} text-sm mt-2 leading-relaxed max-w-md`}>
+            </div>
+          </div>
+
+          {/* right: ayah glass card — same glass treatment as Prayer Times hero */}
+          <div className="hidden md:block" style={{ maxWidth: '360px' }}>
+            <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                  ٢٠٤
+                </span>
+                <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
+                  وَإِذَا قُرِئَ ٱلْقُرْآنُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟ لَعَلَّكُمْ تُرْحَمُونَ
+                </p>
+              </div>
+              <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
                 And when the Qur&apos;an is recited, then listen to it and pay attention that you may receive mercy.
               </p>
-              <p className={`${T.faint} text-xs mt-1.5`}>(Surah Al-A&apos;raf 7:204)</p>
+              <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-A&apos;raf (7:204)</p>
             </div>
-            <div className="relative shrink-0 hidden sm:flex items-end gap-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/recitation/rehal.svg" alt="" className="w-24 animate-float" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/recitation/lantern.svg" alt="" className="w-9 animate-float" style={{ animationDelay: '1.2s' }} />
-            </div>
-          </motion.div>
+          </div>
 
-          {/* audio quality card  -  LIGHT ONLY */}
-          {!isDark && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-              className={`relative overflow-hidden p-5 flex flex-col ${T.card}`}
-            >
-              <div className="flex items-center justify-between">
-                <p className={`text-sm font-semibold ${T.sub}`}>Audio Quality</p>
-                <Activity size={16} className="text-emerald-500" />
-              </div>
-              <p className="text-2xl font-display font-bold text-emerald-600 mt-1">Excellent</p>
-              <FlowWave color="#10b981" className="h-12 mt-2" />
-              <div className="flex items-center gap-1.5 mt-2">
-                {[0, 1].map((i) => (
-                  <span key={i} className={`h-1.5 rounded-full transition-all ${i === 0 ? 'w-5 bg-emerald-500' : 'w-1.5 bg-emerald-200'}`} />
-                ))}
-              </div>
-            </motion.div>
-          )}
         </div>
+      </div>
+      {/* ── end hero section ── */}
+
+      {/* ── page content below hero ── */}
+      <div className="relative px-5 sm:px-8 pb-8">
+
+        {/* dark ambient decor (dark mode only) */}
+        {isDark && (
+          <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 pattern-bg opacity-[0.05]" />
+            <div
+              className="absolute -top-24 right-1/4 w-80 h-80 rounded-full animate-aurora"
+              style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }}
+            />
+            <div
+              className="absolute top-1/3 -left-20 w-72 h-72 rounded-full animate-float-y"
+              style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)' }}
+            />
+          </div>
+        )}
+
+        <div className="relative max-w-[1500px] mx-auto space-y-5 pt-5">
 
         {/* ════════ MAIN + SIDEBAR ════════ */}
         <div className={`grid gap-5 items-start ${isDark ? 'grid-cols-1' : 'xl:grid-cols-[1fr_330px]'}`}>
@@ -1979,7 +1938,8 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
             </aside>
           )}
         </div>
-      </div>
-    </div>
+        </div>{/* closes max-w-[1500px] container */}
+      </div>{/* closes page content px-5 sm:px-8 section */}
+    </div>{/* closes outer -m-5 sm:-m-8 wrapper */}
   );
 }
