@@ -54,11 +54,7 @@
     "win": {
       "target": [
         "nsis"
-      ],
-      "sign": null,
-      "signingHashAlgorithms": null,
-      "certificateFile": null,
-      "verifyUpdateCodeSignature": false
+      ]
     },
     "nsis": {
       "oneClick": false,
