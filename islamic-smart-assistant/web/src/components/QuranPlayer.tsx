@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -309,9 +309,18 @@ export function QuranPlayer({
   const [playing, setPlaying] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const audioRef   = useRef<HTMLAudioElement>(null);
-  const preloadRef = useRef<HTMLAudioElement>(null);
-  // Stable ref so TTS callbacks can advance without stale closures
+
+  // ── Audio pool ────────────────────────────────────────────────────────────
+  // URL-keyed map of pre-loaded HTMLAudioElement objects. Each entry is created
+  // when its URL enters the "upcoming" window and has el.load() called so it
+  // starts buffering from the CDN immediately. On transition (Arabic → translation
+  // or ayah N → N+1) we directly call play() on the already-buffered element
+  // instead of resetting src + load() on a single shared element — that src/load
+  // pipeline is what caused the 0.5–2 s silence gap.
+  const poolRef        = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Stable ref so TTS advance callbacks don't capture stale closure values
   const advanceRef = useRef<() => void>(() => {});
 
   // Detect desktop (Electron / Tauri) — TTS is only used on desktop
@@ -323,15 +332,27 @@ export function QuranPlayer({
     );
   }, []);
 
-  useEffect(() => {
-    setAyahIdx(0); setStage('arabic'); setPlaying(false); setError(null);
-  }, [surahNumber, reciter]);
-
-  useEffect(() => { setStage('arabic'); }, [translation]);
-
-  const currentAyah = arabic?.ayahs[ayahIdx];
-  const currentTrans = trans?.ayahs[ayahIdx];
+  const currentAyah    = arabic?.ayahs[ayahIdx];
+  const currentTrans   = trans?.ayahs[ayahIdx];
   const currentEnglish = english?.ayahs[ayahIdx];
+
+  // Stable snapshot of state for event handlers. Handlers are created once with
+  // useCallback([]) and read from this ref so they never capture stale closures.
+  // Declared after currentAyah/currentTrans so TypeScript infers their types correctly.
+  const hsRef = useRef({
+    arabic,
+    ayahIdx,
+    stage,
+    translationMode,
+    translation,
+    repeat,
+    isDesktop,
+    currentAyah,
+    currentTrans,
+  });
+
+  // Synchronous update — runs before any effects this render cycle
+  hsRef.current = { arabic, ayahIdx, stage, translationMode, translation, repeat, isDesktop, currentAyah, currentTrans };
 
   const stageUrl = (() => {
     if (!currentAyah) return null;
@@ -339,51 +360,84 @@ export function QuranPlayer({
     return translationAudioUrl(translation, currentAyah.number);
   })();
 
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el || !stageUrl) return;
-    el.src = stageUrl;
-    el.load();
-    setError(null);
-  }, [stageUrl]);
+  // ── Pool helper ───────────────────────────────────────────────────────────
+  const getPoolEl = useCallback((url: string): HTMLAudioElement => {
+    const pool = poolRef.current;
+    if (pool.has(url)) return pool.get(url)!;
+    const el = new Audio();
+    el.preload = 'auto';
+    el.src = url;
+    el.load(); // start buffering immediately
+    pool.set(url, el);
+    return el;
+  }, []);
 
-  useEffect(() => {
+  // ── Stable event handlers (read from hsRef — never recreated) ────────────
+  const onEnded = useCallback(() => {
+    const { arabic, currentAyah, stage, translationMode, translation, repeat, isDesktop, ayahIdx } = hsRef.current;
     if (!arabic || !currentAyah) return;
-    const pre = preloadRef.current;
-    if (!pre) return;
-    const wantsTranslation =
-      translationMode && stage === 'arabic' && translation !== 'none' &&
-      translationAudioUrl(translation, currentAyah.number);
-    let nextUrl: string | null = null;
-    if (wantsTranslation) {
-      nextUrl = translationAudioUrl(translation, currentAyah.number);
-    } else if (ayahIdx < arabic.ayahs.length - 1) {
-      const next = arabic.ayahs[ayahIdx + 1];
-      nextUrl = next.audio ?? ayahAudioUrl(next.number, reciter);
-    }
-    if (nextUrl && pre.src !== nextUrl) { pre.src = nextUrl; pre.load(); }
-  }, [arabic, currentAyah, ayahIdx, stage, translationMode, translation, reciter]);
 
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (playing) {
-      el.play().catch((e) => {
-        // AbortError fires whenever el.load() interrupts a pending play() call —
-        // this happens on every ayah advance (stageUrl effect calls el.load() first,
-        // then this effect calls el.play() for the new src). It is not a real failure;
-        // the next effect run will successfully play the new audio.
-        if (e?.name === 'AbortError') return;
-        setPlaying(false);
-        setError(`Couldn't play audio: ${e?.message ?? 'browser blocked playback'}`);
-      });
-    } else {
-      el.pause();
+    const cdnTransUrl  = translationAudioUrl(translation, currentAyah.number);
+    const ttsAvailable = isDesktop && !!getTtsLang(translation);
+    if (
+      translationMode && stage === 'arabic' && translation !== 'none' &&
+      (!!cdnTransUrl || ttsAvailable)
+    ) {
+      setStage('translation');
+      return;
     }
-  }, [playing, stageUrl]);
+
+    const last = ayahIdx >= arabic.ayahs.length - 1;
+    if (last) {
+      setStage('arabic');
+      if (repeat) setAyahIdx(0); else setPlaying(false);
+      return;
+    }
+
+    if (translationMode) {
+      // Keep stage='translation' during the 400 ms gap so stageUrl stays on the
+      // translation URL (already ended). Setting stage='arabic' immediately would
+      // trigger a spurious replay of the same Arabic ayah before ayahIdx advances.
+      setTimeout(() => {
+        setStage('arabic');
+        setAyahIdx((i) => i + 1);
+      }, 400);
+    } else {
+      setStage('arabic');
+      setAyahIdx((i) => i + 1);
+    }
+  }, []);
+
+  const onTranslationAudioError = useCallback(() => {
+    const { stage, isDesktop, currentTrans, translation } = hsRef.current;
+    if (stage === 'translation') {
+      if (isDesktop && currentTrans) {
+        const lang = getTtsLang(translation);
+        if (lang) {
+          const utter = new SpeechSynthesisUtterance(currentTrans.text);
+          utter.lang = lang;
+          utter.rate = 0.92;
+          utter.onend  = () => advanceRef.current();
+          utter.onerror = (e: Event) => {
+            const err = (e as SpeechSynthesisErrorEvent).error;
+            if (err === 'interrupted' || err === 'canceled') return;
+            advanceRef.current();
+          };
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+          return;
+        }
+      }
+      advanceRef.current();
+    } else {
+      setPlaying(false);
+      setError('Audio failed to load from the CDN.');
+    }
+  }, []);
 
   // Keep advanceRef always current so TTS callbacks don't capture stale state
   advanceRef.current = () => {
+    const { arabic, ayahIdx, repeat } = hsRef.current;
     if (!arabic) return;
     const last = ayahIdx >= arabic.ayahs.length - 1;
     if (last) {
@@ -393,6 +447,91 @@ export function QuranPlayer({
       setTimeout(() => { setStage('arabic'); setAyahIdx((i) => i + 1); }, 400);
     }
   };
+
+  // ── Reset on surah / reciter change ──────────────────────────────────────
+  useEffect(() => {
+    // All pooled URLs are stale — flush and release memory
+    poolRef.current.forEach((el) => { el.onended = null; el.onerror = null; el.src = ''; });
+    poolRef.current.clear();
+    activeAudioRef.current = null;
+    setAyahIdx(0); setStage('arabic'); setPlaying(false); setError(null);
+  }, [surahNumber, reciter]);
+
+  // ── Reset stage on translation change ────────────────────────────────────
+  // Stale translation URLs are evicted naturally by the prefetch effect below.
+  useEffect(() => { setStage('arabic'); }, [translation]);
+
+  // ── Prefetch: keep next 3 ayah pairs buffered in the pool ────────────────
+  useEffect(() => {
+    if (!arabic || !currentAyah) return;
+    const urlsToKeep = new Set<string>();
+    if (stageUrl) urlsToKeep.add(stageUrl);
+
+    // Translation of current ayah — the very next sound when stage='arabic'
+    if (stage === 'arabic' && translationMode && translation !== 'none') {
+      const url = translationAudioUrl(translation, currentAyah.number);
+      if (url) urlsToKeep.add(url);
+    }
+
+    // Arabic + translation URLs for the next 3 ayahs
+    for (let i = 1; i <= 3; i++) {
+      const next = arabic.ayahs[ayahIdx + i];
+      if (!next) break;
+      urlsToKeep.add(next.audio ?? ayahAudioUrl(next.number, reciter));
+      if (translationMode && translation !== 'none') {
+        const url = translationAudioUrl(translation, next.number);
+        if (url) urlsToKeep.add(url);
+      }
+    }
+
+    // Ensure every upcoming URL has a pool element that is already loading
+    urlsToKeep.forEach(url => getPoolEl(url));
+
+    // Evict pool entries that are no longer in the upcoming window
+    poolRef.current.forEach((el, url) => {
+      if (!urlsToKeep.has(url)) {
+        el.onended = null; el.onerror = null; el.src = '';
+        poolRef.current.delete(url);
+      }
+    });
+  }, [arabic, ayahIdx, stage, translationMode, translation, reciter, stageUrl, currentAyah, getPoolEl]);
+
+  // ── Activate pool element for current stageUrl ────────────────────────────
+  // This replaces the old `el.src = stageUrl; el.load()` effect. Instead of
+  // resetting a shared element, we look up (or create) the pre-loaded pool
+  // element for the new URL and make it the active player. No load() call means
+  // no CDN round-trip delay on the Arabic → translation transition.
+  useEffect(() => {
+    if (!stageUrl) return; // TTS / no-audio path; the TTS useEffect handles it
+    const el = getPoolEl(stageUrl);
+    const prev = activeAudioRef.current;
+    if (prev && prev !== el) {
+      prev.pause();
+      prev.currentTime = 0;
+      prev.onended = null;
+      prev.onerror = null;
+    }
+    el.onended = onEnded;
+    el.onerror = onTranslationAudioError;
+    activeAudioRef.current = el;
+    setError(null);
+  }, [stageUrl, getPoolEl, onEnded, onTranslationAudioError]);
+
+  // ── Play / pause ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!stageUrl) return; // TTS handled by the dedicated useEffect below
+    const el = activeAudioRef.current;
+    if (!el) return;
+    if (playing) {
+      el.play().catch((e) => {
+        if (e?.name === 'AbortError') return;
+        setPlaying(false);
+        setError(`Couldn't play audio: ${e?.message ?? 'browser blocked playback'}`);
+      });
+    } else {
+      el.pause();
+    }
+  }, [playing, stageUrl]);
 
   // Cancel TTS whenever playback pauses or the component unmounts
   useEffect(() => {
@@ -425,73 +564,13 @@ export function QuranPlayer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, playing, ayahIdx, translation, isDesktop, stageUrl]);
 
-  // Translation audio failed (CDN 403/404, network offline, etc.).
-  // On desktop: silently fall back to TTS if available; otherwise advance.
-  // On web: advance silently (text stays on screen).
-  const onTranslationAudioError = () => {
-    if (stage === 'translation') {
-      if (isDesktop && currentTrans) {
-        const lang = getTtsLang(translation);
-        if (lang) {
-          const utter = new SpeechSynthesisUtterance(currentTrans.text);
-          utter.lang = lang;
-          utter.rate = 0.92;
-          utter.onend  = () => advanceRef.current();
-          utter.onerror = (e: Event) => {
-            const err = (e as SpeechSynthesisErrorEvent).error;
-            if (err === 'interrupted' || err === 'canceled') return;
-            advanceRef.current();
-          };
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utter);
-          return;
-        }
-      }
-      advanceRef.current();
-    } else {
-      setPlaying(false);
-      setError('Audio failed to load from the CDN.');
-    }
-  };
-
-  const onEnded = () => {
-    if (!arabic || !currentAyah) return;
-
-    // Arabic ended with translation mode on → switch to translation stage.
-    // This covers both CDN audio and desktop TTS (for TTS, stageUrl===null but
-    // the TTS useEffect will fire once stage becomes 'translation').
-    const cdnTransUrl  = translationAudioUrl(translation, currentAyah.number);
-    const ttsAvailable = isDesktop && !!getTtsLang(translation);
-    if (
-      translationMode && stage === 'arabic' && translation !== 'none' &&
-      (!!cdnTransUrl || ttsAvailable)
-    ) {
-      setStage('translation'); return;
-    }
-
-    // Translation (or Arabic without translation) ended → advance to next ayah.
-    const last = ayahIdx >= arabic.ayahs.length - 1;
-    if (last) {
-      setStage('arabic');
-      if (repeat) setAyahIdx(0);
-      else setPlaying(false);
-      return;
-    }
-
-    if (translationMode) {
-      // Keep stage='translation' during the 400ms gap so stageUrl stays on the
-      // translation URL (already ended). Setting stage='arabic' first would
-      // immediately re-load the same Arabic ayah and cause a spurious replay +
-      // AbortError when ayahIdx advances 400ms later.
-      setTimeout(() => {
-        setStage('arabic');
-        setAyahIdx((i) => i + 1);
-      }, 400);
-    } else {
-      setStage('arabic');
-      setAyahIdx((i) => i + 1);
-    }
-  };
+  // ── Cleanup pool on unmount ────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      poolRef.current.forEach(el => { el.onended = null; el.onerror = null; el.src = ''; });
+      poolRef.current.clear();
+    };
+  }, []);
 
   const toggle  = () => setPlaying((p) => !p);
   const goPrev  = () => { setStage('arabic'); setAyahIdx((i) => Math.max(0, i - 1)); };
@@ -614,7 +693,7 @@ export function QuranPlayer({
               <Languages size={13} className="shrink-0" />
               {webTtsNotice
                 ? 'Audio plays via system TTS on the desktop app — translation shown as text here on web.'
-                : "Spoken audio isn’t available for this translation yet — the Arabic is recited and the translation is shown as text."}
+                : "Spoken audio isn't available for this translation yet — the Arabic is recited and the translation is shown as text."}
             </div>
           </motion.div>
         )}
@@ -723,14 +802,6 @@ export function QuranPlayer({
           </motion.div>
         )}
       </AnimatePresence>
-
-      <audio
-        ref={audioRef}
-        onEnded={onEnded}
-        onError={onTranslationAudioError}
-        preload="auto"
-      />
-      <audio ref={preloadRef} preload="auto" muted aria-hidden style={{ display: 'none' }} />
     </div>
   );
 }

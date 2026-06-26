@@ -28,23 +28,23 @@ class UploadVoiceDto {
 }
 
 @ApiTags('azan')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('azan')
 export class AzanController {
   constructor(private readonly svc: AzanService) {}
 
+  // Public — no auth required. All visitors see the same voice list (built-in +
+  // every community upload). Audio bytes are served by the separate public route.
   @Get('voices')
   voices() {
     return this.svc.voices();
   }
 
-  // Upload a custom Azan clip. Persisted to the DB and immediately listed by
-  // GET /voices for every platform; playable at GET /voices/:id/audio.
+  // Public upload — no account needed so web/desktop users without a login flow
+  // can still share custom Azans with everyone. uploaded_by is null for anonymous
+  // submissions; if a valid JWT is present, the user's id is stored instead.
   @Post('voices')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_AZAN_BYTES } }))
   uploadVoice(
-    @CurrentUser() user: AuthUser,
     @UploadedFile() file: UploadedAudio | undefined,
     @Body() dto: UploadVoiceDto,
     @Req() req: any,
@@ -52,30 +52,36 @@ export class AzanController {
     if (!file?.buffer?.length) throw new BadRequestException('No audio file uploaded.');
     if (!file.mimetype?.startsWith('audio/')) throw new BadRequestException('File must be an audio clip.');
     if (file.size > MAX_AZAN_BYTES) throw new BadRequestException('Audio file is too large (max 6 MB).');
-    // Build an absolute, publicly-fetchable URL for the audio route. Prefer an
-    // explicit PUBLIC_API_URL (set behind the HF/Spaces proxy); else derive it.
     const proto = (req.headers?.['x-forwarded-proto'] as string) || req.protocol || 'https';
     const host = req.get?.('host');
     const base = process.env.PUBLIC_API_URL || `${proto}://${host}/v1`;
+    // req.user is populated by JwtAuthGuard when a valid token is present; null otherwise.
+    const userId: string | null = (req.user as AuthUser | null)?.id ?? null;
     return this.svc.createCustomVoice(
-      user.id,
+      userId,
       { name: dto.name, durationMs: Number(dto.duration_ms) || 0, sizeBytes: file.size, mime: file.mimetype, data: file.buffer },
       base,
     );
   }
 
-  // Delete one of the current user's own custom clips.
+  // Auth-required: only the uploader can delete their own clip.
   @Delete('voices/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.svc.deleteCustomVoice(user.id, id);
   }
 
   @Get('settings')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   get(@CurrentUser() user: AuthUser) {
     return this.svc.getSettings(user.id);
   }
 
   @Put('settings')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateAzanSettingsDto) {
     return this.svc.updateSettings(user.id, dto);
   }

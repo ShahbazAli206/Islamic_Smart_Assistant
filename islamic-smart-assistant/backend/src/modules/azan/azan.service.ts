@@ -27,7 +27,7 @@ export class AzanService {
   /** Persist a user-uploaded custom Azan clip (bytes stored inline in Postgres
    *  so it's available to web, desktop and mobile via the public audio route). */
   async createCustomVoice(
-    userId: string,
+    userId: string | null,
     input: { name?: string; durationMs: number; sizeBytes: number; mime: string; data: Buffer },
     baseUrl: string,
   ) {

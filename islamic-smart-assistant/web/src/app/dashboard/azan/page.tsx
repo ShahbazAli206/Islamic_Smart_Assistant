@@ -681,7 +681,14 @@ export default function AzanPage() {
       if (!duaId) setDuaId(meta.id);
     } else {
       setCustomAzans((prev) => [meta, ...prev]);
-      setSelectedId(meta.id);
+      // Do NOT auto-select — user must click "Set as Default" explicitly.
+      // Refresh the backend list so the uploaded clip's public audio_url is available.
+      Azan.voices()
+        .then((vs) => setRemoteCustoms(
+          vs.filter((v) => v.is_custom && v.audio_url)
+            .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms })),
+        ))
+        .catch(() => {});
     }
     setUploaderOpen(false);
     setUploadType(null);
