@@ -49,6 +49,13 @@ type AzanVoice = {
 const VOICES: AzanVoice[] = [
   // ── ★ Popular · 🎧 Most Listened (shown by default) ──────────────────────
   {
+    id: 'azan-best-sound-quality', name: 'Azan — Best Sound Quality', subtitle: 'Crystal clear HD recording',
+    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '2:46',
+    badge: 'popular', tags: ['Most Listened'],
+    local: '/audio/Azan Best Sound quality.mp3', remote: '/audio/Azan Best Sound quality.mp3',
+    art: '/azan/makkah.svg', accent: 'from-emerald-500 to-teal-700',
+  },
+  {
     id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
     region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
     badge: 'popular', tags: ['Most Listened'],
