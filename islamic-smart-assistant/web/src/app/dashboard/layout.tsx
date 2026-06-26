@@ -164,7 +164,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen lg:flex dashboard-zoom">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden lg:flex dashboard-zoom">
       {/* ── Mobile top bar: hamburger + brand + quick-access (hidden on lg+) ── */}
       {/* mobile top bar with menu button (hidden on lg+) */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-mosque-gradient text-parchment px-4 py-3 shadow-md">
@@ -222,7 +222,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Sidebar: off-canvas drawer on mobile, fixed rail from lg up ── */}
       <aside
-        className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 z-50 w-72 shrink-0 ${t.text} ${t.sidebarBorder} p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${!isDark ? 'backdrop-blur-md' : ''} ${
+        className={`fixed lg:relative inset-y-0 lg:h-full left-0 z-50 w-72 shrink-0 ${t.text} ${t.sidebarBorder} p-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-out lg:translate-x-0 ${!isDark ? 'backdrop-blur-md' : ''} ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={isDark
