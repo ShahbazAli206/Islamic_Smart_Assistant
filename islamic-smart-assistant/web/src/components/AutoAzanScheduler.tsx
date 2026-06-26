@@ -88,23 +88,22 @@ function getAnnouncementText(prayer: string, lang: string): string {
   }
 }
 
-/** Speak `text` via the browser's TTS engine, resolving when done/cancelled/error.
- *  Falls back to English when the OS has no voice for the requested language. */
-function speakTTS(text: string, lang: string, fallbackText = 'Prayer time'): Promise<void> {
+/** Speak `text` via the browser's TTS engine, resolving when done/cancelled/error. */
+function speakTTS(text: string, lang: string): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) { resolve(); return; }
     window.speechSynthesis.cancel();
-    // Chrome fires onend immediately (without speaking) if speak() is called right
-    // after cancel() — wait one tick to let the cancellation flush.
-    setTimeout(() => {
-      // getVoices() returns [] before the list loads — treat that as "try anyway".
-      // If voices ARE known and none match the target language, fall back to English
-      // so the user hears something instead of silence.
+
+    const doSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
       const langPrefix = lang.split('-')[0];
-      const hasVoice = voices.length === 0 || voices.some(v => v.lang.startsWith(langPrefix));
-      const utter = new SpeechSynthesisUtterance(hasVoice ? text : fallbackText);
-      utter.lang = hasVoice ? lang : 'en-US';
+      // Explicitly setting utter.voice is far more reliable than utter.lang alone —
+      // Chrome often silently drops utterances when only lang is set.
+      const matched = voices.find(v => v.lang === lang)
+        || voices.find(v => v.lang.startsWith(langPrefix));
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang;
+      if (matched) utter.voice = matched;
       utter.rate = 0.88;
       utter.pitch = 1.05;
       // Chrome pauses speechSynthesis when the tab is in the background.
@@ -118,6 +117,24 @@ function speakTTS(text: string, lang: string, fallbackText = 'Prayer time'): Pro
       utter.onend   = done;
       utter.onerror = done;
       window.speechSynthesis.speak(utter);
+    };
+
+    // Chrome fires onend immediately (without speaking) if speak() is called right
+    // after cancel() — wait one tick to let the cancellation flush.
+    // Also: getVoices() is async on first load; wait for voiceschanged so we can
+    // assign utter.voice explicitly.
+    setTimeout(() => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        doSpeak();
+      } else {
+        const onReady = () => {
+          window.speechSynthesis.removeEventListener('voiceschanged', onReady);
+          doSpeak();
+        };
+        window.speechSynthesis.addEventListener('voiceschanged', onReady);
+        setTimeout(doSpeak, 800); // fallback if voiceschanged never fires
+      }
     }, 150);
   });
 }
@@ -185,7 +202,10 @@ export function AutoAzanScheduler() {
   // Currently-firing prayer name (needed inside advanceQueueRef for pending state)
   const firingPrayerRef = useRef<string | null>(null);
 
+  const [azanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
   const [castDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
+  const azanDeviceIdsRef = useRef(azanDeviceIds);
+  azanDeviceIdsRef.current = azanDeviceIds;
   const castDeviceIdRef = useRef(castDeviceId);
   castDeviceIdRef.current = castDeviceId;
   const castClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -291,27 +311,31 @@ export function AutoAzanScheduler() {
     const v = freshVoice;
     const { name: voiceLabel } = resolveVoiceInfo(v);
 
-    // LAN device (Chromecast/DLNA) — cast the main azan and return
+    // LAN devices (Chromecast/DLNA) — cast the main azan on all selected devices simultaneously
     const lanPath = azanLocalPath(v);
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    if (castDeviceIdRef.current && desktopApi && lanPath) {
-      try {
-        await desktopApi.play({
-          deviceId: castDeviceIdRef.current,
-          source: { kind: 'lan', path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url },
-          title: `Adhan — ${voiceLabel}`,
-        });
+    // Use the multi-select list; fall back to the legacy single-device key for existing users
+    const effectiveIds = azanDeviceIdsRef.current.length > 0
+      ? azanDeviceIdsRef.current
+      : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
+    if (effectiveIds.length > 0 && desktopApi && lanPath) {
+      const source = { kind: 'lan' as const, path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url };
+      const results = await Promise.allSettled(
+        effectiveIds.map((id) => desktopApi.play({ deviceId: id, source, title: `Adhan — ${voiceLabel}` }))
+      );
+      const anyOk = results.some((r) => r.status === 'fulfilled');
+      if (anyOk) {
         setFiring({ prayer, voiceId: v });
         firingRef.current = true;
         clearCastTimer();
         castClearTimerRef.current = setTimeout(() => setFiring(null), 4 * 60_000);
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel} on your device`, silent: true });
+          const deviceWord = effectiveIds.length > 1 ? 'your devices' : 'your device';
+          new Notification(`${prayer} prayer time`, { body: `Playing ${voiceLabel} on ${deviceWord}`, silent: true });
         }
         return;
-      } catch {
-        // Device unreachable — fall through to local playback
       }
+      // All devices unreachable — fall through to local playback
     }
 
     // Resolve main azan src
@@ -334,11 +358,7 @@ export function AutoAzanScheduler() {
     // ── 1. TTS announcement ──
     if (announceRef.current) {
       const lang = languageRef.current;
-      await speakTTS(
-        getAnnouncementText(prayer, lang),
-        LANG_CODES[lang] ?? 'en-US',
-        `${prayer} prayer time`,
-      );
+      await speakTTS(getAnnouncementText(prayer, lang), LANG_CODES[lang] ?? 'en-US');
       if (abortRef.current) return;
     }
 
@@ -431,9 +451,13 @@ export function AutoAzanScheduler() {
     firingRef.current = false;
     firingPrayerRef.current = null;
     clearCastTimer();
-    const id = castDeviceIdRef.current;
     const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    if (id && api) { try { api.stop({ deviceId: id }); } catch {} }
+    if (api) {
+      const ids = azanDeviceIdsRef.current.length > 0
+        ? azanDeviceIdsRef.current
+        : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
+      ids.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
+    }
     setFiring(null);
     setMinimized(false);
     if (typeof window !== 'undefined') {

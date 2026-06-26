@@ -427,23 +427,37 @@ export default function SettingsPage() {
                       es: 'Es hora de la oración de Fajr',
                     };
                     window.speechSynthesis.cancel();
-                    setTimeout(() => {
-                      // Check if the OS has a voice for the selected language.
-                      // getVoices() returns [] before the list loads — treat that as
-                      // "unknown, try anyway". If voices ARE loaded and none match,
-                      // fall back to English so the user always hears something.
+                    const doSpeak = () => {
                       const voices = window.speechSynthesis.getVoices();
                       const wantedCode = LANG_CODES_TTS[language] ?? 'en-US';
-                      const wantedPrefix = wantedCode.split('-')[0];
-                      const hasVoice = voices.length === 0 || voices.some(v => v.lang.startsWith(wantedPrefix));
-                      const u = new SpeechSynthesisUtterance(
-                        hasVoice ? (SAMPLE[language] ?? 'Fajr prayer time') : 'Fajr prayer time'
-                      );
-                      u.lang = hasVoice ? wantedCode : 'en-US';
+                      const langPrefix = wantedCode.split('-')[0];
+                      // Explicitly setting u.voice is far more reliable than u.lang
+                      // alone — Chrome often silently drops utterances when only lang
+                      // is set and the browser has to guess which voice to use.
+                      const matched = voices.find(v => v.lang === wantedCode)
+                        || voices.find(v => v.lang.startsWith(langPrefix));
+                      const u = new SpeechSynthesisUtterance(SAMPLE[language] ?? 'Fajr prayer time');
+                      u.lang = wantedCode;
+                      if (matched) u.voice = matched;
                       u.rate = 0.88;
                       u.pitch = 1.05;
                       window.speechSynthesis.speak(u);
-                    }, 100);
+                    };
+                    // getVoices() is async on first load in Chrome — wait for the
+                    // voiceschanged event so we can assign u.voice explicitly.
+                    setTimeout(() => {
+                      const voices = window.speechSynthesis.getVoices();
+                      if (voices.length > 0) {
+                        doSpeak();
+                      } else {
+                        const onReady = () => {
+                          window.speechSynthesis.removeEventListener('voiceschanged', onReady);
+                          doSpeak();
+                        };
+                        window.speechSynthesis.addEventListener('voiceschanged', onReady);
+                        setTimeout(doSpeak, 800); // fallback if event never fires
+                      }
+                    }, 150);
                   }}
                   className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border transition ${
                     isDark
