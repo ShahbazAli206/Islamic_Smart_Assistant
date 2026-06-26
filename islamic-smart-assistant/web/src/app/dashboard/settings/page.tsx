@@ -56,6 +56,21 @@ const accentMap: Record<string, { bg: string; text: string; border: string; badg
   rose:   { bg: 'bg-rose-50 dark:bg-rose-900/20',   text: 'text-rose-700 dark:text-rose-300',   border: 'border-rose-200 dark:border-rose-700/40',   badge: 'bg-rose-500'  },
 };
 
+const AYAH_TRANSLATION: Record<string, string> = {
+  en: 'Establish prayer at the decline of the sun until the darkness of the night.',
+  ar: 'أقم الصلاة لدلوك الشمس إلى غسق الليل',
+  ur: 'نماز قائم کرو سورج کے ڈھلنے سے رات کے اندھیرے تک۔',
+  tr: 'Güneşin batıya meyletmesinden gecenin karanlığına kadar namazı kıl.',
+  fr: "Établis la prière au déclin du soleil jusqu'aux ténèbres de la nuit.",
+  id: 'Dirikanlah shalat sejak matahari tergelincir hingga kegelapan malam.',
+  ms: 'Dirikanlah solat dari waktu gelincir matahari sehingga ke gelap malam.',
+  bn: 'সূর্য ঢলে পড়া থেকে রাতের অন্ধকার পর্যন্ত সালাত কায়েম করো।',
+  hi: 'सूर्य के ढलने से रात के अंधेरे तक नमाज़ क़ायम करो।',
+  de: 'Verrichte das Gebet beim Sinken der Sonne bis zur Dunkelheit der Nacht.',
+  es: 'Establece la oración desde el declive del sol hasta la oscuridad de la noche.',
+  zh: '从太阳偏斜直到黑夜来临，你当谨守拜功。',
+};
+
 // ── Shared UI pieces ───────────────────────────────────────────────────────
 
 function Toggle({ on, onToggle, isDark }: { on: boolean; onToggle: () => void; isDark: boolean }) {
@@ -256,380 +271,426 @@ export default function SettingsPage() {
   const labelCls = `block text-xs font-semibold mb-1.5 ${isDark ? 'text-white/40' : 'text-black/50'}`;
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div
+      className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
+      style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
+    >
 
-      {/* ── Page header ── */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'}`}>
-          <Settings size={20} className={isDark ? 'text-emerald-400' : 'text-emerald-700'} />
-        </div>
-        <div>
-          <h1 className={`text-2xl font-bold leading-tight ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>Settings</h1>
-          <p className={`text-sm ${isDark ? 'text-white/40' : 'text-black/50'}`}>Manage your preferences</p>
-        </div>
-      </div>
+      {/* ── Hero section ── */}
+      <div className="relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Overview_Light_Theme_Updated background images first section.png"
+          alt=""
+          className="absolute inset-0 h-full w-full select-none object-cover object-center"
+        />
 
-      {/* ── Main 2-col grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
-
-        {/* ══ Left: Smart Azan Settings ══ */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className={`rounded-xl overflow-hidden border flex flex-col shadow-[0_4px_20px_-4px_rgba(16,185,129,0.22)] ${
-            isDark ? 'border-emerald-800/40' : 'border-emerald-200'
-          }`}
-        >
-          {/* Gradient header */}
-          <div
-            className="relative overflow-hidden px-5 py-4 shrink-0"
-            style={{ background: 'linear-gradient(135deg,#064e3b 0%,#065f46 55%,#047857 100%)' }}
-          >
-            {/* arabesque overlay */}
-            <div
-              aria-hidden
-              className="absolute inset-0 opacity-[0.07]"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 0L25 8H15L20 0zM20 40L15 32H25L20 40zM0 20L8 15V25L0 20zM40 20L32 25V15L40 20z'/%3E%3C/g%3E%3C/svg%3E")`,
-              }}
-            />
-            <div className="relative flex items-center gap-3">
-              <motion.span
-                className="w-10 h-10 grid place-items-center rounded-xl bg-white/15 text-white shrink-0"
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Activity size={20} />
-              </motion.span>
-              <div className="flex-1">
-                <h2 className="font-bold text-white text-lg leading-tight">Smart Azan Settings</h2>
-                <p className="text-emerald-200/70 text-xs mt-0.5">Personalise every call to prayer</p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/20 text-emerald-200 text-xs font-semibold px-3 py-1 shrink-0">
-                <Sparkles size={12} /> Smart
-              </span>
+        <div className="relative px-6 sm:px-10 pt-5 pb-8 flex flex-wrap items-start justify-between gap-4">
+          {/* Left: badge + heading + subtitle */}
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
+              <Settings size={12} /> Settings
+            </span>
+            <h1
+              className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] text-black"
+              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}
+            >
+              Personalise your prayer experience
+            </h1>
+            <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <p className="text-base sm:text-lg leading-relaxed text-black/85">
+                Configure your Azan voice, location, school of thought and notification preferences.
+              </p>
             </div>
           </div>
 
-          {/* Body: relative so the mosque silhouette can be absolutely placed */}
-          <div className={`relative px-5 flex-1 overflow-hidden ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
-            {/* Mosque silhouette watermark */}
-            <MosqueSilhouette
-              className={`absolute bottom-0 right-0 w-64 pointer-events-none select-none ${
-                isDark ? 'text-emerald-700/25' : 'text-emerald-100'
-              }`}
-            />
-            {/* subtle radial glow behind silhouette in dark mode */}
-            {isDark && (
+          {/* Right: Ayah card */}
+          <div className="hidden md:block" style={{ maxWidth: '360px' }}>
+            <div className="rounded-3xl border border-white/70 bg-white/55 p-5 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(16,40,30,0.25)]">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
+                    ٧٨
+                  </span>
+                  <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
+                    أَقِمِ الصَّلَاةَ لِدُلُوكِ الشَّمْسِ إِلَىٰ غَسَقِ اللَّيْلِ
+                  </p>
+                </div>
+                <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
+                  {AYAH_TRANSLATION[language] ?? AYAH_TRANSLATION.en}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Isra (17:78)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content area ── */}
+      <div className="px-6 sm:px-10 py-6 flex flex-col gap-4">
+
+        {/* ── Main 2-col grid (items-start so Smart Azan card doesn't stretch) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 items-start">
+
+          {/* ══ Left: Smart Azan Settings ══ */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className={`rounded-xl overflow-hidden border shadow-[0_4px_20px_-4px_rgba(16,185,129,0.22)] ${
+              isDark ? 'border-emerald-800/40' : 'border-emerald-200'
+            }`}
+          >
+            {/* Gradient header */}
+            <div
+              className="relative overflow-hidden px-5 py-4 shrink-0"
+              style={{ background: 'linear-gradient(135deg,#064e3b 0%,#065f46 55%,#047857 100%)' }}
+            >
+              {/* arabesque overlay */}
               <div
                 aria-hidden
-                className="absolute bottom-0 right-0 w-72 h-40 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.07) 0%, transparent 70%)' }}
-              />
-            )}
-
-            {/* Prayer announcement row — inline so we can add the Test button */}
-            <div className={`flex items-center gap-3.5 py-3 border-b ${isDark ? 'border-white/5' : 'border-emerald-50'}`}>
-              <span className={`w-9 h-9 shrink-0 grid place-items-center rounded-xl ${
-                isDark ? 'bg-white/10 text-emerald-400'
-                       : `${azanAnnounce ? 'bg-emerald-100' : 'bg-slate-100'} ${azanAnnounce ? 'text-emerald-600' : 'text-slate-400'}`
-              }`}>
-                <Mic2 size={16} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold leading-tight ${
-                  azanAnnounce ? isDark ? 'text-emerald-50' : 'text-emerald-950'
-                               : isDark ? 'text-white/40'   : 'text-emerald-950/50'
-                }`}>Prayer announcement</p>
-                <p className={`text-xs mt-0.5 ${isDark ? 'text-white/30' : 'text-emerald-900/45'}`}>
-                  Speak prayer name before Azan
-                </p>
-              </div>
-              {/* Test button — speaks a sample announcement in the user's language */}
-              <button
-                onClick={() => {
-                  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-                  const LANG_CODES_TTS: Record<string, string> = {
-                    en:'en-US', ar:'ar-SA', ur:'ur-PK', fr:'fr-FR', tr:'tr-TR',
-                    id:'id-ID', ms:'ms-MY', bn:'bn-BD', de:'de-DE', es:'es-ES', hi:'hi-IN',
-                  };
-                  const SAMPLE: Record<string, string> = {
-                    en: 'Fajr prayer time',
-                    ar: 'حان وقت صلاة الفجر',
-                    ur: 'فجر کی نماز کا وقت آ گیا',
-                    fr: "Il est l'heure de la prière de Fajr",
-                    tr: 'Sabah namazı vakti geldi',
-                    id: 'Waktu sholat Subuh telah tiba',
-                    ms: 'Waktu solat Subuh telah tiba',
-                    bn: 'ফজর নামাযের সময় হয়েছে',
-                    hi: 'फजर की नमाज़ का वक्त हो गया है',
-                    de: 'Es ist Zeit für das Sabah-Gebet',
-                    es: 'Es hora de la oración de Fajr',
-                  };
-                  window.speechSynthesis.cancel();
-                  setTimeout(() => {
-                    const u = new SpeechSynthesisUtterance(SAMPLE[language] ?? 'Fajr prayer time');
-                    u.lang = LANG_CODES_TTS[language] ?? 'en-US';
-                    u.rate = 0.88;
-                    u.pitch = 1.05;
-                    window.speechSynthesis.speak(u);
-                  }, 100);
+                className="absolute inset-0 opacity-[0.07]"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 0L25 8H15L20 0zM20 40L15 32H25L20 40zM0 20L8 15V25L0 20zM40 20L32 25V15L40 20z'/%3E%3C/g%3E%3C/svg%3E")`,
                 }}
-                className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border transition ${
-                  isDark
-                    ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-                    : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                }`}
-              >
-                Test
-              </button>
-              <Toggle on={azanAnnounce} onToggle={() => { const n = !azanAnnounce; setAzanAnnounce(n); persist('isa:azanAnnounce', n); }} isDark={isDark} />
-            </div>
-            <AzanRow
-              icon={<Clock size={16} />} title="Auto play before prayer" sub="2 min before adhan"
-              on={azanAutoplayBefore} isDark={isDark}
-              onToggle={() => { const n = !azanAutoplayBefore; setAzanAutoplayBefore(n); persist('isa:azanAutoplayBefore', n); }}
-            />
-            <AzanRow
-              icon={<Volume2 size={16} />} title="Different voices" sub="For each prayer"
-              on={azanDiffVoices} isDark={isDark}
-              onToggle={() => { const n = !azanDiffVoices; setAzanDiffVoices(n); persist('isa:azanDifferentVoices', n); }}
-            />
-            <AzanRow
-              icon={<Activity size={16} />} title="Volume control" sub="Auto adjust"
-              on={azanVolumeAuto} isDark={isDark}
-              onToggle={() => { const n = !azanVolumeAuto; setAzanVolumeAuto(n); persist('isa:azanVolumeAuto', n); }}
-            />
-            <AzanRow
-              icon={<Calendar size={16} />} title="Weekend mode" sub="Custom schedule"
-              on={azanWeekend} isDark={isDark}
-              iconBg={azanWeekend ? 'bg-emerald-100' : 'bg-slate-100'}
-              iconColor={azanWeekend ? 'text-emerald-600' : 'text-slate-400'}
-              onToggle={() => { const n = !azanWeekend; setAzanWeekend(n); persist('isa:azanWeekendMode', n); }}
-              last
-            />
-          </div>
-
-          {/* Footer */}
-          <div className={`px-5 pb-5 pt-2 shrink-0 ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
-            <Link
-              href="/dashboard/azan"
-              className="group flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg,#065f46 0%,#047857 100%)' }}
-            >
-              <Settings size={15} className="opacity-80" />
-              Advanced Settings
-              <ChevronRight size={15} className="ml-auto opacity-60 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-            {favCount > 0 && (
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-rose-400 font-semibold">
-                <Heart size={12} fill="currentColor" /> {favCount} favorite saved
-              </p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* ══ Right: stacked cards ══ */}
-        <div className="flex flex-col gap-3">
-
-          {/* Location */}
-          <SectionCard title="Location" icon={<MapPin size={16} />} isDark={isDark}>
-            <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-              <div>
-                <label className={labelCls}>City</label>
-                <input
-                  value={city}
-                  onChange={(e) => { setCity(e.target.value); setSaved(false); setLocErr(''); }}
-                  placeholder="e.g. Karak"
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Country</label>
-                <input
-                  value={country}
-                  onChange={(e) => { setCountry(e.target.value); setSaved(false); setLocErr(''); }}
-                  placeholder="e.g. Pakistan"
-                  className={inputCls}
-                />
-              </div>
-            </div>
-            {locErr && <p className="mb-2.5 text-xs text-rose-500">{locErr}</p>}
-            <button
-              onClick={saveLocation}
-              disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-60 transition"
-            >
-              {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
-               : saved ? <><Check size={14} /> Saved!</>
-               : 'Save Location'}
-            </button>
-          </SectionCard>
-
-          {/* ── Pre & Post Azan Audio ── */}
-          <SectionCard
-            title="Pre & Post Azan Audio"
-            icon={<Music2 size={16} />}
-            isDark={isDark}
-            noPad
-          >
-            <div className="px-5 py-4">
-              {/* Enable toggle */}
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <div>
-                  <p className={`text-sm font-semibold ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>
-                    Auto-play Durood &amp; Dua
-                  </p>
-                  <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-black/45'}`}>
-                    Play alongside every Azan automatically
-                  </p>
+              />
+              <div className="relative flex items-center gap-3">
+                <motion.span
+                  className="w-10 h-10 grid place-items-center rounded-xl bg-white/15 text-white shrink-0"
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Activity size={20} />
+                </motion.span>
+                <div className="flex-1">
+                  <h2 className="font-bold text-white text-lg leading-tight">Smart Azan Settings</h2>
+                  <p className="text-emerald-200/70 text-xs mt-0.5">Personalise every call to prayer</p>
                 </div>
-                <Toggle on={prePostEnabled} onToggle={() => { const n = !prePostEnabled; setPrePostEnabled(n); persist('isa:prePostEnabled', n); }} isDark={isDark} />
-              </div>
-
-              {/* Queue stats */}
-              <div className="grid grid-cols-2 gap-2.5 mb-4">
-                <div className={`rounded-xl p-3 border ${
-                  isDark ? 'bg-white/5 border-white/10' : 'bg-emerald-50 border-emerald-100'
-                }`}>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-emerald-600 font-bold text-sm">⏮</span>
-                    <p className={`text-xs font-semibold ${isDark ? 'text-white/50' : 'text-emerald-700'}`}>Before Azan</p>
-                  </div>
-                  <p className={`text-xl font-bold leading-none ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                    {preAzanQueue.length}
-                  </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/30' : 'text-emerald-900/40'}`}>
-                    {preAzanQueue.length === 0 ? 'None selected' : preAzanQueue.map(q => q.name).join(', ')}
-                  </p>
-                </div>
-                <div className={`rounded-xl p-3 border ${
-                  isDark ? 'bg-white/5 border-white/10' : 'bg-amber-50 border-amber-100'
-                }`}>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-amber-600 font-bold text-sm">⏭</span>
-                    <p className={`text-xs font-semibold ${isDark ? 'text-amber-300/70' : 'text-amber-700'}`}>After Azan</p>
-                  </div>
-                  <p className={`text-xl font-bold leading-none ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                    {postAzanQueue.length}
-                  </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/30' : 'text-amber-900/40'}`}>
-                    {postAzanQueue.length === 0 ? 'None selected' : postAzanQueue.map(q => q.name).join(', ')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Hint */}
-              <p className={`text-xs mb-3 leading-relaxed ${isDark ? 'text-white/35' : 'text-emerald-900/45'}`}>
-                Upload your own Durood Sharif or Dua recordings and assign them to play before or after every Azan — individually or in sequence.
-              </p>
-
-              {/* Link to Azan Voices */}
-              <Link
-                href="/dashboard/azan"
-                className={`flex items-center justify-between gap-2 w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition group ${
-                  isDark
-                    ? 'border-emerald-700/50 bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50'
-                    : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Music2 size={14} className="opacity-70" />
-                  Configure in Azan Voices
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/20 text-emerald-200 text-xs font-semibold px-3 py-1 shrink-0">
+                  <Sparkles size={12} /> Smart
                 </span>
-                <ArrowRight size={14} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-          </SectionCard>
-
-          {/* School of Thought + Translation Language side-by-side */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <SectionCard
-              title="School of Thought"
-              isDark={isDark}
-              icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M2 22h20M6 18V12M18 18V12M10 18V12M14 18V12M12 2l4 4H8l4-4zM4 12h16" />
-                </svg>
-              }
-            >
-              <div className="flex flex-wrap gap-2">
-                {SECTS.map((s) => (
-                  <Pill key={s.id} label={s.label} active={activeSectId === s.id} onClick={() => selectSect(s.id)} isDark={isDark} />
-                ))}
               </div>
-            </SectionCard>
-
-            <SectionCard title="Translation Language" icon={<Globe size={16} />} isDark={isDark}>
-              <div className="flex flex-wrap gap-2">
-                {LANGUAGES.map((l) => (
-                  <Pill key={l.id} label={l.label} active={language === l.id} onClick={() => selectLang(l.id)} isDark={isDark} />
-                ))}
-              </div>
-            </SectionCard>
-          </div>
-
-          {/* Auto Azan */}
-          <SectionCard
-            title="Auto Azan"
-            isDark={isDark}
-            icon={azanOn ? <BellRing size={16} /> : <BellOff size={16} className="text-rose-500" />}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <p className={`text-sm leading-relaxed ${isDark ? 'text-white/50' : 'text-black/60'}`}>
-                {azanOn
-                  ? 'Azan plays automatically at prayer times in this browser tab.'
-                  : 'Turn on to hear the call to prayer at Fajr, Dhuhr, Asr, Maghrib & Isha.'}
-              </p>
-              <Toggle on={azanOn} onToggle={toggleAzan} isDark={isDark} />
             </div>
-          </SectionCard>
-        </div>
-      </div>
 
-      {/* ── Coming Soon ── */}
-      <div className="mt-2">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={18} className="text-amber-500" />
-          <h2 className={`text-lg font-bold ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>Coming Soon</h2>
-          <span className={`ml-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-            isDark ? 'bg-amber-900/40 text-amber-300' : 'bg-amber-100 text-amber-700'
-          }`}>In Development</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          {COMING_SOON.map((item, i) => {
-            const ac = accentMap[item.accent];
-            return (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.06 }}
-                className={`relative rounded-xl border p-4 overflow-hidden ${
-                  isDark ? 'bg-[#0d1f17] border-emerald-800/30' : 'bg-white border-emerald-100'
+            {/* Body: relative so the mosque silhouette can be absolutely placed */}
+            <div className={`relative px-5 overflow-hidden ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
+              {/* Mosque silhouette watermark */}
+              <MosqueSilhouette
+                className={`absolute bottom-0 right-0 w-64 pointer-events-none select-none ${
+                  isDark ? 'text-emerald-700/25' : 'text-emerald-100'
                 }`}
-              >
-                {/* Coming Soon badge */}
-                <span className={`absolute top-3 right-3 text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${ac.badge}`}>
-                  Soon
-                </span>
-
-                {/* subtle blur dot */}
+              />
+              {/* subtle radial glow behind silhouette in dark mode */}
+              {isDark && (
                 <div
                   aria-hidden
-                  className={`absolute -top-4 -left-4 w-20 h-20 rounded-full blur-2xl opacity-30 ${ac.badge}`}
+                  className="absolute bottom-0 right-0 w-72 h-40 pointer-events-none"
+                  style={{ background: 'radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.07) 0%, transparent 70%)' }}
                 />
+              )}
 
-                <div className="relative">
-                  <span className="text-3xl leading-none">{item.emoji}</span>
-                  <h3 className={`mt-2 font-bold text-sm ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>{item.title}</h3>
-                  <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-white/40' : 'text-black/50'}`}>{item.desc}</p>
+              {/* Prayer announcement row — inline so we can add the Test button */}
+              <div className={`flex items-center gap-3.5 py-3 border-b ${isDark ? 'border-white/5' : 'border-emerald-50'}`}>
+                <span className={`w-9 h-9 shrink-0 grid place-items-center rounded-xl ${
+                  isDark ? 'bg-white/10 text-emerald-400'
+                         : `${azanAnnounce ? 'bg-emerald-100' : 'bg-slate-100'} ${azanAnnounce ? 'text-emerald-600' : 'text-slate-400'}`
+                }`}>
+                  <Mic2 size={16} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold leading-tight ${
+                    azanAnnounce ? isDark ? 'text-emerald-50' : 'text-emerald-950'
+                                 : isDark ? 'text-white/40'   : 'text-emerald-950/50'
+                  }`}>Prayer announcement</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-white/30' : 'text-emerald-900/45'}`}>
+                    Speak prayer name before Azan
+                  </p>
                 </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+                {/* Test button */}
+                <button
+                  onClick={() => {
+                    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+                    const LANG_CODES_TTS: Record<string, string> = {
+                      en:'en-US', ar:'ar-SA', ur:'ur-PK', fr:'fr-FR', tr:'tr-TR',
+                      id:'id-ID', ms:'ms-MY', bn:'bn-BD', de:'de-DE', es:'es-ES', hi:'hi-IN',
+                    };
+                    const SAMPLE: Record<string, string> = {
+                      en: 'Fajr prayer time',
+                      ar: 'حان وقت صلاة الفجر',
+                      ur: 'فجر کی نماز کا وقت آ گیا',
+                      fr: "Il est l'heure de la prière de Fajr",
+                      tr: 'Sabah namazı vakti geldi',
+                      id: 'Waktu sholat Subuh telah tiba',
+                      ms: 'Waktu solat Subuh telah tiba',
+                      bn: 'ফজর নামাযের সময় হয়েছে',
+                      hi: 'फजर की नमाज़ का वक्त हो गया है',
+                      de: 'Es ist Zeit für das Sabah-Gebet',
+                      es: 'Es hora de la oración de Fajr',
+                    };
+                    window.speechSynthesis.cancel();
+                    setTimeout(() => {
+                      const u = new SpeechSynthesisUtterance(SAMPLE[language] ?? 'Fajr prayer time');
+                      u.lang = LANG_CODES_TTS[language] ?? 'en-US';
+                      u.rate = 0.88;
+                      u.pitch = 1.05;
+                      window.speechSynthesis.speak(u);
+                    }, 100);
+                  }}
+                  className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border transition ${
+                    isDark
+                      ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                      : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                  }`}
+                >
+                  Test
+                </button>
+                <Toggle on={azanAnnounce} onToggle={() => { const n = !azanAnnounce; setAzanAnnounce(n); persist('isa:azanAnnounce', n); }} isDark={isDark} />
+              </div>
+              <AzanRow
+                icon={<Clock size={16} />} title="Auto play before prayer" sub="2 min before adhan"
+                on={azanAutoplayBefore} isDark={isDark}
+                onToggle={() => { const n = !azanAutoplayBefore; setAzanAutoplayBefore(n); persist('isa:azanAutoplayBefore', n); }}
+              />
+              <AzanRow
+                icon={<Volume2 size={16} />} title="Different voices" sub="For each prayer"
+                on={azanDiffVoices} isDark={isDark}
+                onToggle={() => { const n = !azanDiffVoices; setAzanDiffVoices(n); persist('isa:azanDifferentVoices', n); }}
+              />
+              <AzanRow
+                icon={<Activity size={16} />} title="Volume control" sub="Auto adjust"
+                on={azanVolumeAuto} isDark={isDark}
+                onToggle={() => { const n = !azanVolumeAuto; setAzanVolumeAuto(n); persist('isa:azanVolumeAuto', n); }}
+              />
+              <AzanRow
+                icon={<Calendar size={16} />} title="Weekend mode" sub="Custom schedule"
+                on={azanWeekend} isDark={isDark}
+                iconBg={azanWeekend ? 'bg-emerald-100' : 'bg-slate-100'}
+                iconColor={azanWeekend ? 'text-emerald-600' : 'text-slate-400'}
+                onToggle={() => { const n = !azanWeekend; setAzanWeekend(n); persist('isa:azanWeekendMode', n); }}
+                last
+              />
+            </div>
 
+            {/* Footer */}
+            <div className={`px-5 pb-5 pt-2 shrink-0 ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
+              <Link
+                href="/dashboard/azan"
+                className="group flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg,#065f46 0%,#047857 100%)' }}
+              >
+                <Settings size={15} className="opacity-80" />
+                Advanced Settings
+                <ChevronRight size={15} className="ml-auto opacity-60 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              {favCount > 0 && (
+                <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-rose-400 font-semibold">
+                  <Heart size={12} fill="currentColor" /> {favCount} favorite saved
+                </p>
+              )}
+            </div>
+          </motion.div>
+
+          {/* ══ Right: stacked cards ══ */}
+          <div className="flex flex-col gap-3">
+
+            {/* Location */}
+            <SectionCard title="Location" icon={<MapPin size={16} />} isDark={isDark}>
+              <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+                <div>
+                  <label className={labelCls}>City</label>
+                  <input
+                    value={city}
+                    onChange={(e) => { setCity(e.target.value); setSaved(false); setLocErr(''); }}
+                    placeholder="e.g. Karak"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Country</label>
+                  <input
+                    value={country}
+                    onChange={(e) => { setCountry(e.target.value); setSaved(false); setLocErr(''); }}
+                    placeholder="e.g. Pakistan"
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+              {locErr && <p className="mb-2.5 text-xs text-rose-500">{locErr}</p>}
+              <button
+                onClick={saveLocation}
+                disabled={saving}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-60 transition"
+              >
+                {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                 : saved ? <><Check size={14} /> Saved!</>
+                 : 'Save Location'}
+              </button>
+            </SectionCard>
+
+            {/* ── Pre & Post Azan Audio ── */}
+            <SectionCard
+              title="Pre & Post Azan Audio"
+              icon={<Music2 size={16} />}
+              isDark={isDark}
+              noPad
+            >
+              <div className="px-5 py-4">
+                {/* Enable toggle */}
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <p className={`text-sm font-semibold ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>
+                      Auto-play Durood &amp; Dua
+                    </p>
+                    <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-black/45'}`}>
+                      Play alongside every Azan automatically
+                    </p>
+                  </div>
+                  <Toggle on={prePostEnabled} onToggle={() => { const n = !prePostEnabled; setPrePostEnabled(n); persist('isa:prePostEnabled', n); }} isDark={isDark} />
+                </div>
+
+                {/* Queue stats */}
+                <div className="grid grid-cols-2 gap-2.5 mb-4">
+                  <div className={`rounded-xl p-3 border ${
+                    isDark ? 'bg-white/5 border-white/10' : 'bg-emerald-50 border-emerald-100'
+                  }`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-emerald-600 font-bold text-sm">⏮</span>
+                      <p className={`text-xs font-semibold ${isDark ? 'text-white/50' : 'text-emerald-700'}`}>Before Azan</p>
+                    </div>
+                    <p className={`text-xl font-bold leading-none ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                      {preAzanQueue.length}
+                    </p>
+                    <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/30' : 'text-emerald-900/40'}`}>
+                      {preAzanQueue.length === 0 ? 'None selected' : preAzanQueue.map(q => q.name).join(', ')}
+                    </p>
+                  </div>
+                  <div className={`rounded-xl p-3 border ${
+                    isDark ? 'bg-white/5 border-white/10' : 'bg-amber-50 border-amber-100'
+                  }`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-amber-600 font-bold text-sm">⏭</span>
+                      <p className={`text-xs font-semibold ${isDark ? 'text-amber-300/70' : 'text-amber-700'}`}>After Azan</p>
+                    </div>
+                    <p className={`text-xl font-bold leading-none ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                      {postAzanQueue.length}
+                    </p>
+                    <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/30' : 'text-amber-900/40'}`}>
+                      {postAzanQueue.length === 0 ? 'None selected' : postAzanQueue.map(q => q.name).join(', ')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Hint */}
+                <p className={`text-xs mb-3 leading-relaxed ${isDark ? 'text-white/35' : 'text-emerald-900/45'}`}>
+                  Upload your own Durood Sharif or Dua recordings and assign them to play before or after every Azan — individually or in sequence.
+                </p>
+
+                {/* Link to Azan Voices */}
+                <Link
+                  href="/dashboard/azan"
+                  className={`flex items-center justify-between gap-2 w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition group ${
+                    isDark
+                      ? 'border-emerald-700/50 bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Music2 size={14} className="opacity-70" />
+                    Configure in Azan Voices
+                  </span>
+                  <ArrowRight size={14} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            </SectionCard>
+
+            {/* School of Thought + Translation Language side-by-side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SectionCard
+                title="School of Thought"
+                isDark={isDark}
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M2 22h20M6 18V12M18 18V12M10 18V12M14 18V12M12 2l4 4H8l4-4zM4 12h16" />
+                  </svg>
+                }
+              >
+                <div className="flex flex-wrap gap-2">
+                  {SECTS.map((s) => (
+                    <Pill key={s.id} label={s.label} active={activeSectId === s.id} onClick={() => selectSect(s.id)} isDark={isDark} />
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Translation Language" icon={<Globe size={16} />} isDark={isDark}>
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGES.map((l) => (
+                    <Pill key={l.id} label={l.label} active={language === l.id} onClick={() => selectLang(l.id)} isDark={isDark} />
+                  ))}
+                </div>
+              </SectionCard>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Auto Azan (below the 2-col grid) ── */}
+        <SectionCard
+          title="Auto Azan"
+          isDark={isDark}
+          icon={azanOn ? <BellRing size={16} /> : <BellOff size={16} className="text-rose-500" />}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <p className={`text-sm leading-relaxed ${isDark ? 'text-white/50' : 'text-black/60'}`}>
+              {azanOn
+                ? 'Azan plays automatically at prayer times in this browser tab.'
+                : 'Turn on to hear the call to prayer at Fajr, Dhuhr, Asr, Maghrib & Isha.'}
+            </p>
+            <Toggle on={azanOn} onToggle={toggleAzan} isDark={isDark} />
+          </div>
+        </SectionCard>
+
+        {/* ── Coming Soon ── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={18} className="text-amber-500" />
+            <h2 className={`text-lg font-bold ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>Coming Soon</h2>
+            <span className={`ml-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+              isDark ? 'bg-amber-900/40 text-amber-300' : 'bg-amber-100 text-amber-700'
+            }`}>In Development</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {COMING_SOON.map((item, i) => {
+              const ac = accentMap[item.accent];
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.06 }}
+                  className={`relative rounded-xl border p-4 overflow-hidden ${
+                    isDark ? 'bg-[#0d1f17] border-emerald-800/30' : 'bg-white border-emerald-100'
+                  }`}
+                >
+                  {/* Coming Soon badge */}
+                  <span className={`absolute top-3 right-3 text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${ac.badge}`}>
+                    Soon
+                  </span>
+
+                  {/* subtle blur dot */}
+                  <div
+                    aria-hidden
+                    className={`absolute -top-4 -left-4 w-20 h-20 rounded-full blur-2xl opacity-30 ${ac.badge}`}
+                  />
+
+                  <div className="relative">
+                    <span className="text-3xl leading-none">{item.emoji}</span>
+                    <h3 className={`mt-2 font-bold text-sm ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>{item.title}</h3>
+                    <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-white/40' : 'text-black/50'}`}>{item.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
