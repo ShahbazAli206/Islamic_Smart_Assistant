@@ -261,7 +261,27 @@ export function AutoAzanScheduler() {
     extraUrlsRef.current = [];
     playQueueRef.current = [];
 
-    const v = voiceRef.current;
+    // useLocalStorage only syncs cross-tab via StorageEvent — same-tab writes from
+    // the Azan page never reach AutoAzanScheduler's React state. Read the latest
+    // values directly from localStorage so fire() always uses what the user set.
+    let freshPreQ  = preAzanQueueRef.current;
+    let freshPostQ = postAzanQueueRef.current;
+    let freshDuroodId  = duroodIdRef.current;
+    let freshDuroodPos = duroodPosRef.current;
+    let freshDuaId  = duaIdRef.current;
+    let freshDuaPos = duaPosRef.current;
+    let freshVoice  = voiceRef.current;
+    try {
+      const p = localStorage.getItem('isa:preAzanQueue');   if (p) freshPreQ  = JSON.parse(p);
+      const q = localStorage.getItem('isa:postAzanQueue');  if (q) freshPostQ = JSON.parse(q);
+      const d = localStorage.getItem('isa:duroodId');       if (d) freshDuroodId  = JSON.parse(d);
+      const dp = localStorage.getItem('isa:duroodPos');     if (dp) freshDuroodPos = JSON.parse(dp);
+      const da = localStorage.getItem('isa:duaId');         if (da) freshDuaId  = JSON.parse(da);
+      const dap = localStorage.getItem('isa:duaPos');       if (dap) freshDuaPos = JSON.parse(dap);
+      const vr = localStorage.getItem('isa:azanVoice');     if (vr) freshVoice = JSON.parse(vr);
+    } catch {}
+
+    const v = freshVoice;
     const { name: voiceLabel } = resolveVoiceInfo(v);
 
     // LAN device (Chromecast/DLNA) — cast the main azan and return
@@ -320,14 +340,15 @@ export function AutoAzanScheduler() {
 
     const queue: string[] = [];
 
-    // Prefer the multi-select queue; fall back to legacy duroodId/duaId single-select
-    const preQ  = preAzanQueueRef.current;
-    const postQ = postAzanQueueRef.current;
+    // Prefer the multi-select queue; fall back to legacy duroodId/duaId single-select.
+    // Use the fresh values read directly from localStorage above (not the stale refs).
+    const preQ  = freshPreQ;
+    const postQ = freshPostQ;
     const hasNewQueue = preQ.length > 0 || postQ.length > 0;
 
     const preIds: string[] = hasNewQueue ? preQ.map(x => x.id) : (() => {
-      const dId = duroodIdRef.current; const dPos = duroodPosRef.current;
-      const qaId = duaIdRef.current;  const qaPos = duaPosRef.current;
+      const dId = freshDuroodId; const dPos = freshDuroodPos;
+      const qaId = freshDuaId;  const qaPos = freshDuaPos;
       return [
         ...(dId  && (dPos  === 'before' || dPos  === 'both') ? [dId]  : []),
         ...(qaId && (qaPos === 'before' || qaPos === 'both') ? [qaId] : []),
@@ -335,8 +356,8 @@ export function AutoAzanScheduler() {
     })();
 
     const postIds: string[] = hasNewQueue ? postQ.map(x => x.id) : (() => {
-      const dId = duroodIdRef.current; const dPos = duroodPosRef.current;
-      const qaId = duaIdRef.current;  const qaPos = duaPosRef.current;
+      const dId = freshDuroodId; const dPos = freshDuroodPos;
+      const qaId = freshDuaId;  const qaPos = freshDuaPos;
       return [
         ...(dId  && (dPos  === 'after' || dPos  === 'both') ? [dId]  : []),
         ...(qaId && (qaPos === 'after' || qaPos === 'both') ? [qaId] : []),
@@ -445,6 +466,11 @@ export function AutoAzanScheduler() {
   useEffect(() => {
     if (!enabled || !data) return;
     const { timings, timezone } = data;
+
+    // Clear on every location/data change so that switching location and back
+    // always allows prayers to fire again (user explicitly asked to remove the
+    // "play only once" guard between location changes).
+    firedRef.current = new Set();
 
     const prayerMs = (h: number, m: number, refNow: Date): number => {
       if (timezone) {
