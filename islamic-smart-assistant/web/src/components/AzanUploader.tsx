@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2, Plus, Bell } from 'lucide-react';
 import { decodeAudioFile, computePeaks, encodeWavFromSegments, formatClock } from '@/lib/audioTrim';
-import { putAzanClip, CUSTOM_AZAN_PREFIX, type CustomAzan, type AudioType } from '@/lib/customAzan';
+import { putAzanClip, saveRemoteUrl, CUSTOM_AZAN_PREFIX, type CustomAzan, type AudioType } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -218,12 +218,24 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
         : [main];
       const blob = encodeWavFromSegments(segments);
       const totalDur = (end - start) + (extraBuffer ? extraDur : 0);
-      const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       const DEFAULT_CLIP_NAME: Record<AudioType, string> = { azan: 'Custom Azan', durood: 'Custom Durood', dua: 'Custom Dua' };
       const clipName = name.trim() || DEFAULT_CLIP_NAME[audioType];
+
+      // Upload to the backend first so every browser gets the same ID and a
+      // public audio_url. Fall back to a local-only ID when offline.
+      let id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
+      let remoteUrl: string | undefined;
+      try {
+        const remote = await Azan.uploadVoice(blob, { name: clipName, durationMs: totalDur * 1000, audioType });
+        id = remote.id;
+        remoteUrl = remote.audio_url || undefined;
+      } catch {
+        // Offline or server error — save locally only; other browsers won't see it until re-uploaded
+      }
+
       await putAzanClip(id, blob);
-      Azan.uploadVoice(blob, { name: clipName, durationMs: totalDur * 1000, audioType }).catch(() => {});
-      onSaved({ id, name: clipName, createdAt: Date.now(), durationSec: Math.round(totalDur * 10) / 10, audioType });
+      if (remoteUrl) saveRemoteUrl(id, remoteUrl);
+      onSaved({ id, name: clipName, createdAt: Date.now(), durationSec: Math.round(totalDur * 10) / 10, audioType, remoteUrl });
       handleClose();
     } catch (e) {
       setError(`Could not save the clip. ${e instanceof Error ? e.message : ''}`);

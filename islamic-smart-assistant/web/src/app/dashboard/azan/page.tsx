@@ -15,6 +15,7 @@ import { AzanUploader } from '@/components/AzanUploader';
 import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
   customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan,
+  saveRemoteUrl,
   BUILT_IN_DUROODS, BUILT_IN_DUAS,
   type CustomAzan, type AudioType,
 } from '@/lib/customAzan';
@@ -506,10 +507,15 @@ export default function AzanPage() {
   const [remoteCustoms, setRemoteCustoms] = useState<{ id: string; name: string; url: string; durationMs: number }[]>([]);
   useEffect(() => {
     Azan.voices()
-      .then((vs) => setRemoteCustoms(
-        vs.filter((v) => v.is_custom && v.audio_url)
-          .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms })),
-      ))
+      .then((vs) => {
+        const customs = vs
+          .filter((v) => v.is_custom && v.audio_url)
+          .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms }));
+        setRemoteCustoms(customs);
+        // Cache every remote URL so the scheduler (and customAzanUrl) can play
+        // synced clips without needing a local IndexedDB blob.
+        customs.forEach((c) => saveRemoteUrl(c.id, c.url));
+      })
       .catch(() => { /* offline / signed out — fall back to local customs only */ });
   }, []);
 
@@ -650,9 +656,18 @@ export default function AzanPage() {
       const segments = editorExtraPos === 'start' ? [extra, main] : [main, extra];
       const wavBlob = encodeWavFromSegments(segments);
       const totalDuration = originalBuffer.duration + editorExtraBuffer.duration;
-      const newId = `custom:${crypto.randomUUID()}`;
+      // Upload first to get the backend ID; fall back to a local-only ID if offline.
+      let newId = `custom:${crypto.randomUUID()}`;
+      let newRemoteUrl: string | undefined;
+      try {
+        const remote = await Azan.uploadVoice(wavBlob, { name: editingItem.name, durationMs: Math.round(totalDuration * 1000) });
+        newId = remote.id;
+        newRemoteUrl = remote.audio_url || undefined;
+      } catch { /* offline — proceed with local-only ID */ }
+
       await putAzanClip(newId, wavBlob);
-      const newMeta: CustomAzan = { id: newId, name: editingItem.name, createdAt: Date.now(), durationSec: totalDuration };
+      if (newRemoteUrl) saveRemoteUrl(newId, newRemoteUrl);
+      const newMeta: CustomAzan = { id: newId, name: editingItem.name, createdAt: Date.now(), durationSec: totalDuration, remoteUrl: newRemoteUrl };
       if (editingItem.isCustom) {
         await deleteAzanClip(editingItem.id);
         setCustomAzans((prev) => [newMeta, ...prev.filter((c) => c.id !== editingItem.id)]);
@@ -663,7 +678,6 @@ export default function AzanPage() {
         setCustomAzans((prev) => [newMeta, ...prev]);
       }
       if (selectedId === editingItem.id) setSelectedId(newId);
-      Azan.uploadVoice(wavBlob, { name: newMeta.name, durationMs: Math.round(totalDuration * 1000) }).catch(() => {});
       setEditingItem(null);
     } catch (e: unknown) {
       setEditorError(e instanceof Error ? e.message : 'Failed to save modified audio');
@@ -684,10 +698,14 @@ export default function AzanPage() {
       // Do NOT auto-select — user must click "Set as Default" explicitly.
       // Refresh the backend list so the uploaded clip's public audio_url is available.
       Azan.voices()
-        .then((vs) => setRemoteCustoms(
-          vs.filter((v) => v.is_custom && v.audio_url)
-            .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms })),
-        ))
+        .then((vs) => {
+          const customs = vs
+            .filter((v) => v.is_custom && v.audio_url)
+            .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms }));
+          customs.forEach((c) => saveRemoteUrl(c.id, c.url));
+          return customs;
+        })
+        .then((customs) => setRemoteCustoms(customs))
         .catch(() => {});
     }
     setUploaderOpen(false);

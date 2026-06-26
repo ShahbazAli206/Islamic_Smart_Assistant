@@ -31,6 +31,9 @@ export type CustomAzan = {
   /** Carried over from the original built-in voice when created by trimming. */
   badge?: 'popular' | 'new';
   tags?: string[];
+  /** Backend audio_url — stored so the scheduler can play this clip even when the
+   *  local IndexedDB blob is absent (e.g. on a different browser/device). */
+  remoteUrl?: string;
 };
 
 export const BUILT_IN_DUROODS: CustomAzan[] = [
@@ -92,12 +95,43 @@ export function deleteAzanClip(id: string): Promise<void> {
   return tx('readwrite', (store) => store.delete(id)).then(() => undefined).catch(() => undefined);
 }
 
+// ── Remote URL cache ─────────────────────────────────────────────────────────
+// When a clip is uploaded to the backend (or fetched from it), we cache the
+// audio_url in localStorage so the scheduler and any other consumer can play it
+// without the local IndexedDB blob — enabling cross-browser / cross-device use.
+
+const REMOTE_CACHE_KEY = 'isa:customRemoteUrls';
+
+export function saveRemoteUrl(id: string, url: string): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const map: Record<string, string> = JSON.parse(localStorage.getItem(REMOTE_CACHE_KEY) ?? '{}');
+    map[id] = url;
+    localStorage.setItem(REMOTE_CACHE_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+function getStoredRemoteUrl(id: string): string | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const map: Record<string, string> = JSON.parse(localStorage.getItem(REMOTE_CACHE_KEY) ?? '{}');
+    return map[id] ?? null;
+  } catch { return null; }
+}
+
 /**
- * Returns a playable URL for any clip — built-in (public path) or custom (IndexedDB
- * object URL). For custom IDs the CALLER is responsible for URL.revokeObjectURL().
+ * Returns a playable URL for any clip:
+ *  - Built-in: static public path
+ *  - Custom (local): IndexedDB object URL (caller must call URL.revokeObjectURL)
+ *  - Custom (synced): backend audio_url from the remote-URL cache
+ *
+ * Falls back to the cached remote URL when the local IndexedDB blob is absent,
+ * which makes synced uploads from other browsers/devices play correctly without
+ * needing to re-download the blob locally.
  */
 export async function customAzanUrl(id: string): Promise<string | null> {
   if (isBuiltinClip(id)) return BUILTIN_PATHS[id] ?? null;
   const blob = await getAzanClip(id);
-  return blob ? URL.createObjectURL(blob) : null;
+  if (blob) return URL.createObjectURL(blob);
+  return getStoredRemoteUrl(id);
 }
