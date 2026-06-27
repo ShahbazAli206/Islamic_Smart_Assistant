@@ -62,7 +62,7 @@ function MethodDropdown({
   const selected = items.find((m) => m.id === value) ?? items[0];
 
   const trig = isDark
-    ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-white hover:bg-[rgba(255,255,255,0.14)]'
+    ? 'border-white/15 bg-white/[0.08] text-parchment hover:bg-white/[0.14]'
     : 'border-emerald-900/15 bg-white text-black hover:bg-emerald-50';
 
   return (
@@ -436,7 +436,7 @@ export default function PrayerTimesPage() {
           NB: overflow-hidden lives on the decorative layer below (not this
           wrapper) so the Calculation-method dropdown can overflow the hero
           without being clipped. */}
-      <div className="relative overflow-hidden">
+      <div className="relative">
         {/* full-cover background image — same as Overview hero */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
@@ -483,18 +483,18 @@ export default function PrayerTimesPage() {
             prayer-cards section that follows. */}
         <div className="relative z-20 px-6 sm:px-10 pb-8 space-y-5">
 
-        {/* ── sect / madhab / method controls (light glass) ── */}
-        <div className="relative z-10 rounded-2xl p-5 border border-white/60 bg-white/60 backdrop-blur-sm">
+        {/* ── sect / madhab / method controls ── */}
+        <div className={`relative z-10 rounded-2xl p-5 border backdrop-blur-sm ${isDark ? 'border-white/10 bg-white/[0.07]' : 'border-white/60 bg-white/60'}`}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Sect</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-parchment' : 'text-black'}`}>Sect</p>
               <div className="flex gap-2">
                 {(['sunni', 'shia'] as Sect[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => { setSect(s); setFiqh(FIQH_BY_SECT[s][0]); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
+                      ${sect === s ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-white/15 bg-white/[0.08] text-parchment hover:bg-white/[0.14]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {s === 'sunni' ? 'Sunni' : 'Fiqah Jafri'}
                   </button>
@@ -503,14 +503,14 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Madhab / Fiqh</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-parchment' : 'text-black'}`}>Madhab / Fiqh</p>
               <div className="flex flex-wrap gap-2">
                 {fiqhOptions.map((f) => (
                   <button
                     key={f}
                     onClick={() => { setFiqh(f); setMethodOverride(-1); }}
                     className={`px-5 py-2 rounded-full text-sm font-semibold border transition
-                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
+                      ${fiqh === f ? 'border-emerald-400 bg-emerald-600 text-white shadow-glow-emerald' : isDark ? 'border-white/15 bg-white/[0.08] text-parchment hover:bg-white/[0.14]' : 'border-emerald-900/15 bg-white/90 text-black hover:bg-white'}`}
                   >
                     {FIQH_LABEL[f]}
                   </button>
@@ -519,7 +519,7 @@ export default function PrayerTimesPage() {
             </div>
 
             <div>
-              <p className="text-base mb-2 uppercase tracking-[0.16em] font-bold text-black">Calculation method</p>
+              <p className={`text-base mb-2 uppercase tracking-[0.16em] font-bold ${isDark ? 'text-parchment' : 'text-black'}`}>Calculation method</p>
               <MethodDropdown value={methodOverride} onChange={setMethodOverride} options={METHOD_LABELS} isDark={isDark} locationLabel={autoMethodLabel} />
             </div>
           </div>
