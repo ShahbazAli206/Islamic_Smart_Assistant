@@ -444,8 +444,23 @@ function RehalScene({ className = '' }: { className?: string }) {
   );
 }
 
+const QURAN_EXP_AYAH: Record<string, string> = {
+  en: 'Indeed, this Qur’an guides to that which is most upright.',
+  ur: 'بے شک یہ قرآن سب سے سیدھی راہ کی ہدایت کرتا ہے۔',
+  tr: 'Gerçekten bu Kur’an en doğru yola iletir.',
+  hi: 'بेशक यह क़ुरआन सबसे सीधी राह की हिदायत करता है।',
+  bn: 'নিশ্চয়ই এই কুরআন সবচেয়ে সঠিক পথের দিকে হেদায়েত করে।',
+  fr: 'Ce Coran guide vers ce qui est le plus droit.',
+  zh: '这部《古兰经》确能引导到最正确的道路。',
+  id: 'Sesungguhnya Al-Qur’an ini memberi petunjuk ke jalan yang paling lurus.',
+  ps: 'بيشکه دا قرآن هغه لاره ده چې ترټولو سمه دې۔',
+};
+
 /** Floating glassmorphic ayah card overlaid on the hero scene. */
 function AyahGlassCard({ className = '' }: { className?: string }) {
+  const [language] = useLocalStorage<string>('isa:language', 'en');
+  const translation = language === 'none' ? null : (QURAN_EXP_AYAH[language] ?? QURAN_EXP_AYAH.en);
+  const rtl = ['ur', 'ar', 'ps'].includes(language);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -462,23 +477,31 @@ function AyahGlassCard({ className = '' }: { className?: string }) {
       <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
         إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-parchment/80">
-        Indeed, this Qur'an guides to that which is most upright.
-      </p>
+      {translation && (
+        <p className={`mt-3 text-sm leading-relaxed text-parchment/80 ${rtl ? 'font-arabic' : ''}`} style={rtl ? { direction: 'rtl' } : undefined}>
+          {translation}
+        </p>
+      )}
       <p className="mt-3 text-xs font-semibold tracking-wide text-gold-300/80">Surah Al-Isra 17:9</p>
     </motion.div>
   );
 }
 
 /* Verse about establishing prayer at its appointed times (An-Nisa 4:103) —
-   shown in the Azan hero. Translation rendered in the user's chosen language
-   (isa:language: 'ur' | 'en' | 'none' → Arabic only). */
+   shown in the Azan hero. Translation rendered in the user's chosen language. */
 const AZAN_AYAH = {
-  arabic: 'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا',
+  arabic: 'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا',
   reference: 'Surah An-Nisa 4:103',
   translations: {
     en: 'Indeed, prayer has been decreed upon the believers a decree of specified times.',
     ur: 'بے شک نماز مومنوں پر مقررہ وقتوں میں فرض کی گئی ہے۔',
+    tr: 'Şüphesiz namaz müminlere vakitli olarak farz kılınmıştır.',
+    hi: 'بेशक नम़ाज़ मोमिनों पर निश्चित समयों में फ़र्ज़ है।',
+    bn: 'নিশ্চয়ই নামাজ মুমিনদের উপর নির্দিষ্ট সময়ে ফরজ।',
+    fr: 'La prière est, pour les croyants, une prescription à des temps déterminés.',
+    zh: '礼拜确是对信士们定时的主命。',
+    id: 'Sesungguhnya shalat itu adalah fardhu yang ditentukan waktunya atas orang-orang yang beriman.',
+    ps: 'بې شکه لمونџ د مؤمنانو لپاره د ټاکلی وخت فرض دی।',
   } as Record<string, string>,
 };
 

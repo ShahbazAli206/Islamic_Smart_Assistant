@@ -1238,15 +1238,58 @@ function CalculatorsSection({ isDark }: { isDark: boolean }) {
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 const HERO_AYAT = [
-  { ar: 'ادْعُونِي أَسْتَجِبْ لَكُمْ', en: 'Call upon Me; I will respond to you.', ref: 'Quran 40:60' },
-  { ar: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ', en: 'When My servants ask about Me, I am indeed close.', ref: 'Quran 2:186' },
-  { ar: 'فَاذْكُرُونِي أَذْكُرْكُمْ', en: 'Remember Me; I will remember you.', ref: 'Quran 2:152' },
+  {
+    ar: 'ادْعُونِي أَسْتَجِبْ لَكُمْ',
+    ref: 'Quran 40:60',
+    translations: {
+      en: 'Call upon Me; I will respond to you.',
+      ur: 'مجھے پکارو، میں تمہاری دعا قبول کروں گا۔',
+      tr: 'Bana dua edin; size icabet edeyim.',
+      hi: 'मुझे पुकारो, मैं तुम्हारी दुआ क़बूल करूंगा।',
+      bn: 'আমাকে ডাকো, আমি তোমাদের ডাকে সাড়া দেব।',
+      fr: 'Invoquez-Moi, Je vous exaucerai.',
+      zh: '你们向我祈祷吧，我必回应你们。',
+      id: 'Berdoalah kepada-Ku, niscaya Aku perkenankan bagimu.',
+      ps: 'ما ته وغواړئ، زه به ستاسو غوښتنه قبوله کوم۔',
+    } as Record<string, string>,
+  },
+  {
+    ar: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
+    ref: 'Quran 2:186',
+    translations: {
+      en: 'When My servants ask about Me, I am indeed close.',
+      ur: 'جب میرے بندے مجھ سے میرے بارے میں سوال کریں تو میں قریب ہوں۔',
+      tr: 'Kullarım sana Beni sorarlarsa, Ben gerçekten yakınım.',
+      hi: 'जब मेरे बन्दे मुझ से मेरे बारे में सवाल करें तो मैं क़रीब हूं।',
+      bn: 'যখন আমার বান্দারা আমার সম্পর্কে তোমাকে জিজ্ঞেস করে, আমি তো নিকটেই আছি।',
+      fr: 'Quand Mes serviteurs t\'interrogent sur Moi, Je suis tout proche.',
+      zh: '当我的仆人询问你关于我的消息时，我确是接近的。',
+      id: 'Apabila hamba-hamba-Ku bertanya kepadamu tentang Aku, maka sesungguhnya Aku dekat.',
+      ps: 'کله چې زما بندګان زما له دې پوښتنه وکړي، زه خو ورسره نږدې یم۔',
+    } as Record<string, string>,
+  },
+  {
+    ar: 'فَاذْكُرُونِي أَذْكُرْكُمْ',
+    ref: 'Quran 2:152',
+    translations: {
+      en: 'Remember Me; I will remember you.',
+      ur: 'تم مجھے یاد کرو، میں تمہیں یاد کروں گا۔',
+      tr: 'Beni anın; Ben de sizi anayım.',
+      hi: 'मुझे याद करो, मैं तुम्हें याद करूंगा।',
+      bn: 'তোমরা আমাকে স্মরণ করো, আমি তোমাদের স্মরণ করব।',
+      fr: 'Évoquez-Moi, Je vous évoquerai.',
+      zh: '你们要记念我，我就记念你们。',
+      id: 'Maka ingatlah kamu kepada-Ku, Aku pun akan ingat kepadamu.',
+      ps: 'زه یادوئ، زه به هم تاسو یاد کوم۔',
+    } as Record<string, string>,
+  },
 ];
 
 export default function IslamicLibraryPage() {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'hadees');
   const [heroIdx, setHeroIdx] = useState(0);
+  const [language] = useLocalStorage<string>('isa:language', 'en');
 
 
   return (
@@ -1287,7 +1330,12 @@ export default function IslamicLibraryPage() {
                     </span>
                     <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">{HERO_AYAT[heroIdx].ar}</p>
                   </div>
-                  <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">&ldquo;{HERO_AYAT[heroIdx].en}&rdquo;</p>
+                  {language !== 'none' && (
+                    <p className={`mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black ${['ur','ar','ps'].includes(language) ? 'font-arabic' : ''}`}
+                       style={['ur','ar','ps'].includes(language) ? { direction: 'rtl' } : undefined}>
+                      &ldquo;{HERO_AYAT[heroIdx].translations[language] ?? HERO_AYAT[heroIdx].translations.en}&rdquo;
+                    </p>
+                  )}
                   <p className="mt-2 text-xs font-semibold text-black/75">({HERO_AYAT[heroIdx].ref})</p>
                 </motion.div>
               </AnimatePresence>

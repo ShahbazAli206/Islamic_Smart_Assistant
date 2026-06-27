@@ -15,6 +15,7 @@ import {
   fetchTimingsByCity, fetchTimingsByCoords, nextPrayerInZone, formatCountdown,
   LocationError, type PrayerTimes,
 } from '@/lib/prayer';
+import { useLocalStorage } from '@/lib/useLocalStorage';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -49,9 +50,22 @@ function prevOf(name: keyof PrayerTimes): keyof PrayerTimes {
   return ORDER[(i - 1 + ORDER.length) % ORDER.length];
 }
 
+const DHIKR_TRANS: Record<string, string> = {
+  en: 'And remember Allah often',
+  ur: 'اور اللہ کو کثرت سے یاد کرو',
+  tr: 'Allah\'ı çokça anın',
+  hi: 'और अल्लाह को बहुत ज़्यादा याद करो',
+  bn: 'এবং আল্লাহকে অধিক স্মরণ করো',
+  fr: 'Et invoquez Allah souvent',
+  zh: '要多多赞念真主',
+  id: 'Dan perbanyaklah mengingat Allah',
+  ps: 'او الله ډیر زیاد یادوئ',
+};
+
 type Props = { lat?: number; lng?: number; city?: string; country?: string; method?: number };
 
 export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan', method }: Props) {
+  const [language] = useLocalStorage<string>('isa:language', 'en');
   // Only fetch live data once the visitor has actually saved a location — a brand
   // new visitor (no stored keys) sees the design's London mockup instead of the
   // app's Karachi default. Read raw localStorage so we don't treat the default as "set".
@@ -146,7 +160,12 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
           <p className="text-parchment/55 text-xs mt-2">Left until Adhan</p>
         </div>
         <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center justify-center text-center">
-          <p className="text-parchment/60 text-xs">And remember Allah often</p>
+          {language !== 'none' && (
+            <p className={`text-parchment/60 text-xs ${['ur','ar','ps'].includes(language) ? 'font-arabic' : ''}`}
+               style={['ur','ar','ps'].includes(language) ? { direction: 'rtl' } : undefined}>
+              {DHIKR_TRANS[language] ?? DHIKR_TRANS.en}
+            </p>
+          )}
           <p className="font-arabic text-2xl text-parchment mt-2" dir="rtl">وَاذْكُرِ اللَّهَ كَثِيرًا</p>
           <p className="text-gold-300 text-xs font-semibold mt-2 flex items-center gap-1">
             <Sparkles size={11} /> Al-Ahzab 33:41

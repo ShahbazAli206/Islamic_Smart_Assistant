@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -34,9 +34,51 @@ const REPEAT_ICON: Record<RepeatMode, typeof Repeat> = {
 
 // Rotating ayat shown in the header (auto-advancing carousel).
 const HERO_AYAT = [
-  { ar: 'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ', en: 'Indeed, this Qur’an guides to that which is most just and right.', ref: 'Surah Al-Isra 17:9' },
-  { ar: 'وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ', en: 'And We have certainly made the Qur’an easy for remembrance, so is there any who will remember?', ref: 'Surah Al-Qamar 54:17' },
-  { ar: 'وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ', en: 'And We send down of the Qur’an that which is healing and mercy for the believers.', ref: 'Surah Al-Isra 17:82' },
+  {
+    ar: "إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
+    ref: "Surah Al-Isra 17:9",
+    translations: {
+      en: "Indeed, this Qur'an guides to that which is most just and right.",
+      ur: "بے شک یہ قرآن سب سے سیدھی راہ کی ہدایت کرتا ہے۔",
+      tr: "Gerçekten bu Kur'an en doğru yola iletir.",
+      hi: "बेशक यह क़ुरआन सबसे सीधी राह की हिदायत करता है।",
+      bn: "নিশ্চয়ই এই কুরআন সবচেয়ে সঠিক পথের দিকে হেদায়েত করে।",
+      fr: "Ce Coran guide vers ce qui est le plus droit.",
+      zh: "这部《古兰经》确能引导到最正确的道路。",
+      id: "Sesungguhnya Al-Qur'an ini memberi petunjuk ke jalan yang paling lurus.",
+      ps: "بيشکه دا قرآن هغه لاره ده چه ترټولو سمه ده۔",
+    } as Record<string, string>,
+  },
+  {
+    ar: "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ",
+    ref: "Surah Al-Qamar 54:17",
+    translations: {
+      en: "And We have certainly made the Qur'an easy for remembrance, so is there any who will remember?",
+      ur: "اور بے شک ہم نے قرآن کو نصیحت کے لیے آسان کر دیا ہے، تو کیا کوئی نصیحت قبول کرنے والا ہے؟",
+      tr: "Andolsun Kur'an'i ogut icin kolaylastirdik. Ogut alan yok mu?",
+      hi: "और हम ने नसीहत के लिए क़ुरआन को आसान कर दिया है, तो क्या कोई नसीहत लेने वाला है?",
+      bn: "আমি কুরআনকে উপদেশের জন্য সহজ করে দিয়েছি, তাহলে কি কেউ উপদেশ গ্রহণ করবে?",
+      fr: "Nous avons facilite le Coran pour la meditation. Y a-t-il quelqu'un pour mediter?",
+      zh: "我确已使《古兰经》便于记忆，有没有人记诵呢？",
+      id: "Dan sungguh, Kami telah memudahkan Al-Qur'an untuk dzikr, maka adakah orang yang mengambil pelajaran?",
+      ps: "او موږ قرآن د یادونکو لپاره اسان کړی دی، نو ایا چا یادوي؟",
+    } as Record<string, string>,
+  },
+  {
+    ar: "وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ",
+    ref: "Surah Al-Isra 17:82",
+    translations: {
+      en: "And We send down of the Qur'an that which is healing and mercy for the believers.",
+      ur: "اور ہم قرآن سے وہ چیز نازل کرتے ہیں جو مومنوں کے لیے شفاء اور رحمت ہے۔",
+      tr: "Kur'an'dan, muminler icin sifa ve rahmet olanı indiriyoruz.",
+      hi: "और हम क़ुरआन से वह चीज़ नाज़िल करते हैं जो ईमान वालों के लिए शिफ़ा और रहमत है।",
+      bn: "আমি কুরআন থেকে এমন কিছু নাজিল করি যা মুমিনদের জন্য শেফা ও রহমত।",
+      fr: "Nous faisons descendre du Coran ce qui est une guerison et une misericorde pour les croyants.",
+      zh: "我降示《古兰经》，作为信士的治病良方和慈恩。",
+      id: "Dan Kami turunkan dari Al-Qur'an sesuatu yang menjadi penawar dan rahmat bagi orang-orang yang beriman.",
+      ps: "او موږ له قرآنه هغه شی نازلوو چه د مومنانو لپاره شفاء او رحمت دی۔",
+    } as Record<string, string>,
+  },
 ];
 
 // Static feature chips beneath the hero.
@@ -368,7 +410,12 @@ export default function RecitationSchedulerPage() {
                     </span>
                     <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">{HERO_AYAT[heroIdx].ar}</p>
                   </div>
-                  <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">&ldquo;{HERO_AYAT[heroIdx].en}&rdquo;</p>
+                  {language !== 'none' && (
+                    <p className={`mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black ${['ur','ar','ps'].includes(language) ? 'font-arabic' : ''}`}
+                       style={['ur','ar','ps'].includes(language) ? { direction: 'rtl' } : undefined}>
+                      &ldquo;{HERO_AYAT[heroIdx].translations[language] ?? HERO_AYAT[heroIdx].translations.en}&rdquo;
+                    </p>
+                  )}
                   <p className="mt-2 text-xs font-semibold text-black/75">({HERO_AYAT[heroIdx].ref})</p>
                 </motion.div>
               </AnimatePresence>

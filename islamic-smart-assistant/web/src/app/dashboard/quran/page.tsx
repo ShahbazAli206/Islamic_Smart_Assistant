@@ -41,6 +41,18 @@ function Flower({ size = 18, color = '#f9a8d4', className = '' }: { size?: numbe
   );
 }
 
+const QURAN_HERO_TRANS: Record<string, string> = {
+  en: 'And when the Quran is recited, listen to it and pay attention that you may receive mercy.',
+  ur: 'جب قرآن پڑھا جائے تو اسے توجہ سے سنو اور خاموش رہو تاکہ تم پر رحم کیا جائے۔',
+  tr: 'Kur\'an okunduğunda onu dinleyin ve susun; belki merhamet olunursunuz.',
+  hi: 'जब क़ुरआन पढ़ा जाए तो उसे ध्यान से सुनो और चुप रहो ताकि तुम पर रहम हो।',
+  bn: 'যখন কুরআন পাঠ করা হয়, তখন মনোযোগ দিয়ে শোনো এবং চুপ থাকো, হয়তো তোমাদের উপর রহমত হবে।',
+  fr: 'Quand on récite le Coran, écoutez-le et restez silencieux, afin qu\'on vous fasse miséricorde.',
+  zh: '当有人诵读《古兰经》时，你们要倾耳细听，并且静默，以便你们蒙恩。',
+  id: 'Apabila dibacakan Al-Qur\'an, maka dengarkanlah baik-baik dan perhatikanlah agar kamu mendapat rahmat.',
+  ps: 'کله چې قرآن لوستل کیږي، غوږ ور نیسئ او خاموش اوسئ، ترڅو درباندې رحم وشي۔',
+};
+
 export default function QuranPage() {
   const { isDark } = useTheme();
   const [query, setQuery]               = useState('');
@@ -122,9 +134,12 @@ export default function QuranPage() {
                     وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنصِتُوا لَعَلَّكُمْ تُرْحَمُونَ
                   </p>
                 </div>
-                <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
-                  And when the Quran is recited, listen to it and pay attention that you may receive mercy.
-                </p>
+                {language !== 'none' && (
+                  <p className={`mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black ${['ur','ar','ps'].includes(language) ? 'font-arabic' : ''}`}
+                     style={['ur','ar','ps'].includes(language) ? { direction: 'rtl' } : undefined}>
+                    {QURAN_HERO_TRANS[language] ?? QURAN_HERO_TRANS.en}
+                  </p>
+                )}
                 <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-A&apos;raf (7:204)</p>
               </div>
             </div>
