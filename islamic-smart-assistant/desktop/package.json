@@ -11,7 +11,12 @@
     "dev:electron": "wait-on http://localhost:3000 && electron .",
     "prebuild": "cd ../web && npm run build",
     "build": "electron-builder",
-    "build:win": "electron-builder --win",
+    "build:win": "electron-builder --win --x64",
+    "build:win:x64": "electron-builder --win --x64",
+    "build:win:ia32": "electron-builder --win --ia32",
+    "build:win:arm64": "electron-builder --win --arm64",
+    "build:win:all": "electron-builder --win --x64 --ia32 --arm64",
+    "build:win:universal": "node scripts/build-universal-win.js",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
@@ -24,6 +29,8 @@
   "build": {
     "appId": "app.islamicassistant.desktop",
     "productName": "Islamic Assistant",
+    "copyright": "Copyright © 2024 Islamic Assistant",
+    "artifactName": "${productName} Setup ${version} ${arch}.${ext}",
     "files": [
       "electron/**/*",
       "assets/**/*"
@@ -54,14 +61,20 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": false,
+      "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "runAfterFinish": true
+      "shortcutName": "Islamic Assistant",
+      "menuCategory": "Islamic Assistant",
+      "runAfterFinish": true,
+      "include": "installer.nsh"
     },
     "mac": {
       "target": [
@@ -80,8 +93,8 @@
   },
   "dependencies": {
     "bonjour-service": "^1.4.1",
-    "castv2-client": "^0.0.2",
-    "node-ssdp": "^1.0.0",
+    "castv2-client": "0.0.8",
+    "node-ssdp": "^4.0.0",
     "upnp-mediarenderer-client": "^1.4.0"
   }
 }

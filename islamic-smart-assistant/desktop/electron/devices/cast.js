@@ -8,8 +8,9 @@
 // serialise play/stop/volume per device with a tiny async mutex so two quick
 // calls can't leave an orphaned, un-stoppable connection behind.
 
-const { Client, DefaultMediaReceiver } = require('castv2-client');
-const MediaRendererClient = require('upnp-mediarenderer-client');
+let Client = null, DefaultMediaReceiver = null, MediaRendererClient = null;
+try { ({ Client, DefaultMediaReceiver } = require('castv2-client')); } catch (e) { console.warn('[cast] castv2-client unavailable — Chromecast disabled:', e.message); }
+try { MediaRendererClient = require('upnp-mediarenderer-client'); } catch (e) { console.warn('[cast] upnp-mediarenderer-client unavailable — DLNA disabled:', e.message); }
 
 const CONNECT_TIMEOUT_MS = 12_000;
 
@@ -61,11 +62,13 @@ class CastController {
     await this._teardown(device.id).catch(() => {});
 
     if (device.kind === 'chromecast') {
+      if (!Client) throw new Error('Chromecast support is unavailable (castv2-client failed to load).');
       const session = await this._chromecastPlay(device.host, url, title, contentType);
       this.sessions.set(device.id, { kind: 'chromecast', ...session });
       return { ok: true };
     }
     if (device.kind === 'dlna') {
+      if (!MediaRendererClient) throw new Error('DLNA support is unavailable (upnp-mediarenderer-client failed to load).');
       const client = await this._dlnaPlay(device.location, url, title, contentType);
       this.sessions.set(device.id, { kind: 'dlna', client });
       return { ok: true };

@@ -412,9 +412,23 @@ type Item = {
   remoteUrl?: string;   // set for backend-synced customs — played directly from this URL
 };
 
+const AZAN_AYAH: Record<string, string> = {
+  en: 'O you who have believed, when the call to prayer is made on Friday, then proceed to the remembrance of Allah.',
+  ar: 'يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا نُودِيَ لِلصَّلَاةِ مِن يَوْمِ الْجُمُعَةِ فَاسْعَوْا إِلَىٰ ذِكْرِ اللَّهِ',
+  ur: 'اے ایمان والو! جب جمعہ کے دن نماز کے لیے اذان دی جائے تو اللہ کے ذکر کی طرف دوڑو۔',
+  tr: 'Ey iman edenler! Cuma günü namaza çağrıldığınızda Allah\'ın zikrine koşun.',
+  hi: 'ऐ ईमान लाने वालो! जब जुमे के दिन नमाज़ के लिए पुकारा जाए तो अल्लाह के ज़िक्र की तरफ दौड़ो।',
+  bn: 'হে মুমিনগণ! জুমআর দিনে সালাতের জন্য আহ্বান করা হলে আল্লাহর স্মরণে ছুটে যাও।',
+  fr: "Ô vous qui croyez ! Quand on appelle à la prière du vendredi, accourez au rappel d'Allah.",
+  zh: '信士们啊！当聚礼日宣礼时，你们当赶快去记念真主。',
+  id: 'Wahai orang-orang beriman! Apabila dipanggil untuk shalat Jumat, bersegeralah mengingat Allah.',
+  ps: 'اې مؤمنانو! چې جمعې ورځ د لمانځه لپاره اذان ووایل شي نو د الله د ذکر خوا ته وسپاریئ.',
+};
+
 export default function AzanPage() {
   const loc = useStoredLocation();
   const { isDark } = useTheme();
+  const [language] = useLocalStorage<string>('isa:language', 'en');
 
   const [activeId, setActiveId]   = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -963,7 +977,7 @@ export default function AzanPage() {
                     </p>
                   </div>
                   <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
-                    O you who have believed, when the call to prayer is made on Friday, then proceed to the remembrance of Allah.
+                    {AZAN_AYAH[language] ?? AZAN_AYAH.en}
                   </p>
                   <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Jumu&apos;ah (62:9)</p>
                 </div>

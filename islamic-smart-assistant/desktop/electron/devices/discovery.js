@@ -17,7 +17,12 @@ const http = require('http');
 const https = require('https');
 const net = require('net');
 const { Bonjour } = require('bonjour-service');
-const { Client: SsdpClient } = require('node-ssdp');
+
+// node-ssdp is a production dependency but wrap it defensively: if the module
+// fails to load (e.g. a future packaging issue with a transitive dep), SSDP
+// discovery degrades gracefully instead of crashing the entire main process.
+let SsdpClient = null;
+try { SsdpClient = require('node-ssdp').Client; } catch (e) { console.warn('[discovery] node-ssdp unavailable — DLNA discovery disabled:', e.message); }
 
 const SSDP_TARGET = 'urn:schemas-upnp-org:device:MediaRenderer:1';
 const SSDP_INTERVAL_MS = 30_000;   // re-search periodically (SSDP is request/response)
@@ -142,6 +147,7 @@ class DeviceDiscovery extends EventEmitter {
   }
 
   _startSsdp() {
+    if (!SsdpClient) return; // module failed to load — skip SSDP silently
     try {
       this.ssdp = new SsdpClient();
       this.ssdp.on('response', (headers) => {

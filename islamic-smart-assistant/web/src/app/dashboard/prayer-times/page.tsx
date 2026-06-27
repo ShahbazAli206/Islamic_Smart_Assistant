@@ -131,7 +131,22 @@ function MethodDropdown({
   );
 }
 
+const PRAYER_TIMES_AYAH: Record<string, string> = {
+  en: 'And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.',
+  ar: 'وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ',
+  ur: 'نماز قائم کرو، بے شک نماز بے حیائی اور برے کاموں سے روکتی ہے۔',
+  tr: 'Namazı kıl! Çünkü namaz, hayâsızlıktan ve kötülükten alıkoyar.',
+  hi: 'नमाज़ क़ायम करो। बेशक नमाज़ बेशर्मी और बुरे कामों से रोकती है।',
+  bn: 'সালাত কায়েম করো। নিশ্চয়ই সালাত অশ্লীলতা ও মন্দ কার্য থেকে বিরত রাখে।',
+  fr: "Accomplis la prière. En vérité, la prière préserve de la turpitude et du blâmable.",
+  zh: '当谨守拜功，拜功确能防止丑事和罪恶。',
+  id: 'Dirikanlah shalat. Sesungguhnya shalat mencegah dari perbuatan keji dan mungkar.',
+  ps: 'لمونځ وکړه، بې شکه لمونځ له بدکارۍ او ناوړه چارو منع کوي.',
+};
+
 export default function PrayerTimesPage() {
+  const [language] = useLocalStorage<string>('isa:language', 'en');
+
   // --- sect / madhab (persisted) ---
   // The onboarding wizard may store isa:sect as a madhab name ('hanafi', 'shafii', …)
   // instead of 'sunni'/'shia'. We normalize on read so the page never crashes.
@@ -456,7 +471,7 @@ export default function PrayerTimesPage() {
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
-                  And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.
+                  {PRAYER_TIMES_AYAH[language] ?? PRAYER_TIMES_AYAH.en}
                 </p>
                 <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Ankabut (29:45)</p>
               </div>

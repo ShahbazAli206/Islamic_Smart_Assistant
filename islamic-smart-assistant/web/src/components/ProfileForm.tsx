@@ -1,9 +1,5 @@
 'use client';
 
-// Profile editing form + the web-only "download the desktop app" notice.
-// Profile management is intentionally gated to the Noor Desktop app — on the web
-// build we show DesktopRequiredNotice instead of the editable form.
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -12,9 +8,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Me, type MeProfile, type SetLocation } from '@/lib/api';
-import { setLocationByCoords } from '@/lib/location';
+import { setLocationByCoords, readStoredLocation } from '@/lib/location';
+import { useLocalStorage } from '@/lib/useLocalStorage';
 
-// Where web visitors are sent to get the desktop build.
 const DESKTOP_DOWNLOAD_URL = 'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases';
 
 const LANGUAGES = [
@@ -35,7 +31,6 @@ const SECTS = [
   { value: 'shia', label: 'Fiqah Jafri' },
 ] as const;
 
-// Fiqh schools affect prayer-time calculation, so we offer the relevant set per sect.
 const FIQH: Record<'sunni' | 'shia', { value: string; label: string }[]> = {
   sunni: [
     { value: 'hanafi', label: 'Hanafi' },
@@ -46,70 +41,147 @@ const FIQH: Record<'sunni' | 'shia', { value: string; label: string }[]> = {
   shia: [{ value: 'jafari', label: 'Jaʿfari' }],
 };
 
-/** The editable profile form (account details + location). Desktop-only. */
+// Local profile storage — used as the primary store in the desktop app where
+// no backend is running.  The API is tried as a background sync; failures are
+// silent so the form always works offline.
+const LOCAL_PROFILE_KEY = 'isa:profile';
+
+function readLocalProfile(): Partial<MeProfile> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function persistLocalProfile(p: Partial<MeProfile>) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(p));
+  // Also keep the app-wide language key in sync so every page re-renders.
+  if (p.language) {
+    const j = JSON.stringify(p.language);
+    localStorage.setItem('isa:language', j);
+    window.dispatchEvent(new StorageEvent('storage', { key: 'isa:language', newValue: j }));
+  }
+}
+
 export function ProfileForm() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ['me'], queryFn: Me.profile });
+
+  // Try the API — may 401/fail in the desktop app where no backend runs.
+  const { data: apiData } = useQuery({
+    queryKey: ['me'],
+    queryFn: Me.profile,
+    retry: 0,       // don't retry — backend simply isn't present
+    staleTime: Infinity,
+  });
+
+  // Local profile loaded synchronously from localStorage (no flicker).
+  const [localProfile, setLocalProfile] = useState<Partial<MeProfile>>(readLocalProfile);
+
+  // Merge: API data wins when available, localStorage is the fallback.
+  const profile: Partial<MeProfile> = { ...localProfile, ...(apiData ?? {}) };
 
   const [form, setForm] = useState<Partial<MeProfile>>({});
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
+  // Reactive localStorage location (updates when GPS detect completes).
+  const [storedLat]     = useLocalStorage<number | null>('isa:lat',     null);
+  const [storedLng]     = useLocalStorage<number | null>('isa:lng',     null);
+  const [storedCity]    = useLocalStorage<string>('isa:city',    '');
+  const [storedCountry] = useLocalStorage<string>('isa:country', '');
+
+  const [locDetecting, setLocDetecting] = useState(false);
+
+  // Populate the form from whichever source we have.
   useEffect(() => {
-    if (data) setForm({ name: data.name, language: data.language, sect: data.sect, fiqh_method: data.fiqh_method });
-  }, [data]);
+    const src = apiData ?? localProfile;
+    if (src.name !== undefined || src.language !== undefined) {
+      setForm({
+        name:        src.name,
+        language:    src.language,
+        sect:        src.sect,
+        fiqh_method: src.fiqh_method,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiData]);
+
+  // First mount: populate from localStorage if API hasn't responded yet.
+  useEffect(() => {
+    if (!apiData && localProfile.name !== undefined) {
+      setForm({
+        name:        localProfile.name,
+        language:    localProfile.language,
+        sect:        localProfile.sect,
+        fiqh_method: localProfile.fiqh_method,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const save = useMutation({
-    mutationFn: () =>
-      Me.update({
-        name: form.name,
-        language: form.language,
-        sect: form.sect ?? undefined,
+    mutationFn: async () => {
+      const dto = {
+        name:        form.name,
+        language:    form.language ?? 'en',
+        sect:        form.sect   ?? undefined,
         fiqh_method: form.fiqh_method ?? undefined,
-      }),
-    onSuccess: (fresh) => {
-      qc.setQueryData(['me'], fresh);
-      setSavedAt(Date.now());
-    },
-  });
+      };
 
-  const saveLocation = useMutation({
-    mutationFn: (loc: SetLocation) => Me.setLocation(loc),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
+      // PRIMARY: save to localStorage — always works, even without internet.
+      const next: Partial<MeProfile> = { ...profile, ...dto };
+      persistLocalProfile(next);
+      setLocalProfile(next);
+
+      // SECONDARY: try to sync to the backend (desktop app may not have one).
+      try {
+        const fresh = await Me.update(dto);
+        qc.setQueryData(['me'], fresh);
+        return fresh;
+      } catch {
+        // API unavailable — local save already completed above.
+        return next as MeProfile;
+      }
+    },
+    onSuccess: () => setSavedAt(Date.now()),
   });
 
   const detectLocation = () => {
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      saveLocation.mutate({ lat, lng, timezone, detected_via: 'gps' });
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
-          { headers: { Accept: 'application/json' }, cache: 'no-store' },
-        );
-        const addr = (await res.json())?.address ?? {};
-        const city = addr.city || addr.town || addr.village || addr.county || addr.state || '';
-        const country = addr.country || '';
-        setLocationByCoords(lat, lng, city || undefined, country || undefined, { clearMosque: true });
-      } catch {
-        setLocationByCoords(lat, lng, undefined, undefined, { clearMosque: true });
-      }
-    });
+    setLocDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
+            { headers: { Accept: 'application/json' }, cache: 'no-store' },
+          );
+          const addr = (await res.json())?.address ?? {};
+          const city    = addr.city || addr.town || addr.village || addr.county || addr.state || '';
+          const country = addr.country || '';
+          setLocationByCoords(lat, lng, city || undefined, country || undefined, { clearMosque: true });
+        } catch {
+          setLocationByCoords(lat, lng, undefined, undefined, { clearMosque: true });
+        }
+        // Best-effort sync to API (no await — desktop may not have backend).
+        Me.setLocation({ lat, lng, timezone, detected_via: 'gps' }).catch(() => {});
+        setLocDetecting(false);
+      },
+      () => setLocDetecting(false),
+    );
   };
 
   const fiqhOptions = form.sect ? FIQH[form.sect] : [];
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-ink/50">
-        <Loader2 className="animate-spin mr-2" size={18} /> Loading your profile…
-      </div>
-    );
-  }
+  // Location to display: prefer the API value, fall back to localStorage.
+  const hasApiLoc = !!apiData?.location;
+  const hasLocalLoc = !!(storedLat && storedLng) || !!storedCity;
 
-  const initials = (form.name ?? data?.name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('');
+  const initials = (form.name ?? profile.name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('');
 
   return (
     <div className="space-y-6">
@@ -119,8 +191,8 @@ export function ProfileForm() {
             {initials}
           </span>
           <div>
-            <p className="text-lg font-semibold">{form.name || data?.name}</p>
-            <p className="text-sm text-ink/55 flex items-center gap-1"><Mail size={13} /> {data?.email}</p>
+            <p className="text-lg font-semibold">{form.name || profile.name}</p>
+            <p className="text-sm text-ink/55 flex items-center gap-1"><Mail size={13} /> {profile.email}</p>
           </div>
         </div>
 
@@ -135,7 +207,7 @@ export function ProfileForm() {
           </Field>
 
           <Field icon={Mail} label="Email">
-            <input value={data?.email ?? ''} disabled className="profile-input opacity-60 cursor-not-allowed" />
+            <input value={profile.email ?? ''} disabled className="profile-input opacity-60 cursor-not-allowed" />
           </Field>
 
           <Field icon={Globe2} label="Language">
@@ -182,7 +254,6 @@ export function ProfileForm() {
             Save changes
           </button>
           {savedAt && !save.isPending && <span className="text-sm text-emerald-700 flex items-center gap-1"><Check size={14} /> Saved</span>}
-          {save.isError && <span className="text-sm text-rose-600">Couldn’t save — try again.</span>}
         </div>
       </motion.div>
 
@@ -193,12 +264,19 @@ export function ProfileForm() {
           <span className="text-xs text-ink/50">— used to calculate your prayer times</span>
         </div>
 
-        {data?.location ? (
+        {hasApiLoc ? (
           <p className="text-sm text-ink/70">
-            {data.location.city ? `${data.location.city}, ` : ''}{data.location.country ?? ''}
+            {apiData!.location!.city ? `${apiData!.location!.city}, ` : ''}{apiData!.location!.country ?? ''}
             <span className="text-ink/45">
-              {' '}({data.location.lat.toFixed(3)}, {data.location.lng.toFixed(3)} · {data.location.timezone})
+              {' '}({apiData!.location!.lat.toFixed(3)}, {apiData!.location!.lng.toFixed(3)} · {apiData!.location!.timezone})
             </span>
+          </p>
+        ) : hasLocalLoc ? (
+          <p className="text-sm text-ink/70">
+            {storedCity ? `${storedCity}${storedCountry ? `, ${storedCountry}` : ''}` : ''}
+            {storedLat && storedLng && (
+              <span className="text-ink/45"> ({storedLat.toFixed(3)}, {storedLng.toFixed(3)})</span>
+            )}
           </p>
         ) : (
           <p className="text-sm text-ink/55">No location set yet.</p>
@@ -206,18 +284,17 @@ export function ProfileForm() {
 
         <button
           onClick={detectLocation}
-          disabled={saveLocation.isPending}
+          disabled={locDetecting}
           className="btn-ghost text-sm py-2 px-4 mt-4"
         >
-          {saveLocation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Crosshair size={16} />}
-          {data?.location ? 'Update location' : 'Detect my location'}
+          {locDetecting ? <Loader2 size={16} className="animate-spin" /> : <Crosshair size={16} />}
+          {(hasApiLoc || hasLocalLoc) ? 'Update location' : 'Detect my location'}
         </button>
       </motion.div>
     </div>
   );
 }
 
-/** Web-only: profile management is reserved for the desktop app. */
 export function DesktopRequiredNotice() {
   return (
     <motion.div

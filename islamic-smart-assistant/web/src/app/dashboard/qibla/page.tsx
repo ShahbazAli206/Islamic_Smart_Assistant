@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { useCompassHeading } from '@/lib/compass';
+import { useLocalStorage } from '@/lib/useLocalStorage';
 import { qiblaBearing, distanceToKaaba, compassPoint, formatDistance, isAligned } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -286,10 +287,24 @@ function InfoRow({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+const QIBLA_AYAH: Record<string, string> = {
+  en: 'So turn your face toward al-Masjid al-Haram. And wherever you are, turn your faces toward it.',
+  ar: 'فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ',
+  ur: 'پس اپنا چہرہ مسجد الحرام کی طرف پھیرو، اور تم جہاں کہیں بھی ہو اپنے چہرے اسی کی طرف پھیرو۔',
+  tr: 'Yüzünü Mescid-i Haram yönüne çevir. Nerede olursanız olun, yüzlerinizi o tarafa çevirin.',
+  hi: 'अपना चेहरा मस्जिद अल-हराम की तरफ फेरो। और तुम जहाँ भी हो, अपने चेहरे उसी की तरफ फेरो।',
+  bn: 'তোমার মুখ মসজিদুল হারামের দিকে ফেরাও। তোমরা যেখানেই থাকো, সেদিকে মুখ ফেরাও।',
+  fr: 'Tourne donc ton visage vers la Mosquée sacrée. Où que vous soyez, tournez vos visages vers elle.',
+  zh: '你当把脸转向禁寺。你们无论在哪里，都当把脸转向那方。',
+  id: 'Palingkanlah wajahmu ke arah Masjidil Haram. Di mana saja kamu berada, palingkanlah wajahmu ke arahnya.',
+  ps: 'خپل مخ د مسجد الحرام لور ته واوږه. تاسو هرچیرې چې اوسئ، خپل مخونه ورلور ته کاږئ.',
+};
+
 export default function QiblaPage() {
   const { isDark } = useTheme();
   const loc     = useStoredLocation();
   const compass = useCompassHeading();
+  const [language] = useLocalStorage<string>('isa:language', 'en');
   const [needleStyle, setNeedleStyle] = useState<NeedleStyle>('classic');
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -449,7 +464,7 @@ export default function QiblaPage() {
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
-                  So turn your face toward al-Masjid al-Haram. And wherever you are, turn your faces toward it.
+                  {QIBLA_AYAH[language] ?? QIBLA_AYAH.en}
                 </p>
                 <p className="mt-2 text-xs font-semibold text-black/75">Surah Al-Baqarah (2:144)</p>
               </div>
