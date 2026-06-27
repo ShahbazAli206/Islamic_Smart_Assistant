@@ -1175,17 +1175,7 @@ export default function DevicesPage() {
                   </div>
                 </div>
 
-                {/* health */}
-                <div className={`flex-1 min-w-0 xl:border-l ${T.divider} xl:pl-5`}>
-                  <p className={`text-sm ${T.sub}`}>Output Health</p>
-                  <p className="text-xl font-display font-bold text-emerald-600 leading-tight">Excellent</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <HealthBars />
-                    <FlowWave color={isDark ? '#34d399' : '#10b981'} className="h-8 flex-1 min-w-[80px] max-w-[180px] opacity-80" />
-                  </div>
-                </div>
-
-                {/* actions */}
+{/* actions */}
                 <div className="flex flex-wrap gap-2 shrink-0">
                   <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={testOutput}
                     className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold ${T.ghost}`}>

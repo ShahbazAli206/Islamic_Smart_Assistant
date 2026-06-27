@@ -21,6 +21,7 @@ import {
 } from '@/lib/customAzan';
 import { formatClock, decodeAudioFile, encodeWavFromSegments, type WavSegment } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
+import { fetchCommunityUploads, deleteCommunityUpload } from '@/lib/communityUploads';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
@@ -522,22 +523,68 @@ export default function AzanPage() {
     if (customUrlRef.current) { URL.revokeObjectURL(customUrlRef.current); customUrlRef.current = null; }
   };
 
-  // Custom azans synced from the backend (uploaded on ANY device). They're played
-  // straight from their public audio_url, so a clip uploaded on web/desktop/mobile
-  // shows up everywhere.
-  const [remoteCustoms, setRemoteCustoms] = useState<{ id: string; name: string; url: string; durationMs: number }[]>([]);
+  // Community uploads fetched from cloud storage — visible to ALL users on every device.
+  const [remoteCustoms,   setRemoteCustoms]   = useState<{ id: string; name: string; url: string; durationMs: number }[]>([]);
+  const [communityDuroods, setCommunityDuroods] = useState<CustomAzan[]>([]);
+  const [communityDuas,    setCommunityDuas]    = useState<CustomAzan[]>([]);
+
   useEffect(() => {
-    Azan.voices()
-      .then((vs) => {
-        const customs = vs
-          .filter((v) => v.is_custom && v.audio_url)
-          .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms }));
-        setRemoteCustoms(customs);
-        // Cache every remote URL so the scheduler (and customAzanUrl) can play
-        // synced clips without needing a local IndexedDB blob.
-        customs.forEach((c) => saveRemoteUrl(c.id, c.url));
-      })
-      .catch(() => { /* offline / signed out — fall back to local customs only */ });
+    // Try Supabase community uploads first; fall back to the legacy backend.
+    const loadAzans = async () => {
+      try {
+        const rows = await fetchCommunityUploads('azan');
+        if (rows.length > 0) {
+          const customs = rows.map((r) => ({ id: r.id, name: r.name, url: r.public_url, durationMs: r.duration_sec * 1000 }));
+          setRemoteCustoms(customs);
+          customs.forEach((c) => saveRemoteUrl(c.id, c.url));
+          return;
+        }
+      } catch { /* Supabase not configured */ }
+      // Legacy backend fallback
+      Azan.voices()
+        .then((vs) => {
+          const customs = vs
+            .filter((v) => v.is_custom && v.audio_url)
+            .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms }));
+          setRemoteCustoms(customs);
+          customs.forEach((c) => saveRemoteUrl(c.id, c.url));
+        })
+        .catch(() => {});
+    };
+
+    const loadDuroods = async () => {
+      try {
+        const rows = await fetchCommunityUploads('durood');
+        const clips = rows.map((r) => ({
+          id: r.id, name: r.name,
+          createdAt: new Date(r.created_at).getTime(),
+          durationSec: r.duration_sec,
+          audioType: 'durood' as const,
+          remoteUrl: r.public_url,
+        }));
+        setCommunityDuroods(clips);
+        clips.forEach((c) => saveRemoteUrl(c.id, c.remoteUrl!));
+      } catch { /* Supabase not configured */ }
+    };
+
+    const loadDuas = async () => {
+      try {
+        const rows = await fetchCommunityUploads('dua');
+        const clips = rows.map((r) => ({
+          id: r.id, name: r.name,
+          createdAt: new Date(r.created_at).getTime(),
+          durationSec: r.duration_sec,
+          audioType: 'dua' as const,
+          remoteUrl: r.public_url,
+        }));
+        setCommunityDuas(clips);
+        clips.forEach((c) => saveRemoteUrl(c.id, c.remoteUrl!));
+      } catch { /* Supabase not configured */ }
+    };
+
+    loadAzans();
+    loadDuroods();
+    loadDuas();
   }, []);
 
   const selectedLabel = isCustomAzan(selectedId)
@@ -711,23 +758,48 @@ export default function AzanPage() {
     if (uploadType === 'durood') {
       setCustomDuroods((prev) => [meta, ...prev]);
       if (!duroodId) setDuroodId(meta.id);
+      // Refresh community duroods so the new upload shows without a page reload
+      fetchCommunityUploads('durood').then((rows) => {
+        const clips = rows.map((r) => ({
+          id: r.id, name: r.name,
+          createdAt: new Date(r.created_at).getTime(),
+          durationSec: r.duration_sec,
+          audioType: 'durood' as const,
+          remoteUrl: r.public_url,
+        }));
+        setCommunityDuroods(clips);
+        clips.forEach((c) => saveRemoteUrl(c.id, c.remoteUrl!));
+      }).catch(() => {});
     } else if (uploadType === 'dua') {
       setCustomDuas((prev) => [meta, ...prev]);
       if (!duaId) setDuaId(meta.id);
+      fetchCommunityUploads('dua').then((rows) => {
+        const clips = rows.map((r) => ({
+          id: r.id, name: r.name,
+          createdAt: new Date(r.created_at).getTime(),
+          durationSec: r.duration_sec,
+          audioType: 'dua' as const,
+          remoteUrl: r.public_url,
+        }));
+        setCommunityDuas(clips);
+        clips.forEach((c) => saveRemoteUrl(c.id, c.remoteUrl!));
+      }).catch(() => {});
     } else {
       setCustomAzans((prev) => [meta, ...prev]);
-      // Do NOT auto-select — user must click "Set as Default" explicitly.
-      // Refresh the backend list so the uploaded clip's public audio_url is available.
-      Azan.voices()
-        .then((vs) => {
-          const customs = vs
-            .filter((v) => v.is_custom && v.audio_url)
+      // Refresh community azans so the new upload is visible immediately.
+      fetchCommunityUploads('azan').then((rows) => {
+        const customs = rows.map((r) => ({ id: r.id, name: r.name, url: r.public_url, durationMs: r.duration_sec * 1000 }));
+        customs.forEach((c) => saveRemoteUrl(c.id, c.url));
+        setRemoteCustoms(customs);
+      }).catch(() => {
+        // Supabase not configured — try legacy backend
+        Azan.voices().then((vs) => {
+          const customs = vs.filter((v) => v.is_custom && v.audio_url)
             .map((v) => ({ id: v.id, name: v.name, url: v.audio_url, durationMs: v.duration_ms }));
           customs.forEach((c) => saveRemoteUrl(c.id, c.url));
-          return customs;
-        })
-        .then((customs) => setRemoteCustoms(customs))
-        .catch(() => {});
+          setRemoteCustoms(customs);
+        }).catch(() => {});
+      });
     }
     setUploaderOpen(false);
     setUploadType(null);
@@ -737,6 +809,8 @@ export default function AzanPage() {
     if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
     await deleteAzanClip(id);
     setCustomDuroods((prev) => prev.filter((c) => c.id !== id));
+    setCommunityDuroods((prev) => prev.filter((c) => c.id !== id));
+    deleteCommunityUpload(id, 'durood').catch(() => {});
     Azan.deleteVoice(id).catch(() => {});
     if (duroodId === id) setDuroodId(null);
     setPreAzanQueue(prev => prev.filter(x => x.id !== id));
@@ -748,6 +822,8 @@ export default function AzanPage() {
     if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
     await deleteAzanClip(id);
     setCustomDuas((prev) => prev.filter((c) => c.id !== id));
+    setCommunityDuas((prev) => prev.filter((c) => c.id !== id));
+    deleteCommunityUpload(id, 'dua').catch(() => {});
     Azan.deleteVoice(id).catch(() => {});
     if (duaId === id) setDuaId(null);
     setPreAzanQueue(prev => prev.filter(x => x.id !== id));
@@ -873,8 +949,8 @@ export default function AzanPage() {
     const fromAll = allItems.find((it) => it.id === activeId)?.name;
     if (fromAll) return fromAll;
     return (
-      [...BUILT_IN_DUROODS, ...customDuroods].find((c) => c.id === activeId)?.name ??
-      [...BUILT_IN_DUAS, ...customDuas].find((c) => c.id === activeId)?.name ??
+      [...BUILT_IN_DUROODS, ...customDuroods, ...communityDuroods].find((c) => c.id === activeId)?.name ??
+      [...BUILT_IN_DUAS, ...customDuas, ...communityDuas].find((c) => c.id === activeId)?.name ??
       null
     );
   }, [activeId, allItems, customDuroods, customDuas]);
@@ -1328,7 +1404,7 @@ export default function AzanPage() {
 
               {/* Active queue summary */}
               {(() => {
-                const allDuroods = [...BUILT_IN_DUROODS, ...customDuroods];
+                const allDuroods = [...BUILT_IN_DUROODS, ...customDuroods, ...communityDuroods];
                 const beforeCount = preAzanQueue.filter(x => allDuroods.some(d => d.id === x.id)).length;
                 const afterCount  = postAzanQueue.filter(x => allDuroods.some(d => d.id === x.id)).length;
                 return (beforeCount > 0 || afterCount > 0) ? (
@@ -1342,10 +1418,24 @@ export default function AzanPage() {
                 ) : null;
               })()}
 
-              {/* Cards — built-ins always shown first, then user uploads */}
+              {/* Cards — built-ins first, then community uploads, then own uploads */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <AnimatePresence>
                   {BUILT_IN_DUROODS.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="emerald" readOnly
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => {}}
+                    />
+                  ))}
+                  {communityDuroods
+                    .filter((r) => !customDuroods.some((c) => c.id === r.id))
+                    .map((track) => (
                     <UploadedCard
                       key={track.id} meta={track} accent="emerald" readOnly
                       isPlaying={activeId === track.id}
@@ -1371,7 +1461,7 @@ export default function AzanPage() {
                   ))}
                 </AnimatePresence>
               </div>
-              {customDuroods.length === 0 && (
+              {customDuroods.length === 0 && communityDuroods.length === 0 && (
                 <button
                   onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
@@ -1401,7 +1491,7 @@ export default function AzanPage() {
 
               {/* Active queue summary */}
               {(() => {
-                const allDuas = [...BUILT_IN_DUAS, ...customDuas];
+                const allDuas = [...BUILT_IN_DUAS, ...customDuas, ...communityDuas];
                 const beforeCount = preAzanQueue.filter(x => allDuas.some(d => d.id === x.id)).length;
                 const afterCount  = postAzanQueue.filter(x => allDuas.some(d => d.id === x.id)).length;
                 return (beforeCount > 0 || afterCount > 0) ? (
@@ -1415,10 +1505,24 @@ export default function AzanPage() {
                 ) : null;
               })()}
 
-              {/* Cards — built-ins always shown first, then user uploads */}
+              {/* Cards — built-ins first, then community uploads, then own uploads */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <AnimatePresence>
                   {BUILT_IN_DUAS.map((track) => (
+                    <UploadedCard
+                      key={track.id} meta={track} accent="rose" readOnly
+                      isPlaying={activeId === track.id}
+                      isBefore={preAzanQueue.some(x => x.id === track.id)}
+                      isAfter={postAzanQueue.some(x => x.id === track.id)}
+                      onPlay={() => previewCustom(track)}
+                      onToggleBefore={() => togglePreAzan(track)}
+                      onToggleAfter={() => togglePostAzan(track)}
+                      onDelete={() => {}}
+                    />
+                  ))}
+                  {communityDuas
+                    .filter((r) => !customDuas.some((c) => c.id === r.id))
+                    .map((track) => (
                     <UploadedCard
                       key={track.id} meta={track} accent="rose" readOnly
                       isPlaying={activeId === track.id}
@@ -1444,7 +1548,7 @@ export default function AzanPage() {
                   ))}
                 </AnimatePresence>
               </div>
-              {customDuas.length === 0 && (
+              {customDuas.length === 0 && communityDuas.length === 0 && (
                 <button
                   onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${

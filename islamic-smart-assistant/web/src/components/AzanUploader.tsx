@@ -6,6 +6,7 @@ import { UploadCloud, X, Play, Square, Scissors, Loader2, Check, Music2, Plus, B
 import { decodeAudioFile, computePeaks, encodeWavFromSegments, formatClock } from '@/lib/audioTrim';
 import { putAzanClip, saveRemoteUrl, CUSTOM_AZAN_PREFIX, type CustomAzan, type AudioType } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
+import { uploadCommunityAudio } from '@/lib/communityUploads';
 import { useTheme } from '@/lib/ThemeContext';
 
 type Props = {
@@ -221,16 +222,28 @@ export function AzanUploader({ open, onClose, onSaved, audioType = 'azan' }: Pro
       const DEFAULT_CLIP_NAME: Record<AudioType, string> = { azan: 'Custom Azan', durood: 'Custom Durood', dua: 'Custom Dua' };
       const clipName = name.trim() || DEFAULT_CLIP_NAME[audioType];
 
-      // Upload to the backend first so every browser gets the same ID and a
-      // public audio_url. Fall back to a local-only ID when offline.
+      // Upload to shared cloud storage so every user sees the clip.
+      // Supabase direct is tried first (reliable, no cold-start, supports audio_type).
+      // Falls back to the NestJS backend, then to local-only.
       let id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
       let remoteUrl: string | undefined;
       try {
-        const remote = await Azan.uploadVoice(blob, { name: clipName, durationMs: totalDur * 1000, audioType });
-        id = remote.id;
-        remoteUrl = remote.audio_url || undefined;
+        const publicUrl = await uploadCommunityAudio(blob, {
+          id,
+          name: clipName,
+          audioType,
+          durationSec: Math.round(totalDur * 10) / 10,
+        });
+        if (publicUrl) remoteUrl = publicUrl;
       } catch {
-        // Offline or server error — save locally only; other browsers won't see it until re-uploaded
+        // Supabase not configured or failed — try backend
+        try {
+          const remote = await Azan.uploadVoice(blob, { name: clipName, durationMs: totalDur * 1000, audioType });
+          id = remote.id;
+          remoteUrl = remote.audio_url || undefined;
+        } catch {
+          // Both failed — local-only; other users won't see this clip
+        }
       }
 
       await putAzanClip(id, blob);

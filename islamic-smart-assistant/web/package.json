@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "@tanstack/react-query": "^5.17.19",
     "autoprefixer": "^10.4.17",
     "axios": "^1.6.5",
