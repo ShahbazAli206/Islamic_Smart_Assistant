@@ -18,8 +18,10 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, BookOpen, Compass, Sparkles, Headphones,
-  ShieldCheck, User, Sun, CalendarDays,
+  ShieldCheck, User, Sun, CalendarDays, MonitorDown,
 } from 'lucide-react';
+
+const DESKTOP_DOWNLOAD_URL = 'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases/download/v1.0.0/NoorDesktop-Setup-1.0.0.exe';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';
@@ -137,6 +139,13 @@ export default function HomePage() {
                 >
                   <BookOpen size={18} /> Explore Quran
                 </Link>
+                <a
+                  href={DESKTOP_DOWNLOAD_URL}
+                  download
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 font-bold shadow-lg shadow-emerald-900/40 transition-all hover:shadow-emerald-700/50 hover:scale-[1.02] active:scale-100"
+                >
+                  <MonitorDown size={18} /> Download Desktop App
+                </a>
               </div>
               <div className="flex items-center gap-3 pt-3">
                 <div className="flex -space-x-3">

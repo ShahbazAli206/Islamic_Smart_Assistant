@@ -11,7 +11,7 @@ import { Me, type MeProfile, type SetLocation } from '@/lib/api';
 import { setLocationByCoords, readStoredLocation } from '@/lib/location';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 
-const DESKTOP_DOWNLOAD_URL = 'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases';
+const DESKTOP_DOWNLOAD_URL = 'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases/download/v1.0.0/NoorDesktop-Setup-1.0.0.exe';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
