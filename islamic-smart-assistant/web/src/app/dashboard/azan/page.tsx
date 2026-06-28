@@ -54,14 +54,14 @@ const VOICES: AzanVoice[] = [
     region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '2:46',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/Azan Best Sound quality.mp3', remote: '/audio/Azan Best Sound quality.mp3',
-    art: '/azan/makkah.svg', accent: 'from-emerald-500 to-teal-700',
+    art: '/azan/makkah.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
   },
   {
     id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
     region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
-    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700', defaultPick: true,
+    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
   },
   {
     id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
@@ -433,7 +433,7 @@ export default function AzanPage() {
 
   const [activeId, setActiveId]   = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'beautiful-azan');
+  const [selectedId, setSelectedId] = useLocalStorage<string>('isa:azanVoice', 'azan-best-sound-quality');
   const [autoplay, setAutoplay]   = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [favorites, setFavorites] = useLocalStorage<string[]>('isa:azanFavorites', []);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});

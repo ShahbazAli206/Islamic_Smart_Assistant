@@ -14,9 +14,10 @@ import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
-/** Top-5 featured voices shown at the top of the Azan voices page.
- *  Used by the "Different voices for each prayer" feature. */
-const TOP_5_VOICES = [
+/** All "Most Listened" tagged voices — pool for the "Different voices for each prayer" feature.
+ *  Each prayer draws a stable-random pick from this pool (seeded by prayer+date, changes daily). */
+const MOST_LISTENED_VOICES = [
+  'azan-best-sound-quality',
   'beautiful-azan',
   'hafiz-ahmed-raza-qadri',
   'mevlan-kurtishi',
@@ -38,6 +39,7 @@ const VOICE_NAMES: Record<string, { name: string; subtitle: string; region: stri
   'makkah-abdallah-ahmad':     { name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter', region: 'Saudi Arabia' },
   'masjid-al-haram':           { name: 'Masjid Al-Haram',         subtitle: 'The Grand Mosque, Makkah', region: 'Saudi Arabia' },
   'seyyid-taleh-boradigahi':   { name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan', region: 'Azerbaijan' },
+  'azan-best-sound-quality':   { name: 'Azan — Best Sound Quality', subtitle: 'Crystal clear HD recording', region: '' },
   'beautiful-azan':            { name: 'Beautiful Azan',          subtitle: 'Melodic & Heartfelt', region: '' },
   'makkah':                    { name: 'Makkah — Haramain',       subtitle: 'Sheikh Ali Mulla', region: 'Saudi Arabia' },
   'madinah':                   { name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari', region: 'Saudi Arabia' },
@@ -154,7 +156,7 @@ type SuppPos = 'before' | 'after' | 'both';
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function AutoAzanScheduler() {
-  const [voice]    = useLocalStorage<string>('isa:azanVoice', 'hafiz-ahmed-raza-qadri');
+  const [voice]    = useLocalStorage<string>('isa:azanVoice', 'azan-best-sound-quality');
   const [enabled, setEnabled] = useLocalStorage<boolean>('isa:azanAutoplay', true);
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
   const [unlocked, setUnlocked] = useLocalStorage<boolean>('isa:azanUnlocked', false);
@@ -327,12 +329,13 @@ export function AutoAzanScheduler() {
     // Volume control: set to 95% when the setting is ON.
     if (freshVolumeAuto) el.volume = 0.95;
 
-    // Different voices: each of the 5 prayers gets a different voice from the top
-    // 5 featured voices — selected voice always plays for Fajr (index 0).
+    // Different voices: each prayer randomly picks from the "Most Listened" pool.
+    // The pick is stable within a day (seeded by prayer name + today's date) so the same
+    // prayer always plays the same voice on a given day, changing each new day.
     if (freshDiffVoices) {
-      const pool = [freshVoice, ...TOP_5_VOICES.filter((id) => id !== freshVoice)].slice(0, 5);
-      const idx = AZAN_PRAYERS.indexOf(prayer as keyof PrayerTimes);
-      freshVoice = pool[idx >= 0 ? idx : 0] ?? freshVoice;
+      const seed = (prayer + new Date().toDateString())
+        .split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0);
+      freshVoice = MOST_LISTENED_VOICES[seed % MOST_LISTENED_VOICES.length];
     }
 
     const v = freshVoice;
