@@ -50,19 +50,36 @@ function readLocalProfile(): Partial<MeProfile> {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const compound: Partial<MeProfile> = raw ? JSON.parse(raw) : {};
+    // Individual keys written by QuickSettings / Settings page may be more recent —
+    // prefer them so the modal always opens with the latest values.
+    const get = (k: string) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } };
+    const lang = get('isa:language');
+    const sect = get('isa:sect');
+    const fiqh = get('isa:fiqh');
+    return {
+      ...compound,
+      ...(lang != null ? { language: lang }        : {}),
+      ...(sect != null ? { sect }                  : {}),
+      ...(fiqh != null ? { fiqh_method: fiqh }     : {}),
+    };
   } catch { return {}; }
 }
 
 function persistLocalProfile(p: Partial<MeProfile>) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(p));
-  // Also keep the app-wide language key in sync so every page re-renders.
-  if (p.language) {
-    const j = JSON.stringify(p.language);
-    localStorage.setItem('isa:language', j);
-    window.dispatchEvent(new StorageEvent('storage', { key: 'isa:language', newValue: j }));
-  }
+  // Emit individual keys so QuickSettings, Settings page, and every other
+  // useLocalStorage subscriber re-renders immediately in the same tab.
+  const emit = (key: string, val: unknown) => {
+    if (val == null) return;
+    const j = JSON.stringify(val);
+    localStorage.setItem(key, j);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: j }));
+  };
+  emit('isa:language', p.language);
+  emit('isa:sect',     p.sect);
+  emit('isa:fiqh',     p.fiqh_method);
 }
 
 export function ProfileForm() {
@@ -107,15 +124,19 @@ export function ProfileForm() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiData]);
 
-  // First mount: populate from localStorage if API hasn't responded yet.
+  // First mount: populate from localStorage (readLocalProfile already merges individual
+  // keys written by QuickSettings, so this reflects the latest values from any source).
   useEffect(() => {
-    if (!apiData && localProfile.name !== undefined) {
-      setForm({
-        name:        localProfile.name,
-        language:    localProfile.language,
-        sect:        localProfile.sect,
-        fiqh_method: localProfile.fiqh_method,
-      });
+    if (!apiData) {
+      const merged = readLocalProfile();
+      if (merged.name !== undefined || merged.language !== undefined) {
+        setForm({
+          name:        merged.name,
+          language:    merged.language,
+          sect:        merged.sect,
+          fiqh_method: merged.fiqh_method,
+        });
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
