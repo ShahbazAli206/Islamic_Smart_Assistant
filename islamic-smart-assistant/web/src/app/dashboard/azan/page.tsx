@@ -8,7 +8,7 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap, Compass,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
-  Pencil, Scissors, Square, X, AlertTriangle,
+  Pencil, Scissors, Square, X, AlertTriangle, Moon,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
@@ -330,16 +330,22 @@ function UploadedCard({
   onToggleBefore: () => void; onToggleAfter: () => void;
   readOnly?: boolean;
 }) {
+  const { isDark } = useTheme();
+  const [queueOpen, setQueueOpen] = useState(false);
   const initials = meta.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
   const g = accent === 'rose' ? 'from-rose-400 to-pink-600' : 'from-emerald-400 to-teal-600';
   const active = isBefore || isAfter;
+  const showQueueBtns = queueOpen || active;
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -2 }}
-      className={`relative rounded-2xl border p-3.5 bg-white shadow-sm transition hover:shadow-md ${
-        active ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-emerald-900/8'
+      className={`relative rounded-2xl border p-3.5 shadow-sm transition hover:shadow-md ${
+        isDark
+          ? `bg-white/[0.05] ${active ? 'border-emerald-500/50 ring-1 ring-emerald-500/25' : 'border-white/10'}`
+          : `bg-white ${active ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-emerald-900/8'}`
       }`}
     >
       {active && (
@@ -349,7 +355,10 @@ function UploadedCard({
       )}
 
       {readOnly ? (
-        <span className="absolute top-2.5 right-2.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 leading-tight">
+        <span className={`absolute top-2.5 right-2.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full leading-tight ${
+          isDark ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700/50'
+                 : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+        }`}>
           Built-in
         </span>
       ) : (
@@ -359,46 +368,73 @@ function UploadedCard({
         </button>
       )}
 
+      {/* Row: avatar + play button + name */}
       <div className="flex items-center gap-3 pr-6">
-        <div className="relative shrink-0">
+        <div className="shrink-0">
           <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${g} flex items-center justify-center ring-2 ring-white shadow-md`}>
             <span className="text-white text-sm font-bold">{initials || '?'}</span>
           </div>
-          <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} onClick={onPlay}
-            className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full grid place-items-center shadow-md transition
-              ${isPlaying ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
-          >
-            {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-px" />}
-          </motion.button>
         </div>
-        <div className="min-w-0 flex-1 pb-1">
-          <h4 className="font-bold text-sm text-emerald-950 leading-tight truncate pr-2">{meta.name}</h4>
-          <p className="text-[10px] font-mono text-emerald-900/35 mt-0.5">{formatClock(meta.durationSec)}</p>
+
+        {/* Play button — sits between avatar and name */}
+        <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} onClick={onPlay}
+          className={`shrink-0 w-8 h-8 rounded-full grid place-items-center shadow-md transition-all
+            ${isPlaying
+              ? 'bg-emerald-500 text-white ring-2 ring-emerald-300/60 shadow-emerald-400/40'
+              : isDark
+              ? 'bg-white/10 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-white/20'
+              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200'}`}
+        >
+          {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-px" />}
+        </motion.button>
+
+        <div className="min-w-0 flex-1">
+          <h4 className={`font-bold text-sm leading-tight truncate pr-2 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{meta.name}</h4>
+          <p className={`text-[10px] font-mono mt-0.5 ${isDark ? 'text-emerald-400/55' : 'text-emerald-900/35'}`}>{formatClock(meta.durationSec)}</p>
         </div>
       </div>
 
-      {/* Before / After toggle buttons */}
-      <div className="mt-3 grid grid-cols-2 gap-1.5">
-        <button
-          onClick={onToggleBefore}
-          className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
-            isBefore
-              ? 'bg-emerald-600 text-white shadow-sm'
-              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-          }`}
-        >
-          ⏮ Before
-        </button>
-        <button
-          onClick={onToggleAfter}
-          className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
-            isAfter
-              ? 'bg-amber-500 text-white shadow-sm'
-              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-          }`}
-        >
-          After ⏭
-        </button>
+      {/* Before / After — only revealed after "Select to Play" is tapped */}
+      <div className="mt-3">
+        {!showQueueBtns ? (
+          <button
+            onClick={() => setQueueOpen(true)}
+            className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition border ${
+              isDark
+                ? 'border-emerald-700/50 text-emerald-400 hover:bg-emerald-900/40'
+                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+            }`}
+          >
+            + Select to Play
+          </button>
+        ) : (
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={onToggleBefore}
+              className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
+                isBefore
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : isDark
+                  ? 'bg-white/5 text-emerald-400 border border-white/10 hover:bg-emerald-900/40'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100'
+              }`}
+            >
+              ⏮ Before
+            </button>
+            <button
+              onClick={onToggleAfter}
+              className={`py-1.5 rounded-lg text-[11px] font-bold transition ${
+                isAfter
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : isDark
+                  ? 'bg-white/5 text-emerald-400 border border-white/10 hover:bg-emerald-900/40'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100'
+              }`}
+            >
+              After ⏭
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -477,6 +513,13 @@ export default function AzanPage() {
   // User-uploaded supplementary clips
   const [customDuroods, setCustomDuroods] = useLocalStorage<CustomAzan[]>('isa:customDuroods', []);
   const [customDuas,    setCustomDuas]    = useLocalStorage<CustomAzan[]>('isa:customDuas',    []);
+
+  // Durood is only shown for Hanafi fiqh (or when no fiqh is selected yet).
+  const [fiqh] = useLocalStorage<string | null>('isa:fiqh', null);
+  const showDurood = !fiqh || fiqh === '' || fiqh === 'hanafi';
+
+  // Ramadan mode
+  const [ramadanMode, setRamadanMode] = useLocalStorage<boolean>('isa:ramadanMode', false);
 
   // Multi-select before/after Azan queues (also read by the Settings page)
   const [preAzanQueue,  setPreAzanQueue]  = useLocalStorage<{id:string;name:string;audioType:string}[]>('isa:preAzanQueue',  []);
@@ -937,10 +980,11 @@ export default function AzanPage() {
   );
 
   const settingsRows = [
-    { Icon: Clock,   title: 'Auto play before prayer', sub: '2 min before adhan', on: autoplay,   set: () => setAutoplay(!autoplay) },
-    { Icon: Volume2, title: 'Different voices',         sub: 'For each prayer',     on: diffVoices, set: () => setDiffVoices(!diffVoices) },
-    { Icon: Activity,title: 'Volume control',           sub: 'Auto adjust',         on: volAuto,    set: () => setVolAuto(!volAuto) },
-    { Icon: Clock,   title: 'Weekend mode',             sub: 'Custom schedule',     on: weekend,    set: () => setWeekend(!weekend) },
+    { Icon: Clock,   title: 'Auto play before prayer', sub: '2 min before adhan',       on: autoplay,    set: () => setAutoplay(!autoplay) },
+    { Icon: Volume2, title: 'Different voices',         sub: 'For each prayer',           on: diffVoices,  set: () => setDiffVoices(!diffVoices) },
+    { Icon: Activity,title: 'Volume control',           sub: 'Auto adjust',               on: volAuto,     set: () => setVolAuto(!volAuto) },
+    { Icon: Clock,   title: 'Weekend mode',             sub: 'Custom schedule',           on: weekend,     set: () => setWeekend(!weekend) },
+    { Icon: Moon,    title: 'Ramadan mode',             sub: 'Suhoor & Iftar duas',       on: ramadanMode, set: () => setRamadanMode(!ramadanMode) },
   ];
 
   // Name of whichever audio item is currently playing (azan / durood / dua).
@@ -1223,25 +1267,11 @@ export default function AzanPage() {
 
                     {/* avatar + identity */}
                     <div className="flex items-start gap-4 pr-8">
-                      <div className="relative shrink-0">
+                      <div className="shrink-0">
                         <div className={`w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gradient-to-br ${item.accent}`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={item.art} alt={item.name} className="w-full h-full object-cover" />
                         </div>
-                        {/* play overlay */}
-                        <motion.button
-                          whileHover={{ scale: isLoading ? 1 : 1.1 }} whileTap={{ scale: isLoading ? 1 : 0.92 }}
-                          onClick={() => playItem(item)}
-                          disabled={isLoading}
-                          className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full grid place-items-center shadow-lg transition
-                            ${isPlaying  ? 'bg-emerald-600 text-white'
-                            : isLoading  ? 'bg-emerald-100 text-emerald-500 cursor-default'
-                            : 'bg-white text-emerald-700 hover:bg-emerald-50'}`}
-                        >
-                          {isLoading  ? <Loader2 size={16} className="animate-spin" />
-                           : isPlaying ? <Pause size={16} fill="currentColor" />
-                           : <Play size={16} fill="currentColor" className="ml-0.5" />}
-                        </motion.button>
                       </div>
 
                       <div className="min-w-0 pt-1">
@@ -1251,8 +1281,26 @@ export default function AzanPage() {
                       </div>
                     </div>
 
-                    {/* waveform */}
-                    <div className="mt-4 flex items-center gap-3">
+                    {/* waveform row — play button sits LEFT of the wave */}
+                    <div className="mt-4 flex items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: isLoading ? 1 : 1.13 }}
+                        whileTap={{ scale: isLoading ? 1 : 0.9 }}
+                        onClick={() => playItem(item)}
+                        disabled={isLoading}
+                        className={`shrink-0 w-9 h-9 rounded-full grid place-items-center shadow-md transition-all
+                          ${isPlaying
+                            ? 'bg-emerald-500 text-white shadow-emerald-400/50 ring-2 ring-emerald-300/60'
+                            : isLoading
+                            ? 'bg-emerald-100 text-emerald-400 cursor-default'
+                            : isDark
+                            ? 'bg-white/10 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-white/20 hover:border-emerald-500 hover:shadow-emerald-600/40'
+                            : 'bg-emerald-100/80 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-500 hover:shadow-emerald-500/30'}`}
+                      >
+                        {isLoading  ? <Loader2 size={14} className="animate-spin" />
+                         : isPlaying ? <Pause size={14} fill="currentColor" />
+                         : <Play size={14} fill="currentColor" className="ml-0.5" />}
+                      </motion.button>
                       <Waveform id={item.id} playing={isPlaying} />
                       <span className="text-xs font-mono text-emerald-900/50 shrink-0">{item.duration}</span>
                     </div>
@@ -1387,8 +1435,8 @@ export default function AzanPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            {/* ── Durood panel ── */}
-            <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
+            {/* ── Durood panel — visible only for Hanafi or unset fiqh ── */}
+            {showDurood && <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl select-none">📿</span>
                 <h3 className={`font-bold text-base ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Durood Sharif</h3>
@@ -1472,7 +1520,7 @@ export default function AzanPage() {
                   + Upload your own Durood
                 </button>
               )}
-            </div>
+            </div>}
 
             {/* ── Dua panel ── */}
             <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>

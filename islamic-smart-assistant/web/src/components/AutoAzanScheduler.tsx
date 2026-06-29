@@ -64,6 +64,32 @@ const WAVE = waveHeights();
 
 const UNLOCK_SRC = '/audio/azan/makkah.mp3';
 
+// ── Ramadan TTS texts ─────────────────────────────────────────────────────────
+
+const SUHOOR_TEXT: Record<string, string> = {
+  en: 'Suhoor time is ending. It is time to stop eating and drinking. May Allah accept your fasting.',
+  ar: 'انتهى وقت السحور. حان وقت الإمساك. تقبل الله صيامكم.',
+  ur: 'سحری کا وقت ختم ہو رہا ہے۔ کھانا پینا بند کر دیں۔ اللہ آپ کا روزہ قبول فرمائے۔',
+  fr: "Le suhoor touche à sa fin. Il est temps de s'arrêter de manger. Qu'Allah accepte votre jeûne.",
+  tr: 'Sahur vakti bitiyor. Yemeyi bırakma zamanı. Allah orucunuzu kabul etsin.',
+  id: 'Waktu sahur hampir habis. Saatnya berhenti makan. Semoga Allah menerima puasa Anda.',
+  ms: 'Masa sahur hampir tamat. Tiba masanya berhenti makan. Semoga Allah menerima puasa anda.',
+  hi: 'सहरी का वक्त समाप्त हो रहा है। खाना बंद करने का समय है। अल्लाह आपका रोज़ा क़बूल करे।',
+  bn: 'সাহরির সময় শেষ। এখন খাওয়া বন্ধ করুন। আল্লাহ আপনার রোজা কবুল করুন।',
+};
+
+const IFTAR_TEXT: Record<string, string> = {
+  en: 'It is time to break your fast. Allahumma inni laka sumtu wa bika aamantu wa alayka tawakkaltu wa ala rizqika aftartu. O Allah, I have fasted for You, believed in You, trusted in You, and break my fast with Your provision.',
+  ar: 'حان وقت الإفطار. اللهم إني لك صمت وبك آمنت وعليك توكلت وعلى رزقك أفطرت.',
+  ur: 'افطار کا وقت آ گیا۔ اے اللہ! میں نے تیرے لیے روزہ رکھا، تجھ پر ایمان لایا، تجھ پر توکل کیا اور تیرے رزق سے افطار کرتا ہوں۔',
+  fr: "C'est l'heure de rompre le jeûne. Allahumma inni laka sumtu wa bika aamantu wa alayka tawakkaltu wa ala rizqika aftartu.",
+  tr: 'İftar vakti geldi. Allahümme inni leke sumtu ve bike ementü ve aleyke tevekkeltü ve ala rızkike eftartü.',
+  id: 'Waktunya berbuka puasa. Ya Allah, aku berpuasa karena-Mu, beriman kepada-Mu, bertawakal kepada-Mu, dan berbuka dengan rezeki-Mu.',
+  ms: 'Masanya berbuka puasa. Ya Allah, aku berpuasa kerana-Mu, beriman kepada-Mu, bertawakkal kepada-Mu, dan berbuka dengan rezeki-Mu.',
+  hi: 'इफ्तार का वक्त आ गया। ऐ अल्लाह! मैंने तेरे लिए रोज़ा रखा, तुझ पर ईमान लाया, तुझ पर भरोसा किया और तेरे रिज़्क़ से इफ्तार करता हूँ।',
+  bn: 'ইফতারের সময় হয়েছে। হে আল্লাহ, আমি তোমার জন্য রোজা রেখেছি, ইমান এনেছি, ভরসা রেখেছি এবং তোমার রিজিক দিয়ে ইফতার করছি।',
+};
+
 // ── Prayer announcement (TTS) helpers ────────────────────────────────────────
 
 const LANG_CODES: Record<string, string> = {
@@ -204,6 +230,9 @@ export function AutoAzanScheduler() {
   const customDuasRef     = useRef(customDuas);    customDuasRef.current = customDuas;
   const preAzanQueueRef   = useRef(preAzanQueue);  preAzanQueueRef.current = preAzanQueue;
   const postAzanQueueRef  = useRef(postAzanQueue); postAzanQueueRef.current = postAzanQueue;
+
+  const [ramadanMode] = useLocalStorage<boolean>('isa:ramadanMode', false);
+  const ramadanModeRef = useRef(ramadanMode); ramadanModeRef.current = ramadanMode;
 
   // Sequential audio queue — each item is a src string played in order
   const playQueueRef    = useRef<string[]>([]);
@@ -395,6 +424,18 @@ export function AutoAzanScheduler() {
       if (abortRef.current) return;
     }
 
+    // ── 1b. Ramadan Iftar dua — spoken before Maghrib Azan ──
+    let freshRamadan = ramadanModeRef.current;
+    try {
+      const rm = localStorage.getItem('isa:ramadanMode');
+      if (rm !== null) freshRamadan = JSON.parse(rm);
+    } catch {}
+    if (freshRamadan && prayer === 'Maghrib') {
+      const iftarText = IFTAR_TEXT[freshLang] ?? IFTAR_TEXT.en;
+      await speakTTS(iftarText, LANG_CODES[freshLang] ?? 'en-US');
+      if (abortRef.current) return;
+    }
+
     // ── 2. Build ordered audio queue ──
     const resolveSupp = async (id: string): Promise<string | null> => {
       const url = await customAzanUrl(id);
@@ -452,6 +493,17 @@ export function AutoAzanScheduler() {
     await setAudioOutput(el);
     advanceQueueRef.current();
   }, [setAudioOutput]);
+
+  // Ramadan suhoor announcement — just TTS, no popup or audio queue.
+  const fireSuhoor = useCallback(async () => {
+    let freshLang = languageRef.current;
+    try {
+      const lr = localStorage.getItem('isa:language');
+      if (lr) freshLang = JSON.parse(lr);
+    } catch {}
+    const text = SUHOOR_TEXT[freshLang] ?? SUHOOR_TEXT.en;
+    await speakTTS(text, LANG_CODES[freshLang] ?? 'en-US');
+  }, []);
 
   const armAudio = useCallback(async (): Promise<boolean> => {
     if (armedRef.current) return true;
@@ -620,6 +672,28 @@ export function AutoAzanScheduler() {
           break;
         }
       }
+
+      // Ramadan mode: suhoor announcement 2 min before Fajr
+      try {
+        const rm = localStorage.getItem('isa:ramadanMode');
+        if (rm === 'true' || rm === '"true"') {
+          const fajrKey = `${locKey}:${dateKey}:ramadan-suhoor`;
+          if (!firedRef.current.has(fajrKey)) {
+            const fajrParts = timings['Fajr']?.split(':');
+            if (fajrParts && fajrParts.length >= 2) {
+              const [fh, fm] = fajrParts.map(Number);
+              if (!isNaN(fh) && !isNaN(fm)) {
+                const suhoorTargetMs = prayerMs(fh, fm, now) - 2 * 60_000;
+                const diff = now.getTime() - suhoorTargetMs;
+                if (diff >= 0 && diff < windowMs) {
+                  firedRef.current.add(fajrKey);
+                  fireSuhoor();
+                }
+              }
+            }
+          }
+        }
+      } catch {}
     };
 
     tick();
