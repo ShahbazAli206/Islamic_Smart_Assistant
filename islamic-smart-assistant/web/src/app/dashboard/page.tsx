@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   Search, MapPin, Sun, Sunrise, Sunset, Moon, Clock, ChevronDown,
   Compass, Bell, Play, BookOpen, Bookmark, Hand, CircleDot, Calendar, Star,
   StickyNote, MoreHorizontal, Globe, GraduationCap, Calculator,
-  User,
+  User, Check, X, Crosshair, Loader2, BookMarked,
 } from 'lucide-react';
 import {
   fetchTimingsByCity, fetchTimingsByCoords, nextPrayerInZone, formatCountdown,
@@ -20,6 +20,7 @@ import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AyahDisplay } from '@/components/AyahDisplay';
+import { setLocationByCoords } from '@/lib/location';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -34,13 +35,134 @@ const PRAYER_META: Record<keyof PrayerTimes, { icon: any; tint: string; badge: s
 };
 
 const SECT_LABELS: Record<string, string> = {
-  hanafi: 'Hanafi', shafii: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', shia: 'Fiqah Jafri',
+  sunni: 'Sunni', shia: 'Fiqah Jafri',
+  hanafi: 'Hanafi', shafii: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali',
 };
 const LANG_LABELS: Record<string, string> = { ur: 'Urdu', en: 'English', none: 'Arabic only' };
 const METHOD_LABELS: Record<number, string> = {
   0: 'Fiqah Jafri', 1: 'University of Karachi', 2: 'ISNA',
   3: 'Muslim World League', 4: 'Umm al-Qura, Makkah', 5: 'Egyptian Authority', 7: 'Tehran',
 };
+const FIQH_LABELS: Record<string, string> = {
+  hanafi: 'Hanafi', shafi: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', jafari: "Ja'fari",
+};
+
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'ar', label: 'العربية (Arabic)' },
+  { value: 'ur', label: 'اردو (Urdu)' },
+  { value: 'tr', label: 'Türkçe (Turkish)' },
+  { value: 'hi', label: 'हिन्दी (Hindi)' },
+  { value: 'bn', label: 'বাংলা (Bengali)' },
+  { value: 'fr', label: 'Français (French)' },
+  { value: 'ps', label: 'پښتو (Pashto)' },
+  { value: 'ja', label: '日本語 (Japanese)' },
+  { value: 'zh', label: '中文 (Chinese)' },
+];
+
+const SECT_OPTIONS = [
+  { value: 'sunni', label: 'Sunni' },
+  { value: 'shia',  label: 'Fiqah Jafri (Shia)' },
+];
+
+const FIQH_OPTIONS: Record<string, { value: string; label: string }[]> = {
+  sunni: [
+    { value: 'hanafi',  label: 'Hanafi'  },
+    { value: 'shafi',   label: "Shafi'i" },
+    { value: 'maliki',  label: 'Maliki'  },
+    { value: 'hanbali', label: 'Hanbali' },
+  ],
+  shia: [{ value: 'jafari', label: "Ja'fari" }],
+};
+
+const ALL_AZAN_VOICES = [
+  { id: 'azan-best-sound-quality',    name: 'Azan — Best Sound Quality',       region: 'HD Recording'         },
+  { id: 'beautiful-azan',             name: 'Beautiful Azan',                  region: 'Melodic & Heartfelt'  },
+  { id: 'hafiz-ahmed-raza-qadri',     name: 'Hafiz Ahmed Raza Qadri',          region: 'Pakistan'             },
+  { id: 'mevlan-kurtishi',            name: 'Mevlan Kurtishi',                 region: 'Macedonia'            },
+  { id: 'egzon-ibrahimi',             name: 'Egzon Ibrahimi',                  region: 'Kosovo'               },
+  { id: 'abdul-rahman-mossad',        name: 'Abdul Rahman Mossad',             region: 'Egypt'                },
+  { id: 'masjid-al-haram',            name: 'Masjid Al-Haram',                 region: 'Makkah, Saudi Arabia' },
+  { id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', region: 'Saudi Arabia'         },
+  { id: 'islam-sobhi',                name: 'Islam Sobhi',                     region: 'Egypt'                },
+  { id: 'makkah-abdallah-ahmad',      name: 'Makkah — Abdallah Ahmad',         region: 'Saudi Arabia'         },
+  { id: 'pakistan',                   name: 'Pakistan Style',                  region: 'Lahore, Pakistan'     },
+  { id: 'turkey',                     name: 'Turkish — Istanbul',              region: 'Türkiye'              },
+  { id: 'egypt',                      name: 'Egyptian — Cairo',                region: 'Egypt'                },
+  { id: 'madinah-adhan',              name: 'Azan Madinah',                    region: 'Saudi Arabia'         },
+  { id: 'seyyid-taleh-boradigahi',    name: 'Seyyid Taleh Boradigahi',         region: 'Azerbaijan'           },
+  { id: 'makkah',                     name: 'Makkah — Haramain',               region: 'Saudi Arabia'         },
+  { id: 'madinah',                    name: 'Madinah — Masjid Nabawi',         region: 'Saudi Arabia'         },
+];
+
+// ── Preference Dropdown ───────────────────────────────────────────────────────
+
+function PrefDropdown({
+  label, icon: Icon, value, displayValue, options, onSelect, isDark, divider, faint,
+}: {
+  label: string; icon: any; value: string; displayValue: string;
+  options: { value: string; label: string }[];
+  onSelect: (v: string) => void;
+  isDark: boolean; divider: string; faint: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-emerald-400 ${isDark ? `${divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'}`}
+      >
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><Icon size={16} /></span>
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-medium ${isDark ? faint : 'text-emerald-900'}`}>{label}</p>
+          <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{displayValue || '—'}</p>
+        </div>
+        <ChevronDown size={15} className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? faint : 'text-emerald-700/70'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.14 }}
+            className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl z-50 overflow-hidden border ${isDark ? 'bg-[#0d2018] border-emerald-500/20' : 'bg-white border-emerald-100'}`}
+          >
+            {options.map((opt, i) => {
+              const selected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { onSelect(opt.value); setOpen(false); }}
+                  className={`w-full px-4 py-3 text-left flex items-center justify-between text-sm transition ${
+                    selected
+                      ? (isDark ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-white')
+                      : (isDark ? 'text-parchment/80 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
+                  } ${i > 0 ? `border-t ${isDark ? 'border-white/5' : 'border-emerald-50'}` : ''}`}
+                >
+                  <span>{opt.label}</span>
+                  {selected && <Check size={14} />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function to12h(time?: string): { hm: string; ap: string } {
   if (!time || !time.includes(':')) return { hm: '--:--', ap: '' };
@@ -70,8 +192,13 @@ export default function Overview() {
   // Live preference values for the "Your Preferences" banner.
   const [name]      = useLocalStorage<string>('isa:name', '');
   const [language]  = useLocalStorage<string>('isa:language', 'en');
-  const [sect]      = useLocalStorage<string>('isa:sect', 'hanafi');
+  const [sect]      = useLocalStorage<string>('isa:sect', 'sunni');
+  const [fiqh]      = useLocalStorage<string>('isa:fiqh', '');
   const [methodRaw] = useLocalStorage<number>('isa:method', -1);
+  const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'azan-best-sound-quality');
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locDetecting, setLocDetecting] = useState(false);
 
   const { data } = useQuery({
     queryKey: byCoords
@@ -115,7 +242,49 @@ export default function Overview() {
 
   const bearing = byCoords ? qiblaBearing(params.lat!, params.lng!) : 256;
   const methodLabel = METHOD_LABELS[methodRaw >= 0 ? methodRaw : 3] ?? 'Muslim World League';
-  const openPrefs = () => window.dispatchEvent(new Event('isa:edit-prefs'));
+
+  const persistPref = (key: string, val: unknown) => {
+    const j = JSON.stringify(val);
+    localStorage.setItem(key, j);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: j }));
+  };
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
+            { headers: { Accept: 'application/json' }, cache: 'no-store' },
+          );
+          const addr = (await res.json())?.address ?? {};
+          const city    = addr.city || addr.town || addr.village || addr.county || addr.state || '';
+          const country = addr.country || '';
+          setLocationByCoords(lat, lng, city || undefined, country || undefined, { clearMosque: true });
+        } catch {
+          setLocationByCoords(lat, lng, undefined, undefined, { clearMosque: true });
+        }
+        setLocDetecting(false);
+        setShowLocationModal(false);
+      },
+      () => setLocDetecting(false),
+    );
+  };
+
+  const effectiveSect = ['sunni', 'shia'].includes(sect) ? sect as 'sunni' | 'shia' : 'sunni';
+  const fiqhOptions = FIQH_OPTIONS[effectiveSect] ?? FIQH_OPTIONS.sunni;
+
+  // Arrange voices so selected voice starts at index 2 (3rd row visible initially)
+  const arrangedVoices = useMemo(() => {
+    const idx = ALL_AZAN_VOICES.findIndex((v) => v.id === selectedAzanVoice);
+    if (idx < 0) return ALL_AZAN_VOICES;
+    const start = ((idx - 2) + ALL_AZAN_VOICES.length) % ALL_AZAN_VOICES.length;
+    return [...ALL_AZAN_VOICES.slice(start), ...ALL_AZAN_VOICES.slice(0, start)];
+  }, [selectedAzanVoice]);
 
   // ── Theme tokens ──────────────────────────────────────────────────────────
   const c = isDark
@@ -190,7 +359,7 @@ export default function Overview() {
                   </div>
                 </div>
               </div>
-              <button onClick={openPrefs} className="relative shrink-0" aria-label="Open preferences">
+              <button onClick={() => window.dispatchEvent(new Event('isa:edit-prefs'))} className="relative shrink-0" aria-label="Open preferences">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold ring-2 ring-white shadow-md">
                   {name ? name.trim().charAt(0).toUpperCase() : <User size={20} />}
                 </span>
@@ -239,22 +408,23 @@ export default function Overview() {
         transition={{ delay: 0.04 }}
         className={
           isDark
-            ? 'relative overflow-hidden rounded-[26px] border border-white/10 p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]'
-            : `${cardCls} p-5`
+            ? 'relative rounded-[26px] border border-white/10 p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]'
+            : `relative rounded-[26px] border border-emerald-900/[0.05] bg-white shadow-[0_1px_3px_rgba(16,40,30,0.04),0_16px_38px_-18px_rgba(16,40,30,0.18)] p-5`
         }
-        style={
-          isDark
-            ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' }
-            : undefined
-        }
+        style={isDark ? { background: 'linear-gradient(150deg,#103a2c 0%,#0b2118 55%,#07140e 100%)' } : undefined}
       >
+        {/* Background images clipped inside their own wrapper so the outer section can overflow for dropdowns */}
         {isDark && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src="/masjid_img.png" alt="" style={FADE_TL} className="pointer-events-none absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[26px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/masjid_img.png" alt="" style={FADE_TL} className="absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
+          </div>
         )}
         {!isDark && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src="/OverviewPage_your_preference_bg.png" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-right" />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[26px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/OverviewPage_your_preference_bg.png" alt="" aria-hidden className="absolute inset-0 h-full w-full select-none object-cover object-right" />
+          </div>
         )}
         <div className="relative">
           <div className="flex items-center gap-3">
@@ -264,25 +434,117 @@ export default function Overview() {
               <p className={`text-xs ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              { icon: Globe,         label: 'Language',           value: LANG_LABELS[language] ?? language },
-              { icon: MapPin,        label: 'Location',           value: `${loc.city}${loc.country ? `, ${loc.country}` : ''}` },
-              { icon: GraduationCap, label: 'Sect',               value: SECT_LABELS[sect] ?? sect },
-              { icon: Calculator,    label: 'Calculation Method', value: methodLabel },
-            ].map((p) => (
-              <button key={p.label} onClick={openPrefs} className={`flex items-center gap-3 rounded-2xl border ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'} px-4 py-3 text-left transition hover:border-emerald-400`}>
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><p.icon size={16} /></span>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>{p.label}</p>
-                  <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{p.value}</p>
-                </div>
-                <ChevronDown size={15} className={isDark ? c.faint : 'text-emerald-700/70'} />
-              </button>
-            ))}
+
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+            {/* Language dropdown */}
+            <PrefDropdown
+              label="Language" icon={Globe}
+              value={language}
+              displayValue={LANGUAGE_OPTIONS.find(o => o.value === language)?.label ?? language}
+              options={LANGUAGE_OPTIONS}
+              onSelect={(v) => persistPref('isa:language', v)}
+              isDark={isDark} divider={c.divider} faint={c.faint}
+            />
+
+            {/* Location — opens popup */}
+            <button
+              onClick={() => setShowLocationModal(true)}
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-emerald-400 ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'}`}
+            >
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><MapPin size={16} /></span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>Location</p>
+                <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>
+                  {loc.city ? `${loc.city}${loc.country ? `, ${loc.country}` : ''}` : 'Set location'}
+                </p>
+              </div>
+              <ChevronDown size={15} className={`shrink-0 ${isDark ? c.faint : 'text-emerald-700/70'}`} />
+            </button>
+
+            {/* Sect dropdown */}
+            <PrefDropdown
+              label="Sect" icon={GraduationCap}
+              value={effectiveSect}
+              displayValue={SECT_LABELS[effectiveSect] ?? effectiveSect}
+              options={SECT_OPTIONS}
+              onSelect={(v) => persistPref('isa:sect', v)}
+              isDark={isDark} divider={c.divider} faint={c.faint}
+            />
+
+            {/* Fiqh / School dropdown */}
+            <PrefDropdown
+              label="Fiqh / School" icon={BookMarked}
+              value={fiqh}
+              displayValue={FIQH_LABELS[fiqh] ?? (fiqh || 'Select school')}
+              options={fiqhOptions}
+              onSelect={(v) => persistPref('isa:fiqh', v)}
+              isDark={isDark} divider={c.divider} faint={c.faint}
+            />
+
+            {/* Calculation Method — navigates to prayer times page where user selects it */}
+            <Link
+              href="/dashboard/prayer-times"
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-emerald-400 ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'}`}
+            >
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><Calculator size={16} /></span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>Calculation Method</p>
+                <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{methodLabel}</p>
+              </div>
+              <ChevronDown size={15} className={`shrink-0 ${isDark ? c.faint : 'text-emerald-700/70'}`} />
+            </Link>
           </div>
         </div>
       </motion.section>
+
+      {/* Location popup */}
+      <AnimatePresence>
+        {showLocationModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.93, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 14 }}
+              className={`relative w-full max-w-sm rounded-3xl p-7 shadow-2xl ${isDark ? 'bg-[#0b1a12] border border-emerald-500/20' : 'bg-white'}`}
+            >
+              <button
+                onClick={() => setShowLocationModal(false)}
+                className={`absolute top-4 right-4 w-8 h-8 grid place-items-center rounded-full transition ${isDark ? 'bg-white/8 text-parchment/50 hover:bg-white/15' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+              >
+                <X size={15} />
+              </button>
+              <div className="flex flex-col items-center text-center gap-5">
+                <span className={`w-14 h-14 flex items-center justify-center rounded-2xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>
+                  <MapPin size={26} />
+                </span>
+                <div>
+                  <h3 className={`font-bold text-xl ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Your Location</h3>
+                  {loc.city && (
+                    <p className={`text-sm mt-1 ${isDark ? 'text-parchment/60' : 'text-emerald-900/60'}`}>
+                      Currently: {loc.city}{loc.country ? `, ${loc.country}` : ''}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={detectLocation}
+                  disabled={locDetecting}
+                  className="w-full rounded-2xl bg-emerald-600 text-white font-bold py-3 hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {locDetecting ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} />}
+                  {loc.city ? 'Update my location' : 'Detect my location'}
+                </button>
+                <Link
+                  href="/dashboard/prayer-times"
+                  onClick={() => setShowLocationModal(false)}
+                  className={`text-sm font-medium transition ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}
+                >
+                  Set manually on Prayer Times page →
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ─────────────────── Main grid: left stack + right rail ─────────────── */}
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -436,31 +698,65 @@ export default function Overview() {
               </div>
             </motion.section>
 
-            {/* Azan Voices */}
+            {/* Azan Voices — scrolling ticker */}
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5 flex flex-col`}>
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-100 text-rose-500"><Bell size={18} /></span>
-                <div>
-                  <h3 className="text-base font-bold leading-tight">Azan Voices</h3>
-                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Listen to beautiful Azan</p>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-100 text-rose-500"><Bell size={18} /></span>
+                  <div>
+                    <h3 className="text-base font-bold leading-tight">Azan Voices</h3>
+                    <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Listen to beautiful Azan</p>
+                  </div>
                 </div>
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
               </div>
-              <ul className="mt-4 flex-1 space-y-2.5">
-                {[
-                  { name: 'Mishary Rashid Alafasy', region: 'Makkah, Saudi Arabia', active: true },
-                  { name: 'Abdul Basit Abd us-Samad', region: 'Egypt' },
-                  { name: 'Maher Al Muaiqly', region: 'Makkah, Saudi Arabia' },
-                ].map((r) => (
-                  <li key={r.name} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${r.active ? (isDark ? 'bg-emerald-500/15 ring-1 ring-emerald-400/40' : 'bg-emerald-50 ring-1 ring-emerald-300/60') : `border ${c.divider} ${isDark ? 'bg-white/[0.03]' : ''}`}`}>
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 text-white"><User size={16} /></span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-semibold leading-tight">{r.name}</p>
-                      <p className={`truncate text-[11px] ${c.faint}`}>{r.region}</p>
-                    </div>
-                    <span className={`grid h-7 w-7 place-items-center rounded-full ${r.active ? 'bg-emerald-600 text-white' : `${c.soft} text-emerald-600`}`}><Play size={12} className="ml-0.5" fill="currentColor" /></span>
-                  </li>
-                ))}
-              </ul>
+
+              {/* Scrolling voices list */}
+              <div className="relative flex-1 overflow-hidden rounded-2xl" style={{ height: '336px' }}>
+                {/* Top fade */}
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-10 z-10 ${isDark ? 'bg-gradient-to-b from-midnight-800/80 to-transparent' : 'bg-gradient-to-b from-white to-transparent'}`} />
+                {/* Bottom fade */}
+                <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-10 z-10 ${isDark ? 'bg-gradient-to-t from-midnight-800/80 to-transparent' : 'bg-gradient-to-t from-white to-transparent'}`} />
+
+                <motion.div
+                  animate={{ y: [0, -(arrangedVoices.length * 56)] }}
+                  transition={{ duration: arrangedVoices.length * 3, repeat: Infinity, ease: 'linear', repeatDelay: 0 }}
+                  className="space-y-2"
+                >
+                  {/* Doubled list for seamless loop */}
+                  {[...arrangedVoices, ...arrangedVoices].map((voice, i) => {
+                    const isSelected = voice.id === selectedAzanVoice;
+                    return (
+                      <Link
+                        href="/dashboard/azan"
+                        key={`${voice.id}-${i}`}
+                        className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition h-[48px] ${
+                          isSelected
+                            ? (isDark ? 'bg-emerald-500/20 ring-1 ring-emerald-400/50' : 'bg-emerald-50 ring-1 ring-emerald-300')
+                            : `border ${c.divider} ${isDark ? 'bg-white/[0.02] hover:bg-white/[0.04]' : 'hover:bg-emerald-50/50'}`
+                        }`}
+                      >
+                        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${isSelected ? 'bg-emerald-600 text-white' : 'bg-gradient-to-br from-emerald-400 to-emerald-700 text-white'}`}>
+                          <User size={13} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className={`truncate text-[13px] font-semibold leading-tight ${isSelected ? (isDark ? 'text-emerald-300' : 'text-emerald-700') : ''}`}>{voice.name}</p>
+                          <p className={`truncate text-[11px] ${c.faint}`}>{voice.region}</p>
+                        </div>
+                        {isSelected && (
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
+                            <Play size={10} className="ml-0.5" fill="currentColor" />
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </motion.div>
+              </div>
+
               <Link href="/dashboard/azan" className={`mt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
                 <Bell size={15} /> View All Voices
               </Link>
