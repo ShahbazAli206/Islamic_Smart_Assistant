@@ -215,9 +215,12 @@ export function AutoAzanScheduler() {
   const firingPrayerRef = useRef<string | null>(null);
 
   const [azanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
+  const [defaultDeviceIds] = useLocalStorage<string[]>('isa:defaultDeviceIds', []);
   const [castDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
   const azanDeviceIdsRef = useRef(azanDeviceIds);
   azanDeviceIdsRef.current = azanDeviceIds;
+  const defaultDeviceIdsRef = useRef(defaultDeviceIds);
+  defaultDeviceIdsRef.current = defaultDeviceIds;
   const castDeviceIdRef = useRef(castDeviceId);
   castDeviceIdRef.current = castDeviceId;
   const castClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -344,9 +347,10 @@ export function AutoAzanScheduler() {
     // LAN devices (Chromecast/DLNA) — cast the main azan on all selected devices simultaneously
     const lanPath = azanLocalPath(v);
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    // Use the multi-select list; fall back to the legacy single-device key for existing users
-    const effectiveIds = azanDeviceIdsRef.current.length > 0
-      ? azanDeviceIdsRef.current
+    // Merge azan-specific + default devices; fall back to legacy single-device key
+    const combined = [...new Set([...azanDeviceIdsRef.current, ...defaultDeviceIdsRef.current])];
+    const effectiveIds = combined.length > 0
+      ? combined
       : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
     if (effectiveIds.length > 0 && desktopApi && lanPath) {
       const source = { kind: 'lan' as const, path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url };
@@ -482,8 +486,9 @@ export function AutoAzanScheduler() {
     clearCastTimer();
     const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
     if (api) {
-      const ids = azanDeviceIdsRef.current.length > 0
-        ? azanDeviceIdsRef.current
+      const combinedStop = [...new Set([...azanDeviceIdsRef.current, ...defaultDeviceIdsRef.current])];
+      const ids = combinedStop.length > 0
+        ? combinedStop
         : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
       ids.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
     }

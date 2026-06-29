@@ -664,6 +664,7 @@ export default function DevicesPage() {
   // Multi-select: which devices are selected per purpose.
   const [azanDeviceIds, setAzanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
   const [recitationDeviceIds, setRecitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
+  const [defaultDeviceIds, setDefaultDeviceIds] = useLocalStorage<string[]>('isa:defaultDeviceIds', []);
 
   const rescanLan = async () => {
     setLanScanning(true);
@@ -698,6 +699,26 @@ export default function DevicesPage() {
     setRecitationDeviceIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  };
+
+  const toggleDefaultDevice = (d: LanDevice) => {
+    const isNowDefault = defaultDeviceIds.includes(d.id);
+    if (isNowDefault) {
+      setDefaultDeviceIds((prev) => prev.filter((x) => x !== d.id));
+    } else {
+      setDefaultDeviceIds((prev) => [...prev, d.id]);
+      // Auto-select for both azan and recitation when set as default
+      if (!azanDeviceIds.includes(d.id)) {
+        const nextAzan = [...azanDeviceIds, d.id];
+        setAzanDeviceIds(nextAzan);
+        const primary = nextAzan[0] ?? '';
+        setCastDeviceId(primary);
+        setCastDeviceName(primary ? (lan.devices.find((x) => x.id === primary)?.name ?? '') : '');
+      }
+      if (!recitationDeviceIds.includes(d.id)) {
+        setRecitationDeviceIds((prev) => [...prev, d.id]);
+      }
+    }
   };
 
   // ── Linked devices on the account (real, from the backend) ──
@@ -983,6 +1004,7 @@ export default function DevicesPage() {
         tile: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20',
         deviceCard: 'border border-white/8 bg-white/[0.03] hover:bg-white/[0.06]',
         deviceSel: 'border border-emerald-400/60 bg-emerald-500/[0.08] shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]',
+        deviceDefault: 'border border-amber-400/60 bg-amber-500/[0.06] shadow-[0_0_24px_-6px_rgba(245,158,11,0.35)]',
         innerNote: 'bg-emerald-500/[0.06] border border-emerald-500/15',
         divider: 'border-white/8',
         primary: 'bg-gold-gradient text-midnight-900',
@@ -998,6 +1020,7 @@ export default function DevicesPage() {
         tile: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
         deviceCard: 'border border-emerald-900/10 bg-white hover:shadow-lg hover:shadow-emerald-900/10',
         deviceSel: 'border border-emerald-500 bg-emerald-50/70',
+        deviceDefault: 'border border-amber-400 bg-amber-50/60 shadow-[0_0_18px_-6px_rgba(245,158,11,0.3)]',
         innerNote: 'bg-emerald-50/60 border border-emerald-100',
         divider: 'border-emerald-900/8',
         primary: 'bg-emerald-600 text-white hover:bg-emerald-700',
@@ -1383,11 +1406,12 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                       const busy = lan.busyId === d.id;
                       const isAzanDevice = azanDeviceIds.includes(d.id);
                       const isRecitationDevice = recitationDeviceIds.includes(d.id);
+                      const isDefaultDevice = defaultDeviceIds.includes(d.id);
                       return (
                         <motion.div
                           key={d.id}
                           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
-                          className={`rounded-2xl p-4 flex flex-col gap-3 ${active ? T.deviceSel : T.deviceCard}`}
+                          className={`rounded-2xl p-4 flex flex-col gap-3 ${active ? T.deviceSel : isDefaultDevice ? T.deviceDefault : T.deviceCard}`}
                         >
                           {/* Now-Playing banner  -  persists across navigation via sessionStorage */}
                           {active && (
@@ -1415,9 +1439,13 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                               </div>
                             </div>
                             {castable ? (
-                              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${active ? 'bg-emerald-100 text-emerald-700' : (isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600')}`}>
-                                {active ? <MiniEq /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />}
-                                {active ? 'Playing' : 'Ready'}
+                              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
+                                active ? 'bg-emerald-100 text-emerald-700'
+                                : isDefaultDevice ? 'bg-amber-100 text-amber-700'
+                                : (isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600')
+                              }`}>
+                                {active ? <MiniEq /> : isDefaultDevice ? <Star size={10} fill="currentColor" /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />}
+                                {active ? 'Playing' : isDefaultDevice ? 'Default' : 'Ready'}
                               </span>
                             ) : (
                               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500'}`}>
@@ -1428,6 +1456,19 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
 
                           {castable ? (
                             <>
+                              {/* Select as Default — plays both azan & recitation automatically */}
+                              <button
+                                onClick={() => toggleDefaultDevice(d)}
+                                className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition ${
+                                  isDefaultDevice
+                                    ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                    : (isDark ? 'border border-amber-400/30 bg-amber-400/[0.06] text-amber-300 hover:bg-amber-400/[0.12]' : 'border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
+                                }`}
+                              >
+                                <Star size={14} fill={isDefaultDevice ? 'currentColor' : 'none'} />
+                                {isDefaultDevice ? 'Default Device (tap to remove)' : 'Select as Default'}
+                              </button>
+
                               {/* Play controls */}
                               <div className="flex flex-wrap items-center gap-2">
                                 <button onClick={() => testSoundOnLan(d.id)} disabled={busy}
@@ -1454,7 +1495,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                                 </div>
                               )}
 
-                              {/* Multi-select purpose toggles */}
+                              {/* Individual purpose toggles */}
                               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-900/[0.07]">
                                 <button
                                   onClick={() => toggleAzanDevice(d)}
