@@ -95,8 +95,9 @@ export function useDesktopDevices() {
     return () => { try { unsub(); } catch { /* ignore */ } };
   }, []);
 
-  const rescan = useCallback(() => {
-    apiRef.current?.rescan().then((l) => l && setDevices(l)).catch(() => {});
+  const rescan = useCallback((): Promise<void> => {
+    if (!apiRef.current) return Promise.resolve();
+    return apiRef.current.rescan().then((l) => { if (l) setDevices(l); }).catch(() => {});
   }, []);
 
   const play = useCallback(async (deviceId: string, source: PlaySource) => {

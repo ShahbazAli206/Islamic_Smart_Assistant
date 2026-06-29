@@ -668,7 +668,16 @@ export default function DevicesPage() {
 
   const rescanLan = async () => {
     setLanScanning(true);
-    try { await Promise.resolve(lan.rescan()); } catch (e: any) { showToast(`Rescan failed: ${e?.message ?? e}`); } finally { setLanScanning(false); }
+    const startedAt = Date.now();
+    try {
+      await lan.rescan();
+    } catch (e: any) {
+      showToast(`Rescan failed: ${e?.message ?? e}`);
+    } finally {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_SPIN_MS) await new Promise((r) => setTimeout(r, MIN_SPIN_MS - elapsed));
+      setLanScanning(false);
+    }
   };
 
   const playAzanOnLan = (id: string) =>
