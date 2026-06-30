@@ -250,9 +250,17 @@ export default function Overview() {
     window.dispatchEvent(new StorageEvent('storage', { key, newValue: j }));
   };
 
+  const openLocationModal = () => {
+    setDraftCity(loc.city ?? '');
+    setDraftCountry(loc.country ?? '');
+    setLocError('');
+    setShowLocationModal(true);
+  };
+
   const detectLocation = () => {
     if (!navigator.geolocation) return;
     setLocDetecting(true);
+    setLocError('');
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = pos.coords.latitude;
@@ -265,6 +273,8 @@ export default function Overview() {
           const addr = (await res.json())?.address ?? {};
           const city    = addr.city || addr.town || addr.village || addr.county || addr.state || '';
           const country = addr.country || '';
+          setDraftCity(city);
+          setDraftCountry(country);
           setLocationByCoords(lat, lng, city || undefined, country || undefined, { clearMosque: true });
         } catch {
           setLocationByCoords(lat, lng, undefined, undefined, { clearMosque: true });
@@ -272,8 +282,47 @@ export default function Overview() {
         setLocDetecting(false);
         setShowLocationModal(false);
       },
-      () => setLocDetecting(false),
+      () => {
+        setLocDetecting(false);
+        setLocError('GPS access denied. Please type your city and country below.');
+      },
     );
+  };
+
+  const saveManualLocation = async () => {
+    const city = draftCity.trim();
+    const country = draftCountry.trim();
+    if (!city || !country) {
+      setLocError('Please enter both city and country.');
+      return;
+    }
+    setLocValidating(true);
+    setLocError('');
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&addressdetails=1&q=${encodeURIComponent(`${city}, ${country}`)}`,
+        { headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' }, cache: 'no-store' },
+      );
+      const hits: any[] = res.ok ? await res.json() : [];
+      if (!hits.length) {
+        setLocError(`"${city}, ${country}" couldn't be found. Check the spelling.`);
+        return;
+      }
+      const resultCountry = (hits[0].address?.country ?? '').toLowerCase();
+      const typed = country.toLowerCase();
+      if (!resultCountry.includes(typed) && !typed.includes(resultCountry)) {
+        setLocError(`"${city}" is in ${hits[0].address?.country ?? 'a different country'}, not "${country}".`);
+        return;
+      }
+      await setLocationByCity(city, country);
+      setShowLocationModal(false);
+    } catch {
+      // Nominatim unreachable — save directly without validation
+      await setLocationByCity(city, country);
+      setShowLocationModal(false);
+    } finally {
+      setLocValidating(false);
+    }
   };
 
   const effectiveSect = ['sunni', 'shia'].includes(sect) ? sect as 'sunni' | 'shia' : 'sunni';
@@ -453,7 +502,7 @@ export default function Overview() {
 
             {/* Location — opens popup */}
             <button
-              onClick={() => setShowLocationModal(true)}
+              onClick={openLocationModal}
               className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-emerald-400 ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'}`}
             >
               <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><MapPin size={16} /></span>
@@ -515,33 +564,93 @@ export default function Overview() {
               >
                 <X size={15} />
               </button>
-              <div className="flex flex-col items-center text-center gap-5">
-                <span className={`w-14 h-14 flex items-center justify-center rounded-2xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>
-                  <MapPin size={26} />
-                </span>
-                <div>
-                  <h3 className={`font-bold text-xl ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Your Location</h3>
-                  {loc.city && (
-                    <p className={`text-sm mt-1 ${isDark ? 'text-parchment/60' : 'text-emerald-900/60'}`}>
-                      Currently: {loc.city}{loc.country ? `, ${loc.country}` : ''}
+
+              <div className="flex flex-col gap-5">
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                  <span className={`w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>
+                    <MapPin size={22} />
+                  </span>
+                  <div>
+                    <h3 className={`font-bold text-lg leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Your Location</h3>
+                    <p className={`text-xs mt-0.5 ${isDark ? 'text-parchment/55' : 'text-emerald-900/55'}`}>
+                      Needed for accurate prayer times &amp; Azan scheduling
                     </p>
-                  )}
+                  </div>
                 </div>
+
+                {/* GPS detect */}
                 <button
                   onClick={detectLocation}
-                  disabled={locDetecting}
+                  disabled={locDetecting || locValidating}
                   className="w-full rounded-2xl bg-emerald-600 text-white font-bold py-3 hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {locDetecting ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} />}
-                  {loc.city ? 'Update my location' : 'Detect my location'}
+                  {locDetecting ? 'Detecting…' : loc.city ? 'Update via GPS' : 'Detect my location'}
                 </button>
-                <Link
-                  href="/dashboard/prayer-times"
-                  onClick={() => setShowLocationModal(false)}
-                  className={`text-sm font-medium transition ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex-1 border-t ${isDark ? 'border-white/10' : 'border-emerald-900/10'}`} />
+                  <span className={`text-xs ${isDark ? 'text-parchment/40' : 'text-emerald-900/40'}`}>or type manually</span>
+                  <div className={`flex-1 border-t ${isDark ? 'border-white/10' : 'border-emerald-900/10'}`} />
+                </div>
+
+                {/* Manual inputs */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`text-xs font-medium mb-1 block ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>City</label>
+                    <input
+                      value={draftCity}
+                      onChange={(e) => { setDraftCity(e.target.value); setLocError(''); }}
+                      placeholder="Karachi"
+                      disabled={locDetecting || locValidating}
+                      className={`w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-60 ${
+                        isDark
+                          ? 'bg-white/5 border-white/10 text-parchment placeholder:text-parchment/30'
+                          : 'bg-white border-emerald-100 text-emerald-950 placeholder:text-emerald-900/30'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`text-xs font-medium mb-1 block ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>Country</label>
+                    <input
+                      value={draftCountry}
+                      onChange={(e) => { setDraftCountry(e.target.value); setLocError(''); }}
+                      placeholder="Pakistan"
+                      disabled={locDetecting || locValidating}
+                      className={`w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-60 ${
+                        isDark
+                          ? 'bg-white/5 border-white/10 text-parchment placeholder:text-parchment/30'
+                          : 'bg-white border-emerald-100 text-emerald-950 placeholder:text-emerald-900/30'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Validation error */}
+                {locError && (
+                  <div className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs leading-relaxed ${
+                    isDark ? 'border-amber-400/30 bg-amber-500/10 text-amber-300' : 'border-amber-300 bg-amber-50 text-amber-800'
+                  }`}>
+                    <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                    <span>{locError}</span>
+                  </div>
+                )}
+
+                {/* Save button */}
+                <button
+                  onClick={saveManualLocation}
+                  disabled={locDetecting || locValidating || !draftCity.trim() || !draftCountry.trim()}
+                  className={`w-full rounded-2xl border py-3 text-sm font-bold transition flex items-center justify-center gap-2 disabled:opacity-50 ${
+                    isDark
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  }`}
                 >
-                  Set manually on Prayer Times page →
-                </Link>
+                  {locValidating ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                  {locValidating ? 'Checking location…' : 'Save location'}
+                </button>
               </div>
             </motion.div>
           </div>
