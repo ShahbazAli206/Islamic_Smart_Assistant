@@ -278,12 +278,16 @@ export default function Overview() {
   const effectiveSect = ['sunni', 'shia'].includes(sect) ? sect as 'sunni' | 'shia' : 'sunni';
   const fiqhOptions = FIQH_OPTIONS[effectiveSect] ?? FIQH_OPTIONS.sunni;
 
-  // Arrange voices so selected voice starts at index 2 (3rd row visible initially)
+  // Top 7 voices shown in the overview ticker
+  const TOP_AZAN_VOICES = ALL_AZAN_VOICES.slice(0, 7);
+
+  // Arrange so the selected voice is visible near the top; fall back to natural order
   const arrangedVoices = useMemo(() => {
-    const idx = ALL_AZAN_VOICES.findIndex((v) => v.id === selectedAzanVoice);
-    if (idx < 0) return ALL_AZAN_VOICES;
-    const start = ((idx - 2) + ALL_AZAN_VOICES.length) % ALL_AZAN_VOICES.length;
-    return [...ALL_AZAN_VOICES.slice(start), ...ALL_AZAN_VOICES.slice(0, start)];
+    const idx = TOP_AZAN_VOICES.findIndex((v) => v.id === selectedAzanVoice);
+    if (idx < 0) return TOP_AZAN_VOICES;
+    const start = Math.max(0, idx - 1);
+    return [...TOP_AZAN_VOICES.slice(start), ...TOP_AZAN_VOICES.slice(0, start)];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAzanVoice]);
 
   // ── Theme tokens ──────────────────────────────────────────────────────────
@@ -714,16 +718,16 @@ export default function Overview() {
                 </span>
               </div>
 
-              {/* Scrolling voices list */}
-              <div className="relative flex-1 overflow-hidden rounded-2xl" style={{ height: '336px' }}>
+              {/* Scrolling voices list — top 7, compact */}
+              <div className="relative overflow-hidden rounded-2xl" style={{ height: '224px' }}>
                 {/* Top fade */}
-                <div className={`pointer-events-none absolute inset-x-0 top-0 h-10 z-10 ${isDark ? 'bg-gradient-to-b from-midnight-800/80 to-transparent' : 'bg-gradient-to-b from-white to-transparent'}`} />
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-8 z-10 ${isDark ? 'bg-gradient-to-b from-midnight-800/80 to-transparent' : 'bg-gradient-to-b from-white to-transparent'}`} />
                 {/* Bottom fade */}
-                <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-10 z-10 ${isDark ? 'bg-gradient-to-t from-midnight-800/80 to-transparent' : 'bg-gradient-to-t from-white to-transparent'}`} />
+                <div className={`pointer-events-none absolute inset-x-0 bottom-0 h-8 z-10 ${isDark ? 'bg-gradient-to-t from-midnight-800/80 to-transparent' : 'bg-gradient-to-t from-white to-transparent'}`} />
 
                 <motion.div
                   animate={{ y: [0, -(arrangedVoices.length * 56)] }}
-                  transition={{ duration: arrangedVoices.length * 3, repeat: Infinity, ease: 'linear', repeatDelay: 0 }}
+                  transition={{ duration: arrangedVoices.length * 2.8, repeat: Infinity, ease: 'linear', repeatDelay: 0 }}
                   className="space-y-2"
                 >
                   {/* Doubled list for seamless loop */}
