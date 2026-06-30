@@ -8,7 +8,7 @@ import {
   Search, MapPin, Sun, Sunrise, Sunset, Moon, Clock, ChevronDown,
   Compass, Bell, Play, BookOpen, Bookmark, Hand, CircleDot, Calendar, Star,
   StickyNote, MoreHorizontal, Globe, GraduationCap, Calculator,
-  User, Check, X, Crosshair, Loader2, BookMarked,
+  User, Check, X, Crosshair, Loader2, BookMarked, AlertTriangle,
 } from 'lucide-react';
 import {
   fetchTimingsByCity, fetchTimingsByCoords, nextPrayerInZone, formatCountdown,
@@ -20,7 +20,7 @@ import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AyahDisplay } from '@/components/AyahDisplay';
-import { setLocationByCoords } from '@/lib/location';
+import { setLocationByCoords, setLocationByCity } from '@/lib/location';
 import { METHOD_LABELS as CALC_METHODS } from '@/lib/sect';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -196,6 +196,10 @@ export default function Overview() {
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locDetecting, setLocDetecting] = useState(false);
+  const [draftCity, setDraftCity] = useState('');
+  const [draftCountry, setDraftCountry] = useState('');
+  const [locError, setLocError] = useState('');
+  const [locValidating, setLocValidating] = useState(false);
 
   const { data } = useQuery({
     queryKey: byCoords
