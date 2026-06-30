@@ -19,6 +19,5 @@ INSERT INTO azan_voices (id, name, audio_url, size_bytes, duration_ms, is_defaul
   ('makkah-abdallah-ahmad',      'Makkah — Abdallah Ahmad',         '/audio/azan/makkah-abdallah-ahmad.m4a',      2975768, 149000, FALSE, FALSE),
   ('masjid-al-haram',            'Masjid Al-Haram',                 '/audio/azan/masjid-al-haram.m4a',            3310769, 166000, FALSE, FALSE),
   ('mevlan-kurtishi',            'Mevlan Kurtishi',                 '/audio/azan/mevlan-kurtishi.m4a',            3139475, 157000, FALSE, FALSE),
-  ('seyyid-taleh-boradigahi',    'Seyyid Taleh Boradigahi',         '/audio/azan/seyyid-taleh-boradigahi.m4a',    5266508, 263000, FALSE, FALSE),
   ('masjid-nabawi-osama-akhdar', 'Masjid Nabawi — Osama Al-Akhdar', '/audio/azan/masjid-nabawi-osama-akhdar.m4a', 4191097, 210000, FALSE, FALSE)
 ON CONFLICT (id) DO NOTHING;

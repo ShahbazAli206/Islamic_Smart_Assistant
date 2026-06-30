@@ -37,7 +37,6 @@ const VOICE_NAMES: Record<string, { name: string; subtitle: string; region: stri
   'islam-sobhi':               { name: 'Islam Sobhi',             subtitle: 'القارئ اسلام صبحي', region: 'Egypt' },
   'makkah-abdallah-ahmad':     { name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter', region: 'Saudi Arabia' },
   'masjid-al-haram':           { name: 'Masjid Al-Haram',         subtitle: 'The Grand Mosque, Makkah', region: 'Saudi Arabia' },
-  'seyyid-taleh-boradigahi':   { name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan', region: 'Azerbaijan' },
   'azan-best-sound-quality':   { name: 'Azan — Best Sound Quality', subtitle: 'Crystal clear HD recording', region: '' },
 
   'makkah':                    { name: 'Makkah — Haramain',       subtitle: 'Sheikh Ali Mulla', region: 'Saudi Arabia' },

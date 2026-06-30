@@ -84,13 +84,6 @@ const VOICES: AzanVoice[] = [
     local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
     art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
   },
-  {
-    id: 'seyyid-taleh-boradigahi', name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan',
-    region: 'Azerbaijan', lang: 'Arabic', style: 'Melodic', duration: '4:23',
-    badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/seyyid-taleh-boradigahi.m4a', remote: '/audio/azan/seyyid-taleh-boradigahi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-violet-500 to-purple-700',
-  },
 
   // ── Sacred Mosques ────────────────────────────────────────────────────────
   {

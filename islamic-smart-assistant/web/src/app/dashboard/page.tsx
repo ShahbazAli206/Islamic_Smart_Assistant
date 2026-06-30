@@ -87,7 +87,6 @@ const ALL_AZAN_VOICES = [
   { id: 'turkey',                     name: 'Turkish — Istanbul',              region: 'Türkiye'              },
   { id: 'egypt',                      name: 'Egyptian — Cairo',                region: 'Egypt'                },
   { id: 'madinah-adhan',              name: 'Azan Madinah',                    region: 'Saudi Arabia'         },
-  { id: 'seyyid-taleh-boradigahi',    name: 'Seyyid Taleh Boradigahi',         region: 'Azerbaijan'           },
   { id: 'makkah',                     name: 'Makkah — Haramain',               region: 'Saudi Arabia'         },
   { id: 'madinah',                    name: 'Madinah — Masjid Nabawi',         region: 'Saudi Arabia'         },
 ];
