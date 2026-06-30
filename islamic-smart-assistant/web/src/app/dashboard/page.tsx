@@ -21,6 +21,7 @@ import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AyahDisplay } from '@/components/AyahDisplay';
 import { setLocationByCoords } from '@/lib/location';
+import { METHOD_LABELS as CALC_METHODS } from '@/lib/sect';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -39,10 +40,7 @@ const SECT_LABELS: Record<string, string> = {
   hanafi: 'Hanafi', shafii: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali',
 };
 const LANG_LABELS: Record<string, string> = { ur: 'Urdu', en: 'English', none: 'Arabic only' };
-const METHOD_LABELS: Record<number, string> = {
-  0: 'Fiqah Jafri', 1: 'University of Karachi', 2: 'ISNA',
-  3: 'Muslim World League', 4: 'Umm al-Qura, Makkah', 5: 'Egyptian Authority', 7: 'Tehran',
-};
+const METHOD_OPTIONS = CALC_METHODS.map(m => ({ value: String(m.id), label: m.label }));
 const FIQH_LABELS: Record<string, string> = {
   hanafi: 'Hanafi', shafi: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', jafari: "Ja'fari",
 };
@@ -240,7 +238,7 @@ export default function Overview() {
   }, [data, next, currentName, now]);
 
   const bearing = byCoords ? qiblaBearing(params.lat!, params.lng!) : 256;
-  const methodLabel = METHOD_LABELS[methodRaw >= 0 ? methodRaw : 3] ?? 'Muslim World League';
+  const methodLabel = CALC_METHODS.find(m => m.id === (methodRaw >= 0 ? methodRaw : 3))?.label ?? 'Muslim World League';
 
   const persistPref = (key: string, val: unknown) => {
     const j = JSON.stringify(val);
@@ -484,18 +482,15 @@ export default function Overview() {
               isDark={isDark} divider={c.divider} faint={c.faint}
             />
 
-            {/* Calculation Method — navigates to prayer times page where user selects it */}
-            <Link
-              href="/dashboard/prayer-times"
-              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-emerald-400 ${isDark ? `${c.divider} bg-black/25 backdrop-blur-sm` : 'border-emerald-900/[0.12] bg-emerald-950/[0.07] backdrop-blur-sm'}`}
-            >
-              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><Calculator size={16} /></span>
-              <div className="min-w-0 flex-1">
-                <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>Calculation Method</p>
-                <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{methodLabel}</p>
-              </div>
-              <ChevronDown size={15} className={`shrink-0 ${isDark ? c.faint : 'text-emerald-700/70'}`} />
-            </Link>
+            {/* Calculation Method dropdown */}
+            <PrefDropdown
+              label="Calculation Method" icon={Calculator}
+              value={String(methodRaw >= 0 ? methodRaw : 3)}
+              displayValue={methodLabel}
+              options={METHOD_OPTIONS}
+              onSelect={(v) => persistPref('isa:method', Number(v))}
+              isDark={isDark} divider={c.divider} faint={c.faint}
+            />
           </div>
         </div>
       </motion.section>
