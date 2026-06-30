@@ -572,18 +572,19 @@ export default function AzanPage() {
   const [communityDuas,    setCommunityDuas]    = useState<CustomAzan[]>([]);
 
   useEffect(() => {
-    // Try Supabase community uploads first; fall back to the legacy backend.
+    // Supabase community uploads — visible to ALL users on every device.
+    // Fall back to the legacy backend only when Supabase is not configured.
     const loadAzans = async () => {
-      try {
-        const rows = await fetchCommunityUploads('azan');
-        if (rows.length > 0) {
+      if (isCommunityEnabled()) {
+        try {
+          const rows = await fetchCommunityUploads('azan');
           const customs = rows.map((r) => ({ id: r.id, name: r.name, url: r.public_url, durationMs: r.duration_sec * 1000 }));
           setRemoteCustoms(customs);
           customs.forEach((c) => saveRemoteUrl(c.id, c.url));
-          return;
-        }
-      } catch { /* Supabase not configured */ }
-      // Legacy backend fallback
+        } catch { /* fetch failed — leave state empty */ }
+        return;
+      }
+      // Legacy backend fallback (only when Supabase is not configured)
       Azan.voices()
         .then((vs) => {
           const customs = vs
@@ -628,6 +629,27 @@ export default function AzanPage() {
     loadAzans();
     loadDuroods();
     loadDuas();
+  }, []);
+
+  // Real-time subscription: when another browser uploads an azan, add it to
+  // remoteCustoms immediately so users don't need to refresh the page.
+  useEffect(() => {
+    const unsubAzan = subscribeToUploads('azan', (upload) => {
+      const item = { id: upload.id, name: upload.name, url: upload.public_url, durationMs: upload.duration_sec * 1000 };
+      saveRemoteUrl(item.id, item.url);
+      setRemoteCustoms((prev) => prev.some((c) => c.id === item.id) ? prev : [item, ...prev]);
+    });
+    const unsubDurood = subscribeToUploads('durood', (upload) => {
+      const clip = { id: upload.id, name: upload.name, createdAt: new Date(upload.created_at).getTime(), durationSec: upload.duration_sec, audioType: 'durood' as const, remoteUrl: upload.public_url };
+      saveRemoteUrl(clip.id, clip.remoteUrl!);
+      setCommunityDuroods((prev) => prev.some((c) => c.id === clip.id) ? prev : [clip, ...prev]);
+    });
+    const unsubDua = subscribeToUploads('dua', (upload) => {
+      const clip = { id: upload.id, name: upload.name, createdAt: new Date(upload.created_at).getTime(), durationSec: upload.duration_sec, audioType: 'dua' as const, remoteUrl: upload.public_url };
+      saveRemoteUrl(clip.id, clip.remoteUrl!);
+      setCommunityDuas((prev) => prev.some((c) => c.id === clip.id) ? prev : [clip, ...prev]);
+    });
+    return () => { unsubAzan(); unsubDurood(); unsubDua(); };
   }, []);
 
   const selectedLabel = isCustomAzan(selectedId)
@@ -1771,6 +1793,14 @@ export default function AzanPage() {
           // If the original was a built-in voice, hide it from the list.
           if (replacedId && !isCustomAzan(replacedId)) {
             setHiddenVoices((prev) => prev.includes(replacedId) ? prev : [...prev, replacedId]);
+          }
+          // Sync remoteCustoms: remove replaced clip, add new one if it uploaded.
+          if (replacedId && isCustomAzan(replacedId)) {
+            setRemoteCustoms((prev) => prev.filter((c) => c.id !== replacedId));
+          }
+          if (meta.remoteUrl) {
+            const item = { id: meta.id, name: meta.name, url: meta.remoteUrl, durationMs: meta.durationSec * 1000 };
+            setRemoteCustoms((prev) => [item, ...prev.filter((c) => c.id !== meta.id)]);
           }
           setSelectedId(meta.id);
         }}
