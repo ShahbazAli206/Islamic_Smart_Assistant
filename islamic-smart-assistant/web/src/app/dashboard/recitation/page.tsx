@@ -87,7 +87,6 @@ const FEATURES = [
   { Icon: Users,       title: 'Multiple Reciters', sub: 'Voices you love' },
   { Icon: Headphones,  title: 'Background Play',    sub: 'Listen while you do more' },
   { Icon: Download,    title: 'Offline Listening', sub: 'Download & listen' },
-  { Icon: Compass,     title: 'Qibla Direction',   sub: 'Stay connected' },
 ];
 
 // Benefits of listening — static, with continuously-floating icons.
@@ -372,15 +371,15 @@ export default function RecitationSchedulerPage() {
           {/* left: badge + title + description + CTA */}
           <div>
             <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
-              <Bell size={12} /> Recitation Alarm
+              <Bell size={12} /> Schedule Recitation
             </span>
             <div className="mt-4 w-fit rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
-              <h1 className="font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-black">
+              <h1 className="font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] whitespace-nowrap text-gray-800">
                 Quran Recitation
               </h1>
             </div>
             <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
-              <p className="text-base sm:text-lg leading-relaxed text-black/85">
+              <p className="text-base sm:text-lg leading-relaxed text-gray-700">
                 Schedule your daily recitation. Let the words of Allah bring peace to your heart.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -430,7 +429,7 @@ export default function RecitationSchedulerPage() {
         </div>
       {/* ════════ FEATURE CHIPS — inside hero so background extends here ════════ */}
       <div className="relative px-6 sm:px-10 pb-8">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {FEATURES.map(({ Icon, title, sub }, i) => (
           <motion.div
             key={title}
@@ -456,8 +455,8 @@ export default function RecitationSchedulerPage() {
               <Icon size={16} />
             </motion.span>
             <div className="min-w-0">
-              <p className={`text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-emerald-950'}`}>{title}</p>
-              <p className={`text-[11px] leading-tight mt-0.5 truncate ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>{sub}</p>
+              <p className="text-sm font-bold leading-tight text-gray-900">{title}</p>
+              <p className="text-[11px] leading-tight mt-0.5 truncate text-gray-600">{sub}</p>
             </div>
           </motion.div>
         ))}

@@ -166,3 +166,70 @@ body {
 /* inputs */
 .azan-dark input { color: #EAF3EE; }
 .azan-dark input::placeholder { color: rgba(234,243,238,0.40) !important; }
+
+/* ── Qibla page dark mode (.qibla-dark on the content section) ────────────
+   Flips the light emerald/parchment palette used by the Qibla page cards
+   to a dark green-black palette when isDark is true.                       */
+
+/* Card / panel backgrounds */
+.qibla-dark .bg-parchment\/95      { background-color: rgba(10,28,20,0.97) !important; }
+
+/* Primary headings & values */
+.qibla-dark .text-emerald-900      { color: #D4EDE5 !important; }
+.qibla-dark .text-emerald-900\/50  { color: rgba(212,237,229,0.55) !important; }
+.qibla-dark .text-emerald-900\/55  { color: rgba(212,237,229,0.60) !important; }
+
+/* Labels / sub-text */
+.qibla-dark .text-emerald-700\/70  { color: rgba(52,211,153,0.78) !important; }
+.qibla-dark .text-emerald-700\/55  { color: rgba(52,211,153,0.62) !important; }
+.qibla-dark .text-emerald-700\/50  { color: rgba(52,211,153,0.58) !important; }
+.qibla-dark .text-emerald-700\/40  { color: rgba(52,211,153,0.46) !important; }
+.qibla-dark .text-emerald-700      { color: #34d399 !important; }
+.qibla-dark .text-emerald-600      { color: #34d399 !important; }
+.qibla-dark .text-emerald-600\/60  { color: rgba(52,211,153,0.65) !important; }
+
+/* Body / supporting text */
+.qibla-dark .text-emerald-800\/70  { color: rgba(212,237,229,0.72) !important; }
+.qibla-dark .text-emerald-800\/65  { color: rgba(212,237,229,0.68) !important; }
+.qibla-dark .text-emerald-800      { color: #34d399 !important; }
+
+/* Gold accent text */
+.qibla-dark .text-gold-700         { color: #D4AF37 !important; }
+.qibla-dark .text-gold-600         { color: #DDB94B !important; }
+
+/* Inner surfaces (info rows, tool cards, buttons) */
+.qibla-dark .bg-white\/55          { background-color: rgba(15,40,28,0.65) !important; }
+.qibla-dark .bg-white\/60          { background-color: rgba(15,40,28,0.70) !important; }
+.qibla-dark .bg-white\/70          { background-color: rgba(15,40,28,0.78) !important; }
+.qibla-dark .bg-white\/80          { background-color: rgba(15,40,28,0.86) !important; }
+
+/* Icon container backgrounds */
+.qibla-dark .bg-emerald-50         { background-color: rgba(16,185,129,0.15) !important; }
+.qibla-dark .bg-emerald-50\/80     { background-color: rgba(16,185,129,0.13) !important; }
+.qibla-dark .bg-emerald-50\/40     { background-color: rgba(16,185,129,0.08) !important; }
+
+/* Gold tip / "Did you know" box */
+.qibla-dark .bg-gold-50            { background-color: rgba(212,175,55,0.09) !important; }
+.qibla-dark .bg-gold-100           { background-color: rgba(212,175,55,0.14) !important; }
+
+/* Card borders */
+.qibla-dark .border-emerald-900\/10 { border-color: rgba(52,211,153,0.16) !important; }
+.qibla-dark .border-emerald-900\/8  { border-color: rgba(52,211,153,0.13) !important; }
+.qibla-dark .border-emerald-900\/5  { border-color: rgba(52,211,153,0.10) !important; }
+.qibla-dark .border-emerald-900\/15 { border-color: rgba(52,211,153,0.20) !important; }
+
+/* Gold borders */
+.qibla-dark .border-gold-200\/60   { border-color: rgba(212,175,55,0.28) !important; }
+.qibla-dark .border-gold-300\/20   { border-color: rgba(212,175,55,0.22) !important; }
+.qibla-dark .border-gold-300\/50   { border-color: rgba(212,175,55,0.28) !important; }
+
+/* Emerald dashed / gradient borders */
+.qibla-dark .border-emerald-300\/60 { border-color: rgba(52,211,153,0.32) !important; }
+.qibla-dark .border-emerald-200    { border-color: rgba(52,211,153,0.28) !important; }
+.qibla-dark .border-emerald-300    { border-color: rgba(52,211,153,0.36) !important; }
+
+/* "Soon" badge */
+.qibla-dark .text-gold-700         { color: #D4AF37 !important; }
+
+/* Step-circle gap ring — match dark card background so the gap is visible */
+.qibla-dark .ring-parchment        { --tw-ring-color: rgba(10,28,20,0.97) !important; }

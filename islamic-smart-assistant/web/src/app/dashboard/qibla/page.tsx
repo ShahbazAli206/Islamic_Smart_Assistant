@@ -6,7 +6,7 @@ import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion'
 import {
   Compass, MapPin, Navigation, AlertTriangle, RotateCcw, Loader2, CheckCircle2,
   Gauge, Clock, Activity, Hexagon, Box, Share2, Camera, Scan, Map as MapIcon,
-  ArrowRight, Sparkles, ExternalLink,
+  ArrowRight, Sparkles, ExternalLink, Smartphone, X,
 } from 'lucide-react';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { useCompassHeading } from '@/lib/compass';
@@ -285,6 +285,144 @@ function InfoRow({
 }
 
 
+// ── Mobile / Compass recommendation popup ─────────────────────────────────────
+
+function MobileCompassPopup({ isDark }: { isDark: boolean }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('isa:qibla-popup-dismissed') || 'false');
+      setVisible(!dismissed);
+    } catch {
+      setVisible(true);
+    }
+  }, []);
+
+  const dismiss = () => {
+    setVisible(false);
+    try { localStorage.setItem('isa:qibla-popup-dismissed', 'true'); } catch {}
+  };
+
+  const cardBg   = isDark ? 'bg-[#081a11]/96 border-emerald-700/30 text-[#D4EDE5]' : 'bg-white/98 border-emerald-200 text-[#0B1410]';
+  const subText  = isDark ? 'text-emerald-400/70' : 'text-emerald-700/60';
+  const warnBg   = isDark ? 'bg-amber-500/10 border-amber-400/20' : 'bg-amber-50 border-amber-200/70';
+  const warnHead = isDark ? 'text-amber-300' : 'text-amber-800';
+  const warnBody = isDark ? 'text-amber-300/70' : 'text-amber-700/70';
+  const phoneBg  = isDark ? 'bg-emerald-800/25 border-emerald-700/20' : 'bg-emerald-50 border-emerald-200/50';
+  const phoneHead = isDark ? 'text-[#D4EDE5]' : 'text-emerald-900';
+  const phoneBody = isDark ? 'text-emerald-400/70' : 'text-emerald-700/60';
+  const divider  = isDark ? 'text-emerald-400/40' : 'text-emerald-700/35';
+  const closeBtn = isDark ? 'text-emerald-400/50 hover:text-[#D4EDE5] hover:bg-white/8' : 'text-emerald-700/45 hover:text-emerald-900 hover:bg-emerald-50';
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          key="qibla-popup"
+          initial={{ x: 110, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 110, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 24, delay: 1.6 }}
+          className={`fixed right-4 top-[28%] z-[100] w-[272px] rounded-3xl border shadow-2xl overflow-hidden backdrop-blur-2xl ${cardBg}`}
+          style={{ boxShadow: isDark ? '0 24px 64px -12px rgba(0,0,0,0.7)' : '0 24px 64px -12px rgba(11,52,33,0.18)' }}
+        >
+          {/* top accent bar */}
+          <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
+
+          <div className="p-4">
+            {/* header row */}
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2.5">
+                {/* blinking indicator */}
+                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                  <span className="relative w-3.5 h-3.5 rounded-full bg-emerald-500 shadow" />
+                </div>
+                <div>
+                  <p className="font-bold text-[13px] leading-tight">Best Qibla Experience</p>
+                  <p className={`text-[10px] ${subText}`}>Live compass required</p>
+                </div>
+              </div>
+              <button onClick={dismiss} className={`rounded-full p-1.5 transition ${closeBtn}`} aria-label="Dismiss">
+                <X size={13} />
+              </button>
+            </div>
+
+            {/* laptop warning */}
+            <div className={`rounded-2xl border px-3 py-2.5 mb-3 ${warnBg}`}>
+              <div className="flex gap-2 items-start">
+                <span className="text-lg leading-none mt-0.5">💻</span>
+                <div>
+                  <p className={`text-[11px] font-semibold leading-snug ${warnHead}`}>
+                    Laptops have no compass sensor
+                  </p>
+                  <p className={`text-[10px] mt-0.5 leading-snug ${warnBody}`}>
+                    The direction shown is mathematically accurate, but can&apos;t track live device orientation.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* phone recommendation */}
+            <div className={`rounded-2xl border px-3 py-2.5 mb-3.5 ${phoneBg}`}>
+              <div className="flex gap-2 items-start">
+                <Smartphone size={18} className="shrink-0 text-emerald-500 mt-0.5" />
+                <div>
+                  <p className={`text-[11px] font-bold leading-snug ${phoneHead}`}>
+                    Open on your phone
+                  </p>
+                  <p className={`text-[10px] mt-0.5 leading-snug ${phoneBody}`}>
+                    Phones have a built-in compass sensor — visit this page on your phone for live Qibla tracking.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* divider */}
+            <div className={`flex items-center gap-2 mb-3 text-[9px] font-bold uppercase tracking-widest ${divider}`}>
+              <span className="flex-1 h-px bg-current opacity-40" />
+              Or get our mobile app
+              <span className="flex-1 h-px bg-current opacity-40" />
+            </div>
+
+            {/* Google Play badge */}
+            <div className="relative mb-2 rounded-2xl overflow-hidden bg-[#1a1a1a] border border-white/8 flex items-center gap-3 px-3.5 py-2.5">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M3.18 23.19 13.8 12 3.18.81C2.7 1.06 2.4 1.56 2.4 2.19v19.62c0 .63.3 1.13.78 1.38z" fill="#EA4335"/>
+                <path d="M20.52 10.44 17.4 8.68 14.22 12l3.18 3.32 3.12-1.76a1.8 1.8 0 0 0 0-3.12z" fill="#FBBC04"/>
+                <path d="M3.18 23.19 13.8 12 17.4 15.32 5.22 22.15a2.04 2.04 0 0 1-2.04-2.06v2.84c0 .09.01.18.02.26z" fill="#34A853"/>
+                <path d="M3.18.81 17.4 8.68 13.8 12 3.18.81z" fill="#4285F4"/>
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] text-white/50 leading-none">Get it on</p>
+                <p className="text-[13px] font-bold text-white leading-tight">Google Play</p>
+              </div>
+              <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+                Coming Soon
+              </span>
+            </div>
+
+            {/* App Store badge */}
+            <div className="relative rounded-2xl overflow-hidden bg-[#1a1a1a] border border-white/8 flex items-center gap-3 px-3.5 py-2.5">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="white" aria-hidden>
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] text-white/50 leading-none">Download on the</p>
+                <p className="text-[13px] font-bold text-white leading-tight">App Store</p>
+              </div>
+              <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+                Coming Soon
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const QIBLA_AYAH: Record<string, string> = {
@@ -429,6 +567,7 @@ export default function QiblaPage() {
       className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
     >
+      <MobileCompassPopup isDark={isDark} />
       {/* ── Full-bleed header ── */}
       <div className="relative overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -474,7 +613,7 @@ export default function QiblaPage() {
       </div>
 
       {/* ── Page content ── */}
-      <div className="relative px-6 sm:px-10 pb-10 space-y-5 mt-5">
+      <div className={`relative px-6 sm:px-10 pb-10 space-y-5 mt-5 ${isDark ? 'qibla-dark' : ''}`}>
         <motion.div
           variants={container}
           initial="hidden"

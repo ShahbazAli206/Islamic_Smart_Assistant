@@ -30,7 +30,7 @@ const NAV = [
       { href: '/dashboard/quran',        label: 'Holy Quran',      icon: BookOpen,   color: 'text-gold-600' },
       { href: '/dashboard/qibla',        label: 'Qibla Finder',    icon: Compass,    color: 'text-teal-600' },
       { href: '/dashboard/azan',         label: 'Azan Voices',     icon: Bell,       color: 'text-rose-500' },
-      { href: '/dashboard/recitation',   label: 'Recitation Alarm', icon: AlarmClock, color: 'text-violet-600' },
+      { href: '/dashboard/recitation',   label: 'Schedule Recitation', icon: AlarmClock, color: 'text-violet-600' },
       { href: '/dashboard/advanced',     label: 'Islamic Library',  icon: Library,    color: 'text-amber-600' },
     ],
   },
