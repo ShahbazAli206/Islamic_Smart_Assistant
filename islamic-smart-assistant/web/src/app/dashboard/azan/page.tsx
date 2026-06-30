@@ -21,7 +21,7 @@ import {
 } from '@/lib/customAzan';
 import { formatClock, decodeAudioFile, encodeWavFromSegments, type WavSegment } from '@/lib/audioTrim';
 import { Azan } from '@/lib/api';
-import { fetchCommunityUploads, deleteCommunityUpload } from '@/lib/communityUploads';
+import { fetchCommunityUploads, deleteCommunityUpload, subscribeToUploads, isCommunityEnabled } from '@/lib/communityUploads';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';

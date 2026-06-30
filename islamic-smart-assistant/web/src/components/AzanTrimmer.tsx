@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Square, Scissors, Loader2, Check } from 'lucide-react';
 import { decodeAudioFile, computePeaks, encodeWavClip, formatClock } from '@/lib/audioTrim';
-import { putAzanClip, getAzanClip, deleteAzanClip, isCustomAzan, CUSTOM_AZAN_PREFIX, type CustomAzan } from '@/lib/customAzan';
+import { putAzanClip, getAzanClip, deleteAzanClip, isCustomAzan, CUSTOM_AZAN_PREFIX, saveRemoteUrl, type CustomAzan } from '@/lib/customAzan';
 import { Azan } from '@/lib/api';
+import { uploadCommunityAudio, deleteCommunityUpload } from '@/lib/communityUploads';
 import { useTheme } from '@/lib/ThemeContext';
 
 export type TrimTarget = {
@@ -199,11 +200,35 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
       const trimmedDur = end - start;
       const savedName = name.trim() || target.name;
       const id = `${CUSTOM_AZAN_PREFIX}${crypto.randomUUID()}`;
+      const durationSec = Math.round(trimmedDur * 10) / 10;
+
+      // Save audio locally first so playback works immediately.
       await putAzanClip(id, blob);
-      if (isCustomAzan(target.id)) await deleteAzanClip(target.id).catch(() => {});
+
+      // Upload to Supabase so ALL browsers/users see the trimmed clip.
+      // Falls back to the backend API if Supabase is not configured.
+      let remoteUrl: string | undefined;
+      try {
+        const publicUrl = await uploadCommunityAudio(blob, { id, name: savedName, audioType: 'azan', durationSec });
+        if (publicUrl) { remoteUrl = publicUrl; saveRemoteUrl(id, publicUrl); }
+      } catch {
+        try {
+          const remote = await Azan.uploadVoice(blob, { name: savedName, durationMs: Math.round(trimmedDur * 1000), audioType: 'azan' });
+          if (remote?.audio_url) { remoteUrl = remote.audio_url; saveRemoteUrl(id, remote.audio_url); }
+        } catch { /* local-only fallback */ }
+      }
+
+      // Remove the original clip from local storage and cloud.
       const replacedId = target.id;
-      Azan.uploadVoice(blob, { name: savedName, durationMs: Math.round(trimmedDur * 1000), audioType: 'azan' }).catch(() => {});
-      onSaved({ id, name: savedName, createdAt: Date.now(), durationSec: Math.round(trimmedDur * 10) / 10, badge: target.badge, tags: target.tags }, replacedId);
+      if (isCustomAzan(target.id)) {
+        await deleteAzanClip(target.id).catch(() => {});
+        deleteCommunityUpload(target.id, 'azan').catch(() => {});
+      }
+
+      onSaved(
+        { id, name: savedName, createdAt: Date.now(), durationSec, badge: target.badge, tags: target.tags, remoteUrl },
+        replacedId,
+      );
       handleClose();
     } catch (e) {
       setError(`Save failed. ${e instanceof Error ? e.message : ''}`); setSaving(false);

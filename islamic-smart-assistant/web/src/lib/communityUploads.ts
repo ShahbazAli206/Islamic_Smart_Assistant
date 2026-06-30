@@ -25,6 +25,9 @@
  *   CREATE POLICY "public read"   ON community_uploads FOR SELECT USING (true);
  *   CREATE POLICY "public insert" ON community_uploads FOR INSERT WITH CHECK (true);
  *   CREATE POLICY "public delete" ON community_uploads FOR DELETE USING (true);
+ *
+ *  For real-time subscriptions (cross-browser live updates) also run:
+ *   ALTER PUBLICATION supabase_realtime ADD TABLE community_uploads;
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -113,4 +116,36 @@ export async function deleteCommunityUpload(id: string, audioType: string): Prom
 /** Whether Supabase credentials are configured. */
 export function isCommunityEnabled(): boolean {
   return Boolean(URL && ANON);
+}
+
+/**
+ * Subscribe to new community uploads in real time so every open browser tab
+ * sees uploads from other users without a page refresh.
+ *
+ * Requires the community_uploads table to be added to the Supabase Realtime
+ * publication (one-time SQL):
+ *   ALTER PUBLICATION supabase_realtime ADD TABLE community_uploads;
+ *
+ * Returns an unsubscribe function — call it inside your useEffect cleanup.
+ */
+export function subscribeToUploads(
+  audioType: 'azan' | 'durood' | 'dua',
+  onNew: (upload: CommunityUpload) => void,
+): () => void {
+  const sb = getClient();
+  if (!sb) return () => {};
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ch = (sb.channel(`cu-${audioType}`) as any)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'community_uploads',
+      filter: `audio_type=eq.${audioType}`,
+    }, (payload: { new: CommunityUpload }) => {
+      if (payload?.new) onNew(payload.new);
+    })
+    .subscribe();
+
+  return () => { sb.removeChannel(ch); };
 }

@@ -16,6 +16,7 @@ import { AutoAzanScheduler } from '@/components/AutoAzanScheduler';
 import { SurahScheduleRunner } from '@/components/SurahScheduleRunner';
 import { OnboardingSetup } from '@/components/OnboardingSetup';
 import { ProfileModal } from '@/components/ProfileModal';
+import { PremiumModal } from '@/components/PremiumModal';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { QuickSettingsPopup, AzanOffTag, type QuickSection } from '@/components/QuickSettings';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -54,8 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   // Controls the OnboardingSetup modal when launched via the profile "edit" pencil.
   const [editPrefs, setEditPrefs] = useState(false);
-  // Profile popup (opened from the sidebar "Profile" item) — replaces the page.
+  // Profile popup (opened from the sidebar "Profile" nav item).
   const [profileOpen, setProfileOpen] = useState(false);
+  // Premium popup (opened from the sidebar bottom profile card).
+  const [premiumOpen, setPremiumOpen] = useState(false);
   // Off-canvas sidebar for mobile; always visible from `lg` up.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
@@ -319,9 +322,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        {/* ── Profile card: avatar · greeting + plan · chevron (opens profile) ── */}
+        {/* ── Profile card: avatar · greeting + plan · chevron (opens premium) ── */}
         <button
-          onClick={() => { setProfileOpen(true); closeSidebar(); }}
+          onClick={() => { setPremiumOpen(true); closeSidebar(); }}
           className={`relative z-10 mt-1 flex w-full items-center gap-3 rounded-2xl border backdrop-blur px-3 py-2.5 text-left transition hover:brightness-105 ${t.profile}`}
         >
           {/* Avatar — initials from the stored name, else a person icon. */}
@@ -432,6 +435,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SurahScheduleRunner />
       <OnboardingSetup forceOpen={editPrefs} onClose={() => setEditPrefs(false)} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
       <QuickSettingsPopup
         open={quickOpen}
         onClose={() => setQuickOpen(false)}
