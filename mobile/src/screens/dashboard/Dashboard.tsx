@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { DateTime } from 'luxon';
 import { Coordinates, CalculationMethod, PrayerTimes } from 'adhan';
 import { Prayer } from '../../api/endpoints';
@@ -142,6 +143,7 @@ function MosqueSilhouette() {
 export function DashboardScreen() {
   const navigation = useNavigation<any>();
   const location   = useSelector((s: RootState) => s.user.location);
+  const { t } = useTranslation();
 
   const [today,     setToday]     = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -384,10 +386,8 @@ export function DashboardScreen() {
         <Text style={S.ayahArabic}>
           {'وَأَقِمِ الصَّلَاةَ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ'}
         </Text>
-        <Text style={S.ayahEn}>
-          And establish prayer. Indeed, prayer prohibits immorality and wrongdoing.
-        </Text>
-        <Text style={S.ayahRef}>Surah Al-Ankabut (29:45)</Text>
+        <Text style={S.ayahEn}>{t('quran.verseOfDay')}</Text>
+        <Text style={S.ayahRef}>{t('quran.verseOfDayRef')}</Text>
       </View>
 
       {/* ── Upcoming Event ── */}

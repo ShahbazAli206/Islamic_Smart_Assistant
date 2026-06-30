@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "الفجر",
+    "sunrise": "الشروق",
+    "dhuhr": "الظهر",
+    "asr": "العصر",
+    "maghrib": "المغرب",
+    "isha": "العشاء",
+    "nextPrayer": "الصلاة القادمة",
+    "timeUntil": "خلال {{time}}"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "القبلة"
+  },
+  "azan": {
+    "title": "أذان {{prayer}}",
+    "body": "حان وقت الصلاة"
+  },
+  "quran": {
+    "verseOfDay": "وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ",
+    "verseOfDayRef": "سورة العنكبوت (29:45)",
+    "heroVerse": "إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
+    "heroRef": "سورة الإسراء (17:9)"
   },
   "qibla": {
     "title": "محدد القبلة",

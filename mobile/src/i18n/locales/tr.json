@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "Sabah",
+    "sunrise": "Güneş",
+    "dhuhr": "Öğle",
+    "asr": "İkindi",
+    "maghrib": "Akşam",
+    "isha": "Yatsı",
+    "nextPrayer": "Sonraki namaz",
+    "timeUntil": "{{time}} sonra"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "Kibla"
+  },
+  "azan": {
+    "title": "{{prayer}} Ezanı",
+    "body": "Namaz vakti geldi"
+  },
+  "quran": {
+    "verseOfDay": "Namazı kıl. Çünkü namaz, hayasızlığı ve kötülüğü önler.",
+    "verseOfDayRef": "Ankebût Suresi (29:45)",
+    "heroVerse": "Bu Kur'an, insanları en doğru yola götürür.",
+    "heroRef": "İsra Suresi (17:9)"
   },
   "qibla": {
     "title": "Kibla Bulucu",

@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "سحر",
+    "sunrise": "لمر",
+    "dhuhr": "غرمه",
+    "asr": "عصر",
+    "maghrib": "ماښام",
+    "isha": "ماښامنۍ",
+    "nextPrayer": "راتلونکی لمونځ",
+    "timeUntil": "{{time}} کې"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "قبله"
+  },
+  "azan": {
+    "title": "د {{prayer}} اذان",
+    "body": "د لمانځه وخت دی"
+  },
+  "quran": {
+    "verseOfDay": "او لمونځ وکړه. بی له شکه، لمونځ د بدکاری او ناوړه کار مخنیوی کوي.",
+    "verseOfDayRef": "سورة العنکبوت (29:45)",
+    "heroVerse": "دا قرآن کریم خلک هغه لارې ته لارښوونه کوي چې خورا سمه ده.",
+    "heroRef": "سورة الإسراء (17:9)"
   },
   "qibla": {
     "title": "قبله موندونکی",

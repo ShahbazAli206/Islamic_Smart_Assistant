@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "ফজর",
+    "sunrise": "সূর্যোদয়",
+    "dhuhr": "যোহর",
+    "asr": "আসর",
+    "maghrib": "মাগরিব",
+    "isha": "এশা",
+    "nextPrayer": "পরবর্তী নামাজ",
+    "timeUntil": "{{time}} পরে"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "কিবলা"
+  },
+  "azan": {
+    "title": "{{prayer}} আজান",
+    "body": "নামাজের সময় হয়েছে"
+  },
+  "quran": {
+    "verseOfDay": "এবং নামাজ কায়েম করো। নিশ্চয়ই নামাজ অশ্লীলতা ও মন্দ কাজ থেকে বিরত রাখে।",
+    "verseOfDayRef": "সূরা আল-আনকাবুত (29:45)",
+    "heroVerse": "নিশ্চয়ই এই কুরআন সেই পথে পরিচালিত করে যা সবচেয়ে সরল।",
+    "heroRef": "সূরা আল-ইসরা (17:9)"
   },
   "qibla": {
     "title": "কিবলা ফাইন্ডার",

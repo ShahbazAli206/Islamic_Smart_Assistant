@@ -41,6 +41,16 @@
     "settings": "Settings",
     "qibla": "朝拜"
   },
+  "azan": {
+    "title": "{{prayer}}宣礼",
+    "body": "礼拜时间到了"
+  },
+  "quran": {
+    "verseOfDay": "当守礼拜，礼拜确能阻止丑事和罪恶。",
+    "verseOfDayRef": "古兰经 蜘蛛章 (29:45)",
+    "heroVerse": "这部古兰经确实引导人于最正确的道路。",
+    "heroRef": "古兰经 夜行章 (17:9)"
+  },
   "qibla": {
     "title": "朝拜方向",
     "subtitle": "礼拜方向",

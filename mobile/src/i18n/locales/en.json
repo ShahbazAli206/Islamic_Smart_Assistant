@@ -41,6 +41,16 @@
     "settings": "Settings",
     "qibla": "Qibla"
   },
+  "azan": {
+    "title": "{{prayer}} Azan",
+    "body": "It is time for prayer"
+  },
+  "quran": {
+    "verseOfDay": "And establish prayer. Indeed, prayer prohibits immorality and wrongdoing.",
+    "verseOfDayRef": "Surah Al-Ankabut (29:45)",
+    "heroVerse": "Indeed, this Quran guides to that which is most just.",
+    "heroRef": "Surah Al-Isra (17:9)"
+  },
   "qibla": {
     "title": "Qibla Finder",
     "subtitle": "Direction of Prayer",

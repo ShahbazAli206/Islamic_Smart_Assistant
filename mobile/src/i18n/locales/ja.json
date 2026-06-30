@@ -41,6 +41,16 @@
     "settings": "Settings",
     "qibla": "キブラ"
   },
+  "azan": {
+    "title": "{{prayer}}のアザーン",
+    "body": "礼拝の時間です"
+  },
+  "quran": {
+    "verseOfDay": "礼拝を守れ。まことに礼拝は恥ずべき行為と悪事を退ける。",
+    "verseOfDayRef": "クモの巣章 (29:45)",
+    "heroVerse": "このクルアーンは最も正しい道に導く。",
+    "heroRef": "夜の旅章 (17:9)"
+  },
   "qibla": {
     "title": "キブラ方向検索",
     "subtitle": "礼拝の方向",

@@ -22,7 +22,8 @@ const EMERALD = '#10B981';
 const GOLD    = '#DDB94B';
 const TEXT    = '#0B1410';
 const SUBTEXT = '#5C5A50';
-const DIVIDER = '#E5E4DA';
+const WHITE    = '#FFFFFF';
+const DIVIDER  = '#E5E4DA';
 const GREEN_DARK = '#0D3320';
 
 // ─── Arabic verse image-area (decorative header) ─────────────────────────────

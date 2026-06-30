@@ -41,6 +41,16 @@
     "settings": "Settings",
     "qibla": "Qibla"
   },
+  "azan": {
+    "title": "Azan de {{prayer}}",
+    "body": "C'est l'heure de la priere"
+  },
+  "quran": {
+    "verseOfDay": "Et accomplis la Salat. Car la Salat preserve de la turpitude et du blamable.",
+    "verseOfDayRef": "Sourate Al-Ankabut (29:45)",
+    "heroVerse": "Ce Coran guide vers ce qui est le plus droit.",
+    "heroRef": "Sourate Al-Isra (17:9)"
+  },
   "qibla": {
     "title": "Chercheur de Qibla",
     "subtitle": "Direction de la Priere",

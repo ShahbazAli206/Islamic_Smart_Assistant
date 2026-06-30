@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet, I18nManager } from 'react-native';
+import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
@@ -13,10 +13,9 @@ export function LanguageScreen({ navigation }: any) {
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
-  const pick = (code: string, rtl: boolean) => {
+  const pick = (code: string) => {
     i18n.changeLanguage(code);
     dispatch(setLanguage(code));
-    if (I18nManager.isRTL !== rtl) I18nManager.forceRTL(rtl);
     navigation.navigate('Sect');
   };
 
@@ -27,7 +26,7 @@ export function LanguageScreen({ navigation }: any) {
         data={SUPPORTED_LANGUAGES}
         keyExtractor={(item) => item.code}
         renderItem={({ item }) => (
-          <Pressable onPress={() => pick(item.code, item.rtl)} style={[styles.item, { backgroundColor: theme.card, borderColor: theme.divider }]}>
+          <Pressable onPress={() => pick(item.code)} style={[styles.item, { backgroundColor: theme.card, borderColor: theme.divider }]}>
             <Text style={[styles.itemText, { color: theme.text }]}>{item.name}</Text>
           </Pressable>
         )}

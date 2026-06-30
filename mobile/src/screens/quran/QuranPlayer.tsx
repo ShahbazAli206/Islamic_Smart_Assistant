@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, Switch, Dimensions,
 } from 'react-native';
+import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import { RootState } from '../../store';
+import { Quran as QuranAPI } from '../../api/endpoints';
+import { SUPPORTED_LANGUAGES } from '../../i18n';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -150,6 +155,22 @@ export function QuranPlayerScreen() {
   const [playing,     setPlaying]     = useState(false);
   const [withTranslation, setWithTranslation] = useState(true);
   const [query,       setQuery]       = useState('');
+  const [translationText, setTranslationText] = useState<string | null>(null);
+
+  const userLang = useSelector((s: RootState) => s.user.language);
+  const { t } = useTranslation();
+  const langName = SUPPORTED_LANGUAGES.find(l => l.code === userLang)?.name ?? 'English';
+
+  useEffect(() => {
+    if (!withTranslation) return;
+    setTranslationText(null);
+    QuranAPI.surah(selected.id, userLang)
+      .then((data: any) => {
+        const text = data?.translation ?? data?.text ?? data?.verses?.[0]?.translation ?? null;
+        if (text) setTranslationText(String(text));
+      })
+      .catch(() => {});
+  }, [selected.id, userLang, withTranslation]);
 
   const filtered = query
     ? SURAHS.filter(s =>
@@ -176,10 +197,8 @@ export function QuranPlayerScreen() {
             <Text style={S.heroArabic}>
               {'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ'}
             </Text>
-            <Text style={S.heroEn}>
-              Indeed, this Quran guides to that which is most just and gives good tidings to the believers.
-            </Text>
-            <Text style={S.heroRef}>Surah Al-Isra (17:9)</Text>
+            <Text style={S.heroEn}>{t('quran.heroVerse')}</Text>
+            <Text style={S.heroRef}>{t('quran.heroRef')}</Text>
           </View>
           <View style={S.heroRight}>
             <Text style={S.quranBookEmoji}>📖</Text>
@@ -251,7 +270,7 @@ export function QuranPlayerScreen() {
             </View>
             <View style={S.playerDropdown}>
               <Text style={S.dropdownIcon}>🌐</Text>
-              <Text style={S.dropdownLabel}>English</Text>
+              <Text style={S.dropdownLabel}>{langName}</Text>
               <Text style={S.dropdownArrow}>›</Text>
             </View>
           </View>
@@ -289,15 +308,15 @@ export function QuranPlayerScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Translation sample text */}
+        {/* Translation */}
         {withTranslation && (
           <View style={S.translationBox}>
             <Text style={S.translationArabic}>
-              {'يس ۝ وَالْقُرْآنِ الْحَكِيمِ ۝ إِنَّكَ لَمِنَ الْمُرْسَلِينَ ۝ عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ'}
+              {'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
             </Text>
-            <Text style={S.translationEn}>
-              Ya-Sin. By the wise Quran. Indeed, you (O Muhammad) are of the messengers. On a straight path.
-            </Text>
+            {translationText ? (
+              <Text style={S.translationEn}>{translationText}</Text>
+            ) : null}
           </View>
         )}
 

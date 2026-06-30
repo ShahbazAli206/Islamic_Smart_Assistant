@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "फ़ज्र",
+    "sunrise": "सूर्योदय",
+    "dhuhr": "ज़ुहर",
+    "asr": "अस्र",
+    "maghrib": "मग़रिब",
+    "isha": "इशा",
+    "nextPrayer": "अगली नमाज़",
+    "timeUntil": "{{time}} में"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "किबला"
+  },
+  "azan": {
+    "title": "{{prayer}} अज़ान",
+    "body": "नमाज़ का वक़्त आ गया"
+  },
+  "quran": {
+    "verseOfDay": "और नमाज़ क़ायम करो। बेशक नमाज़ बेहयाई और बुराई से रोकती है।",
+    "verseOfDayRef": "सूरत अल-अन्कबूत (29:45)",
+    "heroVerse": "बेशक यह क़ुरआन उस राह की हिदायत करता है जो सबसे सीधी है।",
+    "heroRef": "सूरत अल-इस्रा (17:9)"
   },
   "qibla": {
     "title": "किबला फाइंडर",

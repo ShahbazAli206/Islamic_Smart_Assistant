@@ -24,14 +24,14 @@
     "locationDetected": "Location detected"
   },
   "prayer": {
-    "fajr": "Fajr",
-    "sunrise": "Sunrise",
-    "dhuhr": "Dhuhr",
-    "asr": "Asr",
-    "maghrib": "Maghrib",
-    "isha": "Isha",
-    "nextPrayer": "Next prayer",
-    "timeUntil": "in {{time}}"
+    "fajr": "فجر",
+    "sunrise": "طلوع آفتاب",
+    "dhuhr": "ظہر",
+    "asr": "عصر",
+    "maghrib": "مغرب",
+    "isha": "عشاء",
+    "nextPrayer": "اگلی نماز",
+    "timeUntil": "{{time}} میں"
   },
   "tabs": {
     "home": "Home",
@@ -40,6 +40,16 @@
     "devices": "Devices",
     "settings": "Settings",
     "qibla": "قبلہ"
+  },
+  "azan": {
+    "title": "{{prayer}} اذان",
+    "body": "نماز کا وقت آ گیا"
+  },
+  "quran": {
+    "verseOfDay": "اور نماز قائم کرو۔ بے شک نماز بے حیائی اور برائی سے روکتی ہے۔",
+    "verseOfDayRef": "سورۃ العنکبوت (29:45)",
+    "heroVerse": "بے شک یہ قرآن اس راہ کی طرف رہنمائی کرتا ہے جو سیدھی ہے۔",
+    "heroRef": "سورۃ الإسراء (17:9)"
   },
   "qibla": {
     "title": "قبلہ فائنڈر",

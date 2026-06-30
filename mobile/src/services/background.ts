@@ -1,6 +1,8 @@
 import BackgroundFetch from 'react-native-background-fetch';
 import notifee, { TriggerType, TimestampTrigger, AndroidImportance } from '@notifee/react-native';
 import { Prayer } from '../api/endpoints';
+import i18n from '../i18n';
+import { store } from '../store';
 
 /**
  * Background scheduler.
@@ -40,11 +42,15 @@ async function refreshScheduledAlarms(channelId: string) {
       for (const prayer of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) {
         const ts = new Date(day[prayer]).getTime();
         if (ts <= Date.now()) continue;
+        const lng = (store.getState() as any).user?.language ?? 'en';
+        const prayerLabel = i18n.t(`prayer.${prayer}`, { lng });
+        const title = i18n.t('azan.title', { lng, prayer: prayerLabel });
+        const body  = i18n.t('azan.body',  { lng });
         const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: ts, alarmManager: { allowWhileIdle: true } };
         await notifee.createTriggerNotification(
           {
-            title: `${prayer.charAt(0).toUpperCase() + prayer.slice(1)} Azan`,
-            body: 'It is time for prayer',
+            title,
+            body,
             android: { channelId, sound: 'azan', pressAction: { id: 'default' } },
             ios: { sound: 'azan.caf' },
           },
