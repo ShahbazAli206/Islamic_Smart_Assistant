@@ -40,6 +40,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const [end, setEnd] = useState(0);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [playing, setPlaying] = useState(false);
   const [playHead, setPlayHead] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const reset = useCallback(() => {
     setLoading(false); setLoadError(null); setBuffer(null); setPeaks([]);
     setDuration(0); setStart(0); setEnd(0); setName('');
-    setSaving(false); setPlaying(false); setPlayHead(0); setError(null);
+    setSaving(false); setSyncMsg(null); setPlaying(false); setPlayHead(0); setError(null);
     revokeUrl();
   }, []);
 
@@ -194,7 +195,7 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
   const save = async () => {
     if (!buffer || !target) return;
     if (end - start < MIN_LEN) { setError('Selection is too short (minimum 1 second).'); return; }
-    setSaving(true); setError(null);
+    setSaving(true); setError(null); setSyncMsg(null);
     try {
       const blob = encodeWavClip(buffer, start, end);
       const trimmedDur = end - start;
@@ -210,12 +211,17 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
       let remoteUrl: string | undefined;
       try {
         const publicUrl = await uploadCommunityAudio(blob, { id, name: savedName, audioType: 'azan', durationSec });
-        if (publicUrl) { remoteUrl = publicUrl; saveRemoteUrl(id, publicUrl); }
-      } catch {
+        if (publicUrl) { remoteUrl = publicUrl; saveRemoteUrl(id, publicUrl); setSyncMsg({ ok: true, text: 'Synced to cloud ✓' }); }
+        else { setSyncMsg({ ok: false, text: 'Saved locally — Supabase not configured' }); }
+      } catch (supErr) {
+        console.error('[AzanTrimmer] Supabase upload failed:', supErr);
         try {
           const remote = await Azan.uploadVoice(blob, { name: savedName, durationMs: Math.round(trimmedDur * 1000), audioType: 'azan' });
-          if (remote?.audio_url) { remoteUrl = remote.audio_url; saveRemoteUrl(id, remote.audio_url); }
-        } catch { /* local-only fallback */ }
+          if (remote?.audio_url) { remoteUrl = remote.audio_url; saveRemoteUrl(id, remote.audio_url); setSyncMsg({ ok: true, text: 'Synced via backend ✓' }); }
+        } catch (backendErr) {
+          console.error('[AzanTrimmer] Backend upload also failed:', backendErr);
+          setSyncMsg({ ok: false, text: 'Saved locally — cloud sync unavailable' });
+        }
       }
 
       // Remove the original clip from local storage and cloud.
@@ -229,6 +235,8 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
         { id, name: savedName, createdAt: Date.now(), durationSec, badge: target.badge, tags: target.tags, remoteUrl },
         replacedId,
       );
+      // Brief pause so the user sees the sync status before the modal closes.
+      await new Promise((r) => setTimeout(r, 1400));
       handleClose();
     } catch (e) {
       setError(`Save failed. ${e instanceof Error ? e.message : ''}`); setSaving(false);
@@ -418,23 +426,35 @@ export function AzanTrimmer({ open, target, onClose, onSaved }: Props) {
             </div>
 
             {/* ── Footer ── */}
-            <div className={`shrink-0 border-t px-6 sm:px-8 py-4 flex items-center justify-end gap-3 ${isDark ? 'border-white/[0.08]' : 'border-gray-100'}`}>
-              <button onClick={handleClose}
-                className={`py-2.5 px-6 rounded-full text-sm font-semibold border transition ${
-                  isDark
-                    ? 'border-white/20 text-white/55 hover:text-white hover:bg-white/10'
-                    : 'border-gray-200 text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}>
-                Cancel
-              </button>
-              <button onClick={save} disabled={!buffer || saving || loading}
-                className={`inline-flex items-center gap-2 py-2.5 px-6 rounded-full text-sm font-semibold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isDark
-                    ? 'bg-[#C9A227] hover:bg-[#b8911e] text-[#0a1a0f] shadow-amber-900/30'
-                    : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-900/20'
-                }`}>
-                {saving ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <><Check size={16} /> Save Trimmed Azan</>}
-              </button>
+            <div className={`shrink-0 border-t px-6 sm:px-8 py-4 flex items-center gap-3 ${isDark ? 'border-white/[0.08]' : 'border-gray-100'}`}>
+              {/* Cloud sync status */}
+              {syncMsg && (
+                <span className={`flex-1 text-xs font-medium truncate ${syncMsg.ok ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : (isDark ? 'text-amber-400' : 'text-amber-600')}`}>
+                  {syncMsg.text}
+                </span>
+              )}
+              <div className="flex items-center gap-3 ml-auto">
+                <button onClick={handleClose} disabled={saving}
+                  className={`py-2.5 px-6 rounded-full text-sm font-semibold border transition disabled:opacity-40 ${
+                    isDark
+                      ? 'border-white/20 text-white/55 hover:text-white hover:bg-white/10'
+                      : 'border-gray-200 text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  }`}>
+                  Cancel
+                </button>
+                <button onClick={save} disabled={!buffer || saving || loading}
+                  className={`inline-flex items-center gap-2 py-2.5 px-6 rounded-full text-sm font-semibold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark
+                      ? 'bg-[#C9A227] hover:bg-[#b8911e] text-[#0a1a0f] shadow-amber-900/30'
+                      : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-900/20'
+                  }`}>
+                  {saving
+                    ? syncMsg
+                      ? <><Check size={16} /> Saved!</>
+                      : <><Loader2 size={16} className="animate-spin" /> Saving…</>
+                    : <><Check size={16} /> Save Trimmed Azan</>}
+                </button>
+              </div>
             </div>
 
             <audio ref={previewRef} onTimeUpdate={onPreviewTime} onEnded={() => { setPlaying(false); setPlayHead(0); }} preload="auto" />
