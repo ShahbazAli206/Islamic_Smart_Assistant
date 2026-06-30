@@ -24,4 +24,29 @@ contextBridge.exposeInMainWorld('desktop', {
       return () => ipcRenderer.removeListener('devices:changed', handler);
     },
   },
+
+  // Local Bengali translation audio cache.
+  // Files served via isa-audio://bn/{N}.mp3 custom protocol.
+  bnAudio: {
+    /** Returns sorted array of global ayah numbers downloaded to local storage. */
+    list:  () => ipcRenderer.invoke('bn-audio:list'),
+    /** Returns { count, bytes } storage info. */
+    stats: () => ipcRenderer.invoke('bn-audio:stats'),
+    /** Deletes all cached Bengali audio files. Returns { deleted }. */
+    clear: () => ipcRenderer.invoke('bn-audio:clear'),
+    /**
+     * Downloads Bengali audio files.
+     * items: Array<{ ayah: number; url: string }>
+     * Returns { done, failed }.
+     */
+    download: (items) => ipcRenderer.invoke('bn-audio:download', items),
+    /** Returns the isa-audio:// URL for a given global ayah number. */
+    getUrl: (ayahNumber) => `isa-audio://bn/${ayahNumber}.mp3`,
+    /** Subscribe to download progress events. Returns an unsubscribe fn. */
+    onProgress: (cb) => {
+      const handler = (_e, data) => cb(data);
+      ipcRenderer.on('bn-audio:progress', handler);
+      return () => ipcRenderer.removeListener('bn-audio:progress', handler);
+    },
+  },
 });

@@ -13,6 +13,7 @@ import {
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
+import { useBnDownloaded, localBnUrl, isBnLocalSupported } from '@/lib/bnAudioLocal';
 
 type Stage = 'arabic' | 'translation';
 
@@ -332,6 +333,9 @@ export function QuranPlayer({
     );
   }, []);
 
+  // Local Bengali audio: set of global ayah numbers downloaded to disk (desktop only)
+  const bnDownloaded = useBnDownloaded();
+
   const currentAyah    = arabic?.ayahs[ayahIdx];
   const currentTrans   = trans?.ayahs[ayahIdx];
   const currentEnglish = english?.ayahs[ayahIdx];
@@ -357,6 +361,10 @@ export function QuranPlayer({
   const stageUrl = (() => {
     if (!currentAyah) return null;
     if (stage === 'arabic') return currentAyah.audio ?? ayahAudioUrl(currentAyah.number, reciter);
+    // Bengali: prefer local file (isa-audio:// served by Electron) over Supabase/TTS
+    if (translation === 'bn.bengali' && bnDownloaded.has(currentAyah.number)) {
+      return localBnUrl(currentAyah.number);
+    }
     return translationAudioUrl(translation, currentAyah.number);
   })();
 
@@ -469,7 +477,9 @@ export function QuranPlayer({
 
     // Translation of current ayah — the very next sound when stage='arabic'
     if (stage === 'arabic' && translationMode && translation !== 'none') {
-      const url = translationAudioUrl(translation, currentAyah.number);
+      const url = (translation === 'bn.bengali' && bnDownloaded.has(currentAyah.number))
+        ? localBnUrl(currentAyah.number)
+        : translationAudioUrl(translation, currentAyah.number);
       if (url) urlsToKeep.add(url);
     }
 
@@ -479,7 +489,10 @@ export function QuranPlayer({
       if (!next) break;
       urlsToKeep.add(next.audio ?? ayahAudioUrl(next.number, reciter));
       if (translationMode && translation !== 'none') {
-        const url = translationAudioUrl(translation, next.number);
+        // Bengali: use local file URL if downloaded, else CDN/Supabase URL
+        const url = (translation === 'bn.bengali' && bnDownloaded.has(next.number))
+          ? localBnUrl(next.number)
+          : translationAudioUrl(translation, next.number);
         if (url) urlsToKeep.add(url);
       }
     }

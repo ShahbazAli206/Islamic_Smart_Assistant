@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Search, BookOpen, ShieldCheck } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { QuranPlayer } from '@/components/QuranPlayer';
+import { BnAudioManager } from '@/components/BnAudioManager';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
 import { useTheme } from '@/lib/ThemeContext';
@@ -278,6 +279,11 @@ export default function QuranPage() {
           onTranslationModeChange={setTranslationMode}
           isDark={isDark}
         />
+
+        {/* Bengali local audio download manager — desktop only, hidden on web */}
+        {translation === 'bn.bengali' && (
+          <BnAudioManager surahNumber={surah} isDark={isDark} />
+        )}
 
         {/* ── full surah index ── */}
         <div id="all-surahs" className="rounded-3xl bg-parchment text-ink p-5 sm:p-6 shadow-2xl">

@@ -3,12 +3,19 @@
 
 const {
   app, BrowserWindow, Tray, Menu, nativeImage,
-  ipcMain, Notification, dialog, shell, net, utilityProcess,
+  ipcMain, Notification, dialog, shell, net, utilityProcess, protocol,
 } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 
 const { DeviceManager } = require('./devices');
+const bnAudio = require('./bnAudio');
+
+// ── Bengali audio protocol (isa-audio://bn/{N}.mp3 → userData/audio/bn/{N}.mp3) ──
+// Must be registered before app.whenReady().
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'isa-audio', privileges: { secure: true, standard: true, supportFetchAPI: false } },
+]);
 
 const isDev = !app.isPackaged;
 
@@ -155,6 +162,22 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
+  // Serve locally cached Bengali audio files via the isa-audio:// custom protocol.
+  // URL pattern: isa-audio://bn/1.mp3  →  userData/audio/bn/1.mp3
+  protocol.handle('isa-audio', (request) => {
+    try {
+      const url = new URL(request.url);
+      const filePath = path.join(
+        app.getPath('userData'), 'audio',
+        url.host,                    // "bn"
+        url.pathname.replace(/^\//, ''), // "1.mp3"
+      );
+      return net.fetch('file://' + filePath);
+    } catch {
+      return new Response('Not found', { status: 404 });
+    }
+  });
+
   if (isFirstLaunch()) {
     createSetupWindow();
   } else {
@@ -226,6 +249,26 @@ ipcMain.handle('devices:mediaBase', () => (deviceManager ? deviceManager.mediaBa
 ipcMain.handle('devices:play',      (_e, args) => ensureDevices().play(args || {}));
 ipcMain.handle('devices:stop',      (_e, args) => ensureDevices().stop(args || {}));
 ipcMain.handle('devices:setVolume', (_e, args) => ensureDevices().setVolume(args || {}));
+
+// ── Bengali audio: local file cache (isa-audio:// protocol) ──────────────────
+
+ipcMain.handle('bn-audio:list',  () => bnAudio.list());
+ipcMain.handle('bn-audio:stats', () => bnAudio.stats());
+ipcMain.handle('bn-audio:clear', () => bnAudio.clear());
+
+ipcMain.handle('bn-audio:download', async (event, items) => {
+  if (!Array.isArray(items) || items.length === 0) return { done: 0, failed: 0 };
+  let lastEmitted = 0;
+  const result = await bnAudio.download(items, (done, total, failed) => {
+    if (done === total || done - lastEmitted >= 10) {
+      lastEmitted = done;
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('bn-audio:progress', { done, total, failed });
+      }
+    }
+  });
+  return result;
+});
 
 // ── Setup wizard IPC handlers ─────────────────────────────────────────────────
 
