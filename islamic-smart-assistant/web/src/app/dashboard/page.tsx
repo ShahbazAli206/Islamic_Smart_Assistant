@@ -77,8 +77,7 @@ const FIQH_OPTIONS: Record<string, { value: string; label: string }[]> = {
 
 const ALL_AZAN_VOICES = [
   { id: 'azan-best-sound-quality',    name: 'Azan — Best Sound Quality',       region: 'HD Recording'         },
-  { id: 'beautiful-azan',             name: 'Beautiful Azan',                  region: 'Melodic & Heartfelt'  },
-  { id: 'hafiz-ahmed-raza-qadri',     name: 'Hafiz Ahmed Raza Qadri',          region: 'Pakistan'             },
+{ id: 'hafiz-ahmed-raza-qadri',     name: 'Hafiz Ahmed Raza Qadri',          region: 'Pakistan'             },
   { id: 'mevlan-kurtishi',            name: 'Mevlan Kurtishi',                 region: 'Macedonia'            },
   { id: 'egzon-ibrahimi',             name: 'Egzon Ibrahimi',                  region: 'Kosovo'               },
   { id: 'abdul-rahman-mossad',        name: 'Abdul Rahman Mossad',             region: 'Egypt'                },
@@ -761,7 +760,7 @@ export default function Overview() {
                 </motion.div>
               </div>
 
-              <Link href="/dashboard/azan" className={`mt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
+              <Link href="/dashboard/azan" className={`mt-auto pt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
                 <Bell size={15} /> View All Voices
               </Link>
             </motion.section>

@@ -39,7 +39,7 @@ const AZAN: Record<string, AzanSrc> = {
   'masjid-al-haram':            { name: 'Masjid Al-Haram',        local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a' },
   'seyyid-taleh-boradigahi':    { name: 'Seyyid Taleh Boradigahi', local: '/audio/azan/seyyid-taleh-boradigahi.m4a', remote: '/audio/azan/seyyid-taleh-boradigahi.m4a' },
   'azan-best-sound-quality':    { name: 'Azan — Best Sound Quality', local: '/audio/Azan Best Sound quality.mp3', remote: '/audio/Azan Best Sound quality.mp3' },
-  'beautiful-azan':             { name: 'Beautiful Azan',         local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3' },
+
   'makkah':                     { name: 'Makkah — Haramain',      local: '/audio/azan/makkah.mp3',   remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3' },
   'madinah':                    { name: 'Madinah — Masjid Nabawi', local: '/audio/azan/madinah.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3' },
 };

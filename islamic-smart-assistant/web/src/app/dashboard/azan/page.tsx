@@ -57,13 +57,6 @@ const VOICES: AzanVoice[] = [
     art: '/azan/makkah.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
   },
   {
-    id: 'beautiful-azan', name: 'Beautiful Azan', subtitle: 'Melodic & Heartfelt',
-    region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '',
-    badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/beautiful-azan.mp3', remote: '/audio/azan/beautiful-azan.mp3',
-    art: '/azan/makkah.svg', accent: 'from-teal-500 to-emerald-700',
-  },
-  {
     id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
     region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
     badge: 'popular', tags: ['Most Listened'],

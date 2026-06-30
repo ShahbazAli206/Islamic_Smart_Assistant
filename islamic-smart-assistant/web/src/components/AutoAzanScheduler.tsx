@@ -18,7 +18,6 @@ const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 
  *  Each prayer draws a stable-random pick from this pool (seeded by prayer+date, changes daily). */
 const MOST_LISTENED_VOICES = [
   'azan-best-sound-quality',
-  'beautiful-azan',
   'hafiz-ahmed-raza-qadri',
   'mevlan-kurtishi',
   'egzon-ibrahimi',
@@ -40,7 +39,7 @@ const VOICE_NAMES: Record<string, { name: string; subtitle: string; region: stri
   'masjid-al-haram':           { name: 'Masjid Al-Haram',         subtitle: 'The Grand Mosque, Makkah', region: 'Saudi Arabia' },
   'seyyid-taleh-boradigahi':   { name: 'Seyyid Taleh Boradigahi', subtitle: 'Azerbaijani Azan', region: 'Azerbaijan' },
   'azan-best-sound-quality':   { name: 'Azan — Best Sound Quality', subtitle: 'Crystal clear HD recording', region: '' },
-  'beautiful-azan':            { name: 'Beautiful Azan',          subtitle: 'Melodic & Heartfelt', region: '' },
+
   'makkah':                    { name: 'Makkah — Haramain',       subtitle: 'Sheikh Ali Mulla', region: 'Saudi Arabia' },
   'madinah':                   { name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari', region: 'Saudi Arabia' },
 };
