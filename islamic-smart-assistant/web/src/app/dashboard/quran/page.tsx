@@ -125,13 +125,14 @@ export default function QuranPage() {
           backgroundPosition: 'center',
         }}
       >
-        {/* Readability overlay — different tint from left (warmer/amber) to distinguish */}
+        {/* Very light overlay — keep the library image fully visible; per-row
+            cards carry their own dark/light backdrop for text readability. */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'linear-gradient(180deg,rgba(8,5,2,0.62) 0%,rgba(12,7,3,0.65) 100%)'
-              : 'linear-gradient(180deg,rgba(255,250,240,0.52) 0%,rgba(252,246,232,0.55) 100%)',
+              ? 'linear-gradient(180deg,rgba(6,4,2,0.18) 0%,rgba(10,6,3,0.22) 100%)'
+              : 'linear-gradient(180deg,rgba(255,250,240,0.22) 0%,rgba(252,246,232,0.26) 100%)',
           }}
         />
         {/* ── Header / Search ── */}
@@ -146,14 +147,14 @@ export default function QuranPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className={`font-display font-bold text-base leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
+              <h3 className={`font-display font-bold text-2xl leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
                 All Surahs
               </h3>
-              <p className={`text-[11px] mt-0.5 ${isDark ? 'text-parchment/38' : 'text-ink/45'}`}>
+              <p className={`text-xs mt-1 ${isDark ? 'text-parchment/45' : 'text-ink/50'}`}>
                 {isSearching ? `${filtered.length} of ` : ''}{SURAHS.length} · tap to play
               </p>
             </div>
-            <span className={`font-arabic text-2xl leading-none ${isDark ? 'text-gold-400/35' : 'text-emerald-200'}`}>
+            <span className={`font-arabic text-3xl leading-none ${isDark ? 'text-gold-400/45' : 'text-emerald-300'}`}>
               القرآن
             </span>
           </div>
@@ -210,20 +211,22 @@ export default function QuranPage() {
                   className={`group w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-150 ${
                     active
                       ? isDark
-                        ? 'border-gold-400/50 shadow-[0_0_22px_-5px_rgba(221,185,75,0.40)]'
+                        ? 'border-gold-400/55 shadow-[0_0_26px_-4px_rgba(221,185,75,0.45)]'
                         : 'border-amber-400/70 shadow-[0_2px_14px_rgba(221,185,75,0.22)]'
                       : isDark
-                        ? 'border-white/[0.06] hover:border-amber-800/40 hover:bg-black/20'
-                        : 'border-white/40 bg-white/25 hover:border-amber-200 hover:bg-white/50 hover:shadow-sm'
+                        ? 'border-white/[0.10] hover:border-gold-500/40'
+                        : 'border-white/40 hover:border-amber-200 hover:shadow-sm'
                   }`}
                   style={{
                     background: active
                       ? isDark
-                        ? 'linear-gradient(135deg,rgba(30,18,4,0.78) 0%,rgba(20,12,2,0.82) 100%)'
-                        : 'linear-gradient(135deg,rgba(255,243,200,0.72) 0%,rgba(254,235,150,0.45) 100%)'
-                      : undefined,
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
+                        ? 'linear-gradient(135deg,rgba(34,22,6,0.90) 0%,rgba(22,14,3,0.92) 100%)'
+                        : 'linear-gradient(135deg,rgba(255,243,200,0.78) 0%,rgba(254,235,150,0.52) 100%)'
+                      : isDark
+                        ? 'rgba(6,10,8,0.72)'
+                        : 'rgba(255,255,255,0.35)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
                   }}
                 >
                   {/* Number badge */}
@@ -249,7 +252,7 @@ export default function QuranPage() {
                     }`}>
                       {s.englishName}
                     </p>
-                    <p className={`text-[10.5px] mt-0.5 truncate ${isDark ? 'text-parchment/35' : 'text-ink/42'}`}>
+                    <p className={`text-[10.5px] mt-0.5 truncate ${isDark ? 'text-parchment/55' : 'text-ink/50'}`}>
                       {s.englishTranslation} · {s.ayahs}v · {s.revelation === 'Meccan' ? 'Makki' : 'Madani'}
                     </p>
                   </span>
