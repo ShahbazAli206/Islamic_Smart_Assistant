@@ -1024,26 +1024,19 @@ export function QuranPlayer({
                 </div>
               </div>
 
-              {(currentTrans || currentEnglish) && (
+              {currentTrans && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  className="border-t border-emerald-900/10 pt-4 space-y-2 text-center"
+                  className="border-t border-emerald-900/10 pt-4 text-center"
                 >
-                  {currentTrans && (
-                    <p
-                      dir={isUrdu ? 'rtl' : 'ltr'}
-                      className={`text-lg leading-relaxed text-ink/80 ${isUrdu ? 'font-arabic text-xl' : ''}`}
-                    >
-                      {currentTrans.text}
-                    </p>
-                  )}
-                  {currentEnglish && (
-                    <p dir="ltr" className="text-base leading-relaxed text-ink/70">
-                      {currentEnglish.text}
-                    </p>
-                  )}
+                  <p
+                    dir={isUrdu ? 'rtl' : 'ltr'}
+                    className={`leading-relaxed ${isUrdu ? 'font-arabic text-2xl' : 'text-xl'} ${isDark ? 'text-white/95' : 'text-ink/80'}`}
+                  >
+                    {currentTrans.text}
+                  </p>
                 </motion.div>
               )}
             </motion.div>
