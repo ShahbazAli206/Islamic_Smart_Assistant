@@ -48,7 +48,7 @@ export default function QuranPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 flex flex-col lg:flex-row lg:h-screen overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
+      className={`-m-5 sm:-m-8 flex flex-col lg:flex-row min-h-[calc(100vh-64px)] lg:min-h-0 lg:h-full overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
       style={isDark
         ? { background: 'linear-gradient(180deg,#060f0a 0%,#08140d 100%)' }
         : { background: '#EEF5F0' }}
@@ -64,15 +64,15 @@ export default function QuranPage() {
             backgroundImage: 'url(/features-bg.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
-            opacity: isDark ? 0.55 : 0.22,
+            opacity: isDark ? 0.78 : 0.38,
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'linear-gradient(170deg,rgba(4,12,8,0.68) 0%,rgba(6,18,12,0.72) 100%)'
-              : 'linear-gradient(170deg,rgba(238,248,242,0.82) 0%,rgba(224,244,233,0.86) 100%)',
+              ? 'linear-gradient(170deg,rgba(4,12,8,0.52) 0%,rgba(6,18,12,0.58) 100%)'
+              : 'linear-gradient(170deg,rgba(238,248,242,0.72) 0%,rgba(224,244,233,0.78) 100%)',
           }}
         />
 
@@ -131,15 +131,15 @@ export default function QuranPage() {
             backgroundImage: 'url(/islamic_Library_bg.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: isDark ? 0.18 : 0.12,
+            opacity: isDark ? 0.42 : 0.30,
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'rgba(3,8,5,0.88)'
-              : 'rgba(244,250,246,0.90)',
+              ? 'rgba(3,8,5,0.76)'
+              : 'rgba(244,250,246,0.80)',
           }}
         />
         {/* ── Header / Search ── */}

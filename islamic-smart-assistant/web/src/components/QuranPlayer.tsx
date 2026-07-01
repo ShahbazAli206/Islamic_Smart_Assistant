@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipBack, SkipForward, Repeat, Languages, Mic2,
-  ChevronDown, Volume2, FileText, Check,
+  ChevronDown, Volume2, Volume1, VolumeX, FileText, Check,
 } from 'lucide-react';
 import {
   RECITERS, TRANSLATIONS, fetchSurahMulti, ayahAudioUrl, translationAudioUrl,
@@ -355,6 +355,37 @@ function PlaybackBtn({ onClick, children, title, className = '' }: {
   );
 }
 
+// ── Live waveform equaliser ───────────────────────────────────────────────────
+const WAVE_BASES = [4, 7, 5, 9, 6, 10, 4, 8, 6, 7, 5, 9, 4, 6, 10, 7, 4];
+function WaveformBars({ playing, isDark }: { playing: boolean; isDark: boolean }) {
+  return (
+    <div className="flex items-end justify-center gap-[3px] h-12" aria-hidden>
+      {WAVE_BASES.map((base, i) => (
+        <motion.div
+          key={i}
+          className="rounded-full"
+          style={{
+            width: 3,
+            background: isDark
+              ? `rgba(233,207,122,${0.40 + (i % 4) * 0.15})`
+              : `rgba(5,150,105,${0.35 + (i % 4) * 0.15})`,
+          }}
+          animate={playing ? {
+            height: [`${base * 2}px`, `${base * 5 + 10}px`, `${base * 2}px`, `${base * 7}px`, `${base * 3}px`],
+            opacity: [0.55, 1, 0.6, 1, 0.55],
+          } : { height: '3px', opacity: 0.18 }}
+          transition={{
+            duration: 0.45 + (i % 5) * 0.22,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: i * 0.055,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export function QuranPlayer({
   surahNumber, reciter, translation, translationMode,
@@ -389,6 +420,11 @@ export function QuranPlayer({
   const [playing, setPlaying] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [volume, setVolume]         = useState(85);
+  const [muted, setMuted]           = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
+  const volumePopRef = useRef<HTMLDivElement>(null);
+  useClickOutside(volumePopRef, () => setShowVolume(false));
 
   // ── Audio pool ────────────────────────────────────────────────────────────
   // URL-keyed map of pre-loaded HTMLAudioElement objects. Each entry is created
@@ -664,6 +700,12 @@ export function QuranPlayer({
     };
   }, []);
 
+  // Apply volume/mute to the active audio element
+  useEffect(() => {
+    const el = activeAudioRef.current;
+    if (el) el.volume = muted ? 0 : volume / 100;
+  }, [volume, muted]);
+
   const toggle  = () => setPlaying((p) => !p);
   const goPrev  = () => { setStage('arabic'); setAyahIdx((i) => Math.max(0, i - 1)); };
   const goNext  = () => arabic && (setStage('arabic'), setAyahIdx((i) => Math.min(arabic.ayahs.length - 1, i + 1)));
@@ -727,33 +769,60 @@ export function QuranPlayer({
             <SkipBack size={18} />
           </PlaybackBtn>
 
-          <motion.button
-            onClick={toggle}
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.91 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-            className={`relative p-3.5 rounded-full border-2 transition-colors mx-1 ${isDark ? 'border-gold-400 text-gold-300 shadow-glow-gold hover:bg-gold-400/10' : 'border-emerald-600 bg-emerald-600 text-white shadow-glow-emerald hover:bg-emerald-700'}`}
-          >
-            {/* continuous pulse ring */}
-            <motion.span aria-hidden className="absolute inset-0 rounded-full pointer-events-none"
-              style={{ boxShadow: isDark ? '0 0 0 0 rgba(221,185,75,0.5)' : '0 0 0 0 rgba(16,185,129,0.5)' }}
-              animate={{ boxShadow: isDark
-                ? ['0 0 0 0 rgba(221,185,75,0.45)', '0 0 0 8px rgba(221,185,75,0)']
-                : ['0 0 0 0 rgba(16,185,129,0.45)', '0 0 0 8px rgba(16,185,129,0)'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }} />
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={playing ? 'pause' : 'play'}
-                initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
-                animate={{ scale: 1,   opacity: 1, rotate: 0 }}
-                exit={{   scale: 0.5,  opacity: 0, rotate: 20 }}
-                transition={{ duration: 0.14 }}
-                className="relative block"
+          {/* Play/Pause with circular ayah-progress ring */}
+          <div className="relative mx-2">
+            {arabic && (
+              <svg
+                aria-hidden
+                className="absolute pointer-events-none"
+                style={{ top: -7, left: -7, width: 'calc(100% + 14px)', height: 'calc(100% + 14px)', transform: 'rotate(-90deg)' }}
+                viewBox="0 0 58 58"
               >
-                {playing ? <Pause size={20} /> : <Play size={20} />}
-              </motion.span>
-            </AnimatePresence>
-          </motion.button>
+                <circle cx="29" cy="29" r="25" fill="none"
+                  stroke={isDark ? 'rgba(233,207,122,0.14)' : 'rgba(16,185,129,0.14)'}
+                  strokeWidth="2.5" />
+                <motion.circle
+                  cx="29" cy="29" r="25" fill="none"
+                  stroke={isDark ? '#E9CF7A' : '#10B981'}
+                  strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 25}`}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 25 * (1 - (ayahIdx + 1) / arabic.ayahs.length) }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+              </svg>
+            )}
+            <motion.button
+              onClick={toggle}
+              whileHover={{ scale: 1.07 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+              className={`relative p-4 rounded-full border-2 transition-colors ${isDark ? 'border-gold-400 text-gold-300 hover:bg-gold-400/10' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
+              style={{
+                boxShadow: isDark
+                  ? '0 0 24px rgba(221,185,75,0.4), 0 4px 16px rgba(0,0,0,0.4)'
+                  : '0 0 20px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.15)',
+              }}
+            >
+              {/* pulse ring */}
+              <motion.span aria-hidden className="absolute inset-0 rounded-full pointer-events-none"
+                animate={{ boxShadow: isDark
+                  ? ['0 0 0 0 rgba(221,185,75,0.5)', '0 0 0 10px rgba(221,185,75,0)']
+                  : ['0 0 0 0 rgba(16,185,129,0.5)', '0 0 0 10px rgba(16,185,129,0)'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }} />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={playing ? 'pause' : 'play'}
+                  initial={{ scale: 0.4, opacity: 0, rotate: -30 }}
+                  animate={{ scale: 1,   opacity: 1, rotate: 0 }}
+                  exit={{   scale: 0.4,  opacity: 0, rotate: 30 }}
+                  transition={{ duration: 0.16 }}
+                  className="relative block"
+                >
+                  {playing ? <Pause size={22} /> : <Play size={22} />}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
+          </div>
 
           <PlaybackBtn onClick={goNext} title="Next ayah" className={isDark ? 'text-white/80 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-100'}>
             <SkipForward size={18} />
@@ -773,6 +842,64 @@ export function QuranPlayer({
           >
             <Repeat size={18} />
           </motion.button>
+
+          {/* Volume control */}
+          <div ref={volumePopRef} className="relative ml-1">
+            <motion.button
+              onClick={() => setShowVolume(v => !v)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.88 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+              title={`Volume: ${muted ? 'Muted' : volume + '%'}`}
+              className={`p-2.5 rounded-full transition-colors ${isDark ? 'text-white/80 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-100'}`}
+            >
+              {muted || volume === 0 ? <VolumeX size={18} /> : volume < 50 ? <Volume1 size={18} /> : <Volume2 size={18} />}
+            </motion.button>
+            <AnimatePresence>
+              {showVolume && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.88, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.88, y: 10 }}
+                  transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute bottom-full mb-3 right-0 z-50 rounded-2xl border shadow-2xl p-4"
+                  style={{
+                    background: isDark ? 'rgba(4,12,8,0.94)' : 'rgba(255,255,255,0.97)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(16,185,129,0.18)',
+                    minWidth: 200,
+                    boxShadow: isDark
+                      ? '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(233,207,122,0.08)'
+                      : '0 16px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(16,185,129,0.06)',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setMuted(m => !m)}
+                      className={`shrink-0 p-1.5 rounded-lg transition ${isDark ? 'hover:bg-white/10 text-white/65' : 'hover:bg-emerald-50 text-emerald-700'}`}
+                    >
+                      {muted || volume === 0 ? <VolumeX size={15} /> : volume < 50 ? <Volume1 size={15} /> : <Volume2 size={15} />}
+                    </button>
+                    <input
+                      type="range"
+                      min={0} max={100}
+                      value={muted ? 0 : volume}
+                      onChange={e => { setMuted(false); setVolume(Number(e.target.value)); }}
+                      className="flex-1 h-1.5 rounded-full cursor-pointer"
+                      style={{ accentColor: isDark ? '#E9CF7A' : '#10B981' }}
+                    />
+                    <span className={`text-xs font-mono tabular-nums w-8 text-right shrink-0 ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
+                      {muted ? '0' : volume}%
+                    </span>
+                  </div>
+                  <p className={`text-[10px] text-center mt-2.5 opacity-40 ${isDark ? 'text-parchment' : 'text-ink'}`}>
+                    System audio output
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -841,6 +968,38 @@ export function QuranPlayer({
 
               {/* Tajweed-coloured Arabic text */}
               <div className="relative">
+                {/* Radial glow behind text while playing */}
+                <AnimatePresence>
+                  {playing && (
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute inset-0 rounded-2xl pointer-events-none"
+                      style={{
+                        background: isDark
+                          ? 'radial-gradient(ellipse at center, rgba(233,207,122,0.08) 0%, transparent 68%)'
+                          : 'radial-gradient(ellipse at center, rgba(5,150,105,0.07) 0%, transparent 68%)',
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* Waveform bars above Arabic text */}
+                <AnimatePresence>
+                  {playing && (
+                    <motion.div
+                      initial={{ opacity: 0, scaleY: 0.4 }}
+                      animate={{ opacity: 1, scaleY: 1 }}
+                      exit={{ opacity: 0, scaleY: 0.4 }}
+                      style={{ originY: 'bottom' }}
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      className="mb-2"
+                    >
+                      <WaveformBars playing={playing} isDark={isDark} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <TajweedAyah text={currentAyah.text} isDark={isDark} />
                 <p dir="rtl" className="text-center -mt-1">
                   <span className={`font-display text-2xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-emerald-700'}`}>
