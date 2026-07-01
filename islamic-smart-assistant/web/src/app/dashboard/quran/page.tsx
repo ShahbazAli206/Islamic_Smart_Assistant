@@ -51,10 +51,10 @@ export default function QuranPage() {
       className={`-m-5 sm:-m-8 flex flex-col lg:flex-row lg:h-[calc(100%+4rem)] overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
     >
 
-      {/* ═══════════════ LEFT — Player section (60%) ═══════════════ */}
+      {/* ═══════════════ LEFT — Player section (75%) ═══════════════ */}
       {/* features-bg.jpg is the background — a lush nature/forest image */}
       <div
-        className="relative flex flex-col lg:w-[60%] lg:min-h-0 lg:overflow-y-auto"
+        className="relative flex flex-col lg:w-[75%] lg:min-h-0 lg:overflow-y-auto"
         style={{
           backgroundImage: 'url(/features-bg.jpg)',
           backgroundSize: 'cover',
@@ -113,10 +113,10 @@ export default function QuranPage() {
         </div>
       </div>
 
-      {/* ═══════════════ RIGHT — Surah list (40%) ═══════════════ */}
+      {/* ═══════════════ RIGHT — Surah list (25%) ═══════════════ */}
       {/* islamic_Library_bg.png is the background — an Islamic library/mosque image */}
       <div
-        className={`relative flex flex-col lg:w-[40%] lg:min-h-0 border-t lg:border-t-0 lg:border-l ${
+        className={`relative flex flex-col lg:w-[25%] lg:min-h-0 border-t lg:border-t-0 lg:border-l ${
           isDark ? 'border-white/[0.06]' : 'border-emerald-100'
         }`}
         style={{
@@ -147,25 +147,25 @@ export default function QuranPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className={`font-display font-bold text-2xl leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
+              <h3 className={`font-display font-bold text-3xl leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
                 All Surahs
               </h3>
-              <p className={`text-xs mt-1 ${isDark ? 'text-parchment/45' : 'text-ink/50'}`}>
+              <p className={`text-sm mt-1 ${isDark ? 'text-parchment/45' : 'text-ink/50'}`}>
                 {isSearching ? `${filtered.length} of ` : ''}{SURAHS.length} · tap to play
               </p>
             </div>
-            <span className={`font-arabic text-3xl leading-none ${isDark ? 'text-gold-400/45' : 'text-emerald-300'}`}>
+            <span className={`font-arabic text-4xl leading-none ${isDark ? 'text-gold-400/45' : 'text-amber-700/60'}`}>
               القرآن
             </span>
           </div>
 
           <div className="relative">
-            <Search size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/28' : 'text-ink/32'}`} />
+            <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-parchment/28' : 'text-ink/32'}`} />
             <input
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search surah name or number…"
-              className={`w-full pl-8 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition ${
+              className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition ${
                 isDark
                   ? 'bg-white/[0.05] border border-white/[0.08] text-parchment placeholder:text-parchment/25 focus:border-emerald-600/50'
                   : 'bg-emerald-50 border border-emerald-100 text-ink placeholder:text-ink/32 focus:border-emerald-300'
@@ -230,7 +230,7 @@ export default function QuranPage() {
                   }}
                 >
                   {/* Number badge */}
-                  <span className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-display font-bold shrink-0 transition-all ${
+                  <span className={`relative w-11 h-11 rounded-full flex items-center justify-center text-sm font-display font-bold shrink-0 transition-all ${
                     active
                       ? 'bg-gold-gradient text-midnight-900 shadow-[0_0_16px_rgba(221,185,75,0.5)]'
                       : isDark
@@ -245,23 +245,23 @@ export default function QuranPage() {
 
                   {/* Name + meta */}
                   <span className="flex-1 min-w-0">
-                    <p className={`font-semibold text-sm leading-tight truncate transition-colors ${
+                    <p className={`font-semibold text-base leading-tight truncate transition-colors ${
                       active
-                        ? isDark ? 'text-gold-300' : 'text-emerald-800'
-                        : isDark ? 'text-parchment/88' : 'text-ink'
+                        ? isDark ? 'text-gold-300' : 'text-amber-800'
+                        : isDark ? 'text-parchment/90' : 'text-ink'
                     }`}>
                       {s.englishName}
                     </p>
-                    <p className={`text-[10.5px] mt-0.5 truncate ${isDark ? 'text-parchment/55' : 'text-ink/50'}`}>
+                    <p className={`text-[13px] mt-0.5 truncate ${isDark ? 'text-parchment/55' : 'text-ink/50'}`}>
                       {s.englishTranslation} · {s.ayahs}v · {s.revelation === 'Meccan' ? 'Makki' : 'Madani'}
                     </p>
                   </span>
 
-                  {/* Arabic name */}
-                  <span className={`font-arabic text-[1.1rem] leading-none shrink-0 transition-colors ${
+                  {/* Arabic name — warm neutral: dark in light mode, light in dark mode */}
+                  <span className={`font-arabic text-[1.45rem] leading-none shrink-0 transition-colors ${
                     active
-                      ? isDark ? 'text-gold-300' : 'text-emerald-700'
-                      : isDark ? 'text-emerald-600/60' : 'text-emerald-700/75'
+                      ? isDark ? 'text-gold-200' : 'text-amber-800'
+                      : isDark ? 'text-amber-100/80' : 'text-amber-900/75'
                   }`}>
                     {s.arabic}
                   </span>
@@ -273,7 +273,7 @@ export default function QuranPage() {
                       animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
                       transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <Play size={12} fill="currentColor" />
+                      <Play size={16} fill="currentColor" />
                     </motion.span>
                   )}
                 </motion.button>
