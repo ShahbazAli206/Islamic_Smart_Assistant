@@ -204,11 +204,10 @@ export default function QuranPage() {
             {scrollItems.map((s, idx) => {
               const active = s.number === surah;
               const pop    = POPULAR.has(s.number);
-              // Surah name in the user's selected language; falls back to the
-              // Arabic-script name when that language has no distinct translation.
+              // Arabic name is always shown; the user's selected-language name is
+              // shown right below it when a distinct translation exists.
               const localName = distinctSurahName(s.number, language);
-              const rightName = localName ?? s.arabic;
-              const rightIsArabic = /[؀-ۿ]/.test(rightName);
+              const localIsArabic = localName ? /[؀-ۿ]/.test(localName) : false;
               return (
                 <motion.button
                   key={`${s.number}-${idx}`}
@@ -264,20 +263,37 @@ export default function QuranPage() {
                     </p>
                   </span>
 
-                  {/* Surah name in the user's language (falls back to Arabic script).
+                  {/* Right: Arabic name (top) + user-language name (below).
                       Warm neutral: dark in light mode, light in dark mode. */}
-                  <span
-                    dir={rightIsArabic ? 'rtl' : 'ltr'}
-                    title={rightName}
-                    className={`shrink-0 leading-tight text-right max-w-[45%] truncate transition-colors ${
-                      rightIsArabic ? 'font-arabic text-[1.45rem]' : 'font-semibold text-[13px]'
-                    } ${
-                      active
-                        ? isDark ? 'text-gold-200' : 'text-amber-800'
-                        : isDark ? 'text-amber-100/80' : 'text-amber-900/75'
-                    }`}
-                  >
-                    {rightName}
+                  <span className="shrink-0 flex flex-col items-end gap-0.5 max-w-[46%]">
+                    {/* Arabic surah name — always shown */}
+                    <span
+                      dir="rtl"
+                      title={s.arabic}
+                      className={`font-arabic text-[1.4rem] leading-tight w-full text-right truncate transition-colors ${
+                        active
+                          ? isDark ? 'text-gold-200' : 'text-amber-800'
+                          : isDark ? 'text-amber-100/85' : 'text-amber-900/80'
+                      }`}
+                    >
+                      {s.arabic}
+                    </span>
+                    {/* User's selected-language name — shown below when translated */}
+                    {localName && (
+                      <span
+                        dir={localIsArabic ? 'rtl' : 'ltr'}
+                        title={localName}
+                        className={`leading-tight w-full text-right truncate transition-colors ${
+                          localIsArabic ? 'font-arabic text-[1.05rem]' : 'font-medium text-[12px]'
+                        } ${
+                          active
+                            ? isDark ? 'text-gold-300/85' : 'text-amber-700/90'
+                            : isDark ? 'text-parchment/60' : 'text-ink/55'
+                        }`}
+                      >
+                        {localName}
+                      </span>
+                    )}
                   </span>
 
                   {/* Active pulse indicator */}
