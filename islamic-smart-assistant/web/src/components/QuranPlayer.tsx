@@ -55,6 +55,85 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Portuguese',   ids: ['pt.elhayek'] },
 ];
 
+// ── Tajweed makhraj (articulation-point) colour map ─────────────────────────
+// Each Arabic letter is assigned a colour matching its place of articulation.
+// This is a visual approximation, not a full rule engine.
+const MAKHRAJ: Record<string, string> = {
+  // Halq — throat (ء ه ع ح غ خ) → sky blue
+  'ء': '#38bdf8', 'ه': '#38bdf8', 'ع': '#38bdf8',
+  'ح': '#38bdf8', 'غ': '#38bdf8', 'خ': '#38bdf8',
+  // Qalqalah — echoing bounce (ق ط ب ج د) → amber/gold
+  'ق': '#f59e0b', 'ط': '#f59e0b', 'ب': '#f59e0b',
+  'ج': '#f59e0b', 'د': '#f59e0b',
+  // Ghunnah — nasal (ن م) → pink
+  'ن': '#f472b6', 'م': '#f472b6',
+  // Shafatain — lips (ف و) → violet
+  'ف': '#a78bfa', 'و': '#a78bfa',
+  // Dhalaaqah — tongue tip / lateral (ل ر) → emerald green
+  'ل': '#34d399', 'ر': '#34d399',
+  // Asnaan sibilants (ز س ص) → yellow
+  'ز': '#fcd34d', 'س': '#fcd34d', 'ص': '#fcd34d',
+  // Asnaan stops (ت) → orange  (ط is already qalqalah above)
+  'ت': '#fb923c',
+  // Interdentals (ث ذ ظ) → warm yellow
+  'ث': '#fbbf24', 'ذ': '#fbbf24', 'ظ': '#fbbf24',
+  // Middle tongue (ش ي) → teal
+  'ش': '#2dd4bf', 'ي': '#22d3ee',
+  // Back tongue (ك) → light green
+  'ك': '#86efac',
+  // Side tongue (ض) → light blue
+  'ض': '#60a5fa',
+};
+
+// Split Arabic text into grapheme clusters (base letter + all following diacritics)
+// so spans wrap each character with its harakāt together.
+function splitGraphemes(text: string): string[] {
+  const clusters: string[] = [];
+  let cur = '';
+  for (const ch of text) {
+    const cp = ch.codePointAt(0) ?? 0;
+    // Arabic combining diacritics: U+064B–U+065F, U+0610–U+061A, U+0670
+    const isDiacritic = (cp >= 0x064B && cp <= 0x065F) || (cp >= 0x0610 && cp <= 0x061A) || cp === 0x0670;
+    if (isDiacritic) { cur += ch; } else { if (cur) clusters.push(cur); cur = ch; }
+  }
+  if (cur) clusters.push(cur);
+  return clusters;
+}
+
+// Renders an Arabic ayah with per-character tajweed makhraj colours.
+function TajweedAyah({ text, isDark }: { text: string; isDark: boolean }) {
+  const defaultColor = isDark ? '#e2e8f0' : '#1e293b';
+  const words = text.split(/(\s+)/);
+  return (
+    <p className="font-arabic text-3xl md:text-4xl leading-[2] text-center" dir="rtl">
+      {words.map((segment, wi) => {
+        if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
+        const graphemes = splitGraphemes(segment);
+        return (
+          <span key={wi} className="inline-block">
+            {graphemes.map((g, ci) => {
+              const base = g[0];
+              const hasShadda = g.includes('ّ');
+              const color = MAKHRAJ[base] ?? defaultColor;
+              return (
+                <span
+                  key={ci}
+                  style={{
+                    color,
+                    textShadow: hasShadda ? `0 0 10px ${color}88` : undefined,
+                  }}
+                >
+                  {g}
+                </span>
+              );
+            })}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
 // ── Click-outside hook ────────────────────────────────────────────────────────
 function useClickOutside(ref: React.RefObject<HTMLDivElement | null>, onClose: () => void) {
   useEffect(() => {
@@ -597,12 +676,16 @@ export function QuranPlayer({
   const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && !!getTtsLang(translation);
 
   return (
-    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-gold-300/30' : 'border-emerald-900/10'}`} style={{ background: '#F4F0E2' }}>
+    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-gold-300/25' : 'border-emerald-900/10'}`}
+      style={{ background: isDark ? 'rgba(6,18,12,0.97)' : '#F4F0E2' }}>
       {/* ── header ── */}
       <div className="text-white p-6 relative overflow-hidden"
         style={{ background: isDark
           ? 'linear-gradient(135deg,#143A28 0%,#0E2A1D 55%,#0A1F15 100%)'
           : 'linear-gradient(135deg,#1d5a41 0%,#16492f 55%,#103b27 100%)' }}>
+        {/* features background image at low opacity */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: 'url(/features-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
         <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
         {/* drifting glow + sweeping sheen (continuous) */}
         <motion.div aria-hidden className="absolute -top-16 right-1/4 w-56 h-56 rounded-full pointer-events-none"
@@ -713,7 +796,7 @@ export function QuranPlayer({
       </AnimatePresence>
 
       {/* ── now-reading ── */}
-      <div className="p-6">
+      <div className={`p-6 ${isDark ? 'bg-[rgba(6,18,12,0.97)]' : ''}`}>
         {isLoading && (
           <div className="space-y-3">
             <div className="h-24 rounded-xl bg-emerald-50 animate-pulse" />
@@ -755,12 +838,31 @@ export function QuranPlayer({
                 <span className="text-xs text-ink/55">Juz {currentAyah.juz} • Page {currentAyah.page}</span>
               </div>
 
-              <p className="font-arabic text-3xl md:text-4xl leading-[1.9] text-ink text-center" dir="rtl">
-                {currentAyah.text}
-                <span className="font-display text-emerald-700 text-2xl mx-2">
-                  ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
-                </span>
-              </p>
+              {/* Tajweed-coloured Arabic text */}
+              <div className="relative">
+                <TajweedAyah text={currentAyah.text} isDark={isDark} />
+                <p dir="rtl" className="text-center -mt-1">
+                  <span className={`font-display text-2xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-emerald-700'}`}>
+                    ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
+                  </span>
+                </p>
+                {/* Tajweed legend */}
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {[
+                    { color: '#38bdf8', label: 'Throat (حلق)' },
+                    { color: '#f59e0b', label: 'Qalqalah (قلقلة)' },
+                    { color: '#f472b6', label: 'Ghunnah (غنة)' },
+                    { color: '#34d399', label: 'Tongue tip (ذلاقة)' },
+                    { color: '#a78bfa', label: 'Lips (شفتان)' },
+                    { color: '#fcd34d', label: 'Sibilants (أسنان)' },
+                  ].map(({ color, label }) => (
+                    <span key={label} className="inline-flex items-center gap-1 text-[10px] opacity-70">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                      <span className={isDark ? 'text-parchment/60' : 'text-ink/55'}>{label}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
 
               {(currentTrans || currentEnglish) && (
                 <motion.div
@@ -791,7 +893,7 @@ export function QuranPlayer({
 
       {/* ── progress bar ── */}
       {arabic && (
-        <div className="px-6 pb-6">
+        <div className={`px-6 pb-6 ${isDark ? 'bg-[rgba(6,18,12,0.97)]' : ''}`}>
           <div className="h-1.5 rounded-full bg-emerald-100 overflow-hidden">
             <motion.div
               animate={{ width: `${((ayahIdx + 1) / arabic.ayahs.length) * 100}%` }}
