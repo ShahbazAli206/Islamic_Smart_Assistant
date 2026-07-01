@@ -48,31 +48,26 @@ export default function QuranPage() {
 
   return (
     <div
-      className={`-m-5 sm:-m-8 flex flex-col lg:flex-row min-h-[calc(100vh-64px)] lg:min-h-0 lg:h-full overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
-      style={isDark
-        ? { background: 'linear-gradient(180deg,#060f0a 0%,#08140d 100%)' }
-        : { background: '#EEF5F0' }}
+      className={`-m-5 sm:-m-8 flex flex-col lg:flex-row lg:h-[calc(100%+4rem)] overflow-hidden ${isDark ? 'text-parchment' : 'text-ink'}`}
     >
 
       {/* ═══════════════ LEFT — Player section (60%) ═══════════════ */}
-      <div className="relative flex flex-col lg:w-[60%] lg:min-h-0 lg:overflow-y-auto">
-
-        {/* Background: features-bg.jpg + colour overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none"
-          style={{
-            backgroundImage: 'url(/features-bg.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center top',
-            opacity: isDark ? 0.78 : 0.38,
-          }}
-        />
+      {/* features-bg.jpg is the background — a lush nature/forest image */}
+      <div
+        className="relative flex flex-col lg:w-[60%] lg:min-h-0 lg:overflow-y-auto"
+        style={{
+          backgroundImage: 'url(/features-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+        }}
+      >
+        {/* Dark/light readability overlay — keep thin so image shows clearly */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'linear-gradient(170deg,rgba(4,12,8,0.52) 0%,rgba(6,18,12,0.58) 100%)'
-              : 'linear-gradient(170deg,rgba(238,248,242,0.72) 0%,rgba(224,244,233,0.78) 100%)',
+              ? 'linear-gradient(170deg,rgba(2,8,4,0.55) 0%,rgba(3,10,5,0.60) 100%)'
+              : 'linear-gradient(170deg,rgba(255,255,255,0.48) 0%,rgba(240,252,244,0.52) 100%)',
           }}
         />
 
@@ -119,34 +114,35 @@ export default function QuranPage() {
       </div>
 
       {/* ═══════════════ RIGHT — Surah list (40%) ═══════════════ */}
+      {/* islamic_Library_bg.png is the background — an Islamic library/mosque image */}
       <div
         className={`relative flex flex-col lg:w-[40%] lg:min-h-0 border-t lg:border-t-0 lg:border-l ${
           isDark ? 'border-white/[0.06]' : 'border-emerald-100'
         }`}
+        style={{
+          backgroundImage: 'url(/islamic_Library_bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
-        {/* islamic_Library_bg.png background */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none"
-          style={{
-            backgroundImage: 'url(/islamic_Library_bg.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: isDark ? 0.42 : 0.30,
-          }}
-        />
+        {/* Readability overlay — different tint from left (warmer/amber) to distinguish */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'rgba(3,8,5,0.76)'
-              : 'rgba(244,250,246,0.80)',
+              ? 'linear-gradient(180deg,rgba(8,5,2,0.62) 0%,rgba(12,7,3,0.65) 100%)'
+              : 'linear-gradient(180deg,rgba(255,250,240,0.52) 0%,rgba(252,246,232,0.55) 100%)',
           }}
         />
         {/* ── Header / Search ── */}
         <div className={`relative shrink-0 px-4 pt-4 pb-3 border-b ${
-          isDark ? 'border-white/[0.06] bg-[rgba(3,8,5,0.75)]' : 'border-emerald-100 bg-white/85'
+          isDark ? 'border-white/[0.06]' : 'border-amber-200/60'
         }`}
-          style={{ backdropFilter: isDark ? 'blur(8px)' : undefined, WebkitBackdropFilter: isDark ? 'blur(8px)' : undefined }}
+          style={{
+            background: isDark ? 'rgba(8,5,2,0.70)' : 'rgba(255,250,238,0.78)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}
         >
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -214,18 +210,20 @@ export default function QuranPage() {
                   className={`group w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-150 ${
                     active
                       ? isDark
-                        ? 'border-gold-400/45 shadow-[0_0_22px_-5px_rgba(221,185,75,0.35)]'
-                        : 'border-emerald-400/70 shadow-[0_2px_14px_rgba(16,185,129,0.18)]'
+                        ? 'border-gold-400/50 shadow-[0_0_22px_-5px_rgba(221,185,75,0.40)]'
+                        : 'border-amber-400/70 shadow-[0_2px_14px_rgba(221,185,75,0.22)]'
                       : isDark
-                        ? 'border-white/[0.04] hover:border-emerald-800/50 hover:bg-emerald-950/30'
-                        : 'border-transparent bg-white hover:border-emerald-200 hover:shadow-sm'
+                        ? 'border-white/[0.06] hover:border-amber-800/40 hover:bg-black/20'
+                        : 'border-white/40 bg-white/25 hover:border-amber-200 hover:bg-white/50 hover:shadow-sm'
                   }`}
                   style={{
                     background: active
                       ? isDark
-                        ? 'linear-gradient(135deg,rgba(16,44,30,0.85) 0%,rgba(8,24,16,0.9) 100%)'
-                        : 'linear-gradient(135deg,rgba(209,250,229,0.75) 0%,rgba(167,243,208,0.35) 100%)'
+                        ? 'linear-gradient(135deg,rgba(30,18,4,0.78) 0%,rgba(20,12,2,0.82) 100%)'
+                        : 'linear-gradient(135deg,rgba(255,243,200,0.72) 0%,rgba(254,235,150,0.45) 100%)'
                       : undefined,
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
                   }}
                 >
                   {/* Number badge */}
