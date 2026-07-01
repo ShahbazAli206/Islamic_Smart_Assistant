@@ -64,15 +64,15 @@ export default function QuranPage() {
             backgroundImage: 'url(/features-bg.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
-            opacity: isDark ? 0.28 : 0.20,
+            opacity: isDark ? 0.55 : 0.22,
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'linear-gradient(170deg,rgba(4,12,8,0.86) 0%,rgba(6,18,12,0.88) 100%)'
-              : 'linear-gradient(170deg,rgba(238,248,242,0.88) 0%,rgba(224,244,233,0.92) 100%)',
+              ? 'linear-gradient(170deg,rgba(4,12,8,0.68) 0%,rgba(6,18,12,0.72) 100%)'
+              : 'linear-gradient(170deg,rgba(238,248,242,0.82) 0%,rgba(224,244,233,0.86) 100%)',
           }}
         />
 
@@ -120,15 +120,34 @@ export default function QuranPage() {
 
       {/* ═══════════════ RIGHT — Surah list (40%) ═══════════════ */}
       <div
-        className={`flex flex-col lg:w-[40%] lg:min-h-0 border-t lg:border-t-0 lg:border-l ${
+        className={`relative flex flex-col lg:w-[40%] lg:min-h-0 border-t lg:border-t-0 lg:border-l ${
           isDark ? 'border-white/[0.06]' : 'border-emerald-100'
         }`}
-        style={isDark ? { background: 'rgba(4,10,7,0.98)' } : { background: '#F4FAF6' }}
       >
+        {/* islamic_Library_bg.png background */}
+        <div
+          className="absolute inset-0 pointer-events-none select-none"
+          style={{
+            backgroundImage: 'url(/islamic_Library_bg.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: isDark ? 0.18 : 0.12,
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: isDark
+              ? 'rgba(3,8,5,0.88)'
+              : 'rgba(244,250,246,0.90)',
+          }}
+        />
         {/* ── Header / Search ── */}
-        <div className={`shrink-0 px-4 pt-4 pb-3 border-b ${
-          isDark ? 'border-white/[0.06] bg-[#040a07]' : 'border-emerald-100 bg-white'
-        }`}>
+        <div className={`relative shrink-0 px-4 pt-4 pb-3 border-b ${
+          isDark ? 'border-white/[0.06] bg-[rgba(3,8,5,0.75)]' : 'border-emerald-100 bg-white/85'
+        }`}
+          style={{ backdropFilter: isDark ? 'blur(8px)' : undefined, WebkitBackdropFilter: isDark ? 'blur(8px)' : undefined }}
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className={`font-display font-bold text-base leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>

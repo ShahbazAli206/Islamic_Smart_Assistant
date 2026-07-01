@@ -676,17 +676,18 @@ export function QuranPlayer({
   const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && !!getTtsLang(translation);
 
   return (
-    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-gold-300/25' : 'border-emerald-900/10'}`}
-      style={{ background: isDark ? 'rgba(6,18,12,0.97)' : '#F4F0E2' }}>
+    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-gold-300/20' : 'border-emerald-900/10'}`}
+      style={{
+        background: isDark ? 'rgba(4,14,9,0.30)' : '#F4F0E2',
+        backdropFilter: isDark ? 'blur(14px)' : undefined,
+        WebkitBackdropFilter: isDark ? 'blur(14px)' : undefined,
+      }}>
       {/* ── header ── */}
       <div className="text-white p-6 relative overflow-hidden"
         style={{ background: isDark
-          ? 'linear-gradient(135deg,#143A28 0%,#0E2A1D 55%,#0A1F15 100%)'
+          ? 'linear-gradient(135deg,rgba(20,58,40,0.72) 0%,rgba(14,42,29,0.76) 55%,rgba(10,31,21,0.80) 100%)'
           : 'linear-gradient(135deg,#1d5a41 0%,#16492f 55%,#103b27 100%)' }}>
-        {/* features background image at low opacity */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'url(/features-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
-        <div className="absolute inset-0 pattern-bg opacity-[0.12] pointer-events-none" />
+        <div className="absolute inset-0 pattern-bg opacity-[0.10] pointer-events-none" />
         {/* drifting glow + sweeping sheen (continuous) */}
         <motion.div aria-hidden className="absolute -top-16 right-1/4 w-56 h-56 rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(221,185,75,0.18) 0%, transparent 70%)' }}
@@ -709,7 +710,7 @@ export function QuranPlayer({
 
       {/* ── controls ── */}
       <div className={`px-5 py-4 flex flex-wrap items-center gap-3 border-b ${isDark ? 'border-white/10' : 'border-emerald-900/8'}`}
-        style={{ background: isDark ? 'linear-gradient(135deg,#0E2A1D 0%,#0B2218 100%)' : '#FBF8EF' }}>
+        style={{ background: isDark ? 'rgba(8,22,14,0.55)' : '#FBF8EF' }}>
         <ReciterDropdown value={reciter} onChange={(v) => onReciterChange?.(v)} isDark={isDark} />
         <TranslationDropdown value={translation} onChange={(v) => onTranslationChange?.(v)} isDark={isDark} />
         <ToggleSwitch
@@ -796,7 +797,7 @@ export function QuranPlayer({
       </AnimatePresence>
 
       {/* ── now-reading ── */}
-      <div className={`p-6 ${isDark ? 'bg-[rgba(6,18,12,0.97)]' : ''}`}>
+      <div className={`p-6 ${isDark ? 'bg-[rgba(4,12,8,0.45)]' : ''}`}>
         {isLoading && (
           <div className="space-y-3">
             <div className="h-24 rounded-xl bg-emerald-50 animate-pulse" />
@@ -893,7 +894,7 @@ export function QuranPlayer({
 
       {/* ── progress bar ── */}
       {arabic && (
-        <div className={`px-6 pb-6 ${isDark ? 'bg-[rgba(6,18,12,0.97)]' : ''}`}>
+        <div className={`px-6 pb-6 ${isDark ? 'bg-[rgba(4,12,8,0.45)]' : ''}`}>
           <div className="h-1.5 rounded-full bg-emerald-100 overflow-hidden">
             <motion.div
               animate={{ width: `${((ayahIdx + 1) / arabic.ayahs.length) * 100}%` }}
