@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, Play } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
+import { distinctSurahName } from '@/lib/surahNames';
 import { QuranPlayer } from '@/components/QuranPlayer';
 import { BnAudioManager } from '@/components/BnAudioManager';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -34,9 +35,10 @@ export default function QuranPage() {
       s.englishName.toLowerCase().includes(q) ||
       s.englishTranslation.toLowerCase().includes(q) ||
       s.arabic.includes(q) ||
+      (distinctSurahName(s.number, language)?.toLowerCase().includes(q) ?? false) ||
       String(s.number) === q,
     );
-  }, [query]);
+  }, [query, language]);
 
   // Duplicate SURAHS for seamless infinite vertical scroll; use filtered when searching
   const scrollItems = useMemo(
@@ -202,6 +204,11 @@ export default function QuranPage() {
             {scrollItems.map((s, idx) => {
               const active = s.number === surah;
               const pop    = POPULAR.has(s.number);
+              // Surah name in the user's selected language; falls back to the
+              // Arabic-script name when that language has no distinct translation.
+              const localName = distinctSurahName(s.number, language);
+              const rightName = localName ?? s.arabic;
+              const rightIsArabic = /[؀-ۿ]/.test(rightName);
               return (
                 <motion.button
                   key={`${s.number}-${idx}`}
@@ -245,25 +252,32 @@ export default function QuranPage() {
 
                   {/* Name + meta */}
                   <span className="flex-1 min-w-0">
-                    <p className={`font-semibold text-base leading-tight truncate transition-colors ${
+                    <p className={`font-semibold text-[17px] leading-tight truncate transition-colors ${
                       active
                         ? isDark ? 'text-gold-300' : 'text-amber-800'
-                        : isDark ? 'text-parchment/90' : 'text-ink'
+                        : isDark ? 'text-parchment' : 'text-emerald-950'
                     }`}>
                       {s.englishName}
                     </p>
-                    <p className={`text-[13px] mt-0.5 truncate ${isDark ? 'text-parchment/55' : 'text-ink/50'}`}>
+                    <p className={`text-[14px] mt-0.5 truncate ${isDark ? 'text-parchment/80' : 'text-ink/80'}`}>
                       {s.englishTranslation} · {s.ayahs}v · {s.revelation === 'Meccan' ? 'Makki' : 'Madani'}
                     </p>
                   </span>
 
-                  {/* Arabic name — warm neutral: dark in light mode, light in dark mode */}
-                  <span className={`font-arabic text-[1.45rem] leading-none shrink-0 transition-colors ${
-                    active
-                      ? isDark ? 'text-gold-200' : 'text-amber-800'
-                      : isDark ? 'text-amber-100/80' : 'text-amber-900/75'
-                  }`}>
-                    {s.arabic}
+                  {/* Surah name in the user's language (falls back to Arabic script).
+                      Warm neutral: dark in light mode, light in dark mode. */}
+                  <span
+                    dir={rightIsArabic ? 'rtl' : 'ltr'}
+                    title={rightName}
+                    className={`shrink-0 leading-tight text-right max-w-[45%] truncate transition-colors ${
+                      rightIsArabic ? 'font-arabic text-[1.45rem]' : 'font-semibold text-[13px]'
+                    } ${
+                      active
+                        ? isDark ? 'text-gold-200' : 'text-amber-800'
+                        : isDark ? 'text-amber-100/80' : 'text-amber-900/75'
+                    }`}
+                  >
+                    {rightName}
                   </span>
 
                   {/* Active pulse indicator */}
