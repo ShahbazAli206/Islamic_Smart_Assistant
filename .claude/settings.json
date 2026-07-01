@@ -11,7 +11,8 @@
       "WebFetch(*)",
       "WebSearch(*)",
       "TodoWrite",
-      "TodoRead"
+      "TodoRead",
+      "Bash(git push origin main)"
     ],
     "deny": [],
     "defaultMode": "bypassPermissions"

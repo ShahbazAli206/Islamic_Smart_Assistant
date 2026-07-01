@@ -1016,7 +1016,7 @@ export function QuranPlayer({
                     { color: '#a78bfa', label: 'Lips (شفتان)' },
                     { color: '#fcd34d', label: 'Sibilants (أسنان)' },
                   ].map(({ color, label }) => (
-                    <span key={label} className="inline-flex items-center gap-1 text-[10px] opacity-70">
+                    <span key={label} className="inline-flex items-center gap-1 text-[13px] opacity-70">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                       <span className={isDark ? 'text-parchment/60' : 'text-ink/55'}>{label}</span>
                     </span>
