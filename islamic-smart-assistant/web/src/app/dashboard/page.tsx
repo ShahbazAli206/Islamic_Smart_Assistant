@@ -169,13 +169,6 @@ function to12h(time?: string): { hm: string; ap: string } {
   return { hm: `${String(h12).padStart(2, '0')}:${mStr}`, ap };
 }
 
-// Soft fade so a rectangular illustration melts into the card instead of
-// showing a hard edge — solid at the bottom-right corner, fading top-left.
-const FADE_TL = {
-  WebkitMaskImage: 'linear-gradient(to top left, black 30%, transparent 78%)',
-  maskImage: 'linear-gradient(to top left, black 30%, transparent 78%)',
-} as const;
-
 export default function Overview() {
   const { isDark } = useTheme();
   const loc = useStoredLocation();
@@ -470,7 +463,9 @@ export default function Overview() {
         {isDark && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[26px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/masjid_img.png" alt="" style={FADE_TL} className="absolute bottom-0 right-0 w-[440px] max-w-[55%] select-none opacity-90" />
+            <img src="/masjid_img.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center opacity-70" />
+            {/* readability veil — denser on the left where the text sits, lighter toward the right */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,rgba(7,20,14,0.88) 0%,rgba(7,20,14,0.55) 45%,rgba(7,20,14,0.22) 100%)' }} />
           </div>
         )}
         {!isDark && (
