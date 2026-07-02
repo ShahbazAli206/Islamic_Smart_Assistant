@@ -100,17 +100,19 @@ export default function QuranPage() {
             </span>
           </div>
 
-          {/* Player */}
-          <QuranPlayer
-            surahNumber={surah}
-            reciter={reciter}
-            translation={translation}
-            translationMode={translationMode}
-            onReciterChange={setReciter}
-            onTranslationChange={setTranslation}
-            onTranslationModeChange={setTranslationMode}
-            isDark={isDark}
-          />
+          {/* Player — narrower than the section, centered with extra x-axis breathing room */}
+          <div className="w-full max-w-4xl mx-auto px-2 sm:px-6">
+            <QuranPlayer
+              surahNumber={surah}
+              reciter={reciter}
+              translation={translation}
+              translationMode={translationMode}
+              onReciterChange={setReciter}
+              onTranslationChange={setTranslation}
+              onTranslationModeChange={setTranslationMode}
+              isDark={isDark}
+            />
+          </div>
 
         </div>
       </div>
