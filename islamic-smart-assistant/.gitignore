@@ -18,3 +18,8 @@ mobile/android/app/build/
 mobile/ios/build/
 mobile/ios/Pods/
 desktop/dist/
+
+# Translation audio cache (10+ GB, download-on-demand — never commit; hosted externally)
+desktop/resources/audio/
+# Packaged per-language ZIPs (upload targets for the public audio release repo)
+desktop/resources/audio-dist/

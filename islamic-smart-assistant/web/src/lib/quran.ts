@@ -56,6 +56,27 @@ export const TRANSLATIONS = [
   { id: 'sq.nahi',           name: 'Albanian — Hasan Efendi Nahi',        short: 'Shqip'      },
   { id: 'pl.bielawskiego',   name: 'Polish — Józefa Bielawskiego',        short: 'Polski'     },
   { id: 'pt.elhayek',        name: 'Portuguese — Samir El-Hayek',         short: 'Português'  },
+  // Additional languages — pre-generated neural-voice audio, downloadable in the
+  // desktop app (no free CDN recording exists). Editions match the generated audio.
+  { id: 'id.indonesian',     name: 'Indonesian — Kemenag RI',             short: 'Indonesia'  },
+  { id: 'ms.basmeih',        name: 'Malay — Abdullah Basmeih',            short: 'Melayu'     },
+  { id: 'hi.hindi',          name: 'Hindi — Farooq Khan & Nadwi',         short: 'हिन्दी'      },
+  { id: 'ta.tamil',          name: 'Tamil — Jan Trust Foundation',        short: 'தமிழ்'       },
+  { id: 'ml.abdulhameed',    name: 'Malayalam — Abdul Hameed & Parappoor', short: 'മലയാളം'    },
+  { id: 'ja.japanese',       name: 'Japanese — Ryoichi Mita',             short: '日本語'      },
+  { id: 'ko.korean',         name: 'Korean — Hamed Choi',                 short: '한국어'      },
+  { id: 'th.thai',           name: 'Thai — King Fahd Complex',            short: 'ไทย'         },
+  { id: 'my.ghazi',          name: 'Burmese — Ghazi Mohammad Hashim',     short: 'မြန်မာ'      },
+  { id: 'si.naseemismail',   name: 'Sinhala — Naseem Ismail & Kaleel',    short: 'සිංහල'      },
+  { id: 'uz.sodik',          name: 'Uzbek — Muhammad Sodik',              short: 'Oʻzbek'     },
+  { id: 'ps.abdulwali',      name: 'Pashto — Abdulwali Khan',             short: 'پښتو'       },
+  { id: 'sw.barwani',        name: 'Swahili — Ali Muhsin Al-Barwani',     short: 'Kiswahili'  },
+  { id: 'so.abduh',          name: 'Somali — Mahmud Muhammad Abduh',      short: 'Soomaali'   },
+  { id: 'am.sadiq',          name: 'Amharic — Sadiq & Sani Habib',        short: 'አማርኛ'       },
+  { id: 'az.mammadaliyev',   name: 'Azerbaijani — Mammadaliyev & Bunyadov', short: 'Azərbaycan' },
+  { id: 'cs.hrbek',          name: 'Czech — I. Hrbek',                    short: 'Čeština'    },
+  { id: 'bg.theophanov',     name: 'Bulgarian — Tzvetan Theophanov',      short: 'Български'  },
+  { id: 'ro.grigore',        name: 'Romanian — George Grigore',           short: 'Română'     },
 ] as const;
 
 export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
@@ -154,6 +175,54 @@ export function hasTranslationAudio(translation: TranslationId): boolean {
   if (translation in AUDIO_TRANSLATION) return true;
   const folder = TTS_EDITIONS[translation];
   return Boolean(folder && SUPABASE_URL && TTS_LANGS.has(folder));
+}
+
+// ── Downloadable local audio (desktop) ──────────────────────────────────────
+// Translation editions with pre-generated neural-voice audio (no free CDN
+// recording exists). Value = the language folder the files live under, both on
+// disk (userData/audio/<lang>/) and in the download archive. The audio was
+// generated from EXACTLY these editions, so spoken words match on-screen text.
+// This is the single source of truth shared by the player, the download
+// manager, and the download modal.
+export const LOCAL_AUDIO_EDITIONS: Partial<Record<TranslationId, string>> = {
+  'de.bubenheim':    'de',
+  'es.cortes':       'es',
+  'nl.leemhuis':     'nl',
+  'it.piccardo':     'it',
+  'sv.bernstrom':    'sv',
+  'bs.korkut':       'bs',
+  'sq.nahi':         'sq',
+  'pl.bielawskiego': 'pl',
+  'pt.elhayek':      'pt',
+  'id.indonesian':   'id',
+  'ms.basmeih':      'ms',
+  'hi.hindi':        'hi',
+  'ta.tamil':        'ta',
+  'ml.abdulhameed':  'ml',
+  'ja.japanese':     'ja',
+  'ko.korean':       'ko',
+  'th.thai':         'th',
+  'my.ghazi':        'my',
+  'si.naseemismail': 'si',
+  'uz.sodik':        'uz',
+  'ps.abdulwali':    'ps',
+  'sw.barwani':      'sw',
+  'so.abduh':        'so',
+  'am.sadiq':        'am',
+  'az.mammadaliyev': 'az',
+  'cs.hrbek':        'cs',
+  'bg.theophanov':   'bg',
+  'ro.grigore':      'ro',
+};
+
+/** Storage/download language folder for an edition, or null if it has no local audio. */
+export function localAudioLangOf(translation: TranslationId): string | null {
+  return LOCAL_AUDIO_EDITIONS[translation] ?? null;
+}
+
+/** Whether this edition has downloadable local (offline) audio. */
+export function hasLocalAudio(translation: TranslationId): boolean {
+  return translation in LOCAL_AUDIO_EDITIONS;
 }
 
 /**

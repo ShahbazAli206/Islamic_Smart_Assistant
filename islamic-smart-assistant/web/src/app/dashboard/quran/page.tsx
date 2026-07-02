@@ -6,7 +6,6 @@ import { Search, BookOpen, Play } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { distinctSurahName } from '@/lib/surahNames';
 import { QuranPlayer } from '@/components/QuranPlayer';
-import { BnAudioManager } from '@/components/BnAudioManager';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { langToTranslation, type ReciterId, type TranslationId } from '@/lib/quran';
 import { useTheme } from '@/lib/ThemeContext';
@@ -109,9 +108,6 @@ export default function QuranPage() {
             isDark={isDark}
           />
 
-          {translation === 'bn.bengali' && (
-            <BnAudioManager surahNumber={surah} isDark={isDark} />
-          )}
         </div>
       </div>
 

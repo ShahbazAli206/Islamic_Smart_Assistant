@@ -25,28 +25,32 @@ contextBridge.exposeInMainWorld('desktop', {
     },
   },
 
-  // Local Bengali translation audio cache.
-  // Files served via isa-audio://bn/{N}.mp3 custom protocol.
-  bnAudio: {
-    /** Returns sorted array of global ayah numbers downloaded to local storage. */
-    list:  () => ipcRenderer.invoke('bn-audio:list'),
-    /** Returns { count, bytes } storage info. */
-    stats: () => ipcRenderer.invoke('bn-audio:stats'),
-    /** Deletes all cached Bengali audio files. Returns { deleted }. */
-    clear: () => ipcRenderer.invoke('bn-audio:clear'),
+  // Per-language translation audio cache (download-on-demand).
+  // Files served via isa-audio://{lang}/{N}.mp3 custom protocol.
+  transAudio: {
+    /** Sorted array of global ayah numbers downloaded for a language. */
+    list:  (lang) => ipcRenderer.invoke('trans-audio:list', lang),
+    /** { count, bytes } for one language. */
+    stats: (lang) => ipcRenderer.invoke('trans-audio:stats', lang),
+    /** { totalBytes, byLang } across every downloaded language. */
+    statsAll: () => ipcRenderer.invoke('trans-audio:statsAll'),
+    /** Delete one language's cached files. Returns { deleted }. */
+    clear: (lang) => ipcRenderer.invoke('trans-audio:clear', lang),
     /**
-     * Downloads Bengali audio files.
-     * items: Array<{ ayah: number; url: string }>
-     * Returns { done, failed }.
+     * Download + extract a language's audio archive (.zip).
+     * (lang, archiveUrl) -> { ok, extracted, error? }
      */
-    download: (items) => ipcRenderer.invoke('bn-audio:download', items),
-    /** Returns the isa-audio:// URL for a given global ayah number. */
-    getUrl: (ayahNumber) => `isa-audio://bn/${ayahNumber}.mp3`,
-    /** Subscribe to download progress events. Returns an unsubscribe fn. */
+    download: (lang, archiveUrl) => ipcRenderer.invoke('trans-audio:download', lang, archiveUrl),
+    /** isa-audio:// URL for a given language + global ayah number. */
+    getUrl: (lang, ayahNumber) => `isa-audio://${lang}/${ayahNumber}.mp3`,
+    /**
+     * Subscribe to download progress. cb receives { lang, done, total, failed }.
+     * Returns an unsubscribe fn.
+     */
     onProgress: (cb) => {
       const handler = (_e, data) => cb(data);
-      ipcRenderer.on('bn-audio:progress', handler);
-      return () => ipcRenderer.removeListener('bn-audio:progress', handler);
+      ipcRenderer.on('trans-audio:progress', handler);
+      return () => ipcRenderer.removeListener('trans-audio:progress', handler);
     },
   },
 });

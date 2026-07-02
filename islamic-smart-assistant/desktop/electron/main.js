@@ -9,9 +9,9 @@ const path = require('path');
 const fs   = require('fs');
 
 const { DeviceManager } = require('./devices');
-const bnAudio = require('./bnAudio');
+const transAudio = require('./translationAudio');
 
-// ── Bengali audio protocol (isa-audio://bn/{N}.mp3 → userData/audio/bn/{N}.mp3) ──
+// ── Translation audio protocol (isa-audio://{lang}/{N}.mp3 → userData/audio/{lang}/{N}.mp3) ──
 // Must be registered before app.whenReady().
 protocol.registerSchemesAsPrivileged([
   { scheme: 'isa-audio', privileges: { secure: true, standard: true, supportFetchAPI: false } },
@@ -250,24 +250,24 @@ ipcMain.handle('devices:play',      (_e, args) => ensureDevices().play(args || {
 ipcMain.handle('devices:stop',      (_e, args) => ensureDevices().stop(args || {}));
 ipcMain.handle('devices:setVolume', (_e, args) => ensureDevices().setVolume(args || {}));
 
-// ── Bengali audio: local file cache (isa-audio:// protocol) ──────────────────
+// ── Translation audio: per-language local file cache (isa-audio:// protocol) ──
 
-ipcMain.handle('bn-audio:list',  () => bnAudio.list());
-ipcMain.handle('bn-audio:stats', () => bnAudio.stats());
-ipcMain.handle('bn-audio:clear', () => bnAudio.clear());
+ipcMain.handle('trans-audio:list',     (_e, lang) => { try { return transAudio.list(lang); } catch { return []; } });
+ipcMain.handle('trans-audio:stats',    (_e, lang) => { try { return transAudio.stats(lang); } catch { return { count: 0, bytes: 0 }; } });
+ipcMain.handle('trans-audio:statsAll', () => transAudio.statsAll());
+ipcMain.handle('trans-audio:clear',    (_e, lang) => { try { return transAudio.clear(lang); } catch { return { deleted: 0 }; } });
 
-ipcMain.handle('bn-audio:download', async (event, items) => {
-  if (!Array.isArray(items) || items.length === 0) return { done: 0, failed: 0 };
-  let lastEmitted = 0;
-  const result = await bnAudio.download(items, (done, total, failed) => {
-    if (done === total || done - lastEmitted >= 10) {
-      lastEmitted = done;
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('bn-audio:progress', { done, total, failed });
-      }
+ipcMain.handle('trans-audio:download', async (_event, lang, archiveUrl) => {
+  try { transAudio.safeLang(lang); } catch { return { ok: false, extracted: 0, error: 'invalid language' }; }
+  if (typeof archiveUrl !== 'string' || !/^https?:\/\//.test(archiveUrl)) {
+    return { ok: false, extracted: 0, error: 'invalid archive URL' };
+  }
+  const send = (e) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('trans-audio:progress', { lang, ...e });
     }
-  });
-  return result;
+  };
+  return transAudio.downloadAndExtract(lang, archiveUrl, send);
 });
 
 // ── Setup wizard IPC handlers ─────────────────────────────────────────────────

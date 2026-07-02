@@ -5,15 +5,17 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipBack, SkipForward, Repeat, Languages, Mic2,
-  ChevronDown, Volume2, Volume1, VolumeX, FileText, Check,
+  ChevronDown, Volume2, Volume1, VolumeX, FileText, Check, HardDrive,
 } from 'lucide-react';
 import {
   RECITERS, TRANSLATIONS, fetchSurahMulti, ayahAudioUrl, translationAudioUrl,
-  hasTranslationAudio, getTtsLang,
+  hasTranslationAudio, getTtsLang, hasLocalAudio,
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
-import { useBnDownloaded, localBnUrl, isBnLocalSupported } from '@/lib/bnAudioLocal';
+import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported } from '@/lib/translationAudioLocal';
+import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
+import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
 
 type Stage = 'arabic' | 'translation';
 
@@ -29,8 +31,9 @@ type Props = {
 };
 
 // ── Translation groups ────────────────────────────────────────────────────────
-// CDN audio: English, Urdu, Turkish, Chinese, French, Bengali, Persian, Russian, Kazakh
-// Desktop TTS (system voice): German, Spanish, Dutch, Italian, Swedish, Bosnian, Albanian, Polish, Portuguese
+// CDN audio: streamed ayah-by-ayah on all platforms.
+// Downloadable audio: pre-generated neural-voice audio, downloaded in the desktop
+// app (shows a "get the app" prompt on web). See LOCAL_AUDIO_EDITIONS in quran.ts.
 const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: null,           ids: ['none'] },
   // — CDN audio (all platforms) ———————————————————————————————————————————————
@@ -43,7 +46,7 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Persian',      ids: ['fa.fooladvand'] },
   { label: 'Russian',      ids: ['ru.kuliev'] },
   { label: 'Kazakh',       ids: ['kk.khalifahaltai'] },
-  // — System TTS on desktop (text on web) ————————————————————————————————————
+  // — Downloadable offline audio (desktop app) ——————————————————————————————
   { label: 'German',       ids: ['de.bubenheim'] },
   { label: 'Spanish',      ids: ['es.cortes'] },
   { label: 'Dutch',        ids: ['nl.leemhuis'] },
@@ -53,6 +56,25 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Albanian',     ids: ['sq.nahi'] },
   { label: 'Polish',       ids: ['pl.bielawskiego'] },
   { label: 'Portuguese',   ids: ['pt.elhayek'] },
+  { label: 'Indonesian',   ids: ['id.indonesian'] },
+  { label: 'Malay',        ids: ['ms.basmeih'] },
+  { label: 'Hindi',        ids: ['hi.hindi'] },
+  { label: 'Tamil',        ids: ['ta.tamil'] },
+  { label: 'Malayalam',    ids: ['ml.abdulhameed'] },
+  { label: 'Japanese',     ids: ['ja.japanese'] },
+  { label: 'Korean',       ids: ['ko.korean'] },
+  { label: 'Thai',         ids: ['th.thai'] },
+  { label: 'Burmese',      ids: ['my.ghazi'] },
+  { label: 'Sinhala',      ids: ['si.naseemismail'] },
+  { label: 'Uzbek',        ids: ['uz.sodik'] },
+  { label: 'Pashto',       ids: ['ps.abdulwali'] },
+  { label: 'Swahili',      ids: ['sw.barwani'] },
+  { label: 'Somali',       ids: ['so.abduh'] },
+  { label: 'Amharic',      ids: ['am.sadiq'] },
+  { label: 'Azerbaijani',  ids: ['az.mammadaliyev'] },
+  { label: 'Czech',        ids: ['cs.hrbek'] },
+  { label: 'Bulgarian',    ids: ['bg.theophanov'] },
+  { label: 'Romanian',     ids: ['ro.grigore'] },
 ];
 
 // ── Tajweed makhraj (articulation-point) colour map ─────────────────────────
@@ -257,6 +279,7 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
                     const t = transMap[id];
                     if (!t) return null;
                     const hasCdnAudio = hasTranslationAudio(id as TranslationId);
+                    const hasLocal = hasLocalAudio(id as TranslationId);
                     const hasTts = !!getTtsLang(id as TranslationId);
                     const isSelected = value === id;
                     return (
@@ -273,7 +296,7 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
                         <span>{t.name}</span>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {id !== 'none' && (
-                            hasCdnAudio
+                            (hasCdnAudio || hasLocal)
                               ? <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
                                   <Volume2 size={8} strokeWidth={2.5} /> audio
                                 </span>
@@ -448,8 +471,28 @@ export function QuranPlayer({
     );
   }, []);
 
-  // Local Bengali audio: set of global ayah numbers downloaded to disk (desktop only)
-  const bnDownloaded = useBnDownloaded();
+  // Local translation audio: global ayah numbers downloaded to disk for the
+  // current translation (desktop only; empty on web / editions without local audio).
+  const localDownloaded = useDownloadedAyahs(translation);
+  const localLang       = localAudioLang(translation);
+
+  // Offline-audio modals: download manager (desktop) and "get the app" (web).
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showDesktopPromo,  setShowDesktopPromo]  = useState(false);
+
+  // When the user picks a downloadable-audio translation: on web, promote the
+  // desktop app; on desktop, open the download manager if it isn't downloaded yet.
+  const handleTranslationSelect = useCallback((id: TranslationId) => {
+    onTranslationChange?.(id);
+    if (!hasLocalAudio(id)) return;                 // CDN / text / none — no prompt
+    if (!isLocalAudioSupported()) { setShowDesktopPromo(true); return; }
+    const api = (window as any).desktop?.transAudio;
+    const lang = localAudioLang(id);
+    if (!api || !lang) return;
+    api.list(lang).then((nums: number[]) => {
+      if (nums.length < 6236 - 10) setShowDownloadModal(true);   // not fully downloaded
+    }).catch(() => {});
+  }, [onTranslationChange]);
 
   const currentAyah    = arabic?.ayahs[ayahIdx];
   const currentTrans   = trans?.ayahs[ayahIdx];
@@ -476,9 +519,9 @@ export function QuranPlayer({
   const stageUrl = (() => {
     if (!currentAyah) return null;
     if (stage === 'arabic') return currentAyah.audio ?? ayahAudioUrl(currentAyah.number, reciter);
-    // Bengali: prefer local file (isa-audio:// served by Electron) over Supabase/TTS
-    if (translation === 'bn.bengali' && bnDownloaded.has(currentAyah.number)) {
-      return localBnUrl(currentAyah.number);
+    // Prefer a downloaded local file (isa-audio:// served by Electron) over CDN/TTS
+    if (localLang && localDownloaded.has(currentAyah.number)) {
+      return localAudioUrl(localLang, currentAyah.number);
     }
     return translationAudioUrl(translation, currentAyah.number);
   })();
@@ -592,8 +635,8 @@ export function QuranPlayer({
 
     // Translation of current ayah — the very next sound when stage='arabic'
     if (stage === 'arabic' && translationMode && translation !== 'none') {
-      const url = (translation === 'bn.bengali' && bnDownloaded.has(currentAyah.number))
-        ? localBnUrl(currentAyah.number)
+      const url = (localLang && localDownloaded.has(currentAyah.number))
+        ? localAudioUrl(localLang, currentAyah.number)
         : translationAudioUrl(translation, currentAyah.number);
       if (url) urlsToKeep.add(url);
     }
@@ -604,9 +647,9 @@ export function QuranPlayer({
       if (!next) break;
       urlsToKeep.add(next.audio ?? ayahAudioUrl(next.number, reciter));
       if (translationMode && translation !== 'none') {
-        // Bengali: use local file URL if downloaded, else CDN/Supabase URL
-        const url = (translation === 'bn.bengali' && bnDownloaded.has(next.number))
-          ? localBnUrl(next.number)
+        // Use the downloaded local file if present, else CDN/TTS URL
+        const url = (localLang && localDownloaded.has(next.number))
+          ? localAudioUrl(localLang, next.number)
           : translationAudioUrl(translation, next.number);
         if (url) urlsToKeep.add(url);
       }
@@ -622,7 +665,7 @@ export function QuranPlayer({
         poolRef.current.delete(url);
       }
     });
-  }, [arabic, ayahIdx, stage, translationMode, translation, reciter, stageUrl, currentAyah, getPoolEl]);
+  }, [arabic, ayahIdx, stage, translationMode, translation, reciter, stageUrl, currentAyah, getPoolEl, localDownloaded, localLang]);
 
   // ── Activate pool element for current stageUrl ────────────────────────────
   // This replaces the old `el.src = stageUrl; el.load()` effect. Instead of
@@ -712,10 +755,12 @@ export function QuranPlayer({
   const isUrdu       = translation.startsWith('ur.');
   const hasCdnAudio  = hasTranslationAudio(translation);
   const hasTtsAudio  = isDesktop && !!getTtsLang(translation);
+  // desktop editions with pre-generated downloadable audio (played once downloaded)
+  const localAudioOnDesktop = isDesktop && !!localLang;
   // true when translation mode would play nothing at all for this platform
-  const noAudio      = translation !== 'none' && !hasCdnAudio && !hasTtsAudio;
-  // on web, TTS translations exist but won't play — show an informational hint
-  const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && !!getTtsLang(translation);
+  const noAudio      = translation !== 'none' && !hasCdnAudio && !hasTtsAudio && !localAudioOnDesktop;
+  // on web, editions with downloadable/TTS audio won't play — show a hint / prompt
+  const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && (!!getTtsLang(translation) || !!localLang);
 
   return (
     <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-white/[0.12]' : 'border-white/30'}`}
@@ -750,7 +795,7 @@ export function QuranPlayer({
       <div className={`px-5 py-4 flex flex-wrap items-center gap-3 border-b ${isDark ? 'border-white/[0.08]' : 'border-white/30'}`}
         style={{ background: 'transparent' }}>
         <ReciterDropdown value={reciter} onChange={(v) => onReciterChange?.(v)} isDark={isDark} />
-        <TranslationDropdown value={translation} onChange={(v) => onTranslationChange?.(v)} isDark={isDark} />
+        <TranslationDropdown value={translation} onChange={handleTranslationSelect} isDark={isDark} />
         <ToggleSwitch
           checked={translationMode}
           onChange={(v) => onTranslationModeChange?.(v)}
@@ -758,6 +803,21 @@ export function QuranPlayer({
           title="Plays each Arabic ayah followed by its translation, then moves to the next ayah."
           isDark={isDark}
         />
+        {isLocalAudioSupported() && localLang && (
+          <motion.button
+            type="button"
+            onClick={() => setShowDownloadModal(true)}
+            whileTap={{ scale: 0.96 }}
+            title="Download translation audio for offline playback"
+            className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200
+              ${isDark
+                ? 'bg-white/[0.08] border-white/15 text-white hover:bg-white/[0.14]'
+                : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'}`}
+          >
+            <HardDrive size={15} className={isDark ? 'text-gold-300' : 'text-emerald-600'} />
+            <span>Offline audio</span>
+          </motion.button>
+        )}
 
         {/* playback */}
         <div className="ml-auto flex items-center gap-1">
@@ -1066,6 +1126,20 @@ export function QuranPlayer({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── offline-audio modals (portal to body) ── */}
+      <TranslationDownloadModal
+        open={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        highlight={translation}
+        isDark={!!isDark}
+      />
+      <DesktopAppPromoModal
+        open={showDesktopPromo}
+        onClose={() => setShowDesktopPromo(false)}
+        translation={translation}
+        isDark={!!isDark}
+      />
     </div>
   );
 }

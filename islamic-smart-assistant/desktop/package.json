@@ -92,6 +92,7 @@
     }
   },
   "dependencies": {
+    "adm-zip": "^0.5.18",
     "bonjour-service": "^1.4.1",
     "castv2-client": "0.0.8",
     "node-ssdp": "^4.0.0",
