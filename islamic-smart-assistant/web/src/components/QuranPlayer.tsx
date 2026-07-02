@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
 import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported, consumeFirstRunPrompt } from '@/lib/translationAudioLocal';
+import { fetchWordTimings, wordIndexAtTime, countSpokenWords, isSpokenWord, basmalaPrefixWords } from '@/lib/wordTimings';
 import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
 
@@ -122,37 +123,111 @@ function splitGraphemes(text: string): string[] {
   return clusters;
 }
 
-// Renders an Arabic ayah with per-character tajweed makhraj colours.
-function TajweedAyah({ text, isDark }: { text: string; isDark: boolean }) {
+// Renders an Arabic ayah with per-character tajweed makhraj colours, plus a
+// pointing-hand marker that follows the word currently being recited
+// (activeWordIdx = 0-based index over spoken words; null = hidden).
+function TajweedAyah({ text, activeWordIdx, isDark }: { text: string; activeWordIdx: number | null; isDark: boolean }) {
   const defaultColor = isDark ? '#e2e8f0' : '#f1f5f9';
   const words = text.split(/(\s+)/);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wordRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+  const [hand, setHand] = useState<{ x: number; y: number } | null>(null);
+
+  // Position the hand under the active word. Re-measures on resize so the
+  // marker stays glued to its word when lines re-wrap.
+  useLayoutEffect(() => {
+    if (activeWordIdx === null) { setHand(null); return; }
+    const measure = () => {
+      const cont = containerRef.current;
+      const span = wordRefs.current.get(activeWordIdx);
+      if (!cont || !span) { setHand(null); return; }
+      const c = cont.getBoundingClientRect();
+      const w = span.getBoundingClientRect();
+      setHand({ x: w.left - c.left + w.width / 2, y: w.bottom - c.top - 14 });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [activeWordIdx, text]);
+
+  // Running index over spoken words only — waqf-mark tokens get no index,
+  // matching the indices produced by wordIndexAtTime().
+  let spoken = -1;
+
   return (
-    <p className="font-arabic text-4xl md:text-5xl leading-[2.5] text-center" dir="rtl">
-      {words.map((segment, wi) => {
-        if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
-        const graphemes = splitGraphemes(segment);
-        return (
-          <span key={wi} className="inline-block">
-            {graphemes.map((g, ci) => {
-              const base = g[0];
-              const hasShadda = g.includes('ّ');
-              const color = MAKHRAJ[base] ?? defaultColor;
-              return (
-                <span
-                  key={ci}
-                  style={{
-                    color,
-                    textShadow: hasShadda ? `0 0 10px ${color}88` : undefined,
-                  }}
-                >
-                  {g}
-                </span>
-              );
-            })}
-          </span>
-        );
-      })}
-    </p>
+    <div ref={containerRef} className="relative">
+      <p className="font-arabic text-4xl md:text-5xl leading-[2.5] text-center" dir="rtl">
+        {words.map((segment, wi) => {
+          if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
+          const myIdx = isSpokenWord(segment) ? ++spoken : null;
+          const isActive = myIdx !== null && myIdx === activeWordIdx;
+          const graphemes = splitGraphemes(segment);
+          return (
+            <span
+              key={wi}
+              ref={(el) => {
+                if (myIdx === null) return;
+                if (el) wordRefs.current.set(myIdx, el);
+                else wordRefs.current.delete(myIdx);
+              }}
+              className="inline-block rounded-xl transition-[background-color,box-shadow] duration-200"
+              style={{
+                padding: '0 0.12em',
+                background: isActive
+                  ? (isDark ? 'rgba(233,207,122,0.16)' : 'rgba(255,255,255,0.16)')
+                  : 'transparent',
+                boxShadow: isActive
+                  ? (isDark ? '0 0 18px rgba(233,207,122,0.25)' : '0 0 18px rgba(255,255,255,0.22)')
+                  : 'none',
+              }}
+            >
+              {graphemes.map((g, ci) => {
+                const base = g[0];
+                const hasShadda = g.includes('ّ');
+                const color = MAKHRAJ[base] ?? defaultColor;
+                return (
+                  <span
+                    key={ci}
+                    style={{
+                      color,
+                      textShadow: hasShadda ? `0 0 10px ${color}88` : undefined,
+                    }}
+                  >
+                    {g}
+                  </span>
+                );
+              })}
+            </span>
+          );
+        })}
+      </p>
+
+      {/* Pointing hand that glides word-to-word with the recitation */}
+      <AnimatePresence>
+        {hand && (
+          <motion.div
+            key="pointer-hand"
+            initial={{ opacity: 0, scale: 0.4, x: hand.x, y: hand.y }}
+            animate={{ opacity: 1, scale: 1, x: hand.x, y: hand.y }}
+            exit={{ opacity: 0, scale: 0.4 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 27, opacity: { duration: 0.18 } }}
+            className="absolute left-0 top-0 z-10 pointer-events-none select-none"
+            aria-hidden
+          >
+            <div style={{ transform: 'translateX(-50%)' }}>
+              <motion.span
+                className="block text-2xl md:text-3xl leading-none"
+                style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }}
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                👆
+              </motion.span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -437,6 +512,16 @@ export function QuranPlayer({
   const arabic  = data?.[0];
   const trans   = translation === 'none' ? undefined : data?.[1];
   const english = showEnglishToo ? data?.[2] : undefined;
+
+  // Word-level recitation timings (quran.com alignment data). null when the
+  // reciter has no alignment or the API is unreachable — the pointer then
+  // falls back to spreading words evenly across each ayah's duration.
+  const { data: wordTimings } = useQuery({
+    queryKey: ['word-timings', surahNumber, reciter],
+    queryFn: () => fetchWordTimings(surahNumber, reciter),
+    staleTime: Infinity,
+    retry: 1,
+  });
 
   const [ayahIdx, setAyahIdx] = useState(0);
   const [stage, setStage] = useState<Stage>('arabic');
@@ -756,6 +841,31 @@ export function QuranPlayer({
     if (el) el.volume = muted ? 0 : volume / 100;
   }, [volume, muted]);
 
+  // ── Word pointer ──────────────────────────────────────────────────────────
+  // While the Arabic stage is playing, poll the audio position each frame and
+  // resolve it to the spoken-word index the pointing hand should sit under.
+  const [activeWordIdx, setActiveWordIdx] = useState<number | null>(null);
+  useEffect(() => {
+    if (!playing || stage !== 'arabic' || !currentAyah) {
+      setActiveWordIdx(null);
+      return;
+    }
+    const segments = wordTimings?.get(currentAyah.numberInSurah) ?? null;
+    const wordCount = countSpokenWords(currentAyah.text);
+    const prefix = basmalaPrefixWords(surahNumber, currentAyah.numberInSurah);
+    let raf = 0;
+    const tick = () => {
+      const el = activeAudioRef.current;
+      if (el && el.duration > 0) {
+        const idx = wordIndexAtTime(el.currentTime * 1000, el.duration * 1000, wordCount, segments, prefix);
+        setActiveWordIdx((prev) => (prev === idx ? prev : idx));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, stage, currentAyah, wordTimings, surahNumber]);
+
   const toggle  = () => setPlaying((p) => !p);
   const goPrev  = () => { setStage('arabic'); setAyahIdx((i) => Math.max(0, i - 1)); };
   const goNext  = () => arabic && (setStage('arabic'), setAyahIdx((i) => Math.min(arabic.ayahs.length - 1, i + 1)));
@@ -1067,7 +1177,7 @@ export function QuranPlayer({
                   )}
                 </AnimatePresence>
 
-                <TajweedAyah text={currentAyah.text} isDark={isDark} />
+                <TajweedAyah text={currentAyah.text} activeWordIdx={activeWordIdx} isDark={isDark} />
                 <p dir="rtl" className="text-center -mt-1">
                   <span className={`font-display text-3xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-gold-300'}`}>
                     ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
