@@ -84,13 +84,17 @@ export default function QuranPage() {
             }`}>
               <BookOpen size={11} /> The Noble Quran
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 backdrop-blur-sm border ${
+              isDark
+                ? 'border-gold-400/20 bg-emerald-950/55'
+                : 'border-emerald-200/80 bg-white/75'
+            }`}>
               <motion.span
                 className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`}
                 animate={{ opacity: [1, 0.2, 1], scale: [1, 0.6, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <span className={`text-[11px] font-medium ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/80'}`}>
+              <span className={`text-[11px] font-medium ${isDark ? 'text-emerald-400/70' : 'text-emerald-700'}`}>
                 CDN Streaming · 114 Surahs · 7 Reciters
               </span>
             </span>
