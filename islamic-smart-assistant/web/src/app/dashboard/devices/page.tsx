@@ -1111,11 +1111,15 @@ export default function DevicesPage() {
 
       {/* ── Hero section — same visual treatment as Prayer Times page ── */}
       <div className="relative overflow-hidden">
-        {/* Devices-specific hero background. object-fill shows the whole image
-            (full width + full height, no cropping) with a slight vertical
-            compression so as much of the picture's height is visible as possible. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/Devices and output first section background image.png" alt="" className="absolute inset-0 h-full w-full select-none object-fill" />
+        {/* Devices-specific hero background shown TWICE side by side. Each half
+            uses object-fill so the whole picture shows (full height, no crop);
+            the narrower half-width box means far less vertical compression. */}
+        <div className="absolute inset-0 flex">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/Devices and output first section background image.png" alt="" className="w-1/2 h-full select-none object-fill" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/Devices and output first section background image.png" alt="" className="w-1/2 h-full select-none object-fill" />
+        </div>
 
         <div className="relative px-6 sm:px-10 pt-5 pb-8 flex flex-wrap items-start justify-between gap-4">
 
@@ -1124,10 +1128,11 @@ export default function DevicesPage() {
             <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm border border-white/60 bg-white/60 text-emerald-800">
               <Volume2 size={12} /> Devices &amp; Outputs
             </span>
-            <h1 className="mt-4 font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] text-black"
-              style={{ textShadow: '0 1px 8px rgba(255,255,255,0.7)' }}>
-              Choose where Azan &amp; Quran audio plays
-            </h1>
+            <div className="mt-4 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
+              <h1 className="font-display font-bold text-xl sm:text-2xl xl:text-[2rem] 2xl:text-[2rem] leading-[1.05] text-black">
+                Choose where Azan &amp; Quran audio plays
+              </h1>
+            </div>
             <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
               <p className="text-base sm:text-lg leading-relaxed text-black/85">
                 Every call to prayer — on the best speaker in the room, at perfect quality.
