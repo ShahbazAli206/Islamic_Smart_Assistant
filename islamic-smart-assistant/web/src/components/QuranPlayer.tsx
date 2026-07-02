@@ -718,17 +718,13 @@ export function QuranPlayer({
   const webTtsNotice = !isDesktop && translation !== 'none' && !hasCdnAudio && !!getTtsLang(translation);
 
   return (
-    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-white/[0.12]' : 'border-emerald-900/10'}`}
-      style={{
-        background: isDark ? 'rgba(2,8,4,0.22)' : 'rgba(244,240,226,0.82)',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
-      }}>
+    <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-white/[0.12]' : 'border-white/30'}`}
+      style={{ background: 'transparent' }}>
       {/* ── header ── */}
       <div className="text-white p-6 relative overflow-hidden"
         style={{ background: isDark
-          ? 'linear-gradient(135deg,rgba(10,34,20,0.60) 0%,rgba(8,26,15,0.65) 55%,rgba(5,18,10,0.70) 100%)'
-          : 'linear-gradient(135deg,rgba(29,90,65,0.88) 0%,rgba(22,73,47,0.92) 55%,rgba(16,59,39,0.95) 100%)' }}>
+          ? 'linear-gradient(135deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.13) 55%,rgba(255,255,255,0.08) 100%)'
+          : 'linear-gradient(135deg,rgba(0,0,0,0.52) 0%,rgba(0,0,0,0.56) 55%,rgba(0,0,0,0.50) 100%)' }}>
         <div className="absolute inset-0 pattern-bg opacity-[0.10] pointer-events-none" />
         {/* drifting glow + sweeping sheen (continuous) */}
         <motion.div aria-hidden className="absolute -top-16 right-1/4 w-56 h-56 rounded-full pointer-events-none"
@@ -736,13 +732,13 @@ export function QuranPlayer({
           animate={{ x: [0, 30, 0], opacity: [0.5, 0.9, 0.5] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-[#E9CF7A] text-xs uppercase tracking-widest">Surah {surahMeta.number}</p>
-            <h2 className="h-display text-3xl font-bold text-white">{surahMeta.englishName}</h2>
-            <p className="text-white/80 text-sm">
+            <p className="text-[#E9CF7A] text-sm uppercase tracking-widest">Surah {surahMeta.number}</p>
+            <h2 className="h-display text-4xl font-bold text-white">{surahMeta.englishName}</h2>
+            <p className="text-white/90 text-base">
               {surahMeta.englishTranslation} • {surahMeta.revelation} • {surahMeta.ayahs} ayahs
             </p>
           </div>
-          <motion.p className="font-arabic text-5xl text-[#E9CF7A] drop-shadow"
+          <motion.p className="font-arabic text-6xl text-[#E9CF7A] drop-shadow"
             animate={{ opacity: [0.85, 1, 0.85], scale: [1, 1.02, 1] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
             {surahMeta.arabic}
@@ -751,8 +747,8 @@ export function QuranPlayer({
       </div>
 
       {/* ── controls ── */}
-      <div className={`px-5 py-4 flex flex-wrap items-center gap-3 border-b ${isDark ? 'border-white/[0.08]' : 'border-emerald-900/8'}`}
-        style={{ background: isDark ? 'rgba(4,12,6,0.42)' : 'rgba(251,248,239,0.88)' }}>
+      <div className={`px-5 py-4 flex flex-wrap items-center gap-3 border-b ${isDark ? 'border-white/[0.08]' : 'border-white/30'}`}
+        style={{ background: 'transparent' }}>
         <ReciterDropdown value={reciter} onChange={(v) => onReciterChange?.(v)} isDark={isDark} />
         <TranslationDropdown value={translation} onChange={(v) => onTranslationChange?.(v)} isDark={isDark} />
         <ToggleSwitch
@@ -924,7 +920,7 @@ export function QuranPlayer({
       </AnimatePresence>
 
       {/* ── now-reading ── */}
-      <div className={`p-6 ${isDark ? 'bg-[rgba(2,8,4,0.32)]' : 'bg-white/20'}`}>
+      <div className="p-6">
         {isLoading && (
           <div className="space-y-3">
             <div className="h-24 rounded-xl bg-emerald-50 animate-pulse" />
@@ -963,7 +959,7 @@ export function QuranPlayer({
                     )}
                   </AnimatePresence>
                 </div>
-                <span className="text-xs text-ink/55">Juz {currentAyah.juz} • Page {currentAyah.page}</span>
+                <span className={`text-sm font-medium ${isDark ? 'text-parchment/80' : 'text-gray-900'}`}>Juz {currentAyah.juz} • Page {currentAyah.page}</span>
               </div>
 
               {/* Tajweed-coloured Arabic text */}
@@ -1018,7 +1014,7 @@ export function QuranPlayer({
                   ].map(({ color, label }) => (
                     <span key={label} className="inline-flex items-center gap-1 text-[13px] opacity-70">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-                      <span className={isDark ? 'text-parchment/60' : 'text-ink/55'}>{label}</span>
+                      <span className={isDark ? 'text-parchment/80' : 'text-gray-800'}>{label}</span>
                     </span>
                   ))}
                 </div>
@@ -1046,7 +1042,7 @@ export function QuranPlayer({
 
       {/* ── progress bar ── */}
       {arabic && (
-        <div className={`px-6 pb-6 ${isDark ? 'bg-[rgba(2,8,4,0.32)]' : 'bg-white/20'}`}>
+        <div className="px-6 pb-6">
           <div className="h-1.5 rounded-full bg-emerald-100 overflow-hidden">
             <motion.div
               animate={{ width: `${((ayahIdx + 1) / arabic.ayahs.length) * 100}%` }}
