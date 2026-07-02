@@ -38,6 +38,40 @@ function getApi(): TransAudioApi | null {
   return (window as any).desktop?.transAudio ?? null;
 }
 
+// Approximate download size per language (MB), measured from the generated audio.
+// Lets the UI show disk usage before downloading.
+export const LANG_AUDIO_SIZE_MB: Record<string, number> = {
+  am: 284, az: 451, bg: 299, bs: 288, cs: 283, de: 361, es: 296, hi: 467,
+  id: 387, it: 287, ja: 394, ko: 333, ml: 401, ms: 541, my: 777, nl: 308,
+  pl: 321, ps: 330, pt: 279, ro: 317, si: 428, so: 273, sq: 335, sv: 404,
+  sw: 317, ta: 500, th: 359, uz: 576,
+};
+
+/** Total size (MB) of all downloadable languages. */
+export const TOTAL_AUDIO_SIZE_MB = Object.values(LANG_AUDIO_SIZE_MB).reduce((a, b) => a + b, 0);
+
+/** Human-readable size for a language folder (e.g. "361 MB"). */
+export function langSizeLabel(lang: string): string {
+  const mb = LANG_AUDIO_SIZE_MB[lang];
+  if (!mb) return '';
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb} MB`;
+}
+
+/** Format a byte count as KB/MB/GB. */
+export function fmtBytes(b: number): string {
+  if (b <= 0) return '';
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
+  if (b < 1024 * 1024 * 1024) return `${(b / (1024 * 1024)).toFixed(0)} MB`;
+  return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+/** Consume the one-time "prompt for downloads on first launch" flag (desktop). */
+export async function consumeFirstRunPrompt(): Promise<boolean> {
+  const api = getApi() as (TransAudioApi & { consumeFirstRunPrompt?: () => Promise<boolean> }) | null;
+  if (!api?.consumeFirstRunPrompt) return false;
+  try { return await api.consumeFirstRunPrompt(); } catch { return false; }
+}
+
 /** True when running inside the Electron desktop app with local-audio support. */
 export function isLocalAudioSupported(): boolean {
   return !!getApi();

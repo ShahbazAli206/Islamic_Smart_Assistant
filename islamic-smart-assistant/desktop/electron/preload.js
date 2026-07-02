@@ -43,6 +43,8 @@ contextBridge.exposeInMainWorld('desktop', {
     download: (lang, archiveUrl) => ipcRenderer.invoke('trans-audio:download', lang, archiveUrl),
     /** isa-audio:// URL for a given language + global ayah number. */
     getUrl: (lang, ayahNumber) => `isa-audio://${lang}/${ayahNumber}.mp3`,
+    /** One-time first-launch prompt flag (set by the setup wizard). True once. */
+    consumeFirstRunPrompt: () => ipcRenderer.invoke('trans-audio:consumeFirstRunPrompt'),
     /**
      * Subscribe to download progress. cb receives { lang, done, total, failed }.
      * Returns an unsubscribe fn.

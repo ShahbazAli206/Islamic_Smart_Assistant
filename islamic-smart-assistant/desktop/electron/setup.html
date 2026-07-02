@@ -362,8 +362,29 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
           </div>
         </div>
 
-        <!-- ── STEP 5: Summary ── -->
+        <!-- ── STEP 5: Translation Audio (optional) ── -->
         <div class="screen" id="s5">
+          <p style="font-size:12px;color:#555;margin-bottom:14px">
+            Play each ayah&apos;s translation as clear spoken audio — offline — in
+            <strong>28 languages</strong> (German, Spanish, Indonesian, Hindi, Tamil, Uzbek and more).
+            Audio is downloaded to your device; each language is roughly 280–780&nbsp;MB (about 10&nbsp;GB for all).
+          </p>
+          <div class="check-list">
+            <label class="check-item">
+              <input type="checkbox" id="chkAudioDownload">
+              <div class="check-text">
+                <div class="check-title">Set up offline translation audio after install</div>
+                <div class="check-desc">Opens the language picker on first launch so you can choose exactly which languages to download. You can also do this anytime from Settings → Offline Translation Audio.</div>
+              </div>
+            </label>
+          </div>
+          <p style="font-size:11px;color:#888;margin-top:12px">
+            No audio is downloaded during installation — you pick your languages afterwards.
+          </p>
+        </div>
+
+        <!-- ── STEP 6: Summary ── -->
+        <div class="screen" id="s6">
           <p style="font-size:12px;color:#555;margin-bottom:14px">
             Review your selections. Click <strong>Install</strong> to apply settings and launch Islamic Assistant.
           </p>
@@ -408,9 +429,10 @@ const STEPS = [
   { id:'s2',      title:'Additional Tasks',   sub:'Choose shortcuts and startup behaviour' },
   { id:'s3',      title:'Your Location',      sub:'Needed for accurate prayer times and Qibla' },
   { id:'s4',      title:'Permissions',        sub:'Choose which features to enable' },
-  { id:'s5',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
+  { id:'s5',      title:'Translation Audio',  sub:'Optional — offline audio for 28 languages' },
+  { id:'s6',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
 ];
-const FINISH_STEP = 6; // virtual index
+const FINISH_STEP = 7; // virtual index
 
 let cur = 0;
 
@@ -488,7 +510,7 @@ function render() {
 
   // Step-specific side effects
   if (cur === 3 && !locOk && curTab === 'ip') setTimeout(doDetectIp, 400);
-  if (cur === 5) buildSummary();
+  if (cur === 6) buildSummary();
   if (isFinish) {
     document.getElementById('finishLoc').textContent =
       (loc.city && loc.country) ? `${loc.city}, ${loc.country}` : 'your location';
@@ -665,6 +687,7 @@ function buildSummary() {
     ['Notifications',     document.getElementById('chkNotif').checked    ?'Enabled':'Disabled'],
     ['Location Access',   document.getElementById('chkGeo').checked      ?'Allowed':'Denied'],
     ['Auto Updates',      document.getElementById('chkUpdates').checked  ?'Enabled':'Disabled'],
+    ['Offline Audio',     document.getElementById('chkAudioDownload').checked ?'Set up on launch':'Skip for now'],
   ];
   const yes = new Set(['Yes','Enabled','Allowed']);
   const no  = new Set(['No','Disabled','Denied']);
@@ -692,6 +715,7 @@ async function doInstall() {
     notifications:   document.getElementById('chkNotif').checked,
     locationAccess:  document.getElementById('chkGeo').checked,
     autoUpdates:     document.getElementById('chkUpdates').checked,
+    downloadAudioOnLaunch: document.getElementById('chkAudioDownload').checked,
   };
 
   try {

@@ -252,6 +252,19 @@ ipcMain.handle('devices:setVolume', (_e, args) => ensureDevices().setVolume(args
 
 // ── Translation audio: per-language local file cache (isa-audio:// protocol) ──
 
+// One-time flag (set by the setup wizard) telling the app to prompt for
+// language downloads on first launch. Returns true once, then clears itself.
+function audioPromptMarkerPath() {
+  return path.join(app.getPath('userData'), 'audio-prompt-pending');
+}
+ipcMain.handle('trans-audio:consumeFirstRunPrompt', () => {
+  try {
+    const p = audioPromptMarkerPath();
+    if (fs.existsSync(p)) { fs.unlinkSync(p); return true; }
+  } catch {}
+  return false;
+});
+
 ipcMain.handle('trans-audio:list',     (_e, lang) => { try { return transAudio.list(lang); } catch { return []; } });
 ipcMain.handle('trans-audio:stats',    (_e, lang) => { try { return transAudio.stats(lang); } catch { return { count: 0, bytes: 0 }; } });
 ipcMain.handle('trans-audio:statsAll', () => transAudio.statsAll());
@@ -352,6 +365,14 @@ ipcMain.handle('setup:complete', async (_event, settings) => {
       shell.writeShortcutLink(linkPath, 'create', { target: process.execPath, description: 'Islamic Assistant' });
     } catch (_) { /* non-fatal */ }
   }
+
+  // If the user opted in during setup, drop a marker so the app opens the
+  // translation-audio download manager on first launch.
+  try {
+    const marker = path.join(app.getPath('userData'), 'audio-prompt-pending');
+    if (settings.downloadAudioOnLaunch) fs.writeFileSync(marker, '1', 'utf-8');
+    else if (fs.existsSync(marker)) fs.unlinkSync(marker);
+  } catch (_) { /* non-fatal */ }
 
   return true;
 });

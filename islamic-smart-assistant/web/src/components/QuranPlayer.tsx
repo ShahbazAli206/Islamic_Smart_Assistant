@@ -13,7 +13,7 @@ import {
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
-import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported } from '@/lib/translationAudioLocal';
+import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported, consumeFirstRunPrompt } from '@/lib/translationAudioLocal';
 import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
 
@@ -479,6 +479,13 @@ export function QuranPlayer({
   // Offline-audio modals: download manager (desktop) and "get the app" (web).
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showDesktopPromo,  setShowDesktopPromo]  = useState(false);
+
+  // First launch after setup (if the user opted in): open the download manager once.
+  useEffect(() => {
+    let cancelled = false;
+    consumeFirstRunPrompt().then((should) => { if (should && !cancelled) setShowDownloadModal(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   // When the user picks a downloadable-audio translation: on web, promote the
   // desktop app; on desktop, open the download manager if it isn't downloaded yet.

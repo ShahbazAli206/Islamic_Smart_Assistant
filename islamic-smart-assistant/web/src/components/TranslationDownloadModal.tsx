@@ -5,23 +5,20 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Trash2, CheckCircle2, Loader2, HardDrive, Globe2 } from 'lucide-react';
 import { TRANSLATIONS, LOCAL_AUDIO_EDITIONS, type TranslationId } from '@/lib/quran';
-import { archiveUrl, canDownload, type ProgressEvent } from '@/lib/translationAudioLocal';
+import {
+  archiveUrl, canDownload, fmtBytes, langSizeLabel, LANG_AUDIO_SIZE_MB,
+  TOTAL_AUDIO_SIZE_MB, type ProgressEvent,
+} from '@/lib/translationAudioLocal';
 
 const TOTAL_AYAHS = 6236;
 
-// Downloadable languages, resolved to display names once at module load.
-type Row = { id: TranslationId; lang: string; name: string; short: string };
+// Downloadable languages, resolved to display names + sizes once at module load.
+type Row = { id: TranslationId; lang: string; name: string; short: string; sizeMb: number };
 const ROWS: Row[] = (Object.keys(LOCAL_AUDIO_EDITIONS) as TranslationId[]).map((id) => {
   const t = TRANSLATIONS.find((x) => x.id === id);
-  return { id, lang: LOCAL_AUDIO_EDITIONS[id]!, name: t?.name ?? id, short: t?.short ?? '' };
+  const lang = LOCAL_AUDIO_EDITIONS[id]!;
+  return { id, lang, name: t?.name ?? id, short: t?.short ?? '', sizeMb: LANG_AUDIO_SIZE_MB[lang] ?? 0 };
 }).sort((a, b) => a.name.localeCompare(b.name));
-
-function fmtBytes(b: number) {
-  if (b <= 0) return '';
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
-  if (b < 1024 * 1024 * 1024) return `${(b / (1024 * 1024)).toFixed(0)} MB`;
-  return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-}
 
 type LangState = { count: number; bytes: number };
 
@@ -151,7 +148,8 @@ export function TranslationDownloadModal({ open, onClose, highlight, isDark }: P
                   <h2 className="font-display font-bold text-lg leading-tight truncate">Offline Translation Audio</h2>
                   <p className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/50'}`}>
                     {totals.ready}/{ROWS.length} languages ready
-                    {totals.bytes > 0 && ` · ${fmtBytes(totals.bytes)} on disk`}
+                    {totals.bytes > 0 && ` · ${fmtBytes(totals.bytes)} used`}
+                    {` · all ≈ ${(TOTAL_AUDIO_SIZE_MB / 1024).toFixed(1)} GB`}
                   </p>
                 </div>
               </div>
@@ -186,6 +184,9 @@ export function TranslationDownloadModal({ open, onClose, highlight, isDark }: P
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm truncate">{r.name}</span>
                         {r.short && <span className={`text-xs shrink-0 ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>{r.short}</span>}
+                        <span className={`text-[11px] shrink-0 tabular-nums rounded px-1.5 py-0.5 ${isDark ? 'bg-white/8 text-parchment/55' : 'bg-black/5 text-ink/50'}`}>
+                          {langSizeLabel(r.lang)}
+                        </span>
                       </div>
                       {/* Per-row progress / status */}
                       {isActive ? (
