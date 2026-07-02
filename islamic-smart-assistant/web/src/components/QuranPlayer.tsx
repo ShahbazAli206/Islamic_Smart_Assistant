@@ -127,7 +127,7 @@ function TajweedAyah({ text, isDark }: { text: string; isDark: boolean }) {
   const defaultColor = isDark ? '#e2e8f0' : '#f1f5f9';
   const words = text.split(/(\s+)/);
   return (
-    <p className="font-arabic text-4xl md:text-5xl leading-[2] text-center" dir="rtl">
+    <p className="font-arabic text-4xl md:text-5xl leading-[2.5] text-center" dir="rtl">
       {words.map((segment, wi) => {
         if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
         const graphemes = splitGraphemes(segment);
