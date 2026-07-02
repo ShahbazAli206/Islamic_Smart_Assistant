@@ -21,7 +21,7 @@ import {
   ShieldCheck, User, Sun, CalendarDays, MonitorDown,
 } from 'lucide-react';
 
-const DESKTOP_DOWNLOAD_URL = 'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases/download/v1.0.0/Islamic.Assistant.Setup.1.0.0.exe';
+import { DESKTOP_DOWNLOAD_URL } from '@/lib/desktopApp';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';

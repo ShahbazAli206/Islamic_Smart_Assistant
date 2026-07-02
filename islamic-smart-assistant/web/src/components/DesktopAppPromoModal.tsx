@@ -5,10 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MonitorDown, Volume2, Check } from 'lucide-react';
 import { TRANSLATIONS, LOCAL_AUDIO_EDITIONS, type TranslationId } from '@/lib/quran';
-
-// Same release asset the rest of the web app links to.
-const DESKTOP_DOWNLOAD_URL =
-  'https://github.com/ShahbazAli206/Islamic_Smart_Assistant/releases/download/v1.0.0/Islamic.Assistant.Setup.1.0.0.exe';
+import { DESKTOP_DOWNLOAD_URL } from '@/lib/desktopApp';
 
 const LANG_NAMES = (Object.keys(LOCAL_AUDIO_EDITIONS) as TranslationId[])
   .map((id) => TRANSLATIONS.find((t) => t.id === id)?.short || TRANSLATIONS.find((t) => t.id === id)?.name || id)
