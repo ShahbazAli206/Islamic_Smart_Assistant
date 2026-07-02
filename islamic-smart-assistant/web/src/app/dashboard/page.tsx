@@ -358,7 +358,7 @@ export default function Overview() {
     ? `-m-5 sm:-m-8 p-5 sm:p-8 min-h-screen space-y-5 ${c.text}`
     : `space-y-5 ${c.text}`;
   const rootStyle = isDark
-    ? { background: 'radial-gradient(1000px 520px at 12% -12%, rgba(16,185,129,0.07), transparent 60%), linear-gradient(180deg,#0a1c14 0%,#07140e 100%)' }
+    ? { background: 'radial-gradient(1000px 520px at 12% -12%, rgba(16,185,129,0.10), transparent 60%), linear-gradient(180deg,#16382a 0%,#10291e 100%)' }
     : undefined;
 
   return (

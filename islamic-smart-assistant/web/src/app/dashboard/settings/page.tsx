@@ -336,8 +336,20 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── Content area ── */}
-      <div className="px-6 sm:px-10 py-6 flex flex-col gap-4">
+      {/* ── Content area — same bg image as the hero, under a dark transparent veil ── */}
+      <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Overview_Light_Theme_Updated background images first section.png"
+          alt=""
+          className="absolute inset-0 h-full w-full select-none object-cover object-center"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: isDark ? 'rgba(4,12,8,0.72)' : 'rgba(0,0,0,0.38)' }}
+        />
+      <div className="relative px-6 sm:px-10 py-6 flex flex-col gap-4">
 
         {/* ── Main 2-col grid (items-start so Smart Azan card doesn't stretch) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
@@ -768,6 +780,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
+      </div>
       </div>
     </div>
   );
