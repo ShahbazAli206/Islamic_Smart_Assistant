@@ -13,6 +13,7 @@ import { useCompassHeading } from '@/lib/compass';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { qiblaBearing, distanceToKaaba, compassPoint, formatDistance, isAligned } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 const QiblaMap = dynamic(() => import('@/components/QiblaMap'), {
   ssr: false,
@@ -613,7 +614,8 @@ export default function QiblaPage() {
       </div>
 
       {/* ── Page content ── */}
-      <div className={`relative px-6 sm:px-10 pb-10 space-y-5 mt-5 ${isDark ? 'qibla-dark' : ''}`}>
+      <ContentBackdrop isDark={isDark}>
+      <div className={`relative px-6 sm:px-10 pb-10 space-y-5 pt-5 ${isDark ? 'qibla-dark' : ''}`}>
         <motion.div
           variants={container}
           initial="hidden"
@@ -1021,6 +1023,7 @@ export default function QiblaPage() {
         </motion.div>
         </motion.div>
       </div>
+      </ContentBackdrop>
     </div>
   );
 }

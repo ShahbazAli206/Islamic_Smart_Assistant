@@ -20,6 +20,7 @@ import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AyahDisplay } from '@/components/AyahDisplay';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { setLocationByCoords, setLocationByCity } from '@/lib/location';
 import { METHOD_LABELS as CALC_METHODS } from '@/lib/sect';
 
@@ -446,6 +447,10 @@ export default function Overview() {
           </div>
         </div>
       </motion.section>
+
+      {/* ── Everything below the banner sits on the shared bg image + dark veil ── */}
+      <div className="-mx-5 sm:-mx-8 -mb-5 sm:-mb-8 -mt-5">
+      <ContentBackdrop isDark={isDark} className="px-5 sm:px-8 pb-5 sm:pb-8 pt-5 space-y-5">
 
       {/* ───────────────────────── Your Preferences ───────────────────────── */}
       <motion.section
@@ -973,6 +978,9 @@ export default function Overview() {
             </div>
           </motion.section>
         </div>
+      </div>
+
+      </ContentBackdrop>
       </div>
 
     </div>

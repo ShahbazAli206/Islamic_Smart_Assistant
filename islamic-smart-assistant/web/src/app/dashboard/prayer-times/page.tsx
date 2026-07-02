@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronRight, Clock, BookOpen, Compass, Bell,
 } from 'lucide-react';
 import { PrayerCountdownHero } from '@/components/PrayerCountdown';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { searchMosquesNear, type Mosque } from '@/lib/overpass';
@@ -526,6 +527,7 @@ export default function PrayerTimesPage() {
         </div>{/* closes sect controls px wrapper */}
       </div>{/* closes hero section */}
 
+      <ContentBackdrop isDark={isDark}>
       <div className="relative px-6 sm:px-10 pb-10 space-y-5">
         {/* Prayer countdown: outside hero so background image stays above */}
         <PrayerCountdownHero
@@ -671,6 +673,7 @@ export default function PrayerTimesPage() {
           ))}
         </div>
       </div>
+      </ContentBackdrop>
 
       {/* ── Update-location prompt (shown after a map click / search / My Location) ── */}
       <AnimatePresence>

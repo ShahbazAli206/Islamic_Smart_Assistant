@@ -25,6 +25,7 @@ import { fetchCommunityUploads, deleteCommunityUpload, subscribeToUploads, isCom
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 type AzanVoice = {
   id: string;
@@ -1176,6 +1177,7 @@ export default function AzanPage() {
       </header>
 
       {/* ════════ CONTENT ════════ — theme classes applied here only, not to header */}
+      <ContentBackdrop isDark={isDark}>
       <div className={isDark ? 'azan-dark text-parchment' : 'text-ink page-light'}>
       <div className="px-5 sm:px-8 pb-10">
 
@@ -1890,6 +1892,7 @@ export default function AzanPage() {
         )}
       </AnimatePresence>
       </div>{/* end theme wrapper */}
+      </ContentBackdrop>
     </div>
   );
 }

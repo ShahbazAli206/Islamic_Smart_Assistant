@@ -22,6 +22,7 @@ import {
   formatTime, type RecitationSchedule, type RepeatMode,
 } from '@/lib/recitationSchedule';
 import { useTheme } from '@/lib/ThemeContext';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 // Repeat modes for the modal's segmented picker, with their labels + icons.
 const REPEAT_MODES: RepeatMode[] = ['once', 'daily', 'weekly', 'monthly'];
@@ -464,7 +465,8 @@ export default function RecitationSchedulerPage() {
       </div>{/* closes chips px wrapper */}
       </div>{/* closes hero section */}
 
-      <div className="px-6 sm:px-10 pb-10 space-y-6">
+      <ContentBackdrop isDark={isDark}>
+      <div className="px-6 sm:px-10 pb-10 space-y-6 pt-6">
       {/* ════════ YOUR SCHEDULES ════════ */}
       <div className={`relative overflow-hidden rounded-3xl border shadow-card-soft p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-amber-200/60'}`}
         style={isDark ? undefined : { background: 'linear-gradient(135deg, #FFFBF0 0%, #FFF6E0 55%, #FFF9EC 100%)' }}>
@@ -661,6 +663,7 @@ export default function RecitationSchedulerPage() {
       </p>
 
       </div>
+      </ContentBackdrop>
 
       {/* ════════ SCHEDULE PANEL (right-side modal) ════════ */}
       <AnimatePresence>

@@ -6,10 +6,13 @@
 
 import { Sparkles } from 'lucide-react';
 import { useIsDesktop } from '@/lib/useIsDesktop';
+import { useTheme } from '@/lib/ThemeContext';
 import { ProfileForm, DesktopRequiredNotice } from '@/components/ProfileForm';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 export default function ProfilePage() {
   const isDesktop = useIsDesktop();
+  const { isDark } = useTheme();
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -23,7 +26,11 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {isDesktop ? <ProfileForm /> : <DesktopRequiredNotice />}
+      <div className="rounded-3xl overflow-hidden">
+        <ContentBackdrop isDark={isDark} className="p-5">
+          {isDesktop ? <ProfileForm /> : <DesktopRequiredNotice />}
+        </ContentBackdrop>
+      </div>
     </div>
   );
 }

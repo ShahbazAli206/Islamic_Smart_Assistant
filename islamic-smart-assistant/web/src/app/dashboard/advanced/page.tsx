@@ -8,6 +8,7 @@ import {
   Moon, Sparkles, Hash, CheckCircle2, Info, Languages, RefreshCw,
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { DUAS, DUA_GROUP_LABELS, type Dua, type DuaGroup, type DuaSection } from '@/lib/duas-data';
 import { HADEES_BOOKS, HADEES_CDN } from '@/lib/hadees-books';
@@ -1374,7 +1375,7 @@ export default function IslamicLibraryPage() {
       </div>{/* closes hero section */}
 
       {/* ── Tab content ── */}
-      <div className="px-6 sm:px-10 pb-12 pt-6">
+      <ContentBackdrop isDark={isDark} className="px-6 sm:px-10 pb-12 pt-6">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
             {activeTab === 'duas'        && <DuasSection       isDark={isDark} />}
@@ -1383,7 +1384,7 @@ export default function IslamicLibraryPage() {
             {activeTab === 'calculators' && <CalculatorsSection isDark={isDark} />}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </ContentBackdrop>
     </div>
   );
 }

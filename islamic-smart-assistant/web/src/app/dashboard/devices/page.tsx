@@ -13,6 +13,7 @@ import {
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
 import { useTheme } from '@/lib/ThemeContext';
+import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { Devices, type BackendDevice } from '@/lib/api';
 import { resolveAzanCastUrl, RECITATION_CAST_TEST_URL, azanLocalPath, azanVoiceName } from '@/lib/castAudioSources';
 import { useDesktopDevices, type LanDevice } from '@/lib/useDesktopDevices';
@@ -1163,6 +1164,7 @@ export default function DevicesPage() {
       {/* ── end hero section ── */}
 
       {/* ── page content below hero ── */}
+      <ContentBackdrop isDark={isDark}>
       <div className="relative px-5 sm:px-8 pb-8">
 
         {/* dark ambient decor (dark mode only) */}
@@ -1987,6 +1989,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
         </div>
         </div>
       </div>
+      </ContentBackdrop>
     </div>
   );
 }
