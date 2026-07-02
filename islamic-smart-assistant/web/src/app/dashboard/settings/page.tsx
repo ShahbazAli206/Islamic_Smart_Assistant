@@ -6,12 +6,18 @@ import { motion } from 'framer-motion';
 import {
   MapPin, Globe, BellRing, BellOff, Check, Loader2, Settings,
   Activity, Volume2, Clock, Calendar, Heart, ChevronRight, Sparkles, Mic2,
-  Music2, ArrowRight, Bell, Smartphone, Zap, BookOpen,
+  Music2, ArrowRight, Bell, Smartphone, Zap, BookOpen, HardDrive, Download,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useTheme } from '@/lib/ThemeContext';
 import { SECTS, LANGUAGES } from '@/components/OnboardingSetup';
 import { setLocationByCity } from '@/lib/location';
+import { langToTranslation, LOCAL_AUDIO_EDITIONS } from '@/lib/quran';
+import { isLocalAudioSupported } from '@/lib/translationAudioLocal';
+import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
+import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
+
+const LOCAL_AUDIO_LANG_COUNT = Object.keys(LOCAL_AUDIO_EDITIONS).length;
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -196,6 +202,10 @@ export default function SettingsPage() {
   const [fiqh,     setFiqhState] = useLocalStorage<string>('isa:fiqh',         'hanafi');
   const [language, setLanguage]  = useLocalStorage<string>('isa:language',     'en');
   const [azanOn,   setAzanOn]    = useLocalStorage<boolean>('isa:azanAutoplay', true);
+
+  // Offline translation audio manager (opens the download modal on desktop, or
+  // the "get the app" promo on web).
+  const [showAudioModal, setShowAudioModal] = useState(false);
 
   const [azanAnnounce,       setAzanAnnounce]       = useLocalStorage<boolean>('isa:azanAnnounce',        true);
   const [azanAutoplayBefore, setAzanAutoplayBefore] = useLocalStorage<boolean>('isa:azanAutoplayBefore',  true);
@@ -671,8 +681,48 @@ export default function SettingsPage() {
                 </div>
               </SectionCard>
             </div>
+
+            {/* Offline translation audio */}
+            <SectionCard title="Offline Translation Audio" icon={<HardDrive size={16} />} isDark={isDark}>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm ${isDark ? 'text-emerald-50/80' : 'text-emerald-950/80'}`}>
+                    Download clear spoken audio for <span className="font-semibold">{LOCAL_AUDIO_LANG_COUNT} translations</span> (German,
+                    Spanish, Indonesian, Hindi, Tamil, Uzbek and more) to play each ayah&apos;s translation offline.
+                  </p>
+                  <p className={`mt-1 text-xs ${isDark ? 'text-white/40' : 'text-black/45'}`}>
+                    {isLocalAudioSupported()
+                      ? 'Choose languages to download — stored on this device, plays without internet.'
+                      : 'Available in the Noor desktop app. Download the app to use offline audio.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAudioModal(true)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-95 shrink-0
+                    ${isDark ? 'bg-emerald-700/60 hover:bg-emerald-600/70 text-emerald-50' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                >
+                  {isLocalAudioSupported() ? <><HardDrive size={15} /> Manage Downloads</> : <><Download size={15} /> Get the App</>}
+                </button>
+              </div>
+            </SectionCard>
           </div>
         </div>
+
+        {/* Offline-audio modals: download manager (desktop) or app promo (web) */}
+        {isLocalAudioSupported() ? (
+          <TranslationDownloadModal
+            open={showAudioModal}
+            onClose={() => setShowAudioModal(false)}
+            highlight={LOCAL_AUDIO_EDITIONS[langToTranslation(language)] ? langToTranslation(language) : null}
+            isDark={isDark}
+          />
+        ) : (
+          <DesktopAppPromoModal
+            open={showAudioModal}
+            onClose={() => setShowAudioModal(false)}
+            isDark={isDark}
+          />
+        )}
 
         {/* ── Coming Soon ── */}
         <div>
