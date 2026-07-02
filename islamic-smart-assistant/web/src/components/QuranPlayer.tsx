@@ -772,9 +772,9 @@ export function QuranPlayer({
   return (
     <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-white/[0.12]' : 'border-white/30'}`}
       style={{
-        background: isDark ? 'transparent' : 'rgba(0,0,0,0.48)',
-        backdropFilter: isDark ? undefined : 'blur(12px)',
-        WebkitBackdropFilter: isDark ? undefined : 'blur(12px)',
+        background: isDark ? 'rgba(3,10,6,0.62)' : 'rgba(0,0,0,0.48)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}>
       {/* ── header ── */}
       <div className="text-white p-6 relative overflow-hidden"

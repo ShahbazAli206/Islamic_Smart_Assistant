@@ -67,7 +67,7 @@ export default function QuranPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background: isDark
-              ? 'linear-gradient(170deg,rgba(2,8,4,0.55) 0%,rgba(3,10,5,0.60) 100%)'
+              ? 'linear-gradient(170deg,rgba(2,8,4,0.16) 0%,rgba(3,10,5,0.20) 100%)'
               : 'linear-gradient(170deg,rgba(255,255,255,0.48) 0%,rgba(240,252,244,0.52) 100%)',
           }}
         />
