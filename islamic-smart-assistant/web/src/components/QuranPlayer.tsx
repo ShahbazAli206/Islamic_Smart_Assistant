@@ -124,10 +124,10 @@ function splitGraphemes(text: string): string[] {
 
 // Renders an Arabic ayah with per-character tajweed makhraj colours.
 function TajweedAyah({ text, isDark }: { text: string; isDark: boolean }) {
-  const defaultColor = isDark ? '#e2e8f0' : '#1e293b';
+  const defaultColor = isDark ? '#e2e8f0' : '#f1f5f9';
   const words = text.split(/(\s+)/);
   return (
-    <p className="font-arabic text-3xl md:text-4xl leading-[2] text-center" dir="rtl">
+    <p className="font-arabic text-4xl md:text-5xl leading-[2] text-center" dir="rtl">
       {words.map((segment, wi) => {
         if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
         const graphemes = splitGraphemes(segment);
@@ -189,7 +189,7 @@ function ReciterDropdown({ value, onChange, isDark }: { value: ReciterId; onChan
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition-all duration-200 min-w-[240px] ${trig}`}
+        className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-base font-medium shadow-sm transition-all duration-200 min-w-[240px] ${trig}`}
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold-gradient text-midnight-900 shrink-0"><Mic2 size={13} /></span>
         <span className="flex-1 text-left truncate">{selected?.name}</span>
@@ -250,7 +250,7 @@ function TranslationDropdown({ value, onChange, isDark }: { value: TranslationId
       <motion.button
         onClick={() => setOpen(p => !p)}
         whileTap={{ scale: 0.95 }}
-        className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 min-w-[270px] ${trig}`}
+        className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-base font-medium shadow-sm transition-all duration-200 min-w-[270px] ${trig}`}
       >
         <Languages size={15} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-gold-600'}`} />
         <span className="flex-1 text-left truncate">{selected?.name ?? 'No translation'}</span>
@@ -340,7 +340,7 @@ function ToggleSwitch({
       title={title}
       onClick={() => onChange(!checked)}
       whileTap={{ scale: 0.96 }}
-      className={`flex items-center gap-2.5 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 cursor-pointer select-none ${trig}`}
+      className={`flex items-center gap-2.5 border rounded-xl px-3.5 py-2.5 text-base font-medium shadow-sm transition-all duration-200 cursor-pointer select-none ${trig}`}
     >
       {/* track */}
       <motion.div
@@ -771,7 +771,11 @@ export function QuranPlayer({
 
   return (
     <div className={`rounded-3xl overflow-hidden border shadow-2xl ${isDark ? 'border-white/[0.12]' : 'border-white/30'}`}
-      style={{ background: 'transparent' }}>
+      style={{
+        background: isDark ? 'transparent' : 'rgba(0,0,0,0.48)',
+        backdropFilter: isDark ? undefined : 'blur(12px)',
+        WebkitBackdropFilter: isDark ? undefined : 'blur(12px)',
+      }}>
       {/* ── header ── */}
       <div className="text-white p-6 relative overflow-hidden"
         style={{ background: isDark
@@ -816,7 +820,7 @@ export function QuranPlayer({
             onClick={() => setShowDownloadModal(true)}
             whileTap={{ scale: 0.96 }}
             title="Download translation audio for offline playback"
-            className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200
+            className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-base font-medium shadow-sm transition-all duration-200
               ${isDark
                 ? 'bg-white/[0.08] border-white/15 text-white hover:bg-white/[0.14]'
                 : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'}`}
@@ -828,7 +832,7 @@ export function QuranPlayer({
 
         {/* playback */}
         <div className="ml-auto flex items-center gap-1">
-          <PlaybackBtn onClick={goPrev} title="Previous ayah" className={isDark ? 'text-white/80 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-100'}>
+          <PlaybackBtn onClick={goPrev} title="Previous ayah" className={isDark ? 'text-white/80 hover:bg-white/10' : 'text-white/85 hover:bg-white/15'}>
             <SkipBack size={18} />
           </PlaybackBtn>
 
@@ -887,7 +891,7 @@ export function QuranPlayer({
             </motion.button>
           </div>
 
-          <PlaybackBtn onClick={goNext} title="Next ayah" className={isDark ? 'text-white/80 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-100'}>
+          <PlaybackBtn onClick={goNext} title="Next ayah" className={isDark ? 'text-white/80 hover:bg-white/10' : 'text-white/85 hover:bg-white/15'}>
             <SkipForward size={18} />
           </PlaybackBtn>
 
@@ -897,8 +901,8 @@ export function QuranPlayer({
             whileTap={{ scale: 0.88 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             animate={{
-              backgroundColor: repeat ? (isDark ? 'rgba(233,207,122,0.15)' : 'rgba(16,185,129,0.12)') : 'transparent',
-              color: repeat ? (isDark ? '#E9CF7A' : '#047857') : (isDark ? 'rgba(250,247,238,0.8)' : '#047857'),
+              backgroundColor: repeat ? (isDark ? 'rgba(233,207,122,0.15)' : 'rgba(255,255,255,0.15)') : 'transparent',
+              color: repeat ? (isDark ? '#E9CF7A' : '#6ee7b7') : (isDark ? 'rgba(250,247,238,0.8)' : 'rgba(255,255,255,0.85)'),
             }}
             className="p-2.5 rounded-full transition-colors"
             title="Repeat surah"
@@ -1007,7 +1011,7 @@ export function QuranPlayer({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="chip">Ayah {currentAyah.numberInSurah} of {arabic!.ayahs.length}</span>
+                  <span className="chip text-sm">Ayah {currentAyah.numberInSurah} of {arabic!.ayahs.length}</span>
                   <AnimatePresence>
                     {playing && (
                       <motion.span
@@ -1015,7 +1019,7 @@ export function QuranPlayer({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.2 }}
-                        className={`chip ${stage === 'translation' ? 'bg-gold-100 text-gold-700 border-gold-300/40' : ''}`}
+                        className={`chip text-sm ${stage === 'translation' ? 'bg-gold-100 text-gold-700 border-gold-300/40' : ''}`}
                       >
                         {stage === 'arabic'
                           ? 'Reciting Arabic…'
@@ -1026,7 +1030,7 @@ export function QuranPlayer({
                     )}
                   </AnimatePresence>
                 </div>
-                <span className={`text-sm font-medium ${isDark ? 'text-parchment/80' : 'text-gray-900'}`}>Juz {currentAyah.juz} • Page {currentAyah.page}</span>
+                <span className={`text-base font-medium ${isDark ? 'text-parchment/80' : 'text-white/90'}`}>Juz {currentAyah.juz} • Page {currentAyah.page}</span>
               </div>
 
               {/* Tajweed-coloured Arabic text */}
@@ -1065,7 +1069,7 @@ export function QuranPlayer({
 
                 <TajweedAyah text={currentAyah.text} isDark={isDark} />
                 <p dir="rtl" className="text-center -mt-1">
-                  <span className={`font-display text-2xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-emerald-700'}`}>
+                  <span className={`font-display text-3xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-gold-300'}`}>
                     ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
                   </span>
                 </p>
@@ -1079,9 +1083,9 @@ export function QuranPlayer({
                     { color: '#a78bfa', label: 'Lips (شفتان)' },
                     { color: '#fcd34d', label: 'Sibilants (أسنان)' },
                   ].map(({ color, label }) => (
-                    <span key={label} className="inline-flex items-center gap-1 text-[13px] opacity-70">
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-                      <span className={isDark ? 'text-parchment/80' : 'text-gray-800'}>{label}</span>
+                    <span key={label} className="inline-flex items-center gap-1.5 text-[15px] opacity-90">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+                      <span className={isDark ? 'text-parchment/80' : 'text-white/85'}>{label}</span>
                     </span>
                   ))}
                 </div>
@@ -1092,11 +1096,11 @@ export function QuranPlayer({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  className="border-t border-emerald-900/10 pt-4 text-center"
+                  className="border-t border-white/15 pt-4 text-center"
                 >
                   <p
                     dir={isUrdu ? 'rtl' : 'ltr'}
-                    className={`leading-relaxed ${isUrdu ? 'font-arabic text-2xl' : 'text-xl'} ${isDark ? 'text-white/95' : 'text-ink/80'}`}
+                    className={`leading-relaxed text-white/95 ${isUrdu ? 'font-arabic text-3xl' : 'text-2xl'}`}
                   >
                     {currentTrans.text}
                   </p>
