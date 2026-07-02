@@ -1111,9 +1111,11 @@ export default function DevicesPage() {
 
       {/* ── Hero section — same visual treatment as Prayer Times page ── */}
       <div className="relative overflow-hidden">
-        {/* full-cover background image — same as Prayer Times / Overview hero */}
+        {/* Devices-specific hero background. object-fill shows the whole image
+            (full width + full height, no cropping) with a slight vertical
+            compression so as much of the picture's height is visible as possible. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/Overview_Light_Theme_Updated background images first section.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
+        <img src="/Devices and output first section background image.png" alt="" className="absolute inset-0 h-full w-full select-none object-fill" />
 
         <div className="relative px-6 sm:px-10 pt-5 pb-8 flex flex-wrap items-start justify-between gap-4">
 
