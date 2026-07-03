@@ -78,7 +78,7 @@ export default function HomePage() {
             <img
               src="/ismaa_logo.png"
               alt="ISMAA — Islamic Smart Assistant"
-              className="h-9 w-auto object-contain"
+              className="h-11 w-auto object-contain"
               style={{ filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' }}
               draggable={false}
             />
