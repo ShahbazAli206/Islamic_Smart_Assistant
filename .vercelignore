@@ -1,0 +1,10 @@
+# Only the web app (islamic-smart-assistant/web) deploys to Vercel.
+# Exclude everything heavy/irrelevant so CLI deploys stay under the file limit.
+islamic-smart-assistant/desktop
+islamic-smart-assistant/mobile
+islamic-smart-assistant/backend
+mobile
+azan
+*.exe
+*.blockmap
+.next
