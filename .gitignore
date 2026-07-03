@@ -7,3 +7,6 @@ zRouter data/
 
 # Stray Android build output / duplicate of the root ./mobile app (no source)
 islamic-smart-assistant/mobile/
+
+# Dependencies
+mobile/node_modules/
