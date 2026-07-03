@@ -294,7 +294,7 @@ function HadeesSection({ isDark }: { isDark: boolean }) {
     <div className="space-y-5">
 
       {/* ── Filter bar ── */}
-      <div className={`flex flex-wrap items-center gap-2.5 px-5 py-4 rounded-2xl ${isDark ? 'bg-white/[0.04] border border-white/[0.06]' : 'bg-white/60 border border-emerald-100 shadow-sm backdrop-blur'}`}>
+      <div className={`flex flex-wrap items-center gap-2.5 px-5 py-4 rounded-2xl ${isDark ? 'bg-black/35 backdrop-blur-md border border-white/[0.08]' : 'bg-white/60 border border-emerald-100 shadow-sm backdrop-blur'}`}>
         <span className={`text-sm font-semibold ${isDark ? 'text-parchment/60' : 'text-emerald-800/60'}`}>Show:</span>
         {([['all', 'All Books'], ['sehah-sittah', 'Sehah-e-Sittah'], ['other', 'Other Books']] as const).map(([v, l]) => (
           <button key={v} onClick={() => setFilterCategory(v as any)}
@@ -818,7 +818,7 @@ function MasailSection({ isDark }: { isDark: boolean }) {
         <div className="space-y-2">
           {selectedTopic.items.map((item, idx) => (
             <motion.div key={idx} layout
-              className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.08] bg-white/[0.03]' : 'border-neutral-100 bg-white shadow-sm'}`}>
+              className={`rounded-2xl border overflow-hidden ${isDark ? 'border-white/[0.08] bg-black/35 backdrop-blur-md' : 'border-neutral-100 bg-white shadow-sm'}`}>
               <button className="w-full text-left p-4 flex items-start gap-3" onClick={() => setOpenItem(openItem === idx ? -1 : idx)}>
                 <span className={`mt-0.5 shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${isDark ? 'bg-amber-700/30 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
                   Q
@@ -979,7 +979,7 @@ function CalculatorsSection({ isDark }: { isDark: boolean }) {
         {CALC_CARDS.map((c) => (
           <motion.button key={c.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
             onClick={() => setActiveCalc(activeCalc === c.id ? null : c.id)}
-            className={`text-left p-4 rounded-2xl border-2 transition ${activeCalc === c.id ? 'border-emerald-500 bg-emerald-600/10' : isDark ? 'border-white/[0.08] hover:border-emerald-500/40 bg-white/[0.04]' : 'border-neutral-100 hover:border-emerald-200 bg-white shadow-sm'}`}>
+            className={`text-left p-4 rounded-2xl border-2 transition ${activeCalc === c.id ? 'border-emerald-500 bg-emerald-600/10' : isDark ? 'border-white/[0.08] hover:border-emerald-500/40 bg-black/30 backdrop-blur-sm' : 'border-neutral-100 hover:border-emerald-200 bg-white shadow-sm'}`}>
             <span className="text-2xl mb-2 block">{c.icon}</span>
             <p className={`font-display font-bold text-sm leading-tight mb-0.5 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{c.title}</p>
             <p className={`font-arabic text-base ${isDark ? 'text-[#E9CF7A]/60' : 'text-emerald-700'}`}>{c.arabicTitle}</p>

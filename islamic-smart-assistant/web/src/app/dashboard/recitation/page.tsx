@@ -468,7 +468,7 @@ export default function RecitationSchedulerPage() {
       <ContentBackdrop isDark={isDark}>
       <div className="px-6 sm:px-10 pb-10 space-y-6 pt-6">
       {/* ════════ YOUR SCHEDULES ════════ */}
-      <div className={`relative overflow-hidden rounded-3xl border shadow-card-soft p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-amber-200/60'}`}
+      <div className={`relative overflow-hidden rounded-3xl border shadow-card-soft p-5 sm:p-6 ${isDark ? 'border-white/10 bg-black/35 backdrop-blur-md' : 'border-amber-200/60'}`}
         style={isDark ? undefined : { background: 'linear-gradient(135deg, #FFFBF0 0%, #FFF6E0 55%, #FFF9EC 100%)' }}>
         {/* Subtle Quran background image */}
         <div aria-hidden className="absolute inset-0 bg-cover bg-right pointer-events-none"
@@ -505,7 +505,7 @@ export default function RecitationSchedulerPage() {
                   <motion.div
                     key={s.id} layout
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
-                    className={`group relative overflow-hidden rounded-2xl border shadow-sm transition ${isDark ? 'bg-white/[0.06] border-white/10' : 'bg-parchment/70 border-emerald-900/8'} ${s.enabled ? '' : 'opacity-60'}`}
+                    className={`group relative overflow-hidden rounded-2xl border shadow-sm transition ${isDark ? 'bg-black/25 backdrop-blur-sm border-white/10' : 'bg-parchment/70 border-emerald-900/8'} ${s.enabled ? '' : 'opacity-60'}`}
                   >
                     {/* animated accent rail */}
                     <div className="absolute left-0 inset-y-0 w-1.5 overflow-hidden">
@@ -577,7 +577,7 @@ export default function RecitationSchedulerPage() {
       {/* ════════ BENEFITS + TODAY'S GOAL ════════ */}
       <div className="grid lg:grid-cols-[1.7fr_1fr] gap-4">
         {/* Benefits */}
-        <div className={`rounded-3xl border p-6 ${isDark ? 'border-white/10 bg-white/[0.04] backdrop-blur-md' : 'border-amber-200/50'}`}
+        <div className={`rounded-3xl border p-6 ${isDark ? 'border-white/10 bg-black/35 backdrop-blur-md' : 'border-amber-200/50'}`}
           style={isDark ? undefined : { background: 'linear-gradient(135deg,#FFFBF0 0%,#FFF6E0 100%)' }}>
           <h2 className={`flex items-center gap-2 font-display font-bold text-lg mb-5 ${isDark ? 'text-white' : 'text-emerald-950'}`}>
             <BookOpen size={18} className="text-gold-600" /> Benefits of Listening to Quran
@@ -619,7 +619,7 @@ export default function RecitationSchedulerPage() {
       </div>
 
       {/* ════════ QUICK ACTIONS ════════ */}
-      <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-white/[0.05] backdrop-blur-md' : 'border-emerald-200/50 bg-white/60 backdrop-blur-md shadow-card-soft'}`}>
+      <div className={`rounded-3xl border p-5 sm:p-6 ${isDark ? 'border-white/10 bg-black/35 backdrop-blur-md' : 'border-emerald-200/50 bg-white/60 backdrop-blur-md shadow-card-soft'}`}>
         <h2 className={`font-display font-bold text-lg mb-4 ${isDark ? 'text-white' : 'text-emerald-950'}`}>Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
@@ -638,7 +638,7 @@ export default function RecitationSchedulerPage() {
                 whileHover={{ y: -6, scale: 1.03, transition: { duration: 0.2 } }}
                 className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition h-full cursor-default
                   ${isDark
-                    ? 'bg-white/[0.08] border-white/[0.11] backdrop-blur-sm hover:bg-white/[0.13]'
+                    ? 'bg-black/25 border-white/[0.11] backdrop-blur-sm hover:bg-black/40'
                     : 'bg-white/50 border-emerald-900/8 backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-900/10'}`}
               >
                 <span className={`inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-xl border
