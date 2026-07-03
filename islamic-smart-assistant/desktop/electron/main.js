@@ -10,6 +10,7 @@ const fs   = require('fs');
 
 const { DeviceManager } = require('./devices');
 const transAudio = require('./translationAudio');
+const { initUpdater, checkForUpdatesInteractive } = require('./updater');
 
 // ── Translation audio protocol (isa-audio://{lang}/{N}.mp3 → userData/audio/{lang}/{N}.mp3) ──
 // Must be registered before app.whenReady().
@@ -146,6 +147,7 @@ function createTray() {
   tray.setToolTip('Islamic Assistant');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Open', click: () => { mainWindow?.show(); } },
+    { label: 'Check for Updates…', click: () => { checkForUpdatesInteractive(); } },
     { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } },
   ]));
   tray.on('click', () => mainWindow?.isVisible() ? mainWindow.hide() : mainWindow?.show());
@@ -184,6 +186,8 @@ app.whenReady().then(() => {
     createWindow();
     createTray();
   }
+  // Auto-update: checks GitHub Releases on launch and every 4 h (packaged only).
+  initUpdater(() => mainWindow);
 });
 
 app.on('window-all-closed', () => {

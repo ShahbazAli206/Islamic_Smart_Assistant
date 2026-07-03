@@ -1,6 +1,6 @@
 {
   "name": "islamic-assistant-desktop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Islamic Assistant — Prayer times, Quran, Azan, Qibla",
   "author": "Islamic Assistant",
   "private": true,
@@ -17,6 +17,7 @@
     "build:win:arm64": "electron-builder --win --arm64",
     "build:win:all": "electron-builder --win --x64 --ia32 --arm64",
     "build:win:universal": "node scripts/build-universal-win.js",
+    "release": "electron-builder --win --x64 --publish always",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
@@ -31,6 +32,13 @@
     "productName": "Islamic Assistant",
     "copyright": "Copyright © 2024 Islamic Assistant",
     "artifactName": "${productName} Setup ${version} ${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ShahbazAli206",
+        "repo": "Islamic_Assistant_Audio"
+      }
+    ],
     "files": [
       "electron/**/*",
       "assets/**/*"
@@ -62,6 +70,7 @@
       "target": [
         "nsis"
       ],
+      "artifactName": "Islamic-Assistant-Setup-${arch}.${ext}",
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
@@ -94,6 +103,7 @@
   "dependencies": {
     "adm-zip": "^0.5.18",
     "bonjour-service": "^1.4.1",
+    "electron-updater": "^6.3.9",
     "castv2-client": "0.0.8",
     "node-ssdp": "^4.0.0",
     "upnp-mediarenderer-client": "^1.4.0"
