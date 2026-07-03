@@ -331,7 +331,7 @@ function UploadedCard({
       whileHover={{ y: -2 }}
       className={`relative rounded-2xl border p-3.5 shadow-sm transition hover:shadow-md ${
         isDark
-          ? `bg-white/[0.05] ${active ? 'border-emerald-500/50 ring-1 ring-emerald-500/25' : 'border-white/10'}`
+          ? `bg-black/25 backdrop-blur-sm ${active ? 'border-emerald-500/50 ring-1 ring-emerald-500/25' : 'border-white/10'}`
           : `bg-white ${active ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-emerald-900/8'}`
       }`}
     >
@@ -1446,7 +1446,7 @@ export default function AzanPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* ── Durood panel — visible only for Hanafi or unset fiqh ── */}
-            {showDurood && <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
+            {showDurood && <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-black/35 backdrop-blur-md border-white/10' : 'bg-white border-emerald-900/8'}`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl select-none">📿</span>
                 <h3 className={`font-bold text-base ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Durood Sharif</h3>
@@ -1533,7 +1533,7 @@ export default function AzanPage() {
             </div>}
 
             {/* ── Dua panel ── */}
-            <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white border-emerald-900/8'}`}>
+            <div className={`rounded-3xl border p-5 shadow-sm ${isDark ? 'bg-black/35 backdrop-blur-md border-white/10' : 'bg-white border-emerald-900/8'}`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl select-none">🤲</span>
                 <h3 className={`font-bold text-base ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Dua after Azan</h3>
