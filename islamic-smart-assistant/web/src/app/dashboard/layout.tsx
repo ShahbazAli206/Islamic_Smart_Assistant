@@ -179,13 +179,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Menu size={22} />
         </button>
         <Link href="/" className="flex items-center gap-2">
-          <span className="inline-flex w-8 h-8 rounded-lg items-center justify-center bg-white/10 border border-white/15">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
-              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-              <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
-            </svg>
-          </span>
-          <span className="font-display text-lg font-bold">Noor</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ismaa_logo.png"
+            alt="ISMAA — Islamic Smart Assistant"
+            className="h-7 w-auto object-contain"
+            style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.45)) brightness(1.12)' }}
+            draggable={false}
+          />
         </Link>
 
         {/* quick-access icons — Prayer Times, Quran, Qibla, Azan */}
@@ -262,17 +263,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
 
         {/* logo */}
-        <Link href="/" onClick={closeSidebar} className="relative z-10 flex items-center gap-2 mb-1 px-2">
-          <span className={`inline-flex w-9 h-9 rounded-xl items-center justify-center backdrop-blur border ${t.logoBox}`}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" className={t.goldAccent}>
-              <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-              <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
-            </svg>
-          </span>
-          <div className="leading-tight">
-            <p className="font-display text-lg font-bold">Noor</p>
-            <p className={`${isDark ? 'text-[10px]' : 'text-[11px] font-bold'} uppercase tracking-widest ${t.brandSub}`}>Smart Assistant</p>
-          </div>
+        <Link href="/" onClick={closeSidebar} className="relative z-10 flex flex-col items-start gap-1 mb-1 px-2 pt-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ismaa_logo.png"
+            alt="ISMAA — Islamic Smart Assistant"
+            className="h-11 w-auto object-contain"
+            style={{ filter: isDark ? 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' : 'drop-shadow(0 1px 3px rgba(16,40,30,0.18))' }}
+            draggable={false}
+          />
+          <p className={`${isDark ? 'text-[10px]' : 'text-[11px] font-bold'} uppercase tracking-[0.28em] ${t.brandSub}`}>Islamic Smart Assistant</p>
         </Link>
 
         {/* navigation */}

@@ -7,8 +7,13 @@ import { Providers } from '@/components/Providers';
 // Default document metadata (title / description) applied to all pages unless
 // a route overrides it.
 export const metadata = {
-  title: 'Noor — Islamic Smart Assistant',
+  title: 'ISMAA — Islamic Smart Assistant',
   description: 'Prayer times, Azan, Quran with translation, multi-device sync — all in one beautifully crafted assistant.',
+  icons: {
+    icon: '/ismaa_logo.png',
+    shortcut: '/ismaa_logo.png',
+    apple: '/ismaa_logo.png',
+  },
 };
 
 /** Root HTML wrapper rendered around every page; mounts the global providers. */
