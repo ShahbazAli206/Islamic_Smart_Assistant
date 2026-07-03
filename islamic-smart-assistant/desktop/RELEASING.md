@@ -25,6 +25,16 @@ the newest release — neither the website nor the constant needs changing.
 4. Publish the release (not a draft, not a pre-release). Done — installed
    apps pick it up on their next check, and the website button serves it.
 
+### Scripted alternative (no token setup needed)
+
+Steps 3–4 are automated by `scripts/publish-release.sh` (Git Bash) — it reads
+the version from `dist/latest.yml`, creates the release on the assets repo,
+and uploads all three files using the Git Credential Manager token:
+
+```bash
+sh desktop/scripts/publish-release.sh "release notes here"
+```
+
 ### One-command alternative
 
 With a GitHub personal access token (repo scope) in the `GH_TOKEN` env var:
