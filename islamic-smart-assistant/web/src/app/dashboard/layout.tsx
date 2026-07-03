@@ -262,13 +262,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <X size={20} />
         </button>
 
-        {/* logo */}
-        <Link href="/" onClick={closeSidebar} className="relative z-10 flex items-center mb-1 px-2 pt-1">
+        {/* logo — ~80% of the sidebar width, height scales to keep it clear */}
+        <Link href="/" onClick={closeSidebar} className="relative z-10 flex items-center justify-center mb-1 px-2 pt-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/ismaa_logo.png"
             alt="ISMAA — Islamic Smart Assistant"
-            className="h-14 w-auto object-contain"
+            className="w-[230px] max-w-full h-auto object-contain"
             style={{ filter: isDark ? 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' : 'drop-shadow(0 1px 3px rgba(16,40,30,0.18))' }}
             draggable={false}
           />
