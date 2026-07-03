@@ -9,6 +9,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 contextBridge.exposeInMainWorld('desktop', {
   notifyAzan: (title, body) => ipcRenderer.send('azan:notify', { title, body }),
 
+  /**
+   * The setup wizard's saved choices (language, school, location, azan, …)
+   * from setup-complete.json, or null if the wizard never completed. The web
+   * app applies these to its own localStorage once per wizard run (keyed on
+   * the completedAt timestamp).
+   */
+  getSetupSettings: () => ipcRenderer.invoke('desktop:getSetupSettings'),
+
   // LAN device discovery + casting (Chromecast / DLNA / AirPlay / Alexa).
   devices: {
     list:      () => ipcRenderer.invoke('devices:list'),

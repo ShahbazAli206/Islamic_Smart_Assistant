@@ -6,6 +6,7 @@ import { Navigation, Globe, User, ChevronRight, Check, Loader2, AlertTriangle, C
 import { detectLocationByIP } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
 import { methodByCountry } from '@/lib/sect';
+import { applyDesktopSetupSettings } from '@/lib/desktopSetup';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = 'ur' | 'en' | 'tr' | 'bn' | 'zh' | 'fr' | 'hi' | 'none';
@@ -106,13 +107,22 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
       setShow(true);
       return;
     }
-    try {
-      const done = localStorage.getItem('isa:setupDone');
-      if (!done || done === 'false') {
-        setStep(0);
-        setShow(true);
-      }
-    } catch {}
+    // In the desktop app, the Electron setup wizard already asked all of these
+    // questions — apply its answers first, then only show this popup when the
+    // user has genuinely never completed any onboarding.
+    let cancelled = false;
+    (async () => {
+      try { await applyDesktopSetupSettings(); } catch {}
+      if (cancelled) return;
+      try {
+        const done = localStorage.getItem('isa:setupDone');
+        if (!done || done === 'false') {
+          setStep(0);
+          setShow(true);
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceOpen]);
 

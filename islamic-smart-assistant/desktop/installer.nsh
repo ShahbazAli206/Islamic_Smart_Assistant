@@ -56,9 +56,12 @@
   ${EndIf}
 
   ; ── 3. Reset setup-complete flag so the first-run wizard always appears ──
-  ;    Electron's isFirstLaunch() checks for this file in %APPDATA%\Islamic
-  ;    Assistant\.  Without deleting it, reinstalling over an existing build
-  ;    silently skips the setup wizard, leaving location / permissions unconfigured.
+  ;    Electron's isFirstLaunch() checks for this file in its userData folder.
+  ;    IMPORTANT: Electron derives userData from package.json "name"
+  ;    ("islamic-assistant-desktop"), NOT the productName — deleting only the
+  ;    "Islamic Assistant" path silently skipped the wizard on reinstall.
+  ;    Delete from both so the wizard runs after every installation.
+  Delete "$APPDATA\islamic-assistant-desktop\setup-complete.json"
   Delete "$APPDATA\Islamic Assistant\setup-complete.json"
 !macroend
 
@@ -80,10 +83,13 @@ content are stored separately from the application itself.$\r$\n$\r$\n\
   ; ── User chose YES: wipe app data ────────────────────────────────────────
   DetailPrint "Removing Islamic Assistant personal data..."
 
-  ; Roaming profile: prayer settings, bookmarks, Quran notes, userData
+  ; Roaming profile: prayer settings, bookmarks, Quran notes, userData.
+  ; Electron uses package.json "name" for the folder; remove both spellings.
+  RMDir /r "$APPDATA\islamic-assistant-desktop"
   RMDir /r "$APPDATA\Islamic Assistant"
 
   ; Local profile: Chromium cache, GPU cache, Code Cache, logs
+  RMDir /r "$LOCALAPPDATA\islamic-assistant-desktop"
   RMDir /r "$LOCALAPPDATA\Islamic Assistant"
 
   ; Custom registry marker written by customInstall above

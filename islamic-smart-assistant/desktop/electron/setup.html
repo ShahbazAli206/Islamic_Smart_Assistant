@@ -325,8 +325,23 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
           </div>
         </div>
 
-        <!-- ── STEP 4: Permissions ── -->
+        <!-- ── STEP 4: Preferences (language / sect / fiqh) ── -->
         <div class="screen" id="s4">
+          <p style="font-size:12px;color:#555;margin-bottom:10px">
+            Choose your translation language and school of thought — these set the
+            correct prayer-time calculation and Quran translation. Changeable anytime in Settings.
+          </p>
+
+          <div style="font-size:11px;font-weight:700;color:#0a7a4b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Translation Language</div>
+          <div id="prefLangs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+
+          <div style="font-size:11px;font-weight:700;color:#0a7a4b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">School of Thought (Fiqh)</div>
+          <div id="prefSchools" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <p id="prefSchoolDesc" style="font-size:11px;color:#888;margin-top:8px"></p>
+        </div>
+
+        <!-- ── STEP 5: Permissions ── -->
+        <div class="screen" id="s5">
           <p style="font-size:12px;color:#555;margin-bottom:14px">
             Choose which features to enable. These can be changed at any time in Settings.
           </p>
@@ -362,8 +377,8 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
           </div>
         </div>
 
-        <!-- ── STEP 5: Translation Audio (optional) ── -->
-        <div class="screen" id="s5">
+        <!-- ── STEP 6: Translation Audio (optional) ── -->
+        <div class="screen" id="s6">
           <p style="font-size:12px;color:#555;margin-bottom:10px">
             Play each ayah&apos;s translation as clear spoken audio — <strong>offline</strong> — during Quran
             recitation. Tick the languages you want; they download on first launch (not during install).
@@ -379,8 +394,8 @@ hr.divider{border:none;border-top:1px solid #e0e0e0;margin:16px 0}
           </div>
         </div>
 
-        <!-- ── STEP 6: Summary ── -->
-        <div class="screen" id="s6">
+        <!-- ── STEP 7: Summary ── -->
+        <div class="screen" id="s7">
           <p style="font-size:12px;color:#555;margin-bottom:14px">
             Review your selections. Click <strong>Install</strong> to apply settings and launch Islamic Assistant.
           </p>
@@ -424,11 +439,12 @@ const STEPS = [
   { id:'s1',      title:'Select Data Folder', sub:'Where should the app store its data?' },
   { id:'s2',      title:'Additional Tasks',   sub:'Choose shortcuts and startup behaviour' },
   { id:'s3',      title:'Your Location',      sub:'Needed for accurate prayer times and Qibla' },
-  { id:'s4',      title:'Permissions',        sub:'Choose which features to enable' },
-  { id:'s5',      title:'Translation Audio',  sub:'Optional — offline audio for 28 languages' },
-  { id:'s6',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
+  { id:'s4',      title:'Preferences',        sub:'Language and school of thought' },
+  { id:'s5',      title:'Permissions',        sub:'Choose which features to enable' },
+  { id:'s6',      title:'Translation Audio',  sub:'Optional — offline audio for 28 languages' },
+  { id:'s7',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
 ];
-const FINISH_STEP = 7; // virtual index
+const FINISH_STEP = 8; // virtual index
 
 let cur = 0;
 
@@ -504,6 +520,45 @@ function setAllAudioLangs(on) {
   updateAudioTotal();
 }
 
+// ── Preferences (step 4): language + school of thought ────
+// Options mirror the web app's onboarding (OnboardingSetup.tsx) exactly, so
+// the same values flow into the same settings keys.
+const PREF_LANGS = [
+  { id:'ur',   label:'Urdu',        native:'اردو' },
+  { id:'en',   label:'English',     native:'English' },
+  { id:'tr',   label:'Turkish',     native:'Türkçe' },
+  { id:'bn',   label:'Bengali',     native:'বাংলা' },
+  { id:'zh',   label:'Chinese',     native:'中文' },
+  { id:'fr',   label:'French',      native:'Français' },
+  { id:'hi',   label:'Hindi',       native:'हिन्दी' },
+  { id:'none', label:'Arabic only', native:'عربي فقط' },
+];
+const PREF_SCHOOLS = [
+  { id:'hanafi',  label:'Hanafi',      desc:'Imam Abu Hanifa · South Asia, Turkey' },
+  { id:'shafii',  label:"Shafi'i",     desc:"Imam Al-Shafi'i · SE Asia, East Africa" },
+  { id:'maliki',  label:'Maliki',      desc:'Imam Malik · North & West Africa' },
+  { id:'hanbali', label:'Hanbali',     desc:'Imam Ibn Hanbal · Gulf region' },
+  { id:'shia',    label:'Fiqah Jafri', desc:'Jafari school · Iran, Iraq' },
+];
+let prefLang   = 'ur';
+let prefSchool = 'hanafi';
+
+const PILL_ON  = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;border:1.5px solid #0a7a4b;background:#e8f5ee;color:#0a7a4b;font-size:12px;font-weight:700;cursor:pointer';
+const PILL_OFF = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;border:1.5px solid #ddd;background:#fff;color:#555;font-size:12px;font-weight:600;cursor:pointer';
+
+function buildPrefs() {
+  document.getElementById('prefLangs').innerHTML = PREF_LANGS.map((l) => `
+    <span style="${l.id === prefLang ? PILL_ON : PILL_OFF}" onclick="setPrefLang('${l.id}')">
+      ${l.label} <span style="opacity:.65;font-weight:500">${l.native}</span>
+    </span>`).join('');
+  document.getElementById('prefSchools').innerHTML = PREF_SCHOOLS.map((s) => `
+    <span style="${s.id === prefSchool ? PILL_ON : PILL_OFF}" onclick="setPrefSchool('${s.id}')">${s.label}</span>`).join('');
+  const sch = PREF_SCHOOLS.find((s) => s.id === prefSchool);
+  document.getElementById('prefSchoolDesc').textContent = sch ? sch.desc : '';
+}
+function setPrefLang(id)   { prefLang = id;   buildPrefs(); }
+function setPrefSchool(id) { prefSchool = id; buildPrefs(); }
+
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // Get default userData path
@@ -514,6 +569,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   buildSidebar();
   buildAudioLangList();
+  buildPrefs();
   render();
 });
 
@@ -574,7 +630,7 @@ function render() {
 
   // Step-specific side effects
   if (cur === 3 && !locOk && curTab === 'ip') setTimeout(doDetectIp, 400);
-  if (cur === 6) buildSummary();
+  if (cur === 7) buildSummary();
   if (isFinish) {
     document.getElementById('finishLoc').textContent =
       (loc.city && loc.country) ? `${loc.city}, ${loc.country}` : 'your location';
@@ -743,6 +799,8 @@ function buildSummary() {
   const rows = [
     ['Data Folder',       document.getElementById('dataPath').value||'Default'],
     ['Location',          (loc.city&&loc.country)?`${loc.city}, ${loc.country}`:'(not set)'],
+    ['Language',          (PREF_LANGS.find(l=>l.id===prefLang)||{}).label || prefLang],
+    ['School of Thought', (PREF_SCHOOLS.find(s=>s.id===prefSchool)||{}).label || prefSchool],
     ['Desktop Shortcut',  document.getElementById('chkDesktop').checked ?'Yes':'No'],
     ['Launch at Startup', document.getElementById('chkStartup').checked ?'Yes':'No'],
     ['Stay in Tray',      document.getElementById('chkTray').checked     ?'Yes':'No'],
@@ -785,6 +843,8 @@ async function doInstall() {
     locationAccess:  document.getElementById('chkGeo').checked,
     autoUpdates:     document.getElementById('chkUpdates').checked,
     downloadAudioLangs: getSelectedAudioLangs(),
+    language: prefLang,
+    school:   prefSchool,
   };
 
   try {

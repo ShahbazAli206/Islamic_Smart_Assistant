@@ -148,3 +148,43 @@ export function useDownloadedAyahs(translation: TranslationId): Set<number> {
 
   return downloaded;
 }
+
+/** Live download status for one translation's language folder. */
+export type LangDownloadStatus = {
+  /** True while an archive for this language is actively downloading/extracting. */
+  downloading: boolean;
+  phase: 'download' | 'extract' | null;
+  /** 0–100 completion of the active phase, or null when unknown. */
+  pct: number | null;
+};
+
+/**
+ * Hook: live download progress for the given translation's language.
+ * Listens to the same global `trans-audio:progress` stream the download modal
+ * uses, so the player can show status even when the modal is closed. Progress
+ * events broadcast from the main process regardless of which window/component
+ * started the download.
+ */
+export function useLangDownloadProgress(translation: TranslationId): LangDownloadStatus {
+  const lang = localAudioLangOf(translation);
+  const [status, setStatus] = useState<LangDownloadStatus>({ downloading: false, phase: null, pct: null });
+
+  useEffect(() => {
+    setStatus({ downloading: false, phase: null, pct: null });
+    const api = getApi();
+    if (!api || !lang) return;
+
+    const unsub = api.onProgress((e) => {
+      if (e.lang !== lang) return;
+      const finished = e.phase === 'extract' && e.done === e.total;
+      const pct =
+        e.phase === 'download'
+          ? (e.totalBytes ? Math.round(((e.received ?? 0) / e.totalBytes) * 100) : null)
+          : (e.total ? Math.round(((e.done ?? 0) / e.total) * 100) : null);
+      setStatus(finished ? { downloading: false, phase: null, pct: null } : { downloading: true, phase: e.phase, pct });
+    });
+    return () => unsub();
+  }, [lang]);
+
+  return status;
+}

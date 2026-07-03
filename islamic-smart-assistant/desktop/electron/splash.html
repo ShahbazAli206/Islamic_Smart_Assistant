@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Islamic Assistant</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; user-select: none; cursor: default; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background:
+      radial-gradient(120% 90% at 20% 0%,   #0E3B2A 0%, transparent 55%),
+      radial-gradient(130% 90% at 85% 100%, #103A2E 0%, transparent 55%),
+      linear-gradient(160deg, #06231A 0%, #052018 55%, #04160F 100%);
+    color: #F5EFDC;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  /* ── twinkling stars ── */
+  .star {
+    position: absolute; border-radius: 50%;
+    background: #E9CF7A;
+    animation: twinkle var(--d) ease-in-out var(--dl) infinite;
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0;   transform: scale(.6); }
+    50%      { opacity: .85; transform: scale(1); }
+  }
+
+  /* ── floating glow orbs ── */
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(38px); opacity: .35;
+    animation: drift 9s ease-in-out infinite alternate;
+  }
+  .orb.gold    { width: 190px; height: 190px; background: #C9A227; top: -60px; left: -50px; }
+  .orb.emerald { width: 230px; height: 230px; background: #0E9F6E; bottom: -80px; right: -60px; animation-delay: -4.5s; }
+  @keyframes drift {
+    from { transform: translate(0, 0)     scale(1); }
+    to   { transform: translate(26px, 18px) scale(1.15); }
+  }
+
+  /* ── crescent + rings emblem ── */
+  .emblem { position: relative; width: 150px; height: 150px; margin-bottom: 22px; }
+
+  .ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .ring.r1 {
+    border-top-color: #E9CF7A; border-right-color: rgba(233,207,122,.25);
+    animation: spin 2.6s linear infinite;
+  }
+  .ring.r2 {
+    inset: 13px;
+    border-bottom-color: #34D399; border-left-color: rgba(52,211,153,.25);
+    animation: spin 3.8s linear infinite reverse;
+  }
+  .ring.r3 {
+    inset: 26px;
+    border-top-color: rgba(233,207,122,.55);
+    border-style: dashed;
+    animation: spin 9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .pulse {
+    position: absolute; inset: 20px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(233,207,122,.22) 0%, transparent 65%);
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(.85); opacity: .55; }
+    50%      { transform: scale(1.12); opacity: 1; }
+  }
+
+  .crescent {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    animation: floaty 3.4s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(2px); }
+    50%      { transform: translateY(-4px); }
+  }
+
+  /* ── brand ── */
+  .bismillah {
+    font-size: 17px; color: #E9CF7A; letter-spacing: .5px; margin-bottom: 8px;
+    text-shadow: 0 0 18px rgba(233,207,122,.45);
+    animation: fadeGlow 3s ease-in-out infinite;
+  }
+  @keyframes fadeGlow {
+    0%, 100% { opacity: .8; }
+    50%      { opacity: 1; text-shadow: 0 0 26px rgba(233,207,122,.75); }
+  }
+  h1 {
+    font-size: 27px; font-weight: 700; letter-spacing: .04em;
+    background: linear-gradient(90deg, #F6E7B2, #E9CF7A 35%, #C9A227 60%, #F6E7B2);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: sheen 3.2s linear infinite;
+    margin-bottom: 4px;
+  }
+  @keyframes sheen { to { background-position: 200% center; } }
+  .tag { font-size: 12px; color: rgba(245,239,220,.55); margin-bottom: 26px; }
+
+  /* ── progress bar ── */
+  .bar {
+    width: 240px; height: 5px; border-radius: 999px; overflow: hidden;
+    background: rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.4);
+  }
+  .bar i {
+    display: block; height: 100%; width: 40%; border-radius: 999px;
+    background: linear-gradient(90deg, #0E9F6E, #34D399 40%, #E9CF7A);
+    animation: slide 1.5s cubic-bezier(.45,.05,.55,.95) infinite;
+  }
+  @keyframes slide {
+    0%   { margin-left: -42%; }
+    100% { margin-left: 102%; }
+  }
+
+  .status {
+    margin-top: 14px; font-size: 12px; color: rgba(245,239,220,.7);
+    min-height: 16px; letter-spacing: .3px;
+    transition: opacity .35s;
+  }
+</style>
+</head>
+<body>
+  <div class="orb gold"></div>
+  <div class="orb emerald"></div>
+
+  <div class="emblem">
+    <div class="pulse"></div>
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="crescent">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <!-- crescent -->
+        <path d="M42 8a26 26 0 1 0 0 48 22 22 0 1 1 0-48z" fill="#E9CF7A"/>
+        <!-- star -->
+        <path d="M47 24l2.2 4.6 5 .7-3.6 3.6.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.6 5-.7z" fill="#F6E7B2"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+  <h1>Islamic Assistant</h1>
+  <div class="tag">Prayer times · Quran · Azan · Qibla</div>
+
+  <div class="bar"><i></i></div>
+  <div class="status" id="status">Launching your assistant…</div>
+
+<script>
+  // Twinkling star field — positions vary per launch for a lively feel.
+  (function () {
+    const N = 26;
+    for (let i = 0; i < N; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      const size = 1 + Math.random() * 2.2;
+      s.style.width = s.style.height = size + 'px';
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.top  = (Math.random() * 100) + '%';
+      s.style.setProperty('--d',  (1.8 + Math.random() * 2.8) + 's');
+      s.style.setProperty('--dl', (Math.random() * 3) + 's');
+      document.body.appendChild(s);
+    }
+  })();
+
+  // Rotating status messages while the embedded server boots.
+  (function () {
+    const msgs = [
+      'Launching your assistant…',
+      'Preparing prayer times…',
+      'Loading the Noble Quran…',
+      'Aligning the Qibla compass…',
+      'Tuning Azan voices…',
+      'Almost there…',
+    ];
+    const el = document.getElementById('status');
+    let i = 0;
+    setInterval(() => {
+      i = (i + 1) % msgs.length;
+      el.style.opacity = 0;
+      setTimeout(() => { el.textContent = msgs[i]; el.style.opacity = 1; }, 320);
+    }, 2100);
+  })();
+</script>
+</body>
+</html>

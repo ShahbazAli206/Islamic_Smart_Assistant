@@ -49,13 +49,53 @@ function isFirstLaunch() {
   return !fs.existsSync(path.join(app.getPath('userData'), 'setup-complete.json'));
 }
 
+// ── Splash screen ─────────────────────────────────────────────────────────────
+// The bundled Next.js server takes 2–8 s to cold-boot on first launch; without
+// this the user stares at a blank white window. The splash is a local HTML file
+// (instant to paint) with a rich animated loading scene; it stays up until the
+// app's first page has actually finished loading in the (hidden) main window.
+let splashWindow = null;
+
+function createSplash() {
+  splashWindow = new BrowserWindow({
+    width: 460,
+    height: 380,
+    frame: false,
+    resizable: false,
+    center: true,
+    show: true,
+    transparent: false,
+    backgroundColor: '#06231A',
+    skipTaskbar: false,
+    webPreferences: { contextIsolation: true, nodeIntegration: false },
+  });
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'));
+  splashWindow.on('closed', () => { splashWindow = null; });
+}
+
+let splashDismissed = false;
+
+function dismissSplash() {
+  if (splashDismissed) return;
+  splashDismissed = true;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+  if (splashWindow && !splashWindow.isDestroyed()) splashWindow.destroy();
+  splashWindow = null;
+}
+
 // ── Main app window ───────────────────────────────────────────────────────────
 function createWindow() {
+  createSplash();
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 1024,
     minHeight: 720,
+    show: false,               // stays hidden behind the splash until content is ready
     backgroundColor: '#F7F5EE',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     webPreferences: {
@@ -64,6 +104,21 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
+
+  // Swap splash → app the moment the first real page has rendered. A failed
+  // load (server still booting → connection refused) also fires
+  // did-finish-load for Chromium's error page, so track main-frame failures
+  // and only dismiss on a genuinely successful load; the retry loop below
+  // keeps re-loading until the server is up.
+  let mainLoadFailed = false;
+  mainWindow.webContents.on('did-start-loading', () => { mainLoadFailed = false; });
+  mainWindow.webContents.on('did-fail-load', (_e, _c, _d, _u, isMainFrame) => {
+    if (isMainFrame) mainLoadFailed = true;
+  });
+  mainWindow.webContents.on('did-finish-load', () => { if (!mainLoadFailed) dismissSplash(); });
+  // Safety net: never leave the user stuck on the splash (e.g. server died —
+  // the main window then shows Chromium's error page, which is at least actionable).
+  setTimeout(dismissSplash, 45_000);
 
   // Prevent window.open() calls in the web app from spawning new BrowserWindows.
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -222,6 +277,18 @@ ipcMain.on('azan:notify', (_event, { title, body }) => {
   new Notification({ title, body }).show();
 });
 
+// ── Setup settings bridge ─────────────────────────────────────────────────────
+// The web app reads the wizard's choices (language, school, location, azan…)
+// and applies them to its own localStorage on launch. Returns null when the
+// wizard has never completed.
+ipcMain.handle('desktop:getSetupSettings', () => {
+  try {
+    const p = path.join(app.getPath('userData'), 'setup-complete.json');
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf-8'));
+  } catch { return null; }
+});
+
 // ── LAN devices (Chromecast / DLNA / AirPlay / Alexa) ───────────────────────────
 function broadcastDevices(list) {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -363,7 +430,9 @@ ipcMain.handle('setup:selectFolder', async () => {
 ipcMain.handle('setup:complete', async (_event, settings) => {
   const flagPath = path.join(app.getPath('userData'), 'setup-complete.json');
   fs.mkdirSync(path.dirname(flagPath), { recursive: true });
-  fs.writeFileSync(flagPath, JSON.stringify(settings, null, 2), 'utf-8');
+  // completedAt lets the web app detect a fresh wizard run and re-apply the
+  // choices (language/sect/location/…) to its own localStorage exactly once.
+  fs.writeFileSync(flagPath, JSON.stringify({ ...settings, completedAt: Date.now() }, null, 2), 'utf-8');
 
   if (process.platform !== 'linux') {
     app.setLoginItemSettings({
