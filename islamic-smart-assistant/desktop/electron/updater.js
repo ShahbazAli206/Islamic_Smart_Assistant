@@ -3,13 +3,13 @@
 // Publish flow: bump the version in desktop/package.json, run `npm run release`
 // with a GH_TOKEN env var (or `npm run build:win` and manually upload the
 // generated exe, .blockmap AND latest.yml from dist/ to a new GitHub Release).
-// Every installed copy checks the latest release on launch and every 4 hours;
+// Every installed copy checks the latest release on launch and every 20 minutes;
 // the user confirms one dialog to download and one to restart into the update.
 
 const { app, dialog, Notification } = require('electron');
 const { autoUpdater } = require('electron-updater');
 
-const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const CHECK_INTERVAL_MS = 20 * 60 * 1000; // 20 minutes
 
 let getWindow = () => null;
 let downloading = false;

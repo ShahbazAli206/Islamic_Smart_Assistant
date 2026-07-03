@@ -186,7 +186,7 @@ app.whenReady().then(() => {
     createWindow();
     createTray();
   }
-  // Auto-update: checks GitHub Releases on launch and every 4 h (packaged only).
+  // Auto-update: checks GitHub Releases on launch and every 20 min (packaged only).
   initUpdater(() => mainWindow);
 });
 

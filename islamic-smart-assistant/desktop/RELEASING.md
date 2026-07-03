@@ -3,7 +3,7 @@
 The desktop app auto-updates from **GitHub Releases on the PUBLIC assets repo**
 (`ShahbazAli206/Islamic_Assistant_Audio`) using `electron-updater` — the code
 repo is private, so it cannot serve updates. Installed apps (v1.2.0+) check for
-a newer release on every launch and every 4 hours (plus tray → "Check for
+a newer release on every launch and every 20 minutes (plus tray → "Check for
 Updates…"). When one is found, the user sees an **Update available**
 notification + dialog; one click downloads it and a restart installs it.
 
