@@ -1,4 +1,5 @@
 // Single source of truth for the desktop app installer download link.
+// (no-op comment: verifying Vercel auto-deploy on push — safe to remove)
 //
 // The installer is served from the PUBLIC assets repo (Islamic_Assistant_Audio)
 // so the code repo can be private. Artifact names carry the version
