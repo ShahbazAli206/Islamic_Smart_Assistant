@@ -74,8 +74,14 @@ export default function HomePage() {
       <header className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight-900/85 backdrop-blur-xl border-b border-white/10' : 'bg-midnight-900/30 backdrop-blur-md border-b border-white/5'}`}>
         <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <NoorMark size={34} bare />
-            <span className="text-2xl font-display font-bold tracking-tight text-parchment">Noor</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/ismaa_logo.png"
+              alt="ISMAA — Islamic Smart Assistant"
+              className="h-9 w-auto object-contain"
+              style={{ filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' }}
+              draggable={false}
+            />
             <span className="ml-2 hidden sm:inline-flex items-center gap-1.5 rounded-full border border-gold-300/30 bg-gold-300/10 text-gold-200 text-xs font-semibold px-3 py-1">
               <Sparkles size={12} /> AI-Powered Islamic Assistant
             </span>
@@ -217,7 +223,11 @@ export default function HomePage() {
       {/* ── footer ── */}
       <footer className="relative border-t border-gold-300/15">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-ink/60">
-          <div className="flex items-center gap-2"><NoorMark size={20} /> <span className="font-semibold text-ink">Noor</span> • Islamic Smart Assistant Ecosystem</div>
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/ismaa_logo.png" alt="ISMAA" className="h-6 w-auto object-contain" draggable={false} />
+            • Islamic Smart Assistant Ecosystem
+          </div>
           <p>Built with ihsaan • Recitations sourced from islamic.network (verified)</p>
         </div>
       </footer>
@@ -225,28 +235,3 @@ export default function HomePage() {
   );
 }
 
-/**
- * The Noor brand mark: a crescent-and-star glyph. `bare` renders just the gold
- * glyph (for the dark nav); otherwise it sits in a gradient rounded tile.
- */
-function NoorMark({ size = 28, bare = false }: { size?: number; bare?: boolean }) {
-  const glyph = (
-    <svg viewBox="0 0 24 24" width={bare ? size : size * 0.65} height={bare ? size : size * 0.65} fill="none" stroke="currentColor" strokeWidth="1.8" className="text-gold-300">
-      {/* crescent + star */}
-      <path d="M16 4a8 8 0 1 0 4.5 14.5A8 8 0 1 1 16 4z" />
-      <path d="M19.5 7.5l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2.8-1.6z" fill="currentColor" />
-    </svg>
-  );
-  if (bare) {
-    return <span className="inline-flex text-gold-300" aria-hidden>{glyph}</span>;
-  }
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded-xl bg-mosque-gradient shadow-glow-gold"
-      style={{ width: size, height: size }}
-      aria-hidden
-    >
-      {glyph}
-    </span>
-  );
-}
