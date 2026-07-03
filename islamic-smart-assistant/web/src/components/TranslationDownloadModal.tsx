@@ -26,6 +26,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   highlight?: TranslationId | null;   // language the user just selected
+  initialQueue?: string[];            // lang codes to auto-queue (setup wizard picks)
   isDark: boolean;
 }
 
@@ -33,7 +34,7 @@ interface Props {
  * Desktop-only modal: browse & download per-language offline translation audio.
  * Downloads run one at a time (a queue); progress is shown live per language.
  */
-export function TranslationDownloadModal({ open, onClose, highlight, isDark }: Props) {
+export function TranslationDownloadModal({ open, onClose, highlight, initialQueue, isDark }: Props) {
   const [stateByLang, setStateByLang] = useState<Record<string, LangState>>({});
   const [queue, setQueue]     = useState<string[]>([]);          // langs waiting/active
   const [active, setActive]   = useState<string | null>(null);   // lang downloading now
@@ -61,6 +62,27 @@ export function TranslationDownloadModal({ open, onClose, highlight, isDark }: P
     });
     return () => unsub?.();
   }, [open]);
+
+  // Auto-queue the languages the user ticked in the setup wizard (once).
+  // Languages already fully on disk are skipped so we never re-download.
+  const initialApplied = useRef(false);
+  useEffect(() => {
+    if (!open || initialApplied.current || !initialQueue?.length) return;
+    const api = (window as any).desktop?.transAudio;
+    if (!api) return;
+    initialApplied.current = true;
+    (async () => {
+      const valid = initialQueue.filter((l) => ROWS.some((r) => r.lang === l));
+      const need: string[] = [];
+      for (const l of valid) {
+        try {
+          const nums: number[] = await api.list(l);
+          if ((nums?.length ?? 0) < TOTAL_AYAHS - 10) need.push(l);
+        } catch { need.push(l); }
+      }
+      if (need.length) setQueue((q) => [...q, ...need.filter((l) => !q.includes(l))]);
+    })();
+  }, [open, initialQueue]);
 
   // Sequential queue processor
   useEffect(() => {

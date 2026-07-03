@@ -599,10 +599,17 @@ export function QuranPlayer({
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showDesktopPromo,  setShowDesktopPromo]  = useState(false);
 
-  // First launch after setup (if the user opted in): open the download manager once.
+  // First launch after setup: open the download manager once, pre-queueing the
+  // languages the user ticked in the setup wizard.
+  const [firstRunQueue, setFirstRunQueue] = useState<string[]>([]);
   useEffect(() => {
     let cancelled = false;
-    consumeFirstRunPrompt().then((should) => { if (should && !cancelled) setShowDownloadModal(true); });
+    consumeFirstRunPrompt().then((langs) => {
+      if (langs !== null && !cancelled) {
+        setFirstRunQueue(langs);
+        setShowDownloadModal(true);
+      }
+    });
     return () => { cancelled = true; };
   }, []);
 
@@ -1293,6 +1300,7 @@ export function QuranPlayer({
         open={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
         highlight={translation}
+        initialQueue={firstRunQueue}
         isDark={!!isDark}
       />
       <DesktopAppPromoModal

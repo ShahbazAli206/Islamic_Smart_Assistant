@@ -252,17 +252,26 @@ ipcMain.handle('devices:setVolume', (_e, args) => ensureDevices().setVolume(args
 
 // ── Translation audio: per-language local file cache (isa-audio:// protocol) ──
 
-// One-time flag (set by the setup wizard) telling the app to prompt for
-// language downloads on first launch. Returns true once, then clears itself.
+// One-time marker (set by the setup wizard) telling the app to open the
+// download manager on first launch. Contains a JSON array of the language
+// codes the user ticked in the wizard; those get auto-queued for download.
+// Returns the array once, then clears itself. Returns null when no marker.
 function audioPromptMarkerPath() {
   return path.join(app.getPath('userData'), 'audio-prompt-pending');
 }
 ipcMain.handle('trans-audio:consumeFirstRunPrompt', () => {
   try {
     const p = audioPromptMarkerPath();
-    if (fs.existsSync(p)) { fs.unlinkSync(p); return true; }
-  } catch {}
-  return false;
+    if (!fs.existsSync(p)) return null;
+    const raw = fs.readFileSync(p, 'utf-8');
+    fs.unlinkSync(p);
+    try {
+      const parsed = JSON.parse(raw);
+      const langs = Array.isArray(parsed) ? parsed : parsed?.langs;
+      if (Array.isArray(langs)) return langs.filter((l) => typeof l === 'string');
+    } catch { /* legacy "1" marker — open the manager with nothing pre-queued */ }
+    return [];
+  } catch { return null; }
 });
 
 ipcMain.handle('trans-audio:list',     (_e, lang) => { try { return transAudio.list(lang); } catch { return []; } });
@@ -366,11 +375,14 @@ ipcMain.handle('setup:complete', async (_event, settings) => {
     } catch (_) { /* non-fatal */ }
   }
 
-  // If the user opted in during setup, drop a marker so the app opens the
-  // translation-audio download manager on first launch.
+  // If the user picked languages during setup, drop a marker listing them so
+  // the app opens the download manager on first launch with those pre-queued.
   try {
     const marker = path.join(app.getPath('userData'), 'audio-prompt-pending');
-    if (settings.downloadAudioOnLaunch) fs.writeFileSync(marker, '1', 'utf-8');
+    const langs = Array.isArray(settings.downloadAudioLangs)
+      ? settings.downloadAudioLangs.filter((l) => typeof l === 'string' && /^[a-z]{2,3}$/.test(l))
+      : [];
+    if (langs.length) fs.writeFileSync(marker, JSON.stringify({ langs }), 'utf-8');
     else if (fs.existsSync(marker)) fs.unlinkSync(marker);
   } catch (_) { /* non-fatal */ }
 

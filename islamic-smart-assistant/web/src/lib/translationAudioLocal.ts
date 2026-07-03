@@ -65,11 +65,19 @@ export function fmtBytes(b: number): string {
   return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
-/** Consume the one-time "prompt for downloads on first launch" flag (desktop). */
-export async function consumeFirstRunPrompt(): Promise<boolean> {
-  const api = getApi() as (TransAudioApi & { consumeFirstRunPrompt?: () => Promise<boolean> }) | null;
-  if (!api?.consumeFirstRunPrompt) return false;
-  try { return await api.consumeFirstRunPrompt(); } catch { return false; }
+/**
+ * Consume the one-time first-launch marker written by the setup wizard.
+ * Returns the language codes the user ticked during setup (possibly empty —
+ * open the manager with nothing pre-queued), or null when there is no marker.
+ */
+export async function consumeFirstRunPrompt(): Promise<string[] | null> {
+  const api = getApi() as (TransAudioApi & { consumeFirstRunPrompt?: () => Promise<unknown> }) | null;
+  if (!api?.consumeFirstRunPrompt) return null;
+  try {
+    const res = await api.consumeFirstRunPrompt();
+    if (Array.isArray(res)) return res.filter((l): l is string => typeof l === 'string');
+    return res ? [] : null;   // legacy boolean marker
+  } catch { return null; }
 }
 
 /** True when running inside the Electron desktop app with local-audio support. */
