@@ -719,14 +719,21 @@ export default function Overview() {
               className={`relative overflow-hidden rounded-[26px] border p-5 ${isDark ? 'border-white/10' : 'border-emerald-200/60'}`}
               style={{ background: isDark ? 'linear-gradient(150deg,#103a2c 0%,#0c2c21 100%)' : 'linear-gradient(150deg,#eafaf1 0%,#e2f5ee 55%,#dbf1ec 100%)' }}
             >
+              {/* Full-section background image, softened by a light translucent
+                  veil so it never reads fully clear and text stays legible. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={isDark ? '/masjid_img.png' : '/OverviewPage_Asr_Time_bg.png'}
                 alt=""
-                className="pointer-events-none absolute right-0 top-0 h-full w-[60%] select-none object-cover object-right"
+                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-center"
+              />
+              {/* Readability veil — denser on the left where the text sits. */}
+              <div
+                className="pointer-events-none absolute inset-0"
                 style={{
-                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 30%, black 65%)',
-                  maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 30%, black 65%)',
+                  background: isDark
+                    ? 'linear-gradient(90deg, rgba(12,44,33,0.90) 0%, rgba(12,44,33,0.72) 45%, rgba(12,44,33,0.55) 100%)'
+                    : 'linear-gradient(90deg, rgba(234,250,241,0.92) 0%, rgba(234,250,241,0.78) 45%, rgba(234,250,241,0.60) 100%)',
                 }}
               />
               <div className="relative">
