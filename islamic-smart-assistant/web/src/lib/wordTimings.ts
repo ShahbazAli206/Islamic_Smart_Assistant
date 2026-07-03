@@ -91,8 +91,12 @@ export function basmalaPrefixWords(surahNumber: number, numberInSurah: number): 
 }
 
 /**
- * Map a playback position to the 0-based index of the spoken word being
- * recited (indices count only spoken words — waqf-mark tokens excluded).
+ * Map a playback position to a FRACTIONAL 0-based position over the spoken
+ * words (waqf-mark tokens excluded). The integer part is the word being
+ * recited; the fraction is the progress through that word's time span, so a
+ * pointer can glide continuously across each word instead of jumping.
+ * During silence gaps between segments the fraction saturates at ~1 (the
+ * pointer rests at the end of the finished word).
  *
  * `prefixWords` = displayed words before the first aligned word (the basmala,
  * see basmalaPrefixWords). If the recording includes the basmala, the pointer
@@ -101,7 +105,7 @@ export function basmalaPrefixWords(surahNumber: number, numberInSurah: number): 
  * than from the segment data because some ayahs (e.g. 13:1) carry a spurious
  * extra segment for the end-of-ayah marker; the final clamp absorbs those.
  */
-export function wordIndexAtTime(
+export function wordProgressAtTime(
   tMs: number,
   durationMs: number,
   wordCount: number,
@@ -109,16 +113,17 @@ export function wordIndexAtTime(
   prefixWords = 0,
 ): number | null {
   if (wordCount <= 0) return null;
+  const max = wordCount - 0.005; // floor(max) is always the last valid index
 
   if (!segments || segments.length === 0) {
     if (!durationMs || !Number.isFinite(durationMs)) return null;
-    return clamp(Math.floor((tMs / durationMs) * wordCount), 0, wordCount - 1);
+    return clamp((tMs / durationMs) * wordCount, 0, max);
   }
 
   const prefix = clamp(prefixWords, 0, wordCount - 1);
   const first = segments[0];
   if (tMs < first.from) {
-    if (prefix > 0) return clamp(Math.floor((tMs / first.from) * prefix), 0, prefix - 1);
+    if (prefix > 0) return clamp((tMs / first.from) * prefix, 0, prefix - 0.005);
     return 0;
   }
 
@@ -127,5 +132,6 @@ export function wordIndexAtTime(
     if (s.from <= tMs) current = s;
     else break;
   }
-  return clamp(prefix + current.word - 1, 0, wordCount - 1);
+  const frac = clamp((tMs - current.from) / Math.max(1, current.to - current.from), 0, 0.995);
+  return clamp(prefix + current.word - 1 + frac, 0, max);
 }

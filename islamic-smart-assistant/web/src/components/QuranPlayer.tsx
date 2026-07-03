@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import {
   Play, Pause, SkipBack, SkipForward, Repeat, Languages, Mic2,
   ChevronDown, Volume2, Volume1, VolumeX, FileText, Check, HardDrive,
@@ -14,7 +14,7 @@ import {
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
 import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported, consumeFirstRunPrompt } from '@/lib/translationAudioLocal';
-import { fetchWordTimings, wordIndexAtTime, countSpokenWords, isSpokenWord, basmalaPrefixWords } from '@/lib/wordTimings';
+import { fetchWordTimings, wordProgressAtTime, countSpokenWords, isSpokenWord, basmalaPrefixWords } from '@/lib/wordTimings';
 import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
 
@@ -124,31 +124,64 @@ function splitGraphemes(text: string): string[] {
 }
 
 // Renders an Arabic ayah with per-character tajweed makhraj colours, plus a
-// pointing-hand marker that follows the word currently being recited
-// (activeWordIdx = 0-based index over spoken words; null = hidden).
-function TajweedAyah({ text, activeWordIdx, isDark }: { text: string; activeWordIdx: number | null; isDark: boolean }) {
+// pointing-hand marker that follows the recitation. activeWordIdx drives the
+// word highlight and hand visibility; wordPosRef carries the fractional
+// position (word index + progress through the word) written every frame by
+// the player's polling loop, so the hand glides continuously right-to-left
+// through each word without re-rendering the component tree.
+function TajweedAyah({ text, activeWordIdx, wordPosRef, isDark }: {
+  text: string; activeWordIdx: number | null;
+  wordPosRef: React.RefObject<number | null>; isDark: boolean;
+}) {
   const defaultColor = isDark ? '#e2e8f0' : '#f1f5f9';
   const words = text.split(/(\s+)/);
   const containerRef = useRef<HTMLDivElement>(null);
   const wordRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
-  const [hand, setHand] = useState<{ x: number; y: number } | null>(null);
+  const visible = activeWordIdx !== null;
 
-  // Position the hand under the active word. Re-measures on resize so the
-  // marker stays glued to its word when lines re-wrap.
+  // Hand position: raw motion values updated each frame, smoothed by springs
+  // (which also soften the jump between words and across line wraps).
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const handX = useSpring(rawX, { stiffness: 380, damping: 34 });
+  const handY = useSpring(rawY, { stiffness: 300, damping: 30 });
+
+  // Target = a point inside the active word: its RIGHT edge at the start,
+  // sliding to its left edge as the word finishes (RTL reading direction).
+  const measureTarget = useCallback((): { x: number; y: number } | null => {
+    const cont = containerRef.current;
+    const pos = wordPosRef.current;
+    if (!cont || pos === null || pos === undefined) return null;
+    const idx = Math.floor(pos);
+    const frac = pos - idx;
+    const span = wordRefs.current.get(idx) ?? wordRefs.current.get(wordRefs.current.size - 1);
+    if (!span) return null;
+    const c = cont.getBoundingClientRect();
+    const w = span.getBoundingClientRect();
+    return { x: w.right - c.left - frac * w.width, y: w.bottom - c.top - 14 };
+  }, [wordPosRef]);
+
+  // Snap the hand to its starting point the moment it becomes visible so the
+  // fade-in happens in place instead of flying in from the last position.
   useLayoutEffect(() => {
-    if (activeWordIdx === null) { setHand(null); return; }
-    const measure = () => {
-      const cont = containerRef.current;
-      const span = wordRefs.current.get(activeWordIdx);
-      if (!cont || !span) { setHand(null); return; }
-      const c = cont.getBoundingClientRect();
-      const w = span.getBoundingClientRect();
-      setHand({ x: w.left - c.left + w.width / 2, y: w.bottom - c.top - 14 });
+    if (!visible) return;
+    const t = measureTarget();
+    if (t) { rawX.jump(t.x); rawY.jump(t.y); handX.jump(t.x); handY.jump(t.y); }
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Follow loop — reads the fractional position every frame while visible.
+  // Re-measuring per frame also keeps the hand glued through window resizes.
+  useEffect(() => {
+    if (!visible) return;
+    let raf = 0;
+    const tick = () => {
+      const t = measureTarget();
+      if (t) { rawX.set(t.x); rawY.set(t.y); }
+      raf = requestAnimationFrame(tick);
     };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [activeWordIdx, text]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [visible, measureTarget, rawX, rawY]);
 
   // Running index over spoken words only — waqf-mark tokens get no index,
   // matching the indices produced by wordIndexAtTime().
@@ -202,15 +235,16 @@ function TajweedAyah({ text, activeWordIdx, isDark }: { text: string; activeWord
         })}
       </p>
 
-      {/* Pointing hand that glides word-to-word with the recitation */}
+      {/* Pointing hand that glides continuously with the recitation */}
       <AnimatePresence>
-        {hand && (
+        {visible && (
           <motion.div
             key="pointer-hand"
-            initial={{ opacity: 0, scale: 0.4, x: hand.x, y: hand.y }}
-            animate={{ opacity: 1, scale: 1, x: hand.x, y: hand.y }}
+            style={{ x: handX, y: handY }}
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.4 }}
-            transition={{ type: 'spring', stiffness: 340, damping: 27, opacity: { duration: 0.18 } }}
+            transition={{ duration: 0.18 }}
             className="absolute left-0 top-0 z-10 pointer-events-none select-none"
             aria-hidden
           >
@@ -843,10 +877,14 @@ export function QuranPlayer({
 
   // ── Word pointer ──────────────────────────────────────────────────────────
   // While the Arabic stage is playing, poll the audio position each frame and
-  // resolve it to the spoken-word index the pointing hand should sit under.
+  // resolve it to a fractional word position. The float goes into wordPosRef
+  // (read by TajweedAyah's own frame loop → continuous hand glide); only its
+  // integer part is React state, driving the word highlight and visibility.
   const [activeWordIdx, setActiveWordIdx] = useState<number | null>(null);
+  const wordPosRef = useRef<number | null>(null);
   useEffect(() => {
     if (!playing || stage !== 'arabic' || !currentAyah) {
+      wordPosRef.current = null;
       setActiveWordIdx(null);
       return;
     }
@@ -857,7 +895,9 @@ export function QuranPlayer({
     const tick = () => {
       const el = activeAudioRef.current;
       if (el && el.duration > 0) {
-        const idx = wordIndexAtTime(el.currentTime * 1000, el.duration * 1000, wordCount, segments, prefix);
+        const pos = wordProgressAtTime(el.currentTime * 1000, el.duration * 1000, wordCount, segments, prefix);
+        wordPosRef.current = pos;
+        const idx = pos === null ? null : Math.floor(pos);
         setActiveWordIdx((prev) => (prev === idx ? prev : idx));
       }
       raf = requestAnimationFrame(tick);
@@ -1177,7 +1217,7 @@ export function QuranPlayer({
                   )}
                 </AnimatePresence>
 
-                <TajweedAyah text={currentAyah.text} activeWordIdx={activeWordIdx} isDark={isDark} />
+                <TajweedAyah text={currentAyah.text} activeWordIdx={activeWordIdx} wordPosRef={wordPosRef} isDark={isDark} />
                 <p dir="rtl" className="text-center -mt-1">
                   <span className={`font-display text-3xl mx-1 ${isDark ? 'text-gold-400/80' : 'text-gold-300'}`}>
                     ﴿{toArabicNumber(currentAyah.numberInSurah)}﴾
