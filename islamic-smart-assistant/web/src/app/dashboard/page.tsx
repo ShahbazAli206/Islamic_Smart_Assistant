@@ -122,7 +122,7 @@ function PrefDropdown({
       >
         <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><Icon size={16} /></span>
         <div className="min-w-0 flex-1">
-          <p className={`text-xs font-medium ${isDark ? faint : 'text-emerald-900'}`}>{label}</p>
+          <p className={`text-sm font-medium ${isDark ? faint : 'text-emerald-900'}`}>{label}</p>
           <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>{displayValue || '—'}</p>
         </div>
         <ChevronDown size={15} className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? faint : 'text-emerald-700/70'}`} />
@@ -336,7 +336,7 @@ export default function Overview() {
   // ── Theme tokens ──────────────────────────────────────────────────────────
   const c = isDark
     ? {
-        text: 'text-parchment', muted: 'text-parchment/60', faint: 'text-parchment/45',
+        text: 'text-parchment', muted: 'text-parchment/85', faint: 'text-parchment/70',
         card: 'bg-midnight-800/80 border border-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.55)]',
         soft: 'bg-white/[0.04] border border-white/10',
         divider: 'border-white/10',
@@ -345,7 +345,7 @@ export default function Overview() {
         track: 'bg-white/10',
       }
     : {
-        text: 'text-emerald-950', muted: 'text-emerald-900/55', faint: 'text-emerald-900/40',
+        text: 'text-emerald-950', muted: 'text-emerald-900/80', faint: 'text-emerald-900/65',
         card: 'bg-white border border-emerald-900/[0.05] shadow-[0_1px_3px_rgba(16,40,30,0.04),0_16px_38px_-18px_rgba(16,40,30,0.18)]',
         soft: 'bg-emerald-50/40 border border-emerald-900/[0.06]',
         divider: 'border-emerald-900/[0.08]',
@@ -483,8 +483,8 @@ export default function Overview() {
           <div className="flex items-center gap-3">
             <span className={`grid h-10 w-10 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}><Star size={18} /></span>
             <div>
-              <h3 className="text-lg font-bold leading-tight">Your Preferences</h3>
-              <p className={`text-xs ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
+              <h3 className="text-xl font-bold leading-tight">Your Preferences</h3>
+              <p className={`text-sm ${isDark ? c.muted : 'text-emerald-950'}`}>Customize your experience</p>
             </div>
           </div>
 
@@ -506,7 +506,7 @@ export default function Overview() {
             >
               <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><MapPin size={16} /></span>
               <div className="min-w-0 flex-1">
-                <p className={`text-xs font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>Location</p>
+                <p className={`text-sm font-medium ${isDark ? c.faint : 'text-emerald-900'}`}>Location</p>
                 <p className={`truncate text-base font-semibold ${isDark ? '' : 'text-emerald-950'}`}>
                   {loc.city ? `${loc.city}${loc.country ? `, ${loc.country}` : ''}` : 'Set location'}
                 </p>
@@ -668,7 +668,7 @@ export default function Overview() {
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-100 text-violet-600"><Clock size={20} /></span>
                   <div>
-                    <h2 className="text-lg font-bold leading-tight">Prayer Times</h2>
+                    <h2 className="text-xl font-bold leading-tight">Prayer Times</h2>
                     <p className={`text-sm ${isDark ? c.muted : 'text-emerald-900'}`}>Today, {data?.hijriDate ?? '—'}</p>
                   </div>
                 </div>
@@ -692,9 +692,9 @@ export default function Overview() {
                       <span className={`grid h-10 w-10 place-items-center rounded-full ${active ? 'bg-white/20' : meta.badge}`}>
                         <meta.icon size={18} className={active ? 'text-white' : meta.tint} />
                       </span>
-                      <p className={`mt-2 text-sm font-medium ${active ? 'text-white/85' : c.muted}`}>{p}</p>
-                      <p className="mt-1 text-base font-bold tabular-nums leading-none">{t.hm}</p>
-                      <p className={`mt-1 text-[10px] font-semibold ${active ? 'text-white/70' : c.faint}`}>{t.ap}</p>
+                      <p className={`mt-2 text-sm font-semibold ${active ? 'text-white' : c.muted}`}>{p}</p>
+                      <p className="mt-1 text-lg font-bold tabular-nums leading-none">{t.hm}</p>
+                      <p className={`mt-1 text-xs font-semibold ${active ? 'text-white/85' : c.faint}`}>{t.ap}</p>
                       {active && <span className="absolute bottom-1.5 left-1/2 h-1 w-6 -translate-x-1/2 rounded-full bg-white/80" />}
                     </div>
                   );
@@ -733,7 +733,7 @@ export default function Overview() {
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600/15 text-emerald-600"><Moon size={17} /></span>
                   <div>
-                    <h2 className="text-base font-bold leading-tight">{currentName ?? 'Prayer'} Time Left</h2>
+                    <h2 className="text-lg font-bold leading-tight">{currentName ?? 'Prayer'} Time Left</h2>
                     <p className={`text-sm font-medium ${isDark ? c.muted : 'text-emerald-900'}`}>Stay mindful of your time</p>
                   </div>
                 </div>
@@ -746,7 +746,7 @@ export default function Overview() {
                   <motion.div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"
                     animate={{ width: `${progress}%` }} transition={{ ease: 'easeOut', duration: 0.6 }} />
                 </div>
-                <p className={`mt-2.5 text-xs ${c.muted}`}>
+                <p className={`mt-2.5 text-sm ${c.muted}`}>
                   Ends at {next ? next.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() : '—'}
                 </p>
               </div>
@@ -764,8 +764,8 @@ export default function Overview() {
               <img src="/hero-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_42%]" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(7,40,28,0.34) 0%, rgba(6,28,20,0.55) 52%, rgba(5,18,12,0.82) 100%)' }} />
               <div className="relative flex flex-1 flex-col">
-                <h3 className="text-base font-bold leading-tight">Qibla Direction</h3>
-                <p className="text-xs text-white/65">Find the direction of the Kaaba</p>
+                <h3 className="text-lg font-bold leading-tight">Qibla Direction</h3>
+                <p className="text-sm text-white/85">Find the direction of the Kaaba</p>
 
                 <div className="relative mx-auto my-6 h-40 w-40">
                   <div className="absolute inset-0 rounded-full border border-white/25 bg-white/[0.06] backdrop-blur-sm" />
@@ -795,11 +795,11 @@ export default function Overview() {
 
                 <div className="text-center">
                   <p className="font-display text-3xl font-bold text-white">{Math.round(bearing)}<span className="align-top text-lg">°</span></p>
-                  <p className="text-xs text-white/65">from North</p>
-                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-[11px] font-semibold text-emerald-200 ring-1 ring-emerald-300/30">
+                  <p className="text-sm text-white/80">from North</p>
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-300/30">
                     <Compass size={12} /> Accurate
                   </span>
-                  <p className="mt-2 text-[11px] text-white/55">Makkah, Saudi Arabia</p>
+                  <p className="mt-2 text-xs text-white/75">Makkah, Saudi Arabia</p>
                 </div>
 
                 <Link href="/dashboard/qibla" className="mt-5 flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">
@@ -814,8 +814,8 @@ export default function Overview() {
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-100 text-rose-500"><Bell size={18} /></span>
                   <div>
-                    <h3 className="text-base font-bold leading-tight">Azan Voices</h3>
-                    <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Listen to beautiful Azan</p>
+                    <h3 className="text-lg font-bold leading-tight">Azan Voices</h3>
+                    <p className={`text-sm ${isDark ? c.muted : 'text-emerald-900'}`}>Listen to beautiful Azan</p>
                   </div>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-600'}`}>
@@ -853,8 +853,8 @@ export default function Overview() {
                           <User size={13} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className={`truncate text-[13px] font-semibold leading-tight ${isSelected ? (isDark ? 'text-emerald-300' : 'text-emerald-700') : ''}`}>{voice.name}</p>
-                          <p className={`truncate text-[11px] ${c.faint}`}>{voice.region}</p>
+                          <p className={`truncate text-sm font-semibold leading-tight ${isSelected ? (isDark ? 'text-emerald-300' : 'text-emerald-700') : ''}`}>{voice.name}</p>
+                          <p className={`truncate text-xs ${c.faint}`}>{voice.region}</p>
                         </div>
                         {isSelected && (
                           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
@@ -877,13 +877,13 @@ export default function Overview() {
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><BookOpen size={18} /></span>
                 <div>
-                  <h3 className="text-base font-bold leading-tight">Recitation Scheduler</h3>
-                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Your daily Quran recitation</p>
+                  <h3 className="text-lg font-bold leading-tight">Recitation Scheduler</h3>
+                  <p className={`text-sm ${isDark ? c.muted : 'text-emerald-900'}`}>Your daily Quran recitation</p>
                 </div>
               </div>
               <div className={`mt-4 flex items-center justify-between rounded-2xl border ${c.divider} ${c.soft} px-4 py-3`}>
                 <div>
-                  <p className={`text-xs ${isDark ? c.muted : 'text-emerald-900'}`}>Daily Goal</p>
+                  <p className={`text-sm ${isDark ? c.muted : 'text-emerald-900'}`}>Daily Goal</p>
                   <p className="text-2xl font-bold leading-tight">20 <span className={`text-sm font-medium ${c.muted}`}>minutes</span></p>
                 </div>
                 <div className="relative grid h-12 w-12 place-items-center">
@@ -896,18 +896,18 @@ export default function Overview() {
               </div>
               <div className="mt-4 flex-1 space-y-3.5">
                 <div>
-                  <p className={`text-[11px] ${c.faint}`}>Next Session</p>
+                  <p className={`text-xs ${c.faint}`}>Next Session</p>
                   <div className="mt-0.5 flex items-center justify-between">
                     <span className="text-sm font-semibold">Surah Al-Kahf (18)</span>
-                    <span className={`text-[11px] ${c.muted}`}>Today, 08:00 PM</span>
+                    <span className={`text-xs ${c.muted}`}>Today, 08:00 PM</span>
                   </div>
                 </div>
                 <div className={`border-t ${c.divider}`} />
                 <div>
-                  <p className={`text-[11px] ${c.faint}`}>Last Session</p>
+                  <p className={`text-xs ${c.faint}`}>Last Session</p>
                   <div className="mt-0.5 flex items-center justify-between">
                     <span className="text-sm font-semibold">Surah Yaseen (36)</span>
-                    <span className={`text-[11px] ${c.muted}`}>Today, 06:00 AM</span>
+                    <span className={`text-xs ${c.muted}`}>Today, 06:00 AM</span>
                   </div>
                 </div>
               </div>
@@ -943,7 +943,7 @@ export default function Overview() {
                   text-shadow (light mode) keeps them readable without a wash. */}
               <div className={`flex items-center gap-2 ${isDark ? '' : '[text-shadow:0_1px_8px_rgba(255,255,255,0.85)]'}`}>
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-200/70 text-violet-700"><BookOpen size={17} /></span>
-                <h3 className="text-base font-bold">Quran of the Day</h3>
+                <h3 className="text-lg font-bold">Quran of the Day</h3>
               </div>
 
               <div className={`mt-4 ${isDark ? '' : '[text-shadow:0_1px_8px_rgba(255,255,255,0.85)]'}`}>
@@ -958,7 +958,7 @@ export default function Overview() {
 
           {/* Quick Actions */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5`}>
-            <h3 className="text-base font-bold">Quick Actions</h3>
+            <h3 className="text-lg font-bold">Quick Actions</h3>
             <div className="mt-4 grid grid-cols-4 gap-y-4">
               {[
                 { label: 'Quran Library',  icon: BookOpen,       tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
@@ -972,7 +972,7 @@ export default function Overview() {
               ].map((a) => (
                 <Link key={a.label} href={a.href} className="group flex flex-col items-center gap-1.5 text-center">
                   <span className={`grid h-12 w-12 place-items-center rounded-2xl ${a.bg} transition group-hover:scale-105`}><a.icon size={20} className={a.tint} /></span>
-                  <span className={`text-[10px] font-medium leading-tight ${c.muted}`}>{a.label}</span>
+                  <span className={`text-[11px] font-medium leading-tight ${c.muted}`}>{a.label}</span>
                 </Link>
               ))}
             </div>

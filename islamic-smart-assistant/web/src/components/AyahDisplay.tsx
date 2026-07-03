@@ -45,14 +45,14 @@ export function AyahDisplay({ variant = 'hero', isDark = false }: Props) {
 
   if (variant === 'rail') {
     const textPrimary = isDark ? 'text-violet-100' : 'text-violet-900';
-    const textMuted   = isDark ? 'text-white/55'   : 'text-violet-900/55';
+    const textMuted   = isDark ? 'text-white/85'   : 'text-violet-900/80';
     const headText    = isDark ? 'text-parchment'  : 'text-emerald-950';
     return (
       <div>
-        <p className={`text-lg font-bold leading-tight ${headText}`}>
+        <p className={`text-xl font-bold leading-tight ${headText}`}>
           Surah {data.surahName}
         </p>
-        <p className={`text-xs ${textMuted}`}>
+        <p className={`text-sm ${textMuted}`}>
           ({data.surahNumber}:{data.ayahNumber})
         </p>
         <div className={`mt-4 rounded-2xl border px-4 py-3 backdrop-blur-md ${isDark ? 'border-white/15 bg-midnight-900/35' : 'border-white/60 bg-white/55'}`}>
@@ -60,7 +60,7 @@ export function AyahDisplay({ variant = 'hero', isDark = false }: Props) {
             {data.arabic}
           </p>
           {data.translation && (
-            <p className={`mt-2 text-[13px] font-medium leading-relaxed ${textMuted}`}>
+            <p className={`mt-2 text-[15px] font-medium leading-relaxed ${textMuted}`}>
               {data.translation}
             </p>
           )}

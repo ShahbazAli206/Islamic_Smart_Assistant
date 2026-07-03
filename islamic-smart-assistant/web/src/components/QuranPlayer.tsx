@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motio
 import {
   Play, Pause, SkipBack, SkipForward, Repeat, Languages, Mic2,
   ChevronDown, Volume2, Volume1, VolumeX, FileText, Check, HardDrive,
+  Loader2, CheckCircle2, Download,
 } from 'lucide-react';
 import {
   RECITERS, TRANSLATIONS, fetchSurahMulti, ayahAudioUrl, translationAudioUrl,
@@ -13,7 +14,7 @@ import {
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
 import { SURAHS } from '@/lib/surahs';
-import { useDownloadedAyahs, localAudioUrl, localAudioLang, isLocalAudioSupported, consumeFirstRunPrompt } from '@/lib/translationAudioLocal';
+import { useDownloadedAyahs, useLangDownloadProgress, localAudioUrl, localAudioLang, isLocalAudioSupported, consumeFirstRunPrompt } from '@/lib/translationAudioLocal';
 import { fetchWordTimings, wordProgressAtTime, countSpokenWords, isSpokenWord, basmalaPrefixWords } from '@/lib/wordTimings';
 import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
@@ -594,6 +595,8 @@ export function QuranPlayer({
   // current translation (desktop only; empty on web / editions without local audio).
   const localDownloaded = useDownloadedAyahs(translation);
   const localLang       = localAudioLang(translation);
+  // Live download progress for the selected language (desktop only).
+  const dlProgress      = useLangDownloadProgress(translation);
 
   // Offline-audio modals: download manager (desktop) and "get the app" (web).
   const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -644,10 +647,12 @@ export function QuranPlayer({
     isDesktop,
     currentAyah,
     currentTrans,
+    localLang,
+    localDownloaded,
   });
 
   // Synchronous update — runs before any effects this render cycle
-  hsRef.current = { arabic, ayahIdx, stage, translationMode, translation, repeat, isDesktop, currentAyah, currentTrans };
+  hsRef.current = { arabic, ayahIdx, stage, translationMode, translation, repeat, isDesktop, currentAyah, currentTrans, localLang, localDownloaded };
 
   const stageUrl = (() => {
     if (!currentAyah) return null;
@@ -673,14 +678,19 @@ export function QuranPlayer({
 
   // ── Stable event handlers (read from hsRef — never recreated) ────────────
   const onEnded = useCallback(() => {
-    const { arabic, currentAyah, stage, translationMode, translation, repeat, isDesktop, ayahIdx } = hsRef.current;
+    const { arabic, currentAyah, stage, translationMode, translation, repeat, isDesktop, ayahIdx, localLang, localDownloaded } = hsRef.current;
     if (!arabic || !currentAyah) return;
 
     const cdnTransUrl  = translationAudioUrl(translation, currentAyah.number);
     const ttsAvailable = isDesktop && !!getTtsLang(translation);
+    // Downloadable-only editions (e.g. Bulgarian) have neither CDN nor TTS — the
+    // only source is the local file. Enter the translation stage only when THIS
+    // ayah is actually on disk, so a partial download degrades gracefully
+    // (skips to the next ayah) instead of stalling on a missing file.
+    const localAvailable = !!localLang && localDownloaded.has(currentAyah.number);
     if (
       translationMode && stage === 'arabic' && translation !== 'none' &&
-      (!!cdnTransUrl || ttsAvailable)
+      (!!cdnTransUrl || ttsAvailable || localAvailable)
     ) {
       setStage('translation');
       return;
@@ -921,6 +931,12 @@ export function QuranPlayer({
   const hasTtsAudio  = isDesktop && !!getTtsLang(translation);
   // desktop editions with pre-generated downloadable audio (played once downloaded)
   const localAudioOnDesktop = isDesktop && !!localLang;
+  // Local-audio readiness for the selected edition (desktop). "Ready" allows a
+  // small shortfall since a handful of ayahs can legitimately be missing.
+  const localReady   = localAudioOnDesktop && localDownloaded.size >= 6236 - 10;
+  // Downloadable-only edition (no CDN, no TTS) whose spoken translation can't
+  // play until its audio is downloaded — drives the status notice + button.
+  const localNeedsDownload = localAudioOnDesktop && !hasCdnAudio && !hasTtsAudio && !localReady;
   // true when translation mode would play nothing at all for this platform
   const noAudio      = translation !== 'none' && !hasCdnAudio && !hasTtsAudio && !localAudioOnDesktop;
   // on web, editions with downloadable/TTS audio won't play — show a hint / prompt
@@ -976,14 +992,30 @@ export function QuranPlayer({
             type="button"
             onClick={() => setShowDownloadModal(true)}
             whileTap={{ scale: 0.96 }}
-            title="Download translation audio for offline playback"
+            title={
+              dlProgress.downloading ? 'Downloading translation audio…'
+                : localReady ? 'Translation audio downloaded — plays offline'
+                : 'Download translation audio for offline playback'
+            }
             className={`flex items-center gap-2 border rounded-xl px-3.5 py-2.5 text-base font-medium shadow-sm transition-all duration-200
-              ${isDark
-                ? 'bg-white/[0.08] border-white/15 text-white hover:bg-white/[0.14]'
-                : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'}`}
+              ${dlProgress.downloading
+                ? (isDark ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-200' : 'bg-emerald-50 border-emerald-300 text-emerald-800')
+                : isDark
+                  ? 'bg-white/[0.08] border-white/15 text-white hover:bg-white/[0.14]'
+                  : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'}`}
           >
-            <HardDrive size={15} className={isDark ? 'text-gold-300' : 'text-emerald-600'} />
-            <span>Offline audio</span>
+            {dlProgress.downloading ? (
+              <Loader2 size={15} className="animate-spin text-emerald-500" />
+            ) : localReady ? (
+              <CheckCircle2 size={15} className="text-emerald-500" />
+            ) : (
+              <HardDrive size={15} className={isDark ? 'text-gold-300' : 'text-emerald-600'} />
+            )}
+            <span>
+              {dlProgress.downloading
+                ? `Downloading${dlProgress.pct != null ? ` ${dlProgress.pct}%` : '…'}`
+                : localReady ? 'Offline ready' : 'Offline audio'}
+            </span>
           </motion.button>
         )}
 
@@ -1127,9 +1159,9 @@ export function QuranPlayer({
         </div>
       </div>
 
-      {/* ── no-audio / TTS hint notice ── */}
+      {/* ── no-audio / TTS / offline-download hint notice ── */}
       <AnimatePresence>
-        {translationMode && (noAudio || webTtsNotice) && (
+        {translationMode && (noAudio || webTtsNotice || localNeedsDownload) && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -1137,12 +1169,43 @@ export function QuranPlayer({
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <div className="px-5 py-2.5 text-xs text-amber-800 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5">
-              <Languages size={13} className="shrink-0" />
-              {webTtsNotice
-                ? 'Audio plays via system TTS on the desktop app — translation shown as text here on web.'
-                : "Spoken audio isn't available for this translation yet — the Arabic is recited and the translation is shown as text."}
-            </div>
+            {localNeedsDownload ? (
+              // Desktop, downloadable-only edition: spoken translation needs the
+              // audio downloaded first. Show live progress, or a prompt to start.
+              <div className="px-5 py-2.5 text-xs text-amber-800 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                {dlProgress.downloading ? (
+                  <>
+                    <Loader2 size={13} className="shrink-0 animate-spin" />
+                    <span className="shrink-0">
+                      {dlProgress.phase === 'extract' ? 'Installing translation audio' : 'Downloading translation audio'}
+                      {dlProgress.pct != null ? `… ${dlProgress.pct}%` : '…'}
+                    </span>
+                    <div className="flex-1 h-1.5 rounded-full bg-amber-200/60 overflow-hidden min-w-[60px]">
+                      <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${dlProgress.pct ?? 40}%` }} />
+                    </div>
+                    <span className="shrink-0 opacity-80">Arabic plays now; translation starts once ready.</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={13} className="shrink-0" />
+                    <span className="flex-1">Spoken translation for this language isn&apos;t downloaded yet — only the Arabic will play.</span>
+                    <button
+                      onClick={() => setShowDownloadModal(true)}
+                      className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-2.5 py-1 font-semibold text-white transition hover:bg-amber-700"
+                    >
+                      <Download size={11} /> Download
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="px-5 py-2.5 text-xs text-amber-800 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5">
+                <Languages size={13} className="shrink-0" />
+                {webTtsNotice
+                  ? 'Audio plays via system TTS on the desktop app — translation shown as text here on web.'
+                  : "Spoken audio isn't available for this translation yet — the Arabic is recited and the translation is shown as text."}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
