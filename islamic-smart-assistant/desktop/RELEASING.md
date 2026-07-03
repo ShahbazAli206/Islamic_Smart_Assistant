@@ -7,9 +7,10 @@ a newer release on every launch and every 20 minutes (plus tray → "Check for
 Updates…"). When one is found, the user sees an **Update available**
 notification + dialog; one click downloads it and a restart installs it.
 
-The web "Download Desktop App" button (`web/src/lib/desktopApp.ts`) points at
-`releases/latest/download/Islamic-Assistant-Setup-x64.exe`, which always serves
-the newest release — neither the website nor the constant needs changing.
+The web "Download Desktop App" buttons (`web/src/lib/desktopApp.ts`) ask the
+GitHub API which `.exe` the latest release contains, so the downloaded file
+carries the version in its name (`Islamic-Assistant-Setup-<version>.exe`) and
+the website never needs changing when a new installer ships.
 
 ## How to publish an update
 
@@ -19,8 +20,8 @@ the newest release — neither the website nor the constant needs changing.
 3. Create a new GitHub Release on **Islamic_Assistant_Audio**, tagged
    `v<version>` (e.g. `v1.3.0`), and upload **all three** files from
    `desktop/dist/`:
-   - `Islamic-Assistant-Setup-x64.exe`
-   - `Islamic-Assistant-Setup-x64.exe.blockmap`
+   - `Islamic-Assistant-Setup-<version>.exe`
+   - `Islamic-Assistant-Setup-<version>.exe.blockmap`
    - `latest.yml`  ← required — this is what installed apps read to detect the update
 4. Publish the release (not a draft, not a pre-release). Done — installed
    apps pick it up on their next check, and the website button serves it.
@@ -52,8 +53,9 @@ on the assets repo automatically — you just publish the draft on GitHub.
   When publishing audio/asset releases (like `audio-v1`), mark them as
   **pre-release** — otherwise `releases/latest` (both the website link and the
   updater) would point at a release with no installer.
-- Keep the artifact name `Islamic-Assistant-Setup-x64.exe` (set in
-  `package.json` → `build.win.artifactName`) — the website link depends on it.
+- The artifact name pattern (`package.json` → `build.win.artifactName`) must
+  keep the `.exe` extension and stay a single exe per release — the website
+  picks "the exe asset of the latest release" via the GitHub API.
 - **Installs older than 1.2.0 cannot auto-update** — they were built without
   the updater (v1.0.0 and v1.1.0). Those users must manually download once
   from the website; every version from 1.2.0 onward auto-updates.

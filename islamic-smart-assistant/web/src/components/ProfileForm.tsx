@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { Me, type MeProfile, type SetLocation } from '@/lib/api';
 import { setLocationByCoords, readStoredLocation } from '@/lib/location';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { DESKTOP_DOWNLOAD_URL } from '@/lib/desktopApp';
+import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -316,6 +316,7 @@ export function ProfileForm() {
 }
 
 export function DesktopRequiredNotice() {
+  const desktopDownloadUrl = useDesktopDownloadUrl();
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -332,7 +333,7 @@ export function DesktopRequiredNotice() {
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <a
-          href={DESKTOP_DOWNLOAD_URL}
+          href={desktopDownloadUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient text-midnight-900 px-6 py-3 font-bold shadow-glow-gold hover:brightness-105 transition"

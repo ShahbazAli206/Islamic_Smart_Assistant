@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MonitorDown, Volume2, Check } from 'lucide-react';
 import { TRANSLATIONS, LOCAL_AUDIO_EDITIONS, type TranslationId } from '@/lib/quran';
-import { DESKTOP_DOWNLOAD_URL } from '@/lib/desktopApp';
+import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 
 const LANG_NAMES = (Object.keys(LOCAL_AUDIO_EDITIONS) as TranslationId[])
   .map((id) => TRANSLATIONS.find((t) => t.id === id)?.short || TRANSLATIONS.find((t) => t.id === id)?.name || id)
@@ -24,6 +24,7 @@ interface Props {
  */
 export function DesktopAppPromoModal({ open, onClose, translation, isDark }: Props) {
   const [mounted, setMounted] = useState(false);
+  const desktopDownloadUrl = useDesktopDownloadUrl();
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
 
@@ -95,7 +96,7 @@ export function DesktopAppPromoModal({ open, onClose, translation, isDark }: Pro
 
               <div className="mt-6 flex items-center gap-3">
                 <a
-                  href={DESKTOP_DOWNLOAD_URL}
+                  href={desktopDownloadUrl}
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-sm font-semibold shadow-lg transition active:scale-95"
                 >
                   <MonitorDown size={17} /> Download Desktop App

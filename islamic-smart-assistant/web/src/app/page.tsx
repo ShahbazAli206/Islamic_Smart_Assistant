@@ -21,7 +21,7 @@ import {
   ShieldCheck, User, Sun, CalendarDays, MonitorDown,
 } from 'lucide-react';
 
-import { DESKTOP_DOWNLOAD_URL } from '@/lib/desktopApp';
+import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';
@@ -54,6 +54,7 @@ export default function HomePage() {
   // Visitor's saved location (if any) — passed to the hero card so it can show
   // real prayer times immediately instead of the placeholder.
   const loc = useStoredLocation();
+  const desktopDownloadUrl = useDesktopDownloadUrl();
 
   // Nav is transparent over the hero photo at the top, then gains a dark blurred
   // bar once the user scrolls past the fold.
@@ -140,7 +141,7 @@ export default function HomePage() {
                   <BookOpen size={18} /> Explore Quran
                 </Link>
                 <a
-                  href={DESKTOP_DOWNLOAD_URL}
+                  href={desktopDownloadUrl}
                   download
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 font-bold shadow-lg shadow-emerald-900/40 transition-all hover:shadow-emerald-700/50 hover:scale-[1.02] active:scale-100"
                 >

@@ -13,6 +13,8 @@ TOKEN=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill 2>/de
 
 VERSION=$(sed -n 's/^version: //p' "$DIST/latest.yml")
 [ -n "$VERSION" ] || { echo "NO VERSION in $DIST/latest.yml — run npm run build:win first"; exit 1; }
+EXE=$(sed -n 's/^path: //p' "$DIST/latest.yml")
+[ -n "$EXE" ] || { echo "NO path in latest.yml"; exit 1; }
 NOTES="${1:-Desktop app v$VERSION.}"
 echo "publishing v$VERSION to $REPO ..."
 
@@ -33,7 +35,7 @@ upload() {
     | python -c "import json,sys; d=json.load(sys.stdin); print('  ->', d.get('name'), d.get('state'), d.get('size'))"
 }
 
-upload "Islamic-Assistant-Setup-x64.exe" "application/octet-stream"
-upload "Islamic-Assistant-Setup-x64.exe.blockmap" "application/octet-stream"
+upload "$EXE" "application/octet-stream"
+upload "$EXE.blockmap" "application/octet-stream"
 upload "latest.yml" "text/yaml"
 echo "DONE v$VERSION — verify: https://github.com/$REPO/releases/latest"
