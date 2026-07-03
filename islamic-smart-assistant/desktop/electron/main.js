@@ -39,6 +39,10 @@ const PROD_PORT = 3001;
 const DEV_URL   = 'http://localhost:3000';
 const PROD_URL  = `http://localhost:${PROD_PORT}`;
 
+// Brand logo (ismaa_logo.png) bundled in assets/ — used for the window icon,
+// tray and anywhere else the app identifies itself.
+const APP_ICON = path.join(__dirname, '../assets/ismaa_logo.png');
+
 // In packaged builds electron-builder places extraResources at process.resourcesPath.
 const WEB_STANDALONE = isDev
   ? path.join(__dirname, '../../web/.next/standalone')
@@ -90,20 +94,38 @@ function dismissSplash() {
 function createWindow() {
   createSplash();
 
+  const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 1024,
     minHeight: 720,
     show: false,               // stays hidden behind the splash until content is ready
-    backgroundColor: '#F7F5EE',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    backgroundColor: '#06231A',
+    icon: APP_ICON,
+    // Frameless everywhere so the web app can paint its own themed title bar
+    // (see web/src/components/DesktopTitleBar.tsx). On macOS we keep the native
+    // traffic-light buttons but hide the rest of the frame, insetting the lights
+    // to line up with our custom bar.
+    frame: false,
+    titleBarStyle: isMac ? 'hidden' : undefined,
+    trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+
+  // Keep the renderer's custom title bar in sync with the real window state so
+  // the maximize/restore icon and drag behaviour always match.
+  const emitMaxState = () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('win:maximized-changed', mainWindow.isMaximized());
+    }
+  };
+  mainWindow.on('maximize', emitMaxState);
+  mainWindow.on('unmaximize', emitMaxState);
 
   // Swap splash → app the moment the first real page has rendered. A failed
   // load (server still booting → connection refused) also fires
@@ -195,9 +217,8 @@ function createSetupWindow() {
 
 // ── Tray ──────────────────────────────────────────────────────────────────────
 function createTray() {
-  const iconPath = path.join(__dirname, '../assets/tray-icon.png');
-  const raw  = nativeImage.createFromPath(iconPath);
-  const icon = raw.isEmpty() ? nativeImage.createEmpty() : raw.resize({ width: 16, height: 16 });
+  const raw  = nativeImage.createFromPath(APP_ICON);
+  const icon = raw.isEmpty() ? nativeImage.createEmpty() : raw.resize({ height: 16 });
   tray = new Tray(icon);
   tray.setToolTip('Islamic Assistant');
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -219,6 +240,11 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
+  // Drop the default OS menu bar (File / Edit / View / Window) — the app paints
+  // its own themed title bar and doesn't use native menus. Standard editing
+  // shortcuts (copy/paste/select-all) still work inside web inputs.
+  Menu.setApplicationMenu(null);
+
   // Serve locally cached Bengali audio files via the isa-audio:// custom protocol.
   // URL pattern: isa-audio://bn/1.mp3  →  userData/audio/bn/1.mp3
   protocol.handle('isa-audio', (request) => {
@@ -271,6 +297,18 @@ ipcMain.handle('shell:openExternal', (_event, url) => {
     return shell.openExternal(url);
   }
 });
+
+// ── Custom title-bar window controls ──────────────────────────────────────────
+// Driven by the renderer's DesktopTitleBar (frame: false, so no native buttons).
+ipcMain.on('win:minimize', () => mainWindow?.minimize());
+ipcMain.on('win:maximize', () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+});
+// Mirror the native close button: hide to tray (Azan keeps playing) rather than quit.
+ipcMain.on('win:close', () => mainWindow?.close());
+ipcMain.handle('win:isMaximized', () => !!mainWindow?.isMaximized());
 
 // ── Azan notification ─────────────────────────────────────────────────────────
 ipcMain.on('azan:notify', (_event, { title, body }) => {

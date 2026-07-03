@@ -9,6 +9,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
 contextBridge.exposeInMainWorld('desktop', {
   notifyAzan: (title, body) => ipcRenderer.send('azan:notify', { title, body }),
 
+  /** Host OS platform string ('win32' | 'darwin' | 'linux') for the title bar. */
+  platform: process.platform,
+
+  /**
+   * Custom title-bar window controls. The main window is frameless, so the
+   * renderer paints its own minimize / maximize / close buttons (see
+   * web/src/components/DesktopTitleBar.tsx) and drives them through here.
+   */
+  win: {
+    minimize: () => ipcRenderer.send('win:minimize'),
+    maximize: () => ipcRenderer.send('win:maximize'),
+    close:    () => ipcRenderer.send('win:close'),
+    isMaximized: () => ipcRenderer.invoke('win:isMaximized'),
+    /** Subscribe to maximize/unmaximize. cb(isMaximized). Returns an unsubscribe fn. */
+    onMaximizedChanged: (cb) => {
+      const handler = (_e, val) => cb(val);
+      ipcRenderer.on('win:maximized-changed', handler);
+      return () => ipcRenderer.removeListener('win:maximized-changed', handler);
+    },
+  },
+
   /**
    * The setup wizard's saved choices (language, school, location, azan, …)
    * from setup-complete.json, or null if the wizard never completed. The web

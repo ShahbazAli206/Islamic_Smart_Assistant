@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ThemeProvider } from '@/lib/ThemeContext';
+import { DesktopTitleBar } from '@/components/DesktopTitleBar';
 
 /**
  * App-wide client providers. Currently wires up React Query (TanStack Query)
@@ -17,7 +18,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }));
   return (
     <ThemeProvider>
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        <DesktopTitleBar />
+        {children}
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

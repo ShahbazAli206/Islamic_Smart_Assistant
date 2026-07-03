@@ -8,6 +8,26 @@
   --bg-grad-1: #FBF8EF;
   --bg-grad-2: #F1EDDC;
   --bg-grad-3: #E7E0C4;
+  /* Height reserved for the custom desktop title bar (0 on the web build). */
+  --titlebar-h: 0px;
+}
+
+/* ── Desktop (Electron) chrome ──────────────────────────────────────────────
+   `is-desktop` is toggled on <html> by DesktopTitleBar when running inside the
+   Electron shell. The bar is fixed at the top, so every route gets pushed down
+   by its height. The dashboard uses a zoom(0.85) + calc(100vh) height hack, so
+   its full-height wrapper is re-derived to fit the space *below* the bar. */
+html.is-desktop {
+  --titlebar-h: 40px;
+}
+html.is-desktop body {
+  padding-top: var(--titlebar-h);
+}
+@media (min-width: 1024px) {
+  html.is-desktop .dashboard-zoom {
+    height: calc((100vh - var(--titlebar-h)) / 0.85) !important;
+    min-height: 0 !important;
+  }
 }
 
 html, body {
