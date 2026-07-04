@@ -521,17 +521,47 @@ function setAllAudioLangs(on) {
 }
 
 // ── Preferences (step 4): language + school of thought ────
-// Options mirror the web app's onboarding (OnboardingSetup.tsx) exactly, so
-// the same values flow into the same settings keys.
+// Options mirror the web app's onboarding (OnboardingSetup.tsx / LANGUAGE_OPTIONS
+// in lib/quran.ts) exactly, so the same values flow into the same settings keys.
 const PREF_LANGS = [
-  { id:'ur',   label:'Urdu',        native:'اردو' },
-  { id:'en',   label:'English',     native:'English' },
-  { id:'tr',   label:'Turkish',     native:'Türkçe' },
-  { id:'bn',   label:'Bengali',     native:'বাংলা' },
-  { id:'zh',   label:'Chinese',     native:'中文' },
-  { id:'fr',   label:'French',      native:'Français' },
-  { id:'hi',   label:'Hindi',       native:'हिन्दी' },
-  { id:'none', label:'Arabic only', native:'عربي فقط' },
+  { id:'none', label:'Arabic only',  native:'عربي فقط' },
+  { id:'en',   label:'English',      native:'English' },
+  { id:'ur',   label:'Urdu',         native:'اردو' },
+  { id:'tr',   label:'Turkish',      native:'Türkçe' },
+  { id:'zh',   label:'Chinese',      native:'中文' },
+  { id:'fr',   label:'French',       native:'Français' },
+  { id:'bn',   label:'Bengali',      native:'বাংলা' },
+  { id:'fa',   label:'Persian',      native:'فارسی' },
+  { id:'ru',   label:'Russian',      native:'Русский' },
+  { id:'kk',   label:'Kazakh',       native:'Қазақша' },
+  { id:'de',   label:'German',       native:'Deutsch' },
+  { id:'es',   label:'Spanish',      native:'Español' },
+  { id:'nl',   label:'Dutch',        native:'Nederlands' },
+  { id:'it',   label:'Italian',      native:'Italiano' },
+  { id:'sv',   label:'Swedish',      native:'Svenska' },
+  { id:'bs',   label:'Bosnian',      native:'Bosanski' },
+  { id:'sq',   label:'Albanian',     native:'Shqip' },
+  { id:'pl',   label:'Polish',       native:'Polski' },
+  { id:'pt',   label:'Portuguese',   native:'Português' },
+  { id:'id',   label:'Indonesian',   native:'Indonesia' },
+  { id:'ms',   label:'Malay',        native:'Melayu' },
+  { id:'hi',   label:'Hindi',        native:'हिन्दी' },
+  { id:'ta',   label:'Tamil',        native:'தமிழ்' },
+  { id:'ml',   label:'Malayalam',    native:'മലയാളം' },
+  { id:'ja',   label:'Japanese',     native:'日本語' },
+  { id:'ko',   label:'Korean',       native:'한국어' },
+  { id:'th',   label:'Thai',         native:'ไทย' },
+  { id:'my',   label:'Burmese',      native:'မြန်မာ' },
+  { id:'si',   label:'Sinhala',      native:'සිංහල' },
+  { id:'uz',   label:'Uzbek',        native:'Oʻzbek' },
+  { id:'ps',   label:'Pashto',       native:'پښتو' },
+  { id:'sw',   label:'Swahili',      native:'Kiswahili' },
+  { id:'so',   label:'Somali',       native:'Soomaali' },
+  { id:'am',   label:'Amharic',      native:'አማርኛ' },
+  { id:'az',   label:'Azerbaijani',  native:'Azərbaycan' },
+  { id:'cs',   label:'Czech',        native:'Čeština' },
+  { id:'bg',   label:'Bulgarian',    native:'Български' },
+  { id:'ro',   label:'Romanian',     native:'Română' },
 ];
 const PREF_SCHOOLS = [
   { id:'hanafi',  label:'Hanafi',      desc:'Imam Abu Hanifa · South Asia, Turkey' },

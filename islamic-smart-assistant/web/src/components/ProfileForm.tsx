@@ -11,19 +11,14 @@ import { Me, type MeProfile, type SetLocation } from '@/lib/api';
 import { setLocationByCoords, readStoredLocation } from '@/lib/location';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useDesktopDownloadUrl } from '@/lib/desktopApp';
+import { LANGUAGE_OPTIONS } from '@/lib/quran';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'ar', label: 'العربية (Arabic)' },
-  { code: 'ur', label: 'اردو (Urdu)' },
-  { code: 'tr', label: 'Türkçe (Turkish)' },
-  { code: 'hi', label: 'हिन्दी (Hindi)' },
-  { code: 'bn', label: 'বাংলা (Bengali)' },
-  { code: 'fr', label: 'Français (French)' },
-  { code: 'ps', label: 'پښتو (Pashto)' },
-  { code: 'ja', label: '日本語 (Japanese)' },
-  { code: 'zh', label: '中文 (Chinese)' },
-];
+// Same list the Qur'an translation dropdown, onboarding, settings and quick
+// settings use, so a language picked here matches everywhere else.
+const LANGUAGES = LANGUAGE_OPTIONS.map(({ code, label, native }) => ({
+  code,
+  label: native && native !== label ? `${label} (${native})` : label,
+}));
 
 const SECTS = [
   { value: 'sunni', label: 'Sunni' },

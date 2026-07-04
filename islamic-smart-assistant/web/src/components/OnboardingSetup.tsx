@@ -7,9 +7,10 @@ import { detectLocationByIP } from '@/lib/prayer';
 import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location';
 import { methodByCountry } from '@/lib/sect';
 import { applyDesktopSetupSettings } from '@/lib/desktopSetup';
+import { LANGUAGE_OPTIONS } from '@/lib/quran';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
-export type Language = 'ur' | 'en' | 'tr' | 'bn' | 'zh' | 'fr' | 'hi' | 'none';
+export type Language = string;
 
 export const SECTS: { id: Sect; label: string; arabic: string; desc: string; method: number }[] = [
   { id: 'hanafi',  label: 'Hanafi',        arabic: 'حنفي',  desc: 'Imam Abu Hanifa · South Asia, Turkey',    method: 1 },
@@ -19,16 +20,10 @@ export const SECTS: { id: Sect; label: string; arabic: string; desc: string; met
   { id: 'shia',    label: 'Fiqah Jafri', arabic: 'جعفري', desc: 'Jafari school · Iran, Iraq',                method: 7 },
 ];
 
-export const LANGUAGES: { id: Language; label: string; native: string }[] = [
-  { id: 'ur',   label: 'Urdu',        native: 'اردو' },
-  { id: 'en',   label: 'English',     native: 'English' },
-  { id: 'tr',   label: 'Turkish',     native: 'Türkçe' },
-  { id: 'bn',   label: 'Bengali',     native: 'বাংলা' },
-  { id: 'zh',   label: 'Chinese',     native: '中文' },
-  { id: 'fr',   label: 'French',      native: 'Français' },
-  { id: 'hi',   label: 'Hindi',       native: 'हिन्दी' },
-  { id: 'none', label: 'Arabic only', native: 'عربي فقط' },
-];
+// Every language the Qur'an translation dropdown offers, so onboarding,
+// settings, quick settings and the profile form all present the same list.
+export const LANGUAGES: { id: Language; label: string; native: string }[] =
+  LANGUAGE_OPTIONS.map(({ code, label, native }) => ({ id: code, label, native }));
 
 const TOTAL_STEPS = 4;
 

@@ -23,6 +23,7 @@ import { AyahDisplay } from '@/components/AyahDisplay';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { setLocationByCoords, setLocationByCity } from '@/lib/location';
 import { METHOD_LABELS as CALC_METHODS } from '@/lib/sect';
+import { LANGUAGE_OPTIONS as QURAN_LANGUAGE_OPTIONS } from '@/lib/quran';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -46,18 +47,12 @@ const FIQH_LABELS: Record<string, string> = {
   hanafi: 'Hanafi', shafi: "Shafi'i", maliki: 'Maliki', hanbali: 'Hanbali', jafari: "Ja'fari",
 };
 
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English' },
-  { value: 'ar', label: 'العربية (Arabic)' },
-  { value: 'ur', label: 'اردو (Urdu)' },
-  { value: 'tr', label: 'Türkçe (Turkish)' },
-  { value: 'hi', label: 'हिन्दी (Hindi)' },
-  { value: 'bn', label: 'বাংলা (Bengali)' },
-  { value: 'fr', label: 'Français (French)' },
-  { value: 'ps', label: 'پښتو (Pashto)' },
-  { value: 'ja', label: '日本語 (Japanese)' },
-  { value: 'zh', label: '中文 (Chinese)' },
-];
+// Same list the Qur'an translation dropdown, onboarding, settings and profile
+// form use, so a language picked here matches everywhere else.
+const LANGUAGE_OPTIONS = QURAN_LANGUAGE_OPTIONS.map(({ code, label, native }) => ({
+  value: code,
+  label: native && native !== label ? `${label} (${native})` : label,
+}));
 
 const SECT_OPTIONS = [
   { value: 'sunni', label: 'Sunni' },
@@ -135,7 +130,7 @@ function PrefDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.14 }}
-            className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl z-50 overflow-hidden border ${isDark ? 'bg-[#0d2018] border-emerald-500/20' : 'bg-white border-emerald-100'}`}
+            className={`absolute top-full left-0 right-0 mt-2 max-h-72 overflow-y-auto rounded-2xl shadow-2xl z-50 border ${isDark ? 'bg-[#0d2018] border-emerald-500/20' : 'bg-white border-emerald-100'}`}
           >
             {options.map((opt, i) => {
               const selected = opt.value === value;

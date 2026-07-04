@@ -82,32 +82,24 @@ export type TranslationId = (typeof TRANSLATIONS)[number]['id'];
 /**
  * Maps a profile language code (isa:language — 'en', 'ur', …) to the default
  * translation edition. Shared by the Quran player and the recitation scheduler
- * so both honour the same preference.
+ * so both honour the same preference. Derived from TRANSLATIONS (one edition
+ * per language) so every language it offers resolves to a real edition.
  */
 export function langToTranslation(lang: string): TranslationId {
-  const map: Record<string, TranslationId> = {
-    en:   'en.sahih',
-    ur:   'ur.jalandhry',
-    tr:   'tr.vakfi',
-    bn:   'bn.bengali',
-    zh:   'zh.majian',
-    fr:   'fr.hamidullah',
-    fa:   'fa.fooladvand',
-    ru:   'ru.kuliev',
-    kk:   'kk.khalifahaltai',
-    de:   'de.bubenheim',
-    es:   'es.cortes',
-    nl:   'nl.leemhuis',
-    it:   'it.piccardo',
-    sv:   'sv.bernstrom',
-    bs:   'bs.korkut',
-    sq:   'sq.nahi',
-    pl:   'pl.bielawskiego',
-    pt:   'pt.elhayek',
-    none: 'none',
-  };
-  return map[lang] ?? 'en.sahih';
+  const found = TRANSLATIONS.find((t) => t.id.split('.')[0] === lang);
+  return found?.id ?? 'en.sahih';
 }
+
+/**
+ * Short language-picker options (code/label/native) derived from TRANSLATIONS —
+ * the single source of truth for "preferred translation language" pickers
+ * across onboarding, settings, quick settings and the profile form.
+ */
+export const LANGUAGE_OPTIONS = TRANSLATIONS.map(({ id, name, short }) => ({
+  code: id.split('.')[0],
+  label: id === 'none' ? 'Arabic only' : name.split('—')[0].trim(),
+  native: id === 'none' ? 'عربي فقط' : short,
+}));
 
 // 128 kbps tier returns 403 on the public CDN — use 192 (or 64) which are open.
 export function surahAudioUrl(surahNumber: number, reciter: ReciterId, bitrate: 64 | 192 = 192): string {

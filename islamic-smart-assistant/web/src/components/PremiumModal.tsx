@@ -65,7 +65,7 @@ export function PremiumModal({ open, onClose }: { open: boolean; onClose: () => 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.93, y: 24 }}
             transition={{ type: 'spring', damping: 22, stiffness: 260 }}
-            className="relative w-full max-w-2xl my-4 rounded-[32px] overflow-hidden shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8)]"
+            className="relative w-full max-w-2xl my-4 max-h-[75vh] flex flex-col rounded-[32px] overflow-hidden shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8)]"
             style={{
               background: isDark
                 ? 'linear-gradient(160deg, rgba(7,20,14,0.96) 0%, rgba(11,26,18,0.98) 100%)'
@@ -75,7 +75,7 @@ export function PremiumModal({ open, onClose }: { open: boolean; onClose: () => 
             }}
           >
             {/* ── Hero header with mosque backdrop ── */}
-            <div className="relative h-52 overflow-hidden">
+            <div className="relative h-52 shrink-0 overflow-hidden">
               {/* Background image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -147,7 +147,7 @@ export function PremiumModal({ open, onClose }: { open: boolean; onClose: () => 
             </div>
 
             {/* ── Body ── */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
 
               {/* Features grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -218,7 +218,7 @@ export function PremiumModal({ open, onClose }: { open: boolean; onClose: () => 
                   Get Noor Premium — {PLANS.find(p => p.id === selected)?.price}
                   <span className="text-sm font-semibold opacity-70">(Coming Soon)</span>
                 </button>
-                <p className={`text-center text-[11px] ${isDark ? 'text-parchment/35' : 'text-emerald-900/35'}`}>
+                <p className={`text-center text-sm font-medium ${isDark ? 'text-parchment/75' : 'text-emerald-900/75'}`}>
                   Cancel anytime · Secure checkout · One subscription for all platforms
                 </p>
               </div>
@@ -232,7 +232,7 @@ export function PremiumModal({ open, onClose }: { open: boolean; onClose: () => 
                 <div className={`flex-1 h-px ${isDark ? 'bg-white/20' : 'bg-emerald-900/15'}`} />
               </div>
 
-              <p className={`text-center text-[12px] leading-relaxed ${isDark ? 'text-parchment/35' : 'text-emerald-900/40'}`}>
+              <p className={`text-center text-sm font-medium leading-relaxed ${isDark ? 'text-parchment/75' : 'text-emerald-900/80'}`}>
                 Noor Premium supports the continued development of this app and helps us serve the global Muslim community. JazakAllah Khair 🤲
               </p>
             </div>
