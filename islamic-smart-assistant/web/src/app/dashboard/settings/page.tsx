@@ -11,6 +11,7 @@ import {
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useTheme } from '@/lib/ThemeContext';
 import { SECTS, LANGUAGES } from '@/components/OnboardingSetup';
+import { LanguageSelect } from '@/components/LanguageSelect';
 import { setLocationByCity } from '@/lib/location';
 import { langToTranslation, LOCAL_AUDIO_EDITIONS } from '@/lib/quran';
 import { isLocalAudioSupported } from '@/lib/translationAudioLocal';
@@ -686,11 +687,7 @@ export default function SettingsPage() {
               </SectionCard>
 
               <SectionCard title="Translation Language" icon={<Globe size={16} />} isDark={isDark}>
-                <div className="flex flex-wrap gap-2">
-                  {LANGUAGES.map((l) => (
-                    <Pill key={l.id} label={l.label} active={language === l.id} onClick={() => selectLang(l.id)} isDark={isDark} />
-                  ))}
-                </div>
+                <LanguageSelect value={language} onChange={selectLang} options={LANGUAGES} isDark={isDark} />
               </SectionCard>
             </div>
 

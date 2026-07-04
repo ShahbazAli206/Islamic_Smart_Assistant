@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Globe, BellOff, BellRing, SlidersHorizontal, Check, Loader2 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { SECTS, LANGUAGES } from '@/components/OnboardingSetup';
+import { LanguageSelect } from '@/components/LanguageSelect';
 import { setLocationByCity } from '@/lib/location';
 
 export type QuickSection = 'location' | 'sect' | 'language' | 'azan';
@@ -230,16 +231,7 @@ export function QuickSettingsPopup({ open, onClose, focusSection }: PopupProps) 
               {/* ── Translation Language ── */}
               <section>
                 <SectionLabel icon={<Globe size={14} />} label="Translation Language" />
-                <div className="flex flex-wrap gap-2">
-                  {LANGUAGES.map((l) => (
-                    <Pill
-                      key={l.id}
-                      label={l.label}
-                      active={language === l.id}
-                      onClick={() => selectLang(l.id)}
-                    />
-                  ))}
-                </div>
+                <LanguageSelect value={language} onChange={selectLang} options={LANGUAGES} />
               </section>
 
               <hr className="border-black/[0.06]" />

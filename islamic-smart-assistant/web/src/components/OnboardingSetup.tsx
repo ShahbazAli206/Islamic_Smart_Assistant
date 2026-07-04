@@ -8,6 +8,7 @@ import { setLocationByCity, setLocationByCoords, locLabel } from '@/lib/location
 import { methodByCountry } from '@/lib/sect';
 import { applyDesktopSetupSettings } from '@/lib/desktopSetup';
 import { LANGUAGE_OPTIONS } from '@/lib/quran';
+import { LanguageSelect } from '@/components/LanguageSelect';
 
 export type Sect = 'hanafi' | 'shafii' | 'maliki' | 'hanbali' | 'shia';
 export type Language = string;
@@ -566,38 +567,19 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
                 transition={{ duration: 0.2 }}
                 className="flex-1 space-y-4"
               >
-                <div className="space-y-2">
-                  {LANGUAGES.map((l) => (
-                    <button
-                      key={l.id}
-                      onClick={() => {
-                        setDraftLang(l.id);
-                        // Apply immediately — don't wait for Done so the rest
-                        // of the app (Quran ayah, player) updates in real time.
-                        const json = JSON.stringify(l.id);
-                        localStorage.setItem('isa:language', json);
-                        window.dispatchEvent(new StorageEvent('storage', { key: 'isa:language', newValue: json }));
-                      }}
-                      className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition
-                        ${draftLang === l.id
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-emerald-100 hover:border-emerald-300 bg-white'
-                        }`}
-                    >
-                      <Globe
-                        size={20}
-                        className={`shrink-0 ${draftLang === l.id ? 'text-emerald-600' : 'text-ink/35'}`}
-                      />
-                      <span className="flex-1">
-                        <p className="font-semibold text-sm">{l.label}</p>
-                        <p className="text-xs text-ink/50 font-arabic">{l.native}</p>
-                      </span>
-                      {draftLang === l.id && (
-                        <Check size={16} className="text-emerald-600 shrink-0" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                {/* Searchable dropdown — type to filter the full language list. */}
+                <LanguageSelect
+                  value={draftLang}
+                  onChange={(id) => {
+                    setDraftLang(id);
+                    // Apply immediately — don't wait for Done so the rest of the
+                    // app (Quran ayah, player) updates in real time.
+                    const json = JSON.stringify(id);
+                    localStorage.setItem('isa:language', json);
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'isa:language', newValue: json }));
+                  }}
+                  options={LANGUAGES}
+                />
 
                 <div>
                   <label className="text-xs font-medium text-ink/55 mb-1.5 flex items-center gap-1.5">
