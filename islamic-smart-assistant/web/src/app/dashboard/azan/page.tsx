@@ -1,8 +1,9 @@
 'use client';
 
-// NOTE: content hash bumped to force Vercel to regenerate this route — a stale
-// build cache had dropped /dashboard/azan from the deployment (404). If it 404s
-// again, redeploy from the Vercel dashboard with "Use existing Build Cache" off.
+// NOTE: content hash bumped (v2, 2026-07-04) to force Vercel to regenerate this
+// route — a stale build cache had dropped /dashboard/azan from the deployment
+// (404). If it 404s again, redeploy from the Vercel dashboard with
+// "Use existing Build Cache" off.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
