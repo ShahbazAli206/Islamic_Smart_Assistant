@@ -49,7 +49,7 @@ const FEATURES: Feature[] = [
   {
     icon: Bell, title: 'Auto Azan',
     desc: 'Accurate prayer times with beautiful Azan reminders worldwide.',
-    href: '/dashboard/azan',
+    href: '/dashboard/azan-voices',
     grad: 'from-gold-500 to-gold-700', text: 'text-gold-700',
     arrow: 'bg-gold-600', tint: 'to-gold-50', glow: 'bg-gold-400', deco: 'wave',
   },

@@ -30,7 +30,7 @@ const NAV = [
       { href: '/dashboard/prayer-times', label: 'Prayer Times',    icon: Clock,      color: 'text-emerald-600' },
       { href: '/dashboard/quran',        label: 'Holy Quran',      icon: BookOpen,   color: 'text-gold-600' },
       { href: '/dashboard/qibla',        label: 'Qibla Finder',    icon: Compass,    color: 'text-teal-600' },
-      { href: '/dashboard/azan',         label: 'Azan Voices',     icon: Bell,       color: 'text-rose-500' },
+      { href: '/dashboard/azan-voices',         label: 'Azan Voices',     icon: Bell,       color: 'text-rose-500' },
       { href: '/dashboard/recitation',   label: 'Schedule Recitation', icon: AlarmClock, color: 'text-violet-600' },
       { href: '/dashboard/advanced',     label: 'Islamic Library',  icon: Library,    color: 'text-amber-600' },
     ],
@@ -195,7 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { href: '/dashboard/prayer-times', icon: Clock,    label: 'Prayer Times' },
             { href: '/dashboard/quran',        icon: BookOpen, label: 'Holy Quran'   },
             { href: '/dashboard/qibla',        icon: Compass,  label: 'Qibla'        },
-            { href: '/dashboard/azan',         icon: Bell,     label: 'Azan'         },
+            { href: '/dashboard/azan-voices',         icon: Bell,     label: 'Azan'         },
           ].map(({ href, icon: Icon, label }) => {
             const active = pathname === href;
             return (

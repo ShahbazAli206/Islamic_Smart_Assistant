@@ -131,7 +131,7 @@ const AZAN_CARDS: AzanCard[] = [
   {
     icon: Bell,       title: 'Auto Azan',
     desc: 'Automatically play Adhan at every prayer time on all your devices.',
-    href: '/dashboard/azan',         btn: 'Manage',
+    href: '/dashboard/azan-voices',         btn: 'Manage',
     image: '/card_images/Auto_Azan_card_image.png',
     bg: 'bg-gold-50', iconBg: 'bg-gold-600', titleColor: 'text-gold-700', btnBg: 'bg-gold-600',
   },
@@ -159,7 +159,7 @@ const AZAN_CARDS: AzanCard[] = [
   {
     icon: Headphones, title: 'Islamic Voices',
     desc: "Choose from world's best reciters and muezzins voices.",
-    href: '/dashboard/azan',         btn: 'Explore',
+    href: '/dashboard/azan-voices',         btn: 'Explore',
     image: '/card_images/Islamic_Voices_card_image.png',
     bg: 'bg-parchment', iconBg: 'bg-gold-600', titleColor: 'text-gold-700', btnBg: 'bg-gold-600',
   },
@@ -232,7 +232,7 @@ export function AzanShowcase() {
             </p>
             {/* CTA moved into the copy column so the right side can host the ayah card */}
             <Link
-              href="/dashboard/azan"
+              href="/dashboard/azan-voices"
               className="inline-flex w-fit items-center gap-2.5 rounded-full bg-gold-gradient hover:brightness-110 text-midnight-900 px-7 py-4 font-semibold text-sm shadow-glow-gold transition"
             >
               <Headphones size={18} /> Explore Voices <ArrowRight size={16} />

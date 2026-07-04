@@ -20,7 +20,7 @@ export const RECITATION_CAST_TEST_URL =
  *  AND the app is running on localhost (so its bundled file isn't reachable). */
 const PUBLIC_ADHAN_FALLBACK = 'https://www.islamcan.com/audio/adhan/azan2.mp3'; // Makkah
 
-// Minimal mirror of the azan voice table (web/src/app/dashboard/azan/page.tsx).
+// Minimal mirror of the azan voice table (web/src/app/dashboard/azan-voices/page.tsx).
 // `remote` is a public URL when one exists; otherwise it's the bundled local
 // path, which is castable only when the app is served from a public/LAN origin.
 type AzanSrc = { name: string; local: string; remote: string };

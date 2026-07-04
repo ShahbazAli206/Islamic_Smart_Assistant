@@ -1,7 +1,7 @@
 'use client';
 
 // NOTE: content hash bumped (v2, 2026-07-04) to force Vercel to regenerate this
-// route — a stale build cache had dropped /dashboard/azan from the deployment
+// route — a stale build cache had dropped /dashboard/azan-voices from the deployment
 // (404). If it 404s again, redeploy from the Vercel dashboard with
 // "Use existing Build Cache" off.
 

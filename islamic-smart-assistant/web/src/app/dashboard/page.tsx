@@ -848,7 +848,7 @@ export default function Overview() {
                     const isSelected = voice.id === selectedAzanVoice;
                     return (
                       <Link
-                        href="/dashboard/azan"
+                        href="/dashboard/azan-voices"
                         key={`${voice.id}-${i}`}
                         className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition h-[48px] ${
                           isSelected
@@ -874,7 +874,7 @@ export default function Overview() {
                 </motion.div>
               </div>
 
-              <Link href="/dashboard/azan" className={`mt-auto pt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
+              <Link href="/dashboard/azan-voices" className={`mt-auto pt-4 flex items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-semibold transition ${isDark ? 'border-violet-400/30 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20' : 'border-violet-200 bg-violet-50 text-violet-600 hover:border-violet-300'}`}>
                 <Bell size={15} /> View All Voices
               </Link>
             </motion.section>

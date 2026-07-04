@@ -521,7 +521,7 @@ export default function SettingsPage() {
             {/* Footer */}
             <div className={`px-5 pb-5 pt-2 shrink-0 ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
               <Link
-                href="/dashboard/azan"
+                href="/dashboard/azan-voices"
                 className="group flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg,#065f46 0%,#047857 100%)' }}
               >
@@ -651,7 +651,7 @@ export default function SettingsPage() {
 
                 {/* Link to Azan Voices */}
                 <Link
-                  href="/dashboard/azan"
+                  href="/dashboard/azan-voices"
                   className={`flex items-center justify-between gap-2 w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition group ${
                     isDark
                       ? 'border-emerald-700/50 bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50'

@@ -247,9 +247,9 @@ function relativeTime(iso: string | null): string {
 
 const QUICK_ACTIONS = [
   { Icon: Bell,       title: 'Daily Reminder',     sub: 'Never miss a recitation',  tint: 'bg-emerald-50 text-emerald-600', href: '/dashboard/recitation' },
-  { Icon: Users,      title: 'Multiple Reciters',  sub: 'Voices you love',          tint: 'bg-violet-50 text-violet-600',   href: '/dashboard/azan' },
-  { Icon: Headphones, title: 'Background Play',    sub: 'Listen while you do more', tint: 'bg-amber-50 text-amber-600',     href: '/dashboard/azan' },
-  { Icon: Download,   title: 'Offline Listening',  sub: 'Download & listen',        tint: 'bg-sky-50 text-sky-600',         href: '/dashboard/azan' },
+  { Icon: Users,      title: 'Multiple Reciters',  sub: 'Voices you love',          tint: 'bg-violet-50 text-violet-600',   href: '/dashboard/azan-voices' },
+  { Icon: Headphones, title: 'Background Play',    sub: 'Listen while you do more', tint: 'bg-amber-50 text-amber-600',     href: '/dashboard/azan-voices' },
+  { Icon: Download,   title: 'Offline Listening',  sub: 'Download & listen',        tint: 'bg-sky-50 text-sky-600',         href: '/dashboard/azan-voices' },
   { Icon: Compass,    title: 'Qibla Direction',    sub: 'Stay connected',           tint: 'bg-rose-50 text-rose-500',       href: '/dashboard/qibla' },
 ];
 
