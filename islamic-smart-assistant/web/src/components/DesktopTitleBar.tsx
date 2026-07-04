@@ -108,7 +108,7 @@ export function DesktopTitleBar() {
       <div className="relative z-10 flex items-center gap-2.5 pl-3.5 pr-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/ismaa_logo2.png"
+          src="/ismaa_logo3.png"
           alt="ISMAA"
           className="h-[24px] w-auto object-contain"
           style={{ filter: isDark ? 'drop-shadow(0 1px 3px rgba(0,0,0,0.5)) brightness(1.15)' : 'drop-shadow(0 1px 2px rgba(16,40,30,0.15))' }}

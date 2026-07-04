@@ -10,9 +10,9 @@ export const metadata = {
   title: 'ISMAA — Islamic Smart Assistant',
   description: 'Prayer times, Azan, Quran with translation, multi-device sync — all in one beautifully crafted assistant.',
   icons: {
-    icon: '/ismaa_logo2.png',
-    shortcut: '/ismaa_logo2.png',
-    apple: '/ismaa_logo2.png',
+    icon: '/ismaa_logo3.png',
+    shortcut: '/ismaa_logo3.png',
+    apple: '/ismaa_logo3.png',
   },
 };
 
