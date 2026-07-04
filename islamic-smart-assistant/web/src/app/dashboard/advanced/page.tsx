@@ -12,11 +12,13 @@ import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { DUAS, DUA_GROUP_LABELS, type Dua, type DuaGroup, type DuaSection } from '@/lib/duas-data';
 import { HADEES_BOOKS, HADEES_CDN } from '@/lib/hadees-books';
+import { TafsirSection } from '@/components/TafsirLibrary';
 
 // ── Tab definition ───────────────────────────────────────────────────────────
-type Tab = 'duas' | 'hadees' | 'masail' | 'calculators';
+type Tab = 'duas' | 'hadees' | 'tafsir' | 'masail' | 'calculators';
 const TABS: { id: Tab; label: string; icon: typeof BookMarked; color: string }[] = [
   { id: 'hadees',      label: 'Hadees Library',        icon: BookOpen,   color: 'text-emerald-600' },
+  { id: 'tafsir',      label: 'Tafsir-ul-Quran',       icon: Library,    color: 'text-sky-600' },
   { id: 'duas',        label: 'Duas & Supplications', icon: Heart,      color: 'text-rose-500' },
   { id: 'masail',      label: 'Islamic Masail',         icon: Scale,      color: 'text-amber-600' },
   { id: 'calculators', label: 'Islamic Calculators',    icon: Calculator, color: 'text-violet-600' },
@@ -1314,7 +1316,7 @@ export default function IslamicLibraryPage() {
             </div>
             <div className="mt-3 inline-block max-w-md rounded-xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-sm">
               <p className="text-base sm:text-lg leading-relaxed text-black/85">
-                Duas · Hadees Library · Islamic Masail · Calculators
+                Duas · Hadees Library · Tafsir-ul-Quran · Islamic Masail · Calculators
               </p>
               <p className="mt-1 text-xs text-black/55">Hanafi | Deoband | Authentic Sources</p>
             </div>
@@ -1352,7 +1354,7 @@ export default function IslamicLibraryPage() {
 
         {/* ── Tab navigation cards — inside hero so background image extends here ── */}
         <div className="relative px-6 sm:px-10 pb-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -1380,6 +1382,7 @@ export default function IslamicLibraryPage() {
           <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
             {activeTab === 'duas'        && <DuasSection       isDark={isDark} />}
             {activeTab === 'hadees'      && <HadeesSection     isDark={isDark} />}
+            {activeTab === 'tafsir'      && <TafsirSection     isDark={isDark} />}
             {activeTab === 'masail'      && <MasailSection     isDark={isDark} />}
             {activeTab === 'calculators' && <CalculatorsSection isDark={isDark} />}
           </motion.div>
