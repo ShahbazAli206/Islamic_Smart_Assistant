@@ -596,22 +596,24 @@ export default function PrayerTimesPage() {
           {/* Nearby mosque list — the masjid-e-nabwi sits behind it (bottom-right).
               `isolate` makes this card its own stacking context so the -z-10
               image stays above the card background but below the list content. */}
-          <div className="relative isolate rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden lg:col-span-1">
+          {/* Light glass card matching the Sect/Madhab/Fiqh and ayah panels
+              (bg-white/60 + blur), so dark text replaces the parchment tones. */}
+          <div className="relative isolate rounded-2xl border border-white/60 bg-white/60 backdrop-blur-sm overflow-hidden lg:col-span-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/masjid-e-nabwi.png" alt="" aria-hidden
               className="pointer-events-none select-none absolute right-0 bottom-0 -z-10 w-[200px] opacity-90" />
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h3 className="font-bold flex items-center gap-2 text-parchment"><Building2 size={16} className="text-gold-300" /> Nearby Mosques</h3>
-              {loadingMosques && <Loader2 size={16} className="animate-spin text-gold-300" />}
+            <div className="p-4 border-b border-black/10 flex items-center justify-between">
+              <h3 className="font-bold flex items-center gap-2 text-black"><Building2 size={16} className="text-gold-600" /> Nearby Mosques</h3>
+              {loadingMosques && <Loader2 size={16} className="animate-spin text-gold-600" />}
             </div>
 
             {mosqueErr && (
-              <div className={`px-4 py-3 text-sm border-b ${isDark ? 'text-rose-200 bg-rose-500/15 border-rose-500/20' : 'text-rose-800 bg-rose-100 border-rose-200'}`}>{mosqueErr}</div>
+              <div className="px-4 py-3 text-sm border-b text-rose-800 bg-rose-100 border-rose-200">{mosqueErr}</div>
             )}
 
-            <ul className="max-h-[440px] overflow-y-auto divide-y divide-white/5">
+            <ul className="max-h-[440px] overflow-y-auto divide-y divide-black/10">
               {mosques.length === 0 && !loadingMosques && (
-                <li className="p-4 text-sm text-parchment/55">No mosques found in this area. Try zooming out or searching another place.</li>
+                <li className="p-4 text-sm text-black/55">No mosques found in this area. Try zooming out or searching another place.</li>
               )}
               {mosques.map((m) => {
                 const active = m.id === selected?.id;
@@ -619,19 +621,19 @@ export default function PrayerTimesPage() {
                   <li key={m.id}>
                     <button
                       onClick={() => { setSelected(m); setCenter({ lat: m.lat, lng: m.lng }); }}
-                      className={`w-full text-left p-4 flex items-start gap-3 transition hover:bg-white/5 ${active ? 'bg-white/[0.07]' : ''}`}
+                      className={`w-full text-left p-4 flex items-start gap-3 transition hover:bg-black/5 ${active ? 'bg-black/[0.06]' : ''}`}
                     >
                       <span className={`mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                        ${active ? 'bg-gold-gradient text-midnight-900' : 'bg-emerald-600/25 text-gold-300 border border-white/10'}`}>
+                        ${active ? 'bg-gold-gradient text-midnight-900' : 'bg-emerald-600/15 text-emerald-700 border border-black/10'}`}>
                         <Building2 size={16} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <p className="font-semibold truncate text-parchment">{m.name}</p>
-                        <p className="text-xs text-parchment/55 truncate">
+                        <p className="font-semibold truncate text-black">{m.name}</p>
+                        <p className="text-xs text-black/55 truncate">
                           {m.city ? m.city + ' · ' : ''}{m.distanceKm != null ? `${m.distanceKm.toFixed(1)} km away` : ''}
                         </p>
                       </span>
-                      <ChevronRight size={16} className="text-parchment/40 shrink-0 self-center" />
+                      <ChevronRight size={16} className="text-black/40 shrink-0 self-center" />
                     </button>
                   </li>
                 );
