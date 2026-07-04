@@ -3,7 +3,7 @@ Downloads the default Azan + Quran starter pack into the web app's public folder
 new users see real audio without needing an internet connection.
 
 Saves:
-    islamic-smart-assistant/web/public/audio/azan/{makkah,madinah,pakistan,turkey,egypt}.mp3
+    islamic-smart-assistant/web/public/audio/adhan/{makkah,madinah,pakistan,turkey,egypt}.mp3
     islamic-smart-assistant/web/public/audio/quran/{001,036,055,056,067}_abdulbasit.mp3
 
 Run on its own:
@@ -36,7 +36,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_DIR = ROOT / "islamic-smart-assistant" / "web" / "public"
-AZAN_DIR = PUBLIC_DIR / "audio" / "azan"
+AZAN_DIR = PUBLIC_DIR / "audio" / "adhan"
 QURAN_DIR = PUBLIC_DIR / "audio" / "quran"
 
 USER_AGENT = "Mozilla/5.0 (IslamicAssistant/1.0 +https://github.com/)"

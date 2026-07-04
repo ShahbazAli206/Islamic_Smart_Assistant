@@ -60,7 +60,7 @@ function waveHeights(count = 30): number[] {
 }
 const WAVE = waveHeights();
 
-const UNLOCK_SRC = '/audio/azan/makkah.mp3';
+const UNLOCK_SRC = '/audio/adhan/makkah.mp3';
 
 // ── Ramadan TTS texts ─────────────────────────────────────────────────────────
 

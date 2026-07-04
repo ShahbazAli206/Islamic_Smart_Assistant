@@ -77,7 +77,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
     if (!azanAudioRef.current) azanAudioRef.current = new Audio();
     const el = azanAudioRef.current;
     el.muted = true;
-    el.src = '/audio/azan/makkah.mp3';
+    el.src = '/audio/adhan/makkah.mp3';
     try { await el.play(); el.pause(); el.currentTime = 0; el.muted = false; } catch {}
     const persist = (key: string, val: unknown) => {
       const json = JSON.stringify(val);

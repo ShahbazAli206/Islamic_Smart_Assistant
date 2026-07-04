@@ -657,7 +657,7 @@ export default function DevicesPage() {
   // Bundled file path for the selected azan (served to the device over the LAN),
   // with a public stream as fallback if the device can't reach our LAN server.
   const azanLanSource = useMemo(() => {
-    const path = azanLocalPath(selectedAzanVoice) ?? '/audio/azan/makkah.mp3';
+    const path = azanLocalPath(selectedAzanVoice) ?? '/audio/adhan/makkah.mp3';
     const name = azanVoiceName(selectedAzanVoice) ?? 'Makkah  -  Haramain';
     return { kind: 'lan' as const, path, title: `Adhan  -  ${name}`, fallbackUrl: resolveAzanCastUrl(selectedAzanVoice).url };
   }, [selectedAzanVoice]);

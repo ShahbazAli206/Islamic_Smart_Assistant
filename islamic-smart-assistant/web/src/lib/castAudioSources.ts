@@ -25,25 +25,25 @@ const PUBLIC_ADHAN_FALLBACK = 'https://www.islamcan.com/audio/adhan/azan2.mp3'; 
 // path, which is castable only when the app is served from a public/LAN origin.
 type AzanSrc = { name: string; local: string; remote: string };
 const AZAN: Record<string, AzanSrc> = {
-  'hafiz-ahmed-raza-qadri':     { name: 'Hafiz Ahmed Raza Qadri', local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a' },
-  'egzon-ibrahimi':             { name: 'Egzon Ibrahimi',         local: '/audio/azan/egzon-ibrahimi.m4a',         remote: '/audio/azan/egzon-ibrahimi.m4a' },
-  'abdul-rahman-mossad':        { name: 'Abdul Rahman Mossad',    local: '/audio/azan/abdul-rahman-mossad.m4a',    remote: '/audio/azan/abdul-rahman-mossad.m4a' },
-  'mevlan-kurtishi':            { name: 'Mevlan Kurtishi',        local: '/audio/azan/mevlan-kurtishi.m4a',        remote: '/audio/azan/mevlan-kurtishi.m4a' },
-  'masjid-nabawi-osama-akhdar': { name: 'Masjid Nabawi — Osama Al-Akhdar', local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a' },
-  'pakistan':                   { name: 'Pakistan Style',         local: '/audio/azan/pakistan.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan1.mp3' },
-  'turkey':                     { name: 'Turkish — Istanbul',     local: '/audio/azan/turkey.mp3',   remote: 'https://www.islamcan.com/audio/adhan/azan6.mp3' },
-  'egypt':                      { name: 'Egyptian — Cairo',       local: '/audio/azan/egypt.mp3',    remote: 'https://www.islamcan.com/audio/adhan/azan4.mp3' },
-  'madinah-adhan':              { name: 'Azan Madinah',           local: '/audio/azan/madinah-adhan.m4a',  remote: '/audio/azan/madinah-adhan.m4a' },
-  'islam-sobhi':                { name: 'Islam Sobhi',            local: '/audio/azan/islam-sobhi.m4a',    remote: '/audio/azan/islam-sobhi.m4a' },
-  'makkah-abdallah-ahmad':      { name: 'Makkah — Abdallah Ahmad', local: '/audio/azan/makkah-abdallah-ahmad.m4a', remote: '/audio/azan/makkah-abdallah-ahmad.m4a' },
-  'masjid-al-haram':            { name: 'Masjid Al-Haram',        local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a' },
+  'hafiz-ahmed-raza-qadri':     { name: 'Hafiz Ahmed Raza Qadri', local: '/audio/adhan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/adhan/hafiz-ahmed-raza-qadri.m4a' },
+  'egzon-ibrahimi':             { name: 'Egzon Ibrahimi',         local: '/audio/adhan/egzon-ibrahimi.m4a',         remote: '/audio/adhan/egzon-ibrahimi.m4a' },
+  'abdul-rahman-mossad':        { name: 'Abdul Rahman Mossad',    local: '/audio/adhan/abdul-rahman-mossad.m4a',    remote: '/audio/adhan/abdul-rahman-mossad.m4a' },
+  'mevlan-kurtishi':            { name: 'Mevlan Kurtishi',        local: '/audio/adhan/mevlan-kurtishi.m4a',        remote: '/audio/adhan/mevlan-kurtishi.m4a' },
+  'masjid-nabawi-osama-akhdar': { name: 'Masjid Nabawi — Osama Al-Akhdar', local: '/audio/adhan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/adhan/masjid-nabawi-osama-akhdar.m4a' },
+  'pakistan':                   { name: 'Pakistan Style',         local: '/audio/adhan/pakistan.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan1.mp3' },
+  'turkey':                     { name: 'Turkish — Istanbul',     local: '/audio/adhan/turkey.mp3',   remote: 'https://www.islamcan.com/audio/adhan/azan6.mp3' },
+  'egypt':                      { name: 'Egyptian — Cairo',       local: '/audio/adhan/egypt.mp3',    remote: 'https://www.islamcan.com/audio/adhan/azan4.mp3' },
+  'madinah-adhan':              { name: 'Azan Madinah',           local: '/audio/adhan/madinah-adhan.m4a',  remote: '/audio/adhan/madinah-adhan.m4a' },
+  'islam-sobhi':                { name: 'Islam Sobhi',            local: '/audio/adhan/islam-sobhi.m4a',    remote: '/audio/adhan/islam-sobhi.m4a' },
+  'makkah-abdallah-ahmad':      { name: 'Makkah — Abdallah Ahmad', local: '/audio/adhan/makkah-abdallah-ahmad.m4a', remote: '/audio/adhan/makkah-abdallah-ahmad.m4a' },
+  'masjid-al-haram':            { name: 'Masjid Al-Haram',        local: '/audio/adhan/masjid-al-haram.m4a', remote: '/audio/adhan/masjid-al-haram.m4a' },
   'azan-best-sound-quality':    { name: 'Azan — Best Sound Quality', local: '/audio/Azan Best Sound quality.mp3', remote: '/audio/Azan Best Sound quality.mp3' },
 
-  'makkah':                     { name: 'Makkah — Haramain',      local: '/audio/azan/makkah.mp3',   remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3' },
-  'madinah':                    { name: 'Madinah — Masjid Nabawi', local: '/audio/azan/madinah.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3' },
+  'makkah':                     { name: 'Makkah — Haramain',      local: '/audio/adhan/makkah.mp3',   remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3' },
+  'madinah':                    { name: 'Madinah — Masjid Nabawi', local: '/audio/adhan/madinah.mp3', remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3' },
 };
 
-/** Bundled (public/) path for a built-in azan voice, e.g. '/audio/azan/makkah.mp3'.
+/** Bundled (public/) path for a built-in azan voice, e.g. '/audio/adhan/makkah.mp3'.
  *  Returns null for unknown/custom voices. Used by the desktop LAN media server,
  *  which serves these files to Chromecast/DLNA devices on the network. */
 export function azanLocalPath(voiceId: string): string | null {

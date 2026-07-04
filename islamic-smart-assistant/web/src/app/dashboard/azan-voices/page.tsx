@@ -43,11 +43,11 @@ type AzanVoice = {
   badge?: 'popular' | 'new';
   /** Extra label pills shown on the card alongside badge (e.g. 'Most Listened'). */
   tags?: string[];
-  /** Local path served from /public/audio/azan/ — created by download_assets.py */
+  /** Local path served from /public/audio/adhan/ — created by download_assets.py */
   local: string;
   /** Public fallback URL (in case the local file isn't downloaded yet). */
   remote: string;
-  /** Themed artwork (in /public/azan/). Drop a real photo at the same path to override. */
+  /** Themed artwork (in /public/adhan/). Drop a real photo at the same path to override. */
   art: string;
   accent: string;
   defaultPick?: boolean;
@@ -60,55 +60,55 @@ const VOICES: AzanVoice[] = [
     region: 'Unknown', lang: 'Arabic', style: 'Melodic', duration: '2:46',
     badge: 'popular', tags: ['Most Listened'],
     local: '/audio/Azan Best Sound quality.mp3', remote: '/audio/Azan Best Sound quality.mp3',
-    art: '/azan/makkah.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
+    art: '/adhan/makkah.svg', accent: 'from-emerald-500 to-teal-700', defaultPick: true,
   },
   {
     id: 'hafiz-ahmed-raza-qadri', name: 'Hafiz Ahmed Raza Qadri', subtitle: 'Naat-style Azan',
     region: 'Pakistan', lang: 'Urdu', style: 'Melodic', duration: '2:26',
     badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/azan/hafiz-ahmed-raza-qadri.m4a',
-    art: '/azan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
+    local: '/audio/adhan/hafiz-ahmed-raza-qadri.m4a', remote: '/audio/adhan/hafiz-ahmed-raza-qadri.m4a',
+    art: '/adhan/pakistan.svg', accent: 'from-emerald-500 to-teal-700',
   },
   {
     id: 'mevlan-kurtishi', name: 'Mevlan Kurtishi', subtitle: 'Balkan melodic Azan',
     region: 'Macedonia', lang: 'Arabic', style: 'Melodic', duration: '2:37',
     badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/mevlan-kurtishi.m4a', remote: '/audio/azan/mevlan-kurtishi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
+    local: '/audio/adhan/mevlan-kurtishi.m4a', remote: '/audio/adhan/mevlan-kurtishi.m4a',
+    art: '/adhan/turkey.svg', accent: 'from-cyan-500 to-blue-700',
   },
   {
     id: 'egzon-ibrahimi', name: 'Egzon Ibrahimi', subtitle: 'Balkan melodic Azan',
     region: 'Kosovo', lang: 'Arabic', style: 'Melodic', duration: '3:44',
     badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/egzon-ibrahimi.m4a', remote: '/audio/azan/egzon-ibrahimi.m4a',
-    art: '/azan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
+    local: '/audio/adhan/egzon-ibrahimi.m4a', remote: '/audio/adhan/egzon-ibrahimi.m4a',
+    art: '/adhan/turkey.svg', accent: 'from-sky-500 to-indigo-600',
   },
   {
     id: 'abdul-rahman-mossad', name: 'Abdul Rahman Mossad', subtitle: 'Heartfelt recitation',
     region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '2:49',
     badge: 'popular', tags: ['Most Listened'],
-    local: '/audio/azan/abdul-rahman-mossad.m4a', remote: '/audio/azan/abdul-rahman-mossad.m4a',
-    art: '/azan/egypt.svg', accent: 'from-amber-500 to-orange-600',
+    local: '/audio/adhan/abdul-rahman-mossad.m4a', remote: '/audio/adhan/abdul-rahman-mossad.m4a',
+    art: '/adhan/egypt.svg', accent: 'from-amber-500 to-orange-600',
   },
 
   // ── Sacred Mosques ────────────────────────────────────────────────────────
   {
     id: 'masjid-al-haram', name: 'Masjid Al-Haram', subtitle: 'The Grand Mosque, Makkah',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:46',
-    local: '/audio/azan/masjid-al-haram.m4a', remote: '/audio/azan/masjid-al-haram.m4a',
-    art: '/azan/makkah.svg', accent: 'from-emerald-700 to-green-900',
+    local: '/audio/adhan/masjid-al-haram.m4a', remote: '/audio/adhan/masjid-al-haram.m4a',
+    art: '/adhan/makkah.svg', accent: 'from-emerald-700 to-green-900',
   },
   {
     id: 'makkah-abdallah-ahmad', name: 'Makkah — Abdallah Ahmad', subtitle: 'Haramain reciter',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '2:29',
-    local: '/audio/azan/makkah-abdallah-ahmad.m4a', remote: '/audio/azan/makkah-abdallah-ahmad.m4a',
-    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
+    local: '/audio/adhan/makkah-abdallah-ahmad.m4a', remote: '/audio/adhan/makkah-abdallah-ahmad.m4a',
+    art: '/adhan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
   },
   {
     id: 'islam-sobhi', name: 'Islam Sobhi', subtitle: 'القارئ اسلام صبحي',
     region: 'Egypt', lang: 'Arabic', style: 'Melodic', duration: '2:18',
-    local: '/audio/azan/islam-sobhi.m4a', remote: '/audio/azan/islam-sobhi.m4a',
-    art: '/azan/egypt.svg', accent: 'from-rose-500 to-pink-600',
+    local: '/audio/adhan/islam-sobhi.m4a', remote: '/audio/adhan/islam-sobhi.m4a',
+    art: '/adhan/egypt.svg', accent: 'from-rose-500 to-pink-600',
   },
 
   // ── More Voices ───────────────────────────────────────────────────────────
@@ -116,50 +116,50 @@ const VOICES: AzanVoice[] = [
     id: 'masjid-nabawi-osama-akhdar', name: 'Masjid Nabawi — Osama Al-Akhdar', subtitle: 'المسجد النبوي الشريف',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:30',
     badge: 'popular',
-    local: '/audio/azan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/azan/masjid-nabawi-osama-akhdar.m4a',
-    art: '/azan/madinah.svg', accent: 'from-gold-600 to-amber-700',
+    local: '/audio/adhan/masjid-nabawi-osama-akhdar.m4a', remote: '/audio/adhan/masjid-nabawi-osama-akhdar.m4a',
+    art: '/adhan/madinah.svg', accent: 'from-gold-600 to-amber-700',
   },
   {
     id: 'pakistan', name: 'Pakistan Style', subtitle: 'Lahore — Classical',
     region: 'Pakistan', lang: 'Urdu', style: 'Classical', duration: '3:58',
     badge: 'popular',
-    local: '/audio/azan/pakistan.mp3',
+    local: '/audio/adhan/pakistan.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan1.mp3',
-    art: '/azan/pakistan.svg', accent: 'from-rose-500 to-amber-500',
+    art: '/adhan/pakistan.svg', accent: 'from-rose-500 to-amber-500',
   },
   {
     id: 'turkey', name: 'Turkish — Istanbul', subtitle: 'Hafiz Mustafa Özcan',
     region: 'Türkiye', lang: 'Turkish', style: 'Traditional', duration: '4:21',
-    local: '/audio/azan/turkey.mp3',
+    local: '/audio/adhan/turkey.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan6.mp3',
-    art: '/azan/turkey.svg', accent: 'from-cyan-500 to-indigo-600',
+    art: '/adhan/turkey.svg', accent: 'from-cyan-500 to-indigo-600',
   },
   {
     id: 'egypt', name: 'Egyptian — Cairo', subtitle: 'Maqam Style',
     region: 'Egypt', lang: 'Arabic', style: 'Maqam', duration: '4:46',
-    local: '/audio/azan/egypt.mp3',
+    local: '/audio/adhan/egypt.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan4.mp3',
-    art: '/azan/egypt.svg', accent: 'from-fuchsia-500 to-rose-500',
+    art: '/adhan/egypt.svg', accent: 'from-fuchsia-500 to-rose-500',
   },
   {
     id: 'madinah-adhan', name: 'Azan Madinah', subtitle: 'أذان مدني',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '3:09',
-    local: '/audio/azan/madinah-adhan.m4a', remote: '/audio/azan/madinah-adhan.m4a',
-    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
+    local: '/audio/adhan/madinah-adhan.m4a', remote: '/audio/adhan/madinah-adhan.m4a',
+    art: '/adhan/madinah.svg', accent: 'from-gold-500 to-gold-700',
   },
   {
     id: 'makkah', name: 'Makkah — Haramain', subtitle: 'Sheikh Ali Mulla',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:38',
-    local: '/audio/azan/makkah.mp3',
+    local: '/audio/adhan/makkah.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan2.mp3',
-    art: '/azan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
+    art: '/adhan/makkah.svg', accent: 'from-emerald-600 to-emerald-800',
   },
   {
     id: 'madinah', name: 'Madinah — Masjid Nabawi', subtitle: 'Sheikh Essam Bukhari',
     region: 'Saudi Arabia', lang: 'Arabic', style: 'Traditional', duration: '4:12',
-    local: '/audio/azan/madinah.mp3',
+    local: '/audio/adhan/madinah.mp3',
     remote: 'https://www.islamcan.com/audio/adhan/azan3.mp3',
-    art: '/azan/madinah.svg', accent: 'from-gold-500 to-gold-700',
+    art: '/adhan/madinah.svg', accent: 'from-gold-500 to-gold-700',
   },
 ];
 
@@ -948,7 +948,7 @@ export default function AzanPage() {
     const custom: Item[] = customAzans.map((c) => ({
       id: c.id, name: c.name, subtitle: 'Your upload', region: 'Custom',
       lang: 'Custom', style: 'Custom', duration: formatClock(c.durationSec),
-      art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true,
+      art: '/adhan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true,
       badge: c.badge, tags: c.tags,
     }));
     // Backend-synced customs — skip any matching a local upload (same name +
@@ -959,7 +959,7 @@ export default function AzanPage() {
       .map((r) => ({
         id: r.id, name: r.name, subtitle: 'Synced upload', region: 'Custom',
         lang: 'Custom', style: 'Custom', duration: formatClock(Math.round(r.durationMs / 1000)),
-        art: '/azan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true, remoteUrl: r.url,
+        art: '/adhan/custom.svg', accent: 'from-violet-500 to-fuchsia-600', isCustom: true, remoteUrl: r.url,
       }));
     return [...builtin, ...custom, ...remote];
   }, [customAzans, remoteCustoms, hiddenVoices]);
