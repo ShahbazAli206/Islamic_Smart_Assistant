@@ -428,7 +428,7 @@ function MobileCompassPopup({ isDark }: { isDark: boolean }) {
 
 const QIBLA_AYAH: Record<string, string> = {
   en: 'So turn your face toward al-Masjid al-Haram. And wherever you are, turn your faces toward it.',
-  ar: 'فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ',
+  ar: 'فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا۟ وُجُوهَكُمْ شَطْرَهُۥ',
   ur: 'پس اپنا چہرہ مسجد الحرام کی طرف پھیرو، اور تم جہاں کہیں بھی ہو اپنے چہرے اسی کی طرف پھیرو۔',
   tr: 'Yüzünü Mescid-i Haram yönüne çevir. Nerede olursanız olun, yüzlerinizi o tarafa çevirin.',
   hi: 'अपना चेहरा मस्जिद अल-हराम की तरफ फेरो। और तुम जहाँ भी हो, अपने चेहरे उसी की तरफ फेरो।',
@@ -600,7 +600,7 @@ export default function QiblaPage() {
                     ١٤٤
                   </span>
                   <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
-                    فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ
+                    فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا۟ وُجُوهَكُمْ شَطْرَهُۥ
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">

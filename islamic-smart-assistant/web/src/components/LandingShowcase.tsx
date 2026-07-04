@@ -475,7 +475,7 @@ function AyahGlassCard({ className = '' }: { className?: string }) {
         <BookOpen size={22} />
       </span>
       <p className="font-arabic text-2xl leading-[1.9] text-gold-100" style={{ direction: 'rtl' }}>
-        إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ
+        إِنَّ هَٰذَا ٱلْقُرْءَانَ يَهْدِى لِلَّتِى هِىَ أَقْوَمُ
       </p>
       {translation && (
         <p className={`mt-3 text-sm leading-relaxed text-parchment/80 ${rtl ? 'font-arabic' : ''}`} style={rtl ? { direction: 'rtl' } : undefined}>
@@ -490,7 +490,7 @@ function AyahGlassCard({ className = '' }: { className?: string }) {
 /* Verse about establishing prayer at its appointed times (An-Nisa 4:103) —
    shown in the Azan hero. Translation rendered in the user's chosen language. */
 const AZAN_AYAH = {
-  arabic: 'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا',
+  arabic: 'إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَٰبًۭا مَّوْقُوتًۭا',
   reference: 'Surah An-Nisa 4:103',
   translations: {
     en: 'Indeed, prayer has been decreed upon the believers a decree of specified times.',

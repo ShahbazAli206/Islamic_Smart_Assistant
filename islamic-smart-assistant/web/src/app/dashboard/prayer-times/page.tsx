@@ -132,7 +132,7 @@ function MethodDropdown({
 
 const PRAYER_TIMES_AYAH: Record<string, string> = {
   en: 'And establish prayer. Indeed, prayer prohibits immorality and wrong-doing.',
-  ar: 'وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ',
+  ar: 'وَأَقِمِ ٱلصَّلَوٰةَ ۖ إِنَّ ٱلصَّلَوٰةَ تَنْهَىٰ عَنِ ٱلْفَحْشَآءِ وَٱلْمُنكَرِ',
   ur: 'نماز قائم کرو، بے شک نماز بے حیائی اور برے کاموں سے روکتی ہے۔',
   tr: 'Namazı kıl! Çünkü namaz, hayâsızlıktan ve kötülükten alıkoyar.',
   hi: 'नमाज़ क़ायम करो। बेशक नमाज़ बेशर्मी और बुरे कामों से रोकती है।',
@@ -466,7 +466,7 @@ export default function PrayerTimesPage() {
                     ٤٥
                   </span>
                   <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
-                    وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ
+                    وَأَقِمِ ٱلصَّلَوٰةَ ۖ إِنَّ ٱلصَّلَوٰةَ تَنْهَىٰ عَنِ ٱلْفَحْشَآءِ وَٱلْمُنكَرِ
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">

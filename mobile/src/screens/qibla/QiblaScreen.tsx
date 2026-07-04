@@ -36,7 +36,7 @@ function VerseHeader() {
       <View style={vh.overlay} />
       <View style={vh.content}>
         <Text style={vh.arabic}>
-          {'قُلْ وَجَّهْتُ وَجْهِيَ لِلَّذِي فَطَرَ السَّمَاوَاتِ وَالْأَرْضَ'}
+          {'فَوَلِّ وَجْهَكَ شَطْرَ ٱلْمَسْجِدِ ٱلْحَرَامِ ۚ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا۟ وُجُوهَكُمْ شَطْرَهُۥ'}
         </Text>
         <Text style={vh.en}>
           So turn your face toward Al-Masjid Al-Haram.

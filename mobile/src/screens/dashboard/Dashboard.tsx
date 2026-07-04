@@ -384,7 +384,7 @@ export function DashboardScreen() {
       <View style={S.ayahCard}>
         <Text style={S.ayahBadge}>View of the Day</Text>
         <Text style={S.ayahArabic}>
-          {'وَأَقِمِ الصَّلَاةَ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ'}
+          {'وَأَقِمِ ٱلصَّلَوٰةَ ۖ إِنَّ ٱلصَّلَوٰةَ تَنْهَىٰ عَنِ ٱلْفَحْشَآءِ وَٱلْمُنكَرِ'}
         </Text>
         <Text style={S.ayahEn}>{t('quran.verseOfDay')}</Text>
         <Text style={S.ayahRef}>{t('quran.verseOfDayRef')}</Text>

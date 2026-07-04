@@ -64,7 +64,7 @@ const accentMap: Record<string, { bg: string; text: string; border: string; badg
 
 const AYAH_TRANSLATION: Record<string, string> = {
   en: 'Establish prayer at the decline of the sun until the darkness of the night.',
-  ar: 'أقم الصلاة لدلوك الشمس إلى غسق الليل',
+  ar: 'أَقِمِ ٱلصَّلَوٰةَ لِدُلُوكِ ٱلشَّمْسِ إِلَىٰ غَسَقِ ٱلَّيْلِ',
   ur: 'نماز قائم کرو سورج کے ڈھلنے سے رات کے اندھیرے تک۔',
   tr: 'Güneşin batıya meyletmesinden gecenin karanlığına kadar namazı kıl.',
   fr: "Établis la prière au déclin du soleil jusqu'aux ténèbres de la nuit.",
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                     ٧٨
                   </span>
                   <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
-                    أَقِمِ الصَّلَاةَ لِدُلُوكِ الشَّمْسِ إِلَىٰ غَسَقِ اللَّيْلِ
+                    أَقِمِ ٱلصَّلَوٰةَ لِدُلُوكِ ٱلشَّمْسِ إِلَىٰ غَسَقِ ٱلَّيْلِ
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">

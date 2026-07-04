@@ -166,9 +166,9 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
               {DHIKR_TRANS[language] ?? DHIKR_TRANS.en}
             </p>
           )}
-          <p className="font-arabic text-2xl text-parchment mt-2" dir="rtl">وَاذْكُرِ اللَّهَ كَثِيرًا</p>
+          <p className="font-arabic text-2xl text-parchment mt-2" dir="rtl">وَٱذْكُرُوا۟ ٱللّٰهَ كَثِيرًۭا</p>
           <p className="text-gold-300 text-xs font-semibold mt-2 flex items-center gap-1">
-            <Sparkles size={11} /> Al-Ahzab 33:41
+            <Sparkles size={11} /> Al-Jumu&apos;ah 62:10
           </p>
         </div>
       </div>

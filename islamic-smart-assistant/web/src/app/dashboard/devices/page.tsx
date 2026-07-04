@@ -1149,7 +1149,7 @@ export default function DevicesPage() {
                   ٢٠٤
                 </span>
                 <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
-                  وَإِذَا قُرِئَ ٱلْقُرْآنُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟ لَعَلَّكُمْ تُرْحَمُونَ
+                  وَإِذَا قُرِئَ ٱلْقُرْءَانُ فَٱسْتَمِعُوا۟ لَهُۥ وَأَنصِتُوا۟ لَعَلَّكُمْ تُرْحَمُونَ
                 </p>
               </div>
               <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">

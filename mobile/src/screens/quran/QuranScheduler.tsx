@@ -77,7 +77,7 @@ export function QuranSchedulerScreen() {
         <View style={S.heroContent}>
           <Text style={S.heroTitle}>Quran Recitation Schedule</Text>
           <Text style={S.heroArabic}>
-            {'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'}
+            {'أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ'}
           </Text>
           <Text style={S.heroEn}>Verify, in the remembrance of Allah do hearts find rest.</Text>
           <Text style={S.heroRef}>Surah Ar-Ra'd (13:28)</Text>

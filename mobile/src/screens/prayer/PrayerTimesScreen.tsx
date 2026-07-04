@@ -127,7 +127,7 @@ export function PrayerTimesScreen() {
       {/* ── Top Arabic verse banner ── */}
       <View style={S.verseBanner}>
         <Text style={S.verseArabic}>
-          {'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا'}
+          {'إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَٰبًۭا مَّوْقُوتًۭا'}
         </Text>
         <Text style={S.verseEn}>
           And established prayer. Indeed, prayer prohibits immorality and wrongdoing and the

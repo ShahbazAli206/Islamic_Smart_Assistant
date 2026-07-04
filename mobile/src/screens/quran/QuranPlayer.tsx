@@ -195,7 +195,7 @@ export function QuranPlayerScreen() {
           <View style={S.heroLeft}>
             <Text style={S.heroTitle}>Holy Quran</Text>
             <Text style={S.heroArabic}>
-              {'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ'}
+              {'إِنَّ هَٰذَا ٱلْقُرْءَانَ يَهْدِى لِلَّتِى هِىَ أَقْوَمُ'}
             </Text>
             <Text style={S.heroEn}>{t('quran.heroVerse')}</Text>
             <Text style={S.heroRef}>{t('quran.heroRef')}</Text>
@@ -312,7 +312,7 @@ export function QuranPlayerScreen() {
         {withTranslation && (
           <View style={S.translationBox}>
             <Text style={S.translationArabic}>
-              {'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
+              {'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'}
             </Text>
             {translationText ? (
               <Text style={S.translationEn}>{translationText}</Text>

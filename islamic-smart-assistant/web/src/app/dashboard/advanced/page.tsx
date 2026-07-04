@@ -1240,7 +1240,7 @@ function CalculatorsSection({ isDark }: { isDark: boolean }) {
 // ═══════════════════════════════════════════════════════════════════════════
 const HERO_AYAT = [
   {
-    ar: 'ادْعُونِي أَسْتَجِبْ لَكُمْ',
+    ar: 'ٱدْعُونِىٓ أَسْتَجِبْ لَكُمْ',
     ref: 'Quran 40:60',
     translations: {
       en: 'Call upon Me; I will respond to you.',
@@ -1255,7 +1255,7 @@ const HERO_AYAT = [
     } as Record<string, string>,
   },
   {
-    ar: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
+    ar: 'وَإِذَا سَأَلَكَ عِبَادِى عَنِّى فَإِنِّى قَرِيبٌ',
     ref: 'Quran 2:186',
     translations: {
       en: 'When My servants ask about Me, I am indeed close.',
@@ -1270,7 +1270,7 @@ const HERO_AYAT = [
     } as Record<string, string>,
   },
   {
-    ar: 'فَاذْكُرُونِي أَذْكُرْكُمْ',
+    ar: 'فَٱذْكُرُونِىٓ أَذْكُرْكُمْ',
     ref: 'Quran 2:152',
     translations: {
       en: 'Remember Me; I will remember you.',

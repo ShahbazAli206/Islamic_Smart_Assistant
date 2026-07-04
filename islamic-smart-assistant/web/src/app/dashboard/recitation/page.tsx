@@ -36,7 +36,7 @@ const REPEAT_ICON: Record<RepeatMode, typeof Repeat> = {
 // Rotating ayat shown in the header (auto-advancing carousel).
 const HERO_AYAT = [
   {
-    ar: "إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
+    ar: "إِنَّ هَٰذَا ٱلْقُرْءَانَ يَهْدِى لِلَّتِى هِىَ أَقْوَمُ",
     ref: "Surah Al-Isra 17:9",
     translations: {
       en: "Indeed, this Qur'an guides to that which is most just and right.",
@@ -51,7 +51,7 @@ const HERO_AYAT = [
     } as Record<string, string>,
   },
   {
-    ar: "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ",
+    ar: "وَلَقَدْ يَسَّرْنَا ٱلْقُرْءَانَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍۢ",
     ref: "Surah Al-Qamar 54:17",
     translations: {
       en: "And We have certainly made the Qur'an easy for remembrance, so is there any who will remember?",
@@ -66,7 +66,7 @@ const HERO_AYAT = [
     } as Record<string, string>,
   },
   {
-    ar: "وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ",
+    ar: "وَنُنَزِّلُ مِنَ ٱلْقُرْءَانِ مَا هُوَ شِفَآءٌۭ وَرَحْمَةٌۭ",
     ref: "Surah Al-Isra 17:82",
     translations: {
       en: "And We send down of the Qur'an that which is healing and mercy for the believers.",
@@ -833,7 +833,7 @@ export default function RecitationSchedulerPage() {
                 {/* ayah quote + lantern */}
                 <div className="relative overflow-hidden rounded-2xl bg-emerald-50/70 border border-emerald-100 px-5 py-4 flex items-center gap-4">
                   <div className="flex-1 text-center">
-                    <p className="font-arabic text-xl text-emerald-900 leading-loose" dir="rtl">فَإِنَّ مَعَ الْعُسْرِ يُسْرًا</p>
+                    <p className="font-arabic text-xl text-emerald-900 leading-loose" dir="rtl">فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا</p>
                     <p className="text-xs text-emerald-900/65 mt-1">&ldquo;Indeed, with hardship [will be] ease.&rdquo;</p>
                     <p className="text-[11px] text-emerald-900/40 mt-0.5">(Surah Ash-Sharh 94:6)</p>
                   </div>
