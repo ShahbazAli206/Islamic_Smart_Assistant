@@ -23,6 +23,11 @@ html.is-desktop {
 html.is-desktop body {
   padding-top: var(--titlebar-h);
 }
+/* Fixed-position elements ignore the body padding above, so the landing page's
+   fixed nav must be offset explicitly or it slides under the title bar. */
+html.is-desktop .landing-nav {
+  top: var(--titlebar-h);
+}
 @media (min-width: 1024px) {
   html.is-desktop .dashboard-zoom {
     height: calc((100vh - var(--titlebar-h)) / 0.85) !important;

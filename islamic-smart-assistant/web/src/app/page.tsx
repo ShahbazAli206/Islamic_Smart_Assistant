@@ -71,7 +71,7 @@ export default function HomePage() {
       {/* ── nav (fixed, scroll-aware) ── */}
       {/* Nav keeps a translucent background at all times: more transparent over the
           first section, then more opaque (less transparent) once scrolled. */}
-      <header className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight-900/85 backdrop-blur-xl border-b border-white/10' : 'bg-midnight-900/30 backdrop-blur-md border-b border-white/5'}`}>
+      <header className={`landing-nav fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight-900/85 backdrop-blur-xl border-b border-white/10' : 'bg-midnight-900/30 backdrop-blur-md border-b border-white/5'}`}>
         <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
