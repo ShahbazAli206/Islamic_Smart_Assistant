@@ -17,6 +17,8 @@ import { ContentBackdrop } from '@/components/ContentBackdrop';
 import { Devices, type BackendDevice } from '@/lib/api';
 import { resolveAzanCastUrl, RECITATION_CAST_TEST_URL, azanLocalPath, azanVoiceName } from '@/lib/castAudioSources';
 import { useDesktopDevices, type LanDevice } from '@/lib/useDesktopDevices';
+import { useIsDesktop } from '@/lib/useIsDesktop';
+import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -649,6 +651,11 @@ export default function DevicesPage() {
 
   // ── Desktop-only: real LAN devices (Chromecast / DLNA / AirPlay / Alexa) ──
   const lan = useDesktopDevices();
+  // Chromecast/Nest discovery only works in the Electron desktop app (LAN mDNS/SSDP
+  // scanning). On the website we hide that card entirely and instead point users to
+  // the desktop download. Local audio devices (speaker/USB/Bluetooth) still work on web.
+  const isDesktop = useIsDesktop();
+  const desktopDownloadUrl = useDesktopDownloadUrl();
   const [castDeviceId, setCastDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
   const [, setCastDeviceName] = useLocalStorage<string>('isa:castDeviceName', '');
   const [lanVol, setLanVol] = useState(0.6);
@@ -1547,7 +1554,46 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
             )}
 
             {/* ── Cast ── (only shown when no LAN devices are detected) */}
-            {(!lan.supported || lan.devices.length === 0) && (
+            {/* Chromecast / Google Home / Nest casting relies on LAN discovery that
+                only the desktop app can do. On the WEBSITE we replace this whole card
+                with a blinking "desktop-only" notice + a direct installer download.
+                In the DESKTOP app it renders exactly as before. */}
+            {!isDesktop ? (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white">
+                  <Cast size={20} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
+                    {/* softly blinking badge — signals this feature lives in the desktop app */}
+                    <motion.span
+                      animate={{ opacity: [1, 0.35, 1] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/40 bg-gold-400/15 text-gold-500 text-[11px] font-bold px-2.5 py-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold-500" /> Desktop app only
+                    </motion.span>
+                  </div>
+                  <p className={`text-sm mt-1.5 ${T.sub}`}>
+                    Discovering and streaming Azan &amp; Quran to Chromecast, Google Home, Nest and
+                    other Wi-Fi speakers on your network needs the ISMAA Desktop app — a web browser
+                    can&apos;t scan your local network for these devices.
+                  </p>
+                  <a
+                    href={desktopDownloadUrl}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-semibold text-sm px-4 py-2.5 shadow-md shadow-emerald-700/25 hover:brightness-105 transition"
+                  >
+                    <Download size={16} /> Download Desktop App
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+            ) : (!lan.supported || lan.devices.length === 0) ? (
             <motion.div
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
               className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
@@ -1784,7 +1830,7 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                 </div>
               )}
             </motion.div>
-            )}
+            ) : null}
 
             {/* ── Other devices on your account ── */}
             <motion.div
