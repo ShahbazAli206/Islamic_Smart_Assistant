@@ -52,6 +52,15 @@ export interface CommunityUpload {
   created_at: string;
 }
 
+// Voices permanently removed by the maintainer. They are hidden from every
+// client and purged from Supabase on sight (the table's RLS allows public
+// delete), so they can never reappear via sync or realtime. Matched
+// case-insensitively against the upload's display name.
+const REMOVED_UPLOAD_NAMES = new Set(['azan test', 'seyyid taleh boradigahi']);
+export function isRemovedUpload(name: string): boolean {
+  return REMOVED_UPLOAD_NAMES.has((name ?? '').trim().toLowerCase());
+}
+
 /** Upload an audio blob to Supabase Storage and insert a metadata row.
  *  Returns the public URL on success, null if Supabase is not configured. */
 export async function uploadCommunityAudio(
@@ -101,7 +110,13 @@ export async function fetchCommunityUploads(
 
   const { data, error } = await q;
   if (error) return [];
-  return (data ?? []) as CommunityUpload[];
+  const rows = (data ?? []) as CommunityUpload[];
+
+  // Permanently drop maintainer-removed voices: purge them from the shared DB
+  // (best-effort) and never return them to the UI.
+  const removed = rows.filter((r) => isRemovedUpload(r.name));
+  removed.forEach((r) => { deleteCommunityUpload(r.id, r.audio_type).catch(() => {}); });
+  return rows.filter((r) => !isRemovedUpload(r.name));
 }
 
 /** Delete a community upload (storage file + DB row). */
@@ -143,7 +158,7 @@ export function subscribeToUploads(
       table: 'community_uploads',
       filter: `audio_type=eq.${audioType}`,
     }, (payload: { new: CommunityUpload }) => {
-      if (payload?.new) onNew(payload.new);
+      if (payload?.new && !isRemovedUpload(payload.new.name)) onNew(payload.new);
     })
     .subscribe();
 
