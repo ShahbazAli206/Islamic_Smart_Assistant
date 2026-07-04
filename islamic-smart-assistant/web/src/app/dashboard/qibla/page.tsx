@@ -288,7 +288,7 @@ function InfoRow({
 
 // ── Mobile / Compass recommendation popup ─────────────────────────────────────
 
-function MobileCompassPopup({ isDark }: { isDark: boolean }) {
+function MobileCompassPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -305,16 +305,21 @@ function MobileCompassPopup({ isDark }: { isDark: boolean }) {
     try { localStorage.setItem('isa:qibla-popup-dismissed', 'true'); } catch {}
   };
 
-  const cardBg   = isDark ? 'bg-[#081a11]/96 border-emerald-700/30 text-[#D4EDE5]' : 'bg-white/98 border-emerald-200 text-[#0B1410]';
-  const subText  = isDark ? 'text-emerald-400/70' : 'text-emerald-700/60';
-  const warnBg   = isDark ? 'bg-amber-500/10 border-amber-400/20' : 'bg-amber-50 border-amber-200/70';
-  const warnHead = isDark ? 'text-amber-300' : 'text-amber-800';
-  const warnBody = isDark ? 'text-amber-300/70' : 'text-amber-700/70';
-  const phoneBg  = isDark ? 'bg-emerald-800/25 border-emerald-700/20' : 'bg-emerald-50 border-emerald-200/50';
-  const phoneHead = isDark ? 'text-[#D4EDE5]' : 'text-emerald-900';
-  const phoneBody = isDark ? 'text-emerald-400/70' : 'text-emerald-700/60';
-  const divider  = isDark ? 'text-emerald-400/40' : 'text-emerald-700/35';
-  const closeBtn = isDark ? 'text-emerald-400/50 hover:text-[#D4EDE5] hover:bg-white/8' : 'text-emerald-700/45 hover:text-emerald-900 hover:bg-emerald-50';
+  // The popup is deliberately a dark translucent panel in BOTH themes — dark
+  // smoked glass over the page, with light text throughout. (The previous
+  // theme-split classes used /96 and /98 opacity steps that don't exist in
+  // Tailwind's scale, so no background was generated and the card rendered
+  // as clear glass.)
+  const cardBg   = 'bg-[rgba(4,16,10,0.80)] border-white/10 text-[#D4EDE5]';
+  const subText  = 'text-emerald-400/70';
+  const warnBg   = 'bg-amber-500/10 border-amber-400/20';
+  const warnHead = 'text-amber-300';
+  const warnBody = 'text-amber-300/70';
+  const phoneBg  = 'bg-emerald-800/25 border-emerald-700/20';
+  const phoneHead = 'text-[#D4EDE5]';
+  const phoneBody = 'text-emerald-400/70';
+  const divider  = 'text-emerald-400/40';
+  const closeBtn = 'text-emerald-400/50 hover:text-[#D4EDE5] hover:bg-white/10';
 
   return (
     <AnimatePresence>
@@ -326,7 +331,7 @@ function MobileCompassPopup({ isDark }: { isDark: boolean }) {
           exit={{ x: 110, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 240, damping: 24, delay: 1.6 }}
           className={`fixed right-4 top-[28%] z-[100] w-[272px] rounded-3xl border shadow-2xl overflow-hidden backdrop-blur-2xl ${cardBg}`}
-          style={{ boxShadow: isDark ? '0 24px 64px -12px rgba(0,0,0,0.7)' : '0 24px 64px -12px rgba(11,52,33,0.18)' }}
+          style={{ boxShadow: '0 24px 64px -12px rgba(0,0,0,0.7)' }}
         >
           {/* top accent bar */}
           <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
@@ -568,7 +573,7 @@ export default function QiblaPage() {
       className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
     >
-      <MobileCompassPopup isDark={isDark} />
+      <MobileCompassPopup />
       {/* ── Full-bleed header ── */}
       <div className="relative overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
