@@ -225,11 +225,14 @@ export default function FaithShowcase() {
           its true landscape aspect preserved so neither mosque is cropped, then
           softly melted into the page along its lower edge) */}
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* The div keeps the photo's own aspect ratio and the image is drawn at
+            100% × 100% of it, so the full picture always shows — never cropped. */}
         <div
-          className="absolute inset-x-0 top-0 w-full min-h-[26rem] bg-cover bg-top"
+          className="absolute inset-x-0 top-0 w-full bg-top"
           style={{
             aspectRatio: '1536 / 1024',
             backgroundImage: "url('/features-bg.jpg')",
+            backgroundSize: '100% 100%',
             WebkitMaskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
             maskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
           }}
@@ -242,7 +245,7 @@ export default function FaithShowcase() {
         <div className="absolute top-28 right-[8%] w-[24rem] h-[24rem] rounded-full bg-gold-300/15 blur-3xl animate-aurora" style={{ animationDelay: '6s' }} />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16">
+      <div className="relative max-w-7xl mx-auto px-6 pt-12 pb-10">
         {/* ── header ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -266,7 +269,7 @@ export default function FaithShowcase() {
         </motion.div>
 
         {/* ── feature grid ── */}
-        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
@@ -279,7 +282,7 @@ export default function FaithShowcase() {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ delay: i * 0.05, duration: 0.5 }}
                 whileHover={{ y: -5 }}
-                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-5 pb-12 h-full min-h-[196px] transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
+                className="group relative overflow-hidden rounded-3xl border border-white/50 bg-white/20 backdrop-blur-md p-5 h-full min-h-[168px] transition-shadow duration-300 shadow-[0_4px_10px_rgba(11,20,16,0.07),0_26px_50px_-18px_rgba(11,20,16,0.30)] hover:shadow-[0_12px_24px_rgba(11,20,16,0.12),0_44px_72px_-22px_rgba(11,20,16,0.42)]"
               >
                 {/* soft corner glow */}
                 <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full ${f.glow} opacity-[0.18] group-hover:opacity-35 blur-xl transition`} />
@@ -294,7 +297,17 @@ export default function FaithShowcase() {
                     : <CornerMotif className={`-mt-2 -mr-2 w-20 h-20 ${f.text} opacity-[0.18]`} />}
                 </div>
 
-                <h3 className={`relative mt-4 text-lg font-extrabold ${f.text}`}>{f.title}</h3>
+                {/* heading row: title + arrow button on the same line */}
+                <div className="relative mt-4 flex items-center justify-between gap-3">
+                  <h3 className={`text-lg font-extrabold ${f.text}`}>{f.title}</h3>
+                  <Link
+                    href={f.href}
+                    aria-label={`Open ${f.title}`}
+                    className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
+                  >
+                    <ArrowRight size={17} />
+                  </Link>
+                </div>
                 <p className="relative mt-1.5 text-sm text-ink/80 leading-relaxed">{f.desc}</p>
 
                 {/* watermark for waveform cards too — keep all cards balanced */}
@@ -303,15 +316,6 @@ export default function FaithShowcase() {
                   aria-hidden
                   className={`pointer-events-none absolute -bottom-4 right-3 ${f.text} opacity-[0.08]`}
                 />
-
-                {/* arrow button */}
-                <Link
-                  href={f.href}
-                  aria-label={`Open ${f.title}`}
-                  className={`absolute bottom-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white ${f.arrow} shadow-md transition group-hover:translate-x-0.5`}
-                >
-                  <ArrowRight size={17} />
-                </Link>
               </motion.div>
             </div>
           ))}
