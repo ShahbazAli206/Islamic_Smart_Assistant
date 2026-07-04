@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan di {{prayer}}",
+    "body": "È ora della preghiera"
+  },
+  "quran": {
+    "verseOfDay": "E osserva la preghiera. In verità, la preghiera preserva dalla turpitudine e da ciò che è riprovevole.",
+    "verseOfDayRef": "Sura Al-Ankabut (29:45)",
+    "heroVerse": "In verità, questo Corano guida verso ciò che è più giusto.",
+    "heroRef": "Sura Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Cerca Qibla",
+    "subtitle": "Direzione della Preghiera",
+    "live": "Bussola dal Vivo",
+    "noSensor": "Nessun Sensore Bussola",
+    "noSensorDesc": "Usa la direzione qui sotto per orientarti manualmente.",
+    "aligned": "Sei rivolto verso la Qibla!",
+    "calibrate": "Muovi il dispositivo a forma di 8 per calibrare",
+    "noLocation": "Posizione non impostata",
+    "noLocationDesc": "Vai su Orari di Preghiera per impostare la tua posizione.",
+    "fromKaaba": "dalla Kaaba",
+    "heading": "direzione",
+    "hint": "Ruota finché la punta dell'ago non punta dritta verso l'alto — quella è la direzione della Qibla."
+  }
+}

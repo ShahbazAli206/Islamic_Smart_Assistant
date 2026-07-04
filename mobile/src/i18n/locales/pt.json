@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan de {{prayer}}",
+    "body": "É hora da oração"
+  },
+  "quran": {
+    "verseOfDay": "E cumpre a oração. Em verdade, a oração afasta da obscenidade e do que é reprovável.",
+    "verseOfDayRef": "Surata Al-Ankabut (29:45)",
+    "heroVerse": "Em verdade, este Alcorão guia para o que é mais correto.",
+    "heroRef": "Surata Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Localizador de Qibla",
+    "subtitle": "Direção da Oração",
+    "live": "Bússola ao Vivo",
+    "noSensor": "Sem Sensor de Bússola",
+    "noSensorDesc": "Use a direção abaixo para se orientar manualmente.",
+    "aligned": "Você está voltado para a Qibla!",
+    "calibrate": "Mova o dispositivo em forma de oito para calibrar",
+    "noLocation": "Localização não definida",
+    "noLocationDesc": "Vá para Horários de Oração para definir sua localização.",
+    "fromKaaba": "da Kaaba",
+    "heading": "direção",
+    "hint": "Gire até que a ponta da agulha aponte para cima — essa é a direção da Qibla."
+  }
+}

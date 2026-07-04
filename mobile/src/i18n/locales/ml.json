@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} ബാങ്ക്",
+    "body": "നമസ്കാര സമയമായി"
+  },
+  "quran": {
+    "verseOfDay": "നമസ്കാരം നിലനിർത്തുക. തീർച്ചയായും നമസ്കാരം നീചവൃത്തിയിൽ നിന്നും ദുരാചാരത്തിൽ നിന്നും തടയുന്നു.",
+    "verseOfDayRef": "സൂറ അൽ-അൻകബൂത്ത് (29:45)",
+    "heroVerse": "തീർച്ചയായും ഈ ഖുർആൻ ഏറ്റവും ശരിയായതിലേക്ക് വഴി കാണിക്കുന്നു.",
+    "heroRef": "സൂറ അൽ-ഇസ്റാഅ് (17:9)"
+  },
+  "qibla": {
+    "title": "ഖിബ്ല കണ്ടെത്തൽ",
+    "subtitle": "നമസ്കാര ദിശ",
+    "live": "തത്സമയ കോമ്പസ്",
+    "noSensor": "കോമ്പസ് സെൻസർ ഇല്ല",
+    "noSensorDesc": "സ്വയം ദിശ കണ്ടെത്താൻ താഴെയുള്ള ദിശ ഉപയോഗിക്കുക.",
+    "aligned": "നിങ്ങൾ ഖിബ്‌ലയിലേക്ക് അഭിമുഖീകരിക്കുന്നു!",
+    "calibrate": "ക്രമീകരിക്കാൻ ഉപകരണം 8 ആകൃതിയിൽ ചലിപ്പിക്കുക",
+    "noLocation": "സ്ഥാനം സജ്ജീകരിച്ചിട്ടില്ല",
+    "noLocationDesc": "നിങ്ങളുടെ സ്ഥാനം സജ്ജീകരിക്കാൻ നമസ്കാര സമയങ്ങളിലേക്ക് പോകുക.",
+    "fromKaaba": "കഅ്ബയിൽ നിന്ന്",
+    "heading": "ദിശ",
+    "hint": "സൂചിയുടെ അഗ്രം നേരെ മുകളിലേക്ക് ചൂണ്ടുന്നതുവരെ തിരിക്കുക — അതാണ് ഖിബ്ല ദിശ."
+  }
+}

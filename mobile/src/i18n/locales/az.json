@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} azanı",
+    "body": "Namaz vaxtı gəldi"
+  },
+  "quran": {
+    "verseOfDay": "Namaz qılın. Həqiqətən, namaz çirkin işlərdən və pis əməllərdən çəkindirir.",
+    "verseOfDayRef": "Ənkəbut surəsi (29:45)",
+    "heroVerse": "Həqiqətən, bu Quran ən doğru olana hidayət edir.",
+    "heroRef": "İsra surəsi (17:9)"
+  },
+  "qibla": {
+    "title": "Qiblə Tapıcısı",
+    "subtitle": "Namaz İstiqaməti",
+    "live": "Canlı Kompas",
+    "noSensor": "Kompas Sensoru Yoxdur",
+    "noSensorDesc": "Özünüzü əl ilə istiqamətləndirmək üçün aşağıdakı istiqamətdən istifadə edin.",
+    "aligned": "Siz Qibləyə üz tutmusunuz!",
+    "calibrate": "Kalibrləmək üçün cihazı 8 formasında hərəkət etdirin",
+    "noLocation": "Yer təyin edilməyib",
+    "noLocationDesc": "Yerinizi təyin etmək üçün Namaz Vaxtlarına keçin.",
+    "fromKaaba": "Kəbədən",
+    "heading": "istiqamət",
+    "hint": "İynənin ucu düz yuxarını göstərənə qədər fırladın — bu Qiblə istiqamətidir."
+  }
+}

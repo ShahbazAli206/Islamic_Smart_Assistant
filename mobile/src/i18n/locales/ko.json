@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} 아잔",
+    "body": "예배 시간입니다"
+  },
+  "quran": {
+    "verseOfDay": "예배를 드려라. 실로 예배는 부도덕과 악행을 막아준다.",
+    "verseOfDayRef": "수라 알 안카부트 (29:45)",
+    "heroVerse": "실로 이 꾸란은 가장 올바른 길로 인도한다.",
+    "heroRef": "수라 알 이스라 (17:9)"
+  },
+  "qibla": {
+    "title": "키블라 찾기",
+    "subtitle": "예배 방향",
+    "live": "실시간 나침반",
+    "noSensor": "나침반 센서 없음",
+    "noSensorDesc": "아래 방위각을 사용하여 수동으로 방향을 맞추세요.",
+    "aligned": "키블라 방향을 향하고 있습니다!",
+    "calibrate": "보정하려면 기기를 8자 모양으로 움직이세요",
+    "noLocation": "위치가 설정되지 않음",
+    "noLocationDesc": "위치를 설정하려면 예배 시간으로 이동하세요.",
+    "fromKaaba": "카바로부터",
+    "heading": "방위",
+    "hint": "바늘 끝이 똑바로 위를 가리킬 때까지 회전하세요 — 그것이 키블라 방향입니다."
+  }
+}

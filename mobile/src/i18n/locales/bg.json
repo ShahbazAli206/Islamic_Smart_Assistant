@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Азан за {{prayer}}",
+    "body": "Дойде време за молитва"
+  },
+  "quran": {
+    "verseOfDay": "И извършвай молитвата. Наистина молитвата възпира от безнравственост и порицаемото.",
+    "verseOfDayRef": "Сура Ал-Анкабут (29:45)",
+    "heroVerse": "Наистина този Коран напътства към най-правилното.",
+    "heroRef": "Сура Ал-Исра (17:9)"
+  },
+  "qibla": {
+    "title": "Търсач на Кибла",
+    "subtitle": "Посока на Молитвата",
+    "live": "Компас на Живо",
+    "noSensor": "Няма Сензор за Компас",
+    "noSensorDesc": "Използвайте посоката по-долу, за да се ориентирате ръчно.",
+    "aligned": "Обърнати сте към Кибла!",
+    "calibrate": "Движете устройството във форма на осморка, за да калибрирате",
+    "noLocation": "Местоположението не е зададено",
+    "noLocationDesc": "Отидете на Часове за Молитва, за да зададете местоположението си.",
+    "fromKaaba": "от Кааба",
+    "heading": "посока",
+    "hint": "Въртете, докато върхът на иглата не сочи право нагоре — това е посоката на Кибла."
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azaanka {{prayer}}",
+    "body": "Waqtiga salaadda ayaa gaaray"
+  },
+  "quran": {
+    "verseOfDay": "Oo ooga salaadda. Hubaal salaaddu waxay reebtaa xumaanta iyo waxa la naco.",
+    "verseOfDayRef": "Suuratu Al-Ankabuut (29:45)",
+    "heroVerse": "Hubaal Qur'aankan wuxuu ku hanuuniyaa waxa ugu toosan.",
+    "heroRef": "Suuratu Al-Israa (17:9)"
+  },
+  "qibla": {
+    "title": "Raadiyaha Qiblada",
+    "subtitle": "Jihada Salaadda",
+    "live": "Kumbaska Tooska ah",
+    "noSensor": "Ma jiro Dareemaha Kumbaska",
+    "noSensorDesc": "Isticmaal jihada hoose si aad naftaada u toosiso.",
+    "aligned": "Waxaad u jeeddaa Qiblada!",
+    "calibrate": "Ku dhaqaajii qalabka qaab siddeed ah si aad u qiyaastid",
+    "noLocation": "Goobta lama dejin",
+    "noLocationDesc": "Aad Waqtiyada Salaadda si aad u dejiso goobtaada.",
+    "fromKaaba": "Kacbada ka",
+    "heading": "jihada",
+    "hint": "Wareeji ilaa dhuudhuunka irbadda uu si toos ah kor ugu fiiqmo — taasi waa jihada Qiblada."
+  }
+}

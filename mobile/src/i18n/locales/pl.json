@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan na {{prayer}}",
+    "body": "Nadszedł czas modlitwy"
+  },
+  "quran": {
+    "verseOfDay": "I odprawiaj modlitwę. Zaprawdę, modlitwa powstrzymuje od rozpusty i zła.",
+    "verseOfDayRef": "Sura Al-Ankabut (29:45)",
+    "heroVerse": "Zaprawdę, ten Koran prowadzi ku temu, co najsłuszniejsze.",
+    "heroRef": "Sura Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Wyszukiwarka Kibli",
+    "subtitle": "Kierunek Modlitwy",
+    "live": "Kompas na Żywo",
+    "noSensor": "Brak Czujnika Kompasu",
+    "noSensorDesc": "Użyj poniższego namiaru, aby zorientować się ręcznie.",
+    "aligned": "Jesteś skierowany w stronę Kibli!",
+    "calibrate": "Poruszaj urządzeniem w kształcie ósemki, aby skalibrować",
+    "noLocation": "Lokalizacja nie ustawiona",
+    "noLocationDesc": "Przejdź do Czasów Modlitwy, aby ustawić swoją lokalizację.",
+    "fromKaaba": "od Kaaby",
+    "heading": "kierunek",
+    "hint": "Obracaj, aż grot igły wskaże prosto w górę — to jest kierunek Kibli."
+  }
+}

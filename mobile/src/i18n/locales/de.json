@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan für {{prayer}}",
+    "body": "Es ist Zeit für das Gebet"
+  },
+  "quran": {
+    "verseOfDay": "Und verrichte das Gebet. Gewiss, das Gebet hält von Schändlichem und Verwerflichem ab.",
+    "verseOfDayRef": "Sure Al-Ankabut (29:45)",
+    "heroVerse": "Gewiss, dieser Koran leitet zu dem, was am gerechtesten ist.",
+    "heroRef": "Sure Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Qibla-Finder",
+    "subtitle": "Gebetsrichtung",
+    "live": "Live-Kompass",
+    "noSensor": "Kein Kompasssensor",
+    "noSensorDesc": "Verwenden Sie die untenstehende Peilung, um sich manuell auszurichten.",
+    "aligned": "Sie sind zur Qibla ausgerichtet!",
+    "calibrate": "Bewegen Sie das Gerät in einer Achterbewegung, um zu kalibrieren",
+    "noLocation": "Standort nicht festgelegt",
+    "noLocationDesc": "Gehen Sie zu Gebetszeiten, um Ihren Standort festzulegen.",
+    "fromKaaba": "von der Kaaba",
+    "heading": "Richtung",
+    "hint": "Drehen Sie, bis die Nadelspitze gerade nach oben zeigt — das ist die Qibla-Richtung."
+  }
+}

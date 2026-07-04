@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} အာဇန်း",
+    "body": "ဆွလာသ်ဝတ်ပြုချိန် ရောက်ပါပြီ"
+  },
+  "quran": {
+    "verseOfDay": "ဆွလာသ်ကို ဆောက်တည်ကြလော့။ ဧကန်မလွဲ ဆွလာသ်သည် ညစ်ညမ်းမှုနှင့် မကောင်းမှုများမှ တားဆီးပေးသည်။",
+    "verseOfDayRef": "စူရဟ် အန်ကဗူသ် (29:45)",
+    "heroVerse": "ဧကန်မလွဲ ဤကုရ်အာန်ကျမ်းတော်သည် အမှန်ဆုံးလမ်းသို့ ညွှန်ပြသည်။",
+    "heroRef": "စူရဟ် အစ်စရာအ် (17:9)"
+  },
+  "qibla": {
+    "title": "ကိဗ်လဟ် ရှာဖွေရေး",
+    "subtitle": "ဆွလာသ်ဝတ်ပြုရမည့် ဦးတည်ရာ",
+    "live": "တိုက်ရိုက် အံလိုင်း",
+    "noSensor": "အံလိုင်း အာရုံခံကိရိယာ မရှိပါ",
+    "noSensorDesc": "ကိုယ်တိုင် ဦးတည်ရန် အောက်ပါ ဦးတည်ချက်ကို အသုံးပြုပါ။",
+    "aligned": "သင်သည် ကိဗ်လဟ်ကို မျက်နှာမူနေပါသည်!",
+    "calibrate": "ချိန်ညှိရန် စက်ကိရိယာကို ၈ ပုံစံဖြင့် လှုပ်ရှားပါ",
+    "noLocation": "တည်နေရာ သတ်မှတ်မထားပါ",
+    "noLocationDesc": "သင့်တည်နေရာကို သတ်မှတ်ရန် ဆွလာသ်ချိန်များသို့ သွားပါ။",
+    "fromKaaba": "ကအ်ဗဟ်မှ",
+    "heading": "ဦးတည်ချက်",
+    "hint": "အပ်ချွန်ထိပ်သည် တည့်တည့်အထက်သို့ ညွှန်သည်အထိ လှည့်ပါ — ၎င်းသည် ကိဗ်လဟ် ဦးတည်ရာဖြစ်သည်။"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azanul de {{prayer}}",
+    "body": "Este timpul rugăciunii"
+  },
+  "quran": {
+    "verseOfDay": "Și împlinește rugăciunea. Într-adevăr, rugăciunea oprește de la depravare și de la ceea ce este condamnabil.",
+    "verseOfDayRef": "Sura Al-Ankabut (29:45)",
+    "heroVerse": "Într-adevăr, acest Coran călăuzește spre ceea ce este cel mai drept.",
+    "heroRef": "Sura Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Localizator Qibla",
+    "subtitle": "Direcția Rugăciunii",
+    "live": "Busolă în Direct",
+    "noSensor": "Niciun Senzor de Busolă",
+    "noSensorDesc": "Folosește direcția de mai jos pentru a te orienta manual.",
+    "aligned": "Ești orientat spre Qibla!",
+    "calibrate": "Mișcă dispozitivul în formă de 8 pentru calibrare",
+    "noLocation": "Locația nu este setată",
+    "noLocationDesc": "Mergi la Orele de Rugăciune pentru a-ți seta locația.",
+    "fromKaaba": "de la Kaaba",
+    "heading": "direcție",
+    "hint": "Rotește până când vârful acului indică drept în sus — aceea este direcția Qibla."
+  }
+}

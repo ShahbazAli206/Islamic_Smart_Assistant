@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} බාංකුව",
+    "body": "සලාතය සඳහා කාලය පැමිණ ඇත"
+  },
+  "quran": {
+    "verseOfDay": "සලාතය විධිමත් ලෙස ඉටු කරන්න. නියත වශයෙන්ම සලාතය අශීලාචාරකම් හා අයුතුකම්වලින් වළක්වයි.",
+    "verseOfDayRef": "සූරා අල්-අන්කබූත් (29:45)",
+    "heroVerse": "නියත වශයෙන්ම මෙම කුර්ආනය වඩාත් නිවැරදි මාර්ගය වෙත මඟ පෙන්වයි.",
+    "heroRef": "සූරා අල්-ඉස්රා (17:9)"
+  },
+  "qibla": {
+    "title": "කිබ්ලා සොයනය",
+    "subtitle": "සලාත දිශාව",
+    "live": "සජීවී මාලිමා යන්ත්‍රය",
+    "noSensor": "මාලිමා සංවේදකයක් නැත",
+    "noSensorDesc": "අතින් දිශානති කර ගැනීමට පහත දිශාව භාවිත කරන්න.",
+    "aligned": "ඔබ කිබ්ලාවට මුහුණලා සිටී!",
+    "calibrate": "ක්‍රමාංකනය කිරීමට උපකරණය 8 හැඩයෙන් සොලවන්න",
+    "noLocation": "ස්ථානය සකසා නැත",
+    "noLocationDesc": "ඔබේ ස්ථානය සැකසීමට සලාත වේලාවන් වෙත යන්න.",
+    "fromKaaba": "කඃබාවෙන්",
+    "heading": "දිශාව",
+    "hint": "ඉදිකටුවේ තුඩුව කෙළින්ම ඉහළට යොමු වන තෙක් කරකවන්න — එය කිබ්ලා දිශාවයි."
+  }
+}

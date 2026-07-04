@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} азаны",
+    "body": "Намаз уақыты келді"
+  },
+  "quran": {
+    "verseOfDay": "Намазды толық орында. Шындығында намаз жиіркенішті және жаман істерден тыяды.",
+    "verseOfDayRef": "Анкабут сүресі (29:45)",
+    "heroVerse": "Шындығында бұл Құран ең дұрыс жолға бастайды.",
+    "heroRef": "Исра сүресі (17:9)"
+  },
+  "qibla": {
+    "title": "Қибыла Іздеуші",
+    "subtitle": "Намаз Бағыты",
+    "live": "Тікелей Компас",
+    "noSensor": "Компас Сенсоры Жоқ",
+    "noSensorDesc": "Өзіңізді қолмен бағыттау үшін төмендегі бағытты пайдаланыңыз.",
+    "aligned": "Сіз Қибылаға қарап тұрсыз!",
+    "calibrate": "Калибрлеу үшін құрылғыны 8 пішінінде қозғалтыңыз",
+    "noLocation": "Орналасқан жер орнатылмаған",
+    "noLocationDesc": "Орналасқан жеріңізді орнату үшін Намаз Уақыттарына өтіңіз.",
+    "fromKaaba": "Қағбадан",
+    "heading": "бағыт",
+    "hint": "Ине ұшы тік жоғарыны көрсеткенше бұраңыз — бұл Қибыла бағыты."
+  }
+}

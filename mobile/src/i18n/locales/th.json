@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "อาซาน{{prayer}}",
+    "body": "ถึงเวลาละหมาดแล้ว"
+  },
+  "quran": {
+    "verseOfDay": "และจงดำรงการละหมาด แท้จริงการละหมาดนั้นยับยั้งจากความชั่วช้าและความเลวทราม",
+    "verseOfDayRef": "ซูเราะฮ์อัลอังกะบูต (29:45)",
+    "heroVerse": "แท้จริงอัลกุรอานนี้ชี้นำไปสู่ทางที่เที่ยงตรงที่สุด",
+    "heroRef": "ซูเราะฮ์อัลอิสรออ์ (17:9)"
+  },
+  "qibla": {
+    "title": "ตัวค้นหากิบลัต",
+    "subtitle": "ทิศทางการละหมาด",
+    "live": "เข็มทิศสด",
+    "noSensor": "ไม่มีเซ็นเซอร์เข็มทิศ",
+    "noSensorDesc": "ใช้ทิศทางด้านล่างเพื่อกำหนดทิศทางด้วยตนเอง",
+    "aligned": "คุณหันหน้าไปทางกิบลัตแล้ว!",
+    "calibrate": "เคลื่อนอุปกรณ์เป็นรูปเลข 8 เพื่อปรับเทียบ",
+    "noLocation": "ยังไม่ได้ตั้งค่าตำแหน่ง",
+    "noLocationDesc": "ไปที่เวลาละหมาดเพื่อตั้งค่าตำแหน่งของคุณ",
+    "fromKaaba": "จากกะอ์บะฮ์",
+    "heading": "ทิศทาง",
+    "hint": "หมุนจนกว่าปลายเข็มชี้ตรงขึ้น — นั่นคือทิศทางกิบลัต"
+  }
+}

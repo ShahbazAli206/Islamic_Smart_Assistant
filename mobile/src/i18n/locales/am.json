@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "የ{{prayer}} አዛን",
+    "body": "የሶላት ጊዜ ደርሷል"
+  },
+  "quran": {
+    "verseOfDay": "ሶላትንም ስገዱ። ሶላት ከመጥፎና ከክፉ ነገር ትከለክላለች።",
+    "verseOfDayRef": "ሱረቱ አል-አንከቡት (29:45)",
+    "heroVerse": "ይህ ቁርኣን ወደ በጣም ቀጥተኛው መንገድ ይመራል።",
+    "heroRef": "ሱረቱ አል-ኢስራእ (17:9)"
+  },
+  "qibla": {
+    "title": "ቂብላ መፈለጊያ",
+    "subtitle": "የሶላት አቅጣጫ",
+    "live": "ቀጥታ ኮምፓስ",
+    "noSensor": "የኮምፓስ ዳሳሽ የለም",
+    "noSensorDesc": "እራስዎን በእጅ ለማስተካከል ከታች ያለውን አቅጣጫ ይጠቀሙ።",
+    "aligned": "ወደ ቂብላ ትይያለህ!",
+    "calibrate": "ለማስተካከል መሳሪያውን በ8 ቅርጽ ያንቀሳቅሱ",
+    "noLocation": "አካባቢ አልተዘጋጀም",
+    "noLocationDesc": "አካባቢዎን ለማዘጋጀት ወደ የሶላት ሰዓታት ይሂዱ።",
+    "fromKaaba": "ከካዕባ",
+    "heading": "አቅጣጫ",
+    "hint": "የመርፌው ጫፍ በቀጥታ ወደ ላይ እስኪያመለክት ድረስ ያሽከርክሩ — ያ የቂብላ አቅጣጫ ነው።"
+  }
+}

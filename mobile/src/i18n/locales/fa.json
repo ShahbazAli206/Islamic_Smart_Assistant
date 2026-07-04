@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "اذان {{prayer}}",
+    "body": "وقت نماز فرا رسید"
+  },
+  "quran": {
+    "verseOfDay": "و نماز را برپا دار. همانا نماز از زشتی‌ها و کارهای ناپسند باز می‌دارد.",
+    "verseOfDayRef": "سوره العنکبوت (29:45)",
+    "heroVerse": "همانا این قرآن به راستی‌ترین راه هدایت می‌کند.",
+    "heroRef": "سوره الإسراء (17:9)"
+  },
+  "qibla": {
+    "title": "قبله‌یاب",
+    "subtitle": "جهت نماز",
+    "live": "قطب‌نمای زنده",
+    "noSensor": "حسگر قطب‌نما موجود نیست",
+    "noSensorDesc": "برای جهت‌یابی دستی از جهت زیر استفاده کنید.",
+    "aligned": "شما رو به قبله هستید!",
+    "calibrate": "برای کالیبراسیون دستگاه را به شکل عدد ۸ حرکت دهید",
+    "noLocation": "موقعیت مکانی تنظیم نشده است",
+    "noLocationDesc": "برای تنظیم موقعیت خود به اوقات نماز بروید.",
+    "fromKaaba": "از کعبه",
+    "heading": "جهت",
+    "hint": "بچرخانید تا نوک سوزن مستقیم به بالا اشاره کند — این جهت قبله است."
+  }
+}

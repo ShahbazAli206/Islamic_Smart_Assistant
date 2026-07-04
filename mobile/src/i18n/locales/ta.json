@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "{{prayer}} தொழுகை அழைப்பு",
+    "body": "தொழுகை நேரம் ஆகிவிட்டது"
+  },
+  "quran": {
+    "verseOfDay": "தொழுகையை நிலைநிறுத்துங்கள். நிச்சயமாக தொழுகை மானக்கேடான மற்றும் தீய செயல்களைத் தடுக்கிறது.",
+    "verseOfDayRef": "ஸூரா அல்-அன்கபூத் (29:45)",
+    "heroVerse": "நிச்சயமாக இந்த குர்ஆன் மிகவும் நேரான வழியை காட்டுகிறது.",
+    "heroRef": "ஸூரா அல்-இஸ்ரா (17:9)"
+  },
+  "qibla": {
+    "title": "கிப்லா கண்டுபிடிப்பான்",
+    "subtitle": "தொழுகை திசை",
+    "live": "நேரடி திசைகாட்டி",
+    "noSensor": "திசைகாட்டி சென்சார் இல்லை",
+    "noSensorDesc": "கீழே உள்ள திசையைப் பயன்படுத்தி கைமுறையாக திசையமைக்கவும்.",
+    "aligned": "நீங்கள் கிப்லாவை நோக்கி இருக்கிறீர்கள்!",
+    "calibrate": "அளவீடு செய்ய சாதனத்தை 8 வடிவில் அசைக்கவும்",
+    "noLocation": "இருப்பிடம் அமைக்கப்படவில்லை",
+    "noLocationDesc": "உங்கள் இருப்பிடத்தை அமைக்க தொழுகை நேரங்களுக்குச் செல்லவும்.",
+    "fromKaaba": "கஃபாவிலிருந்து",
+    "heading": "திசை",
+    "hint": "ஊசியின் நுனி நேராக மேலே சுட்டும் வரை சுழற்றவும் — அதுவே கிப்லா திசை."
+  }
+}

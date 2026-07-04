@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan voor {{prayer}}",
+    "body": "Het is tijd voor het gebed"
+  },
+  "quran": {
+    "verseOfDay": "En verricht het gebed. Voorwaar, het gebed weerhoudt van gruweldaden en het verwerpelijke.",
+    "verseOfDayRef": "Soera Al-Ankabut (29:45)",
+    "heroVerse": "Voorwaar, deze Koran leidt naar wat het meest rechtvaardig is.",
+    "heroRef": "Soera Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Qibla Zoeker",
+    "subtitle": "Gebedsrichting",
+    "live": "Live Kompas",
+    "noSensor": "Geen Kompassensor",
+    "noSensorDesc": "Gebruik de richting hieronder om jezelf handmatig te oriënteren.",
+    "aligned": "Je bent gericht op de Qibla!",
+    "calibrate": "Beweeg het apparaat in een 8-vorm om te kalibreren",
+    "noLocation": "Locatie niet ingesteld",
+    "noLocationDesc": "Ga naar Gebedstijden om je locatie in te stellen.",
+    "fromKaaba": "vanaf de Kaaba",
+    "heading": "richting",
+    "hint": "Draai totdat de naaldpunt recht omhoog wijst — dat is de Qibla-richting."
+  }
+}

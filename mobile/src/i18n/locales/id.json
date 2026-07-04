@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan {{prayer}}",
+    "body": "Waktunya salat"
+  },
+  "quran": {
+    "verseOfDay": "Dan dirikanlah salat. Sesungguhnya salat mencegah dari perbuatan keji dan mungkar.",
+    "verseOfDayRef": "Surah Al-Ankabut (29:45)",
+    "heroVerse": "Sesungguhnya Al-Qur'an ini memberi petunjuk ke jalan yang paling lurus.",
+    "heroRef": "Surah Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Pencari Kiblat",
+    "subtitle": "Arah Salat",
+    "live": "Kompas Langsung",
+    "noSensor": "Tidak Ada Sensor Kompas",
+    "noSensorDesc": "Gunakan arah di bawah untuk mengarahkan diri secara manual.",
+    "aligned": "Anda menghadap Kiblat!",
+    "calibrate": "Gerakkan perangkat membentuk angka 8 untuk kalibrasi",
+    "noLocation": "Lokasi belum diatur",
+    "noLocationDesc": "Buka Waktu Salat untuk mengatur lokasi Anda.",
+    "fromKaaba": "dari Ka'bah",
+    "heading": "arah",
+    "hint": "Putar hingga ujung jarum menunjuk lurus ke atas — itulah arah Kiblat."
+  }
+}

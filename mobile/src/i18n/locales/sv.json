@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azan för {{prayer}}",
+    "body": "Det är dags för bön"
+  },
+  "quran": {
+    "verseOfDay": "Och förrätta bönen. Sannerligen avhåller bönen från skamlösheter och det förkastliga.",
+    "verseOfDayRef": "Sura Al-Ankabut (29:45)",
+    "heroVerse": "Sannerligen vägleder denna Koran till det som är mest rättvist.",
+    "heroRef": "Sura Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Qibla-sökare",
+    "subtitle": "Bönens Riktning",
+    "live": "Live-kompass",
+    "noSensor": "Ingen Kompassensor",
+    "noSensorDesc": "Använd riktningen nedan för att orientera dig manuellt.",
+    "aligned": "Du är vänd mot Qibla!",
+    "calibrate": "Rör enheten i en åtta-form för att kalibrera",
+    "noLocation": "Plats inte inställd",
+    "noLocationDesc": "Gå till Bönetider för att ställa in din plats.",
+    "fromKaaba": "från Kaaba",
+    "heading": "riktning",
+    "hint": "Rotera tills nålspetsen pekar rakt upp — det är Qibla-riktningen."
+  }
+}

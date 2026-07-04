@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azana ya {{prayer}}",
+    "body": "Ni wakati wa swala"
+  },
+  "quran": {
+    "verseOfDay": "Na simamisha swala. Hakika swala huzuia machafu na maovu.",
+    "verseOfDayRef": "Surat Al-Ankabut (29:45)",
+    "heroVerse": "Hakika Qur'ani hii huongoza kwenye lililo sawa zaidi.",
+    "heroRef": "Surat Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Kitafuta Kibla",
+    "subtitle": "Mwelekeo wa Swala",
+    "live": "Dira ya Moja kwa Moja",
+    "noSensor": "Hakuna Kihisi cha Dira",
+    "noSensorDesc": "Tumia mwelekeo ulioko chini kujielekeza mwenyewe.",
+    "aligned": "Umeelekea Kibla!",
+    "calibrate": "Sogeza kifaa kwa umbo la nane kusawazisha",
+    "noLocation": "Mahali hapajawekwa",
+    "noLocationDesc": "Nenda kwenye Nyakati za Swala kuweka mahali ulipo.",
+    "fromKaaba": "kutoka Kaaba",
+    "heading": "mwelekeo",
+    "hint": "Zungusha mpaka ncha ya sindano ielekeze juu moja kwa moja — huo ndio mwelekeo wa Kibla."
+  }
+}

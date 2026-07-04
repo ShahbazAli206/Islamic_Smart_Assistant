@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Ezan za {{prayer}}",
+    "body": "Vrijeme je za namaz"
+  },
+  "quran": {
+    "verseOfDay": "I obavljaj namaz. Zaista namaz odvraća od razvrata i od svega što je ružno.",
+    "verseOfDayRef": "Sura Al-Ankabut (29:45)",
+    "heroVerse": "Zaista ovaj Kur'an upućuje na ono što je najispravnije.",
+    "heroRef": "Sura Al-Isra (17:9)"
+  },
+  "qibla": {
+    "title": "Pronalazač Kible",
+    "subtitle": "Pravac Namaza",
+    "live": "Kompas Uživo",
+    "noSensor": "Nema Senzora Kompasa",
+    "noSensorDesc": "Koristite pravac ispod da se ručno orijentišete.",
+    "aligned": "Okrenuti ste prema Kibli!",
+    "calibrate": "Pomjerajte uređaj u obliku osmice za kalibraciju",
+    "noLocation": "Lokacija nije postavljena",
+    "noLocationDesc": "Idite na Vremena Namaza da postavite svoju lokaciju.",
+    "fromKaaba": "od Kabe",
+    "heading": "pravac",
+    "hint": "Okrećite dok vrh igle ne pokaže pravo gore — to je pravac Kible."
+  }
+}

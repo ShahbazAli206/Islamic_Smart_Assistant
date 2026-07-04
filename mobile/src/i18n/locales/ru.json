@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Азан на {{prayer}}",
+    "body": "Настало время молитвы"
+  },
+  "quran": {
+    "verseOfDay": "И совершай молитву. Поистине, молитва предостерегает от мерзости и предосудительного.",
+    "verseOfDayRef": "Сура Аль-Анкабут (29:45)",
+    "heroVerse": "Поистине, этот Коран ведёт к самому верному пути.",
+    "heroRef": "Сура Аль-Исра (17:9)"
+  },
+  "qibla": {
+    "title": "Поиск Киблы",
+    "subtitle": "Направление Молитвы",
+    "live": "Компас в реальном времени",
+    "noSensor": "Нет датчика компаса",
+    "noSensorDesc": "Используйте направление ниже, чтобы сориентироваться вручную.",
+    "aligned": "Вы обращены к Кибле!",
+    "calibrate": "Подвигайте устройством в форме восьмёрки для калибровки",
+    "noLocation": "Местоположение не задано",
+    "noLocationDesc": "Перейдите в раздел «Время намаза», чтобы задать своё местоположение.",
+    "fromKaaba": "от Каабы",
+    "heading": "направление",
+    "hint": "Вращайте, пока кончик стрелки не укажет строго вверх — это направление на Киблу."
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry"
+  },
+  "onboarding": {
+    "welcome": "Welcome",
+    "tagline": "Your Islamic companion",
+    "chooseLanguage": "Choose your language",
+    "chooseSect": "Select sect",
+    "sunni": "Sunni",
+    "shia": "Fiqah Jafri",
+    "chooseFiqh": "Select fiqh",
+    "hanafi": "Hanafi",
+    "shafi": "Shafi",
+    "maliki": "Maliki",
+    "hanbali": "Hanbali",
+    "jafari": "Jafari",
+    "detectLocation": "Detect my location",
+    "locationDetected": "Location detected"
+  },
+  "prayer": {
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next prayer",
+    "timeUntil": "in {{time}}"
+  },
+  "tabs": {
+    "home": "Home",
+    "quran": "Quran",
+    "azan": "Azan",
+    "devices": "Devices",
+    "settings": "Settings",
+    "qibla": "Qibla"
+  },
+  "azan": {
+    "title": "Azán na {{prayer}}",
+    "body": "Je čas modlitby"
+  },
+  "quran": {
+    "verseOfDay": "A konej modlitbu. Věru modlitba odvrací od hanebnosti a odsouzeníhodného.",
+    "verseOfDayRef": "Súra Al-Ankabút (29:45)",
+    "heroVerse": "Věru tento Korán vede k tomu, co je nejsprávnější.",
+    "heroRef": "Súra Al-Isrá (17:9)"
+  },
+  "qibla": {
+    "title": "Vyhledávač Qibly",
+    "subtitle": "Směr Modlitby",
+    "live": "Živý Kompas",
+    "noSensor": "Žádný Kompasový Senzor",
+    "noSensorDesc": "Použijte níže uvedený směr k ruční orientaci.",
+    "aligned": "Jste otočeni směrem ke Qible!",
+    "calibrate": "Pohybujte zařízením ve tvaru osmičky pro kalibraci",
+    "noLocation": "Poloha není nastavena",
+    "noLocationDesc": "Přejděte na Časy Modliteb a nastavte svou polohu.",
+    "fromKaaba": "od Kaaby",
+    "heading": "směr",
+    "hint": "Otáčejte, dokud hrot jehly nesměřuje přímo nahoru — to je směr Qibly."
+  }
+}
