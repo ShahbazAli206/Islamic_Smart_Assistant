@@ -23,23 +23,21 @@ export type ReciterId = (typeof RECITERS)[number]['id'];
 // flag into this list — it would go stale.
 export const TRANSLATIONS = [
   { id: 'none',              name: 'No translation',                      short: 'Arabic only' },
+  // One edition per language: sibling text editions (Asad, Junagarhi, Diyanet
+  // İşleri, Yazır, Hoque) shared a single audio recording, so offering them
+  // separately just showed duplicate options that sounded identical.
   // English — spoken audio by Ibrahim Walk (Saheeh International)
   { id: 'en.sahih',          name: 'English — Saheeh Intl.',              short: 'English' },
-  { id: 'en.asad',           name: 'English — Muhammad Asad',             short: 'English' },
   // Urdu — spoken audio by Shamshad Ali Khan
   { id: 'ur.jalandhry',      name: 'Urdu — Fateh M. Jalandhry',           short: 'اردو' },
-  { id: 'ur.junagarhi',      name: 'Urdu — M. Junagarhi',                 short: 'اردو' },
   // Turkish — spoken audio by Diyanet Vakfı (matches the tr.vakfi text exactly)
   { id: 'tr.vakfi',          name: 'Turkish — Diyanet Vakfı',             short: 'Türkçe' },
-  { id: 'tr.diyanet',        name: 'Turkish — Diyanet İşleri',            short: 'Türkçe' },
-  { id: 'tr.yazir',          name: 'Turkish — Elmalılı H. Yazır',         short: 'Türkçe' },
   // Chinese — spoken audio (Ma Jian)
   { id: 'zh.majian',         name: 'Chinese — Ma Jian',                   short: '中文' },
   // French — spoken audio by Youssouf Leclerc
   { id: 'fr.hamidullah',     name: 'French — Muhammad Hamidullah',        short: 'Français' },
-  // Bengali — spoken audio is self-generated (TTS) and hosted on Supabase
+  // Bengali — spoken audio is self-generated (neural voice) and hosted on Supabase
   { id: 'bn.bengali',        name: 'Bengali — Muhiuddin Khan',            short: 'বাংলা' },
-  { id: 'bn.hoque',          name: 'Bengali — Zohurul Hoque',             short: 'বাংলা' },
   // Persian / Farsi — spoken audio by Hedayatfar (Fooladvand text, 40 kbps)
   { id: 'fa.fooladvand',     name: 'Persian — Fooladvand',                short: 'فارسی' },
   // Russian — spoken audio by 1MuslimApp (Kuliev text, 128 kbps)
@@ -133,12 +131,8 @@ export function ayahAudioUrl(globalAyahNumber: number, reciter: ReciterId, bitra
 
 const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 40 | 64 | 128 | 192 }> = {
   'en.sahih':      { edition: 'en.walk',                 bitrate: 192 }, // Ibrahim Walk (Saheeh Intl.)
-  'en.asad':       { edition: 'en.walk',                 bitrate: 192 }, // only English recording available
   'ur.jalandhry':  { edition: 'ur.khan',                 bitrate: 64  }, // Shamshad Ali Khan
-  'ur.junagarhi':  { edition: 'ur.khan',                 bitrate: 64  },
   'tr.vakfi':      { edition: 'tr.vakfi-audio',          bitrate: 128 }, // Diyanet Vakfı (exact text match)
-  'tr.diyanet':    { edition: 'tr.vakfi-audio',          bitrate: 128 },
-  'tr.yazir':      { edition: 'tr.vakfi-audio',          bitrate: 128 },
   'zh.majian':     { edition: 'zh.chinese',              bitrate: 128 }, // Ma Jian
   'fr.hamidullah': { edition: 'fr.leclerc',              bitrate: 128 }, // Youssouf Leclerc
   'fa.fooladvand':    { edition: 'fa.hedayatfarfooladvand', bitrate: 40  }, // Fooladvand - Hedayatfar
@@ -147,20 +141,20 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 40 | 64 | 12
 };
 
 // Translation editions for which we generate TTS audio. The generator reads the
-// text of EXACTLY these editions, so the spoken words match the on-screen text;
-// the sibling edition (bn.hoque) stays text-only. Value = the folder the files
-// live under in the bucket (translations/<folder>/<globalAyah>.mp3).
+// text of EXACTLY these editions, so the spoken words match the on-screen text.
+// Value = the folder the files live under in the bucket
+// (translations/<folder>/<globalAyah>.mp3).
 const TTS_EDITIONS: Record<string, string> = {
   'bn.bengali': 'bn',
 };
 
-// A TTS language only becomes "available" once its files have been uploaded.
-// Flip it on by listing the folder(s) in NEXT_PUBLIC_TTS_TRANSLATION_LANGS
-// (e.g. "bn"); until then Bengali gracefully falls back to text-only.
+// Languages whose generated audio is uploaded and live. Defaults to 'bn' so
+// EVERY build (web and the desktop app, which builds from a local .env) plays
+// Bengali as audio — the env var only exists to override/extend the list.
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '');
 const TTS_BUCKET = process.env.NEXT_PUBLIC_TTS_BUCKET || 'quran-audio';
 const TTS_LANGS = new Set(
-  (process.env.NEXT_PUBLIC_TTS_TRANSLATION_LANGS ?? '')
+  (process.env.NEXT_PUBLIC_TTS_TRANSLATION_LANGS || 'bn')
     .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
 );
 
@@ -239,16 +233,11 @@ export function hasLocalAudio(translation: TranslationId): boolean {
 export const TTS_LANG_MAP: Partial<Record<TranslationId, string>> = {
   // CDN languages — TTS fires only as an offline/error fallback on desktop
   'en.sahih':         'en-US',
-  'en.asad':          'en-US',
   'ur.jalandhry':     'ur-PK',
-  'ur.junagarhi':     'ur-PK',
   'tr.vakfi':         'tr-TR',
-  'tr.diyanet':       'tr-TR',
-  'tr.yazir':         'tr-TR',
   'zh.majian':        'zh-CN',
   'fr.hamidullah':    'fr-FR',
   'bn.bengali':       'bn-BD',
-  'bn.hoque':         'bn-BD',
   'fa.fooladvand':    'fa-IR',
   'ru.kuliev':        'ru-RU',
   'kk.khalifahaltai': 'kk-KZ',

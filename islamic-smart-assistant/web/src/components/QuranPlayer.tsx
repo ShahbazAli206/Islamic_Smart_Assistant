@@ -39,12 +39,12 @@ type Props = {
 const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: null,           ids: ['none'] },
   // — CDN audio (all platforms) ———————————————————————————————————————————————
-  { label: 'English',      ids: ['en.sahih', 'en.asad'] },
-  { label: 'Urdu',         ids: ['ur.jalandhry', 'ur.junagarhi'] },
-  { label: 'Turkish',      ids: ['tr.vakfi', 'tr.diyanet', 'tr.yazir'] },
+  { label: 'English',      ids: ['en.sahih'] },
+  { label: 'Urdu',         ids: ['ur.jalandhry'] },
+  { label: 'Turkish',      ids: ['tr.vakfi'] },
   { label: 'Chinese',      ids: ['zh.majian'] },
   { label: 'French',       ids: ['fr.hamidullah'] },
-  { label: 'Bengali',      ids: ['bn.bengali', 'bn.hoque'] },
+  { label: 'Bengali',      ids: ['bn.bengali'] },
   { label: 'Persian',      ids: ['fa.fooladvand'] },
   { label: 'Russian',      ids: ['ru.kuliev'] },
   { label: 'Kazakh',       ids: ['kk.khalifahaltai'] },
