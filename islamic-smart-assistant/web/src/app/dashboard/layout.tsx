@@ -181,7 +181,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Link href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/ismaa_logo3.png"
+            src="/ismaa_logo4.png"
             alt="ISMAA — Islamic Smart Assistant"
             className="h-7 w-auto object-contain"
             style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.45)) brightness(1.12)' }}
@@ -266,7 +266,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Link href="/" onClick={closeSidebar} className="relative z-10 flex items-center justify-center mb-1 px-2 pt-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/ismaa_logo3.png"
+            src="/ismaa_logo4.png"
             alt="ISMAA — Islamic Smart Assistant"
             className="w-[230px] max-w-full h-auto object-contain"
             style={{ filter: isDark ? 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' : 'drop-shadow(0 1px 3px rgba(16,40,30,0.18))' }}

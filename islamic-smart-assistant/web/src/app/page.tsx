@@ -76,7 +76,7 @@ export default function HomePage() {
           <Link href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/ismaa_logo3.png"
+              src="/ismaa_logo4.png"
               alt="ISMAA — Islamic Smart Assistant"
               className="h-[62px] w-auto object-contain"
               style={{ filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5)) brightness(1.15)' }}
@@ -225,7 +225,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-ink/60">
           <div className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/ismaa_logo3.png" alt="ISMAA" className="h-6 w-auto object-contain" draggable={false} />
+            <img src="/ismaa_logo4.png" alt="ISMAA" className="h-6 w-auto object-contain" draggable={false} />
             • Islamic Smart Assistant Ecosystem
           </div>
           <p>Built with ihsaan • Recitations sourced from islamic.network (verified)</p>
