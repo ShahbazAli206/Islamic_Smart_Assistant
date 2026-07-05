@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronLeft, ChevronRight, ChevronDown, X, Search, Loader2,
   ZoomIn, ZoomOut, Download, ExternalLink, BookMarked, AlertCircle, Layers,
-  Check, ListFilter,
+  Check, ListFilter, RefreshCw,
 } from 'lucide-react';
 import {
   TAFSIR_BOOKS, bookPdfUrl, bookStreamUrl, bookSizeMb, sizeLabel, volumeForPara,
@@ -250,7 +250,6 @@ function PdfReader({ target, onClose, isDark }: {
   target: ReaderTarget; onClose: () => void; isDark: boolean;
 }) {
   const { book, volume } = target;
-  const storageKey = `isa:tafsir-page:${book.id}:${volume.n}`;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const holderRef = useRef<HTMLDivElement>(null);
@@ -270,18 +269,10 @@ function PdfReader({ target, onClose, isDark }: {
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);      // document loading
   const [rendering, setRendering] = useState(false); // page rendering
-  const [error, setError] = useState<string | null>(null);
-  const [pageInput, setPageInput] = useState('');
-
-  // Restore last-read page (unless a jump target was given)
-  useEffect(() => {
-    if (target.page) return;
-    try {
-      const saved = Number(localStorage.getItem(storageKey));
-      if (saved > 1) setPage(saved);
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
+  const [error, setError] = useState(false);
+  // null = not editing (input mirrors the current page number)
+  const [pageInput, setPageInput] = useState<string | null>(null);
+  const [loadTick, setLoadTick] = useState(0); // bumped by the Reload button
 
   // Load the PDF document (pdf.js streams it with range requests)
   useEffect(() => {
@@ -289,7 +280,7 @@ function PdfReader({ target, onClose, isDark }: {
     let doc: any = null;
     (async () => {
       try {
-        setLoading(true); setError(null);
+        setLoading(true); setError(false);
         const pdfjs = await import('pdfjs-dist');
         // Worker is served from /public (copied from pdfjs-dist/build) — bundling
         // it via new URL() makes Next's compiler choke on the minified file.
@@ -312,15 +303,10 @@ function PdfReader({ target, onClose, isDark }: {
         setNumPages(doc.numPages);
         setPage((p) => Math.min(Math.max(1, p), doc.numPages));
         setLoading(false);
-      } catch (e: any) {
-        if (!cancelled) {
-          setLoading(false);
-          setError(
-            e?.message?.includes('Failed to fetch') || e?.name === 'UnexpectedResponseException'
-              ? 'The book file is not reachable yet. It may still be uploading — try again shortly, or use "Original source" below.'
-              : `Couldn't open the book: ${e?.message ?? 'unknown error'}`,
-          );
-        }
+      } catch {
+        // Whatever failed underneath, the user-facing story is the same:
+        // the book couldn't be fetched — show a plain network notice + Reload.
+        if (!cancelled) { setLoading(false); setError(true); }
       }
     })();
     return () => {
@@ -329,7 +315,7 @@ function PdfReader({ target, onClose, isDark }: {
       docRef.current?.destroy?.();
       docRef.current = null;
     };
-  }, [volume.file]);
+  }, [volume.file, loadTick]);
 
   // Render the current page to canvas
   useEffect(() => {
@@ -343,15 +329,14 @@ function PdfReader({ target, onClose, isDark }: {
         renderTaskRef.current?.cancel?.();
         const pg = await doc.getPage(page);
         if (cancelled) return;
-        // Fit the FULL page into the available viewer area (height-bound for
-        // these tall book scans), then apply user zoom. Measured from the
-        // scroll container itself — measuring the canvas's wrapper fed the
-        // previous canvas size back in and shrank the page on every flip.
+        // Height-driven fit: the page always fills the viewer's height, and
+        // the panel's width follows the page (w-fit) so there's no dead space
+        // beside the book. The viewport width only acts as an upper cap.
         const holder = holderRef.current ?? canvas.parentElement!;
         const vw1 = pg.getViewport({ scale: 1 });
-        const availW = holder.clientWidth - 24;
-        const availH = holder.clientHeight - 24;
-        const base = Math.min(availW / vw1.width, availH / vw1.height);
+        const availH = holder.clientHeight - 16;
+        const maxW = Math.min(window.innerWidth * 0.94, 1100) - 24;
+        const base = Math.min(availH / vw1.height, maxW / vw1.width);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const viewport = pg.getViewport({ scale: base * zoom });
         canvas.width = Math.floor(viewport.width * dpr);
@@ -383,11 +368,6 @@ function PdfReader({ target, onClose, isDark }: {
     return () => { cancelled = true; };
   }, [page, zoom, loading, viewTick]);
 
-  // Persist last-read page
-  useEffect(() => {
-    if (numPages > 0) try { localStorage.setItem(storageKey, String(page)); } catch {}
-  }, [page, numPages, storageKey]);
-
   const go = useCallback((delta: number) => {
     setPage((p) => Math.min(Math.max(1, p + delta), numPages || 1));
   }, [numPages]);
@@ -411,12 +391,6 @@ function PdfReader({ target, onClose, isDark }: {
     const span = to - from + 1;
     const frac = (para - from) / span;
     setPage(Math.min(numPages, Math.max(1, Math.round(8 + frac * (numPages - 8)))));
-  };
-
-  const jumpToInput = () => {
-    const n = Number(pageInput);
-    if (Number.isFinite(n) && n >= 1) setPage(Math.min(numPages || 1, Math.round(n)));
-    setPageInput('');
   };
 
   const paras = useMemo(() => {
@@ -464,7 +438,7 @@ function PdfReader({ target, onClose, isDark }: {
         initial={{ opacity: 0, scale: 0.96, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-        className={`relative w-full max-w-5xl h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${t.panel}`}
+        className={`relative w-fit min-w-[min(94vw,560px)] max-w-[96vw] h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${t.panel}`}
         style={{ background: t.panelBg, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         {/* gold accent — same signature as the app's cards */}
@@ -506,13 +480,18 @@ function PdfReader({ target, onClose, isDark }: {
             </div>
           )}
           {error && (
-            <div className="m-auto max-w-sm text-center space-y-3">
-              <AlertCircle size={26} className="mx-auto text-amber-500" />
-              <p className="text-sm leading-relaxed">{error}</p>
-              <a href={book.sourceUrl} target="_blank" rel="noreferrer"
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold hover:underline ${isDark ? 'text-gold-300' : 'text-gold-700'}`}>
-                <ExternalLink size={12} /> Original source ({book.source})
-              </a>
+            <div className="m-auto max-w-xs text-center space-y-4 px-6">
+              <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${isDark ? 'bg-amber-500/15' : 'bg-amber-50'}`}>
+                <AlertCircle size={24} className="text-amber-500" />
+              </span>
+              <p className="text-sm font-semibold">Network error</p>
+              <p className={`text-xs leading-relaxed ${t.faint}`}>The book couldn&apos;t load. Check your internet connection and try again.</p>
+              <button
+                onClick={() => setLoadTick((n) => n + 1)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 transition"
+              >
+                <RefreshCw size={14} /> Reload
+              </button>
             </div>
           )}
           {!loading && !error && (
@@ -537,14 +516,21 @@ function PdfReader({ target, onClose, isDark }: {
             </button>
 
             <div className="flex items-center gap-1.5 text-sm tabular-nums">
+              {/* Shows the CURRENT page number; type to jump (Enter or blur) */}
               <input
-                value={pageInput}
+                value={pageInput ?? String(page)}
+                onFocus={(e) => { setPageInput(String(page)); e.target.select(); }}
                 onChange={(e) => setPageInput(e.target.value.replace(/[^0-9]/g, ''))}
-                onKeyDown={(e) => e.key === 'Enter' && jumpToInput()}
-                onBlur={() => pageInput && jumpToInput()}
-                placeholder={String(page)}
-                className={`w-14 px-2 py-1.5 rounded-lg border text-center text-sm focus:outline-none ${t.input}`}
-                aria-label="Go to page"
+                onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+                onBlur={() => {
+                  const n = Number(pageInput);
+                  if (pageInput && Number.isFinite(n) && n >= 1) {
+                    setPage(Math.min(numPages || 1, Math.round(n)));
+                  }
+                  setPageInput(null);
+                }}
+                className={`w-16 px-2 py-1.5 rounded-lg border text-center text-sm font-bold focus:outline-none ${t.input}`}
+                aria-label="Current page — type to jump"
               />
               <span className={t.faint}>/ {numPages}</span>
             </div>
