@@ -58,6 +58,20 @@ function buildDeviceGroups(
       return `${name.toLowerCase()}::${modeLabel.toLowerCase()}`;
     }),
   );
+  // The browser's "default" pseudo-device carries the OS's currently selected
+  // output as its own label, so its (name, mode) key tells us which REAL
+  // device is the default — capture that here, before the dedup filter below
+  // discards the pseudo-device (it duplicates a real entry in the common case,
+  // so it shouldn't also render as its own row, but its default-ness still
+  // needs to land on the real device's group).
+  const defaultKeys = new Set(
+    labelled
+      .filter((d) => d.deviceId === 'default')
+      .map((d) => {
+        const { name, modeLabel } = extractDeviceName(d.label);
+        return `${name.toLowerCase()}::${modeLabel.toLowerCase()}`;
+      }),
+  );
   const virtual = labelled
     .filter((d) => d.deviceId === 'default' || d.deviceId === 'communications')
     .filter((d) => {
@@ -88,7 +102,9 @@ function buildDeviceGroups(
       /airpod|g\d+\s*pro|jabra|jbl|bose|sony|beats|havit|edifier|anker|soundcore|skullcandy|sennheiser/i.test(
         best.name,
       );
-    const isDefault = devices.some((d) => d.deviceId === 'default');
+    const isDefault =
+      devices.some((d) => d.deviceId === 'default') ||
+      modes.some((m) => defaultKeys.has(`${m.name.toLowerCase()}::${m.modeLabel.toLowerCase()}`));
     return {
       id: best.deviceId,
       name: best.name || 'Audio Device',
