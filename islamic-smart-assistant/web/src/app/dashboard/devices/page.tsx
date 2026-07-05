@@ -1170,7 +1170,9 @@ export default function DevicesPage() {
         <div className="relative space-y-5 pt-5">
 
         {/* ════════ MAIN + SIDEBAR ════════ */}
-        <div className="grid gap-5 items-start grid-cols-1 xl:grid-cols-[1fr_330px]">
+        {/* The sidebar is light-mode-only (below) — in dark mode don't reserve
+            its 330px column, or the main content leaves a permanent empty gap. */}
+        <div className={`grid gap-5 items-start grid-cols-1 ${isDark ? '' : 'xl:grid-cols-[1fr_330px]'}`}>
           <div className="space-y-5 min-w-0">
 
             {/* ── Audio Output + Cast, side-by-side on the same row ── */}
@@ -1731,7 +1733,7 @@ export default function DevicesPage() {
                   click <strong>Rescan</strong>.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 gap-3 max-h-[420px] overflow-y-auto pr-1">
                   {deviceGroups.map((group) => {
                     const isGroupActive = group.modes.some((m) => m.deviceId === selectedOutputId);
                     const selectedMode =
@@ -1749,7 +1751,7 @@ export default function DevicesPage() {
                       <motion.div
                         key={group.id}
                         whileHover={{ y: -3 }}
-                        className={`rounded-2xl p-4 transition flex flex-col gap-3 ${isGroupActive ? T.deviceSel : T.deviceCard}`}
+                        className={`rounded-2xl p-4 transition flex flex-col gap-3 min-w-[240px] ${isGroupActive ? T.deviceSel : T.deviceCard}`}
                       >
                         {/* Click header to select best/current mode */}
                         <button
@@ -1761,12 +1763,12 @@ export default function DevicesPage() {
                           </span>
                           <span className="flex-1 min-w-0">
                             <span className={`block font-semibold truncate ${T.heading}`}>{group.name}</span>
-                            <span className={`text-xs ${T.sub} flex items-center gap-1.5`}>
+                            <span className={`text-xs ${T.sub} flex items-center flex-wrap gap-1.5`}>
                               {group.isBluetooth ? 'Bluetooth' : group.isDefault ? 'System Default' : 'Wired / System'}
                               {isGroupActive && (
                                 <>
                                   <span>•</span>
-                                  <span className="text-emerald-500 font-semibold">Connected</span>
+                                  <span className="text-emerald-500 font-semibold whitespace-nowrap">Connected</span>
                                 </>
                               )}
                             </span>
