@@ -1445,7 +1445,7 @@ export default function AzanPage() {
               <h2 className={`font-display font-bold text-xl ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
                 Durood Sharif &amp; Dua
               </h2>
-              <p className={`text-sm ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/50'}`}>
+              <p className={`text-sm ${isDark ? 'text-emerald-100/55' : 'text-emerald-900/80'}`}>
                 Optional — plays alongside your Azan automatically
               </p>
             </div>
