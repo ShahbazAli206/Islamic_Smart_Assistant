@@ -37,12 +37,6 @@ type DeviceGroup = {
   modes: DeviceMode[];
 };
 
-type DiagInfo = {
-  ua: string; hasMediaDevices: boolean; hasEnumerate: boolean; hasSelectOutput: boolean;
-  hasSetSinkId: boolean; totalDevices: number; byKind: Record<string, number>;
-  rawOutputs: Array<{ id: string; label: string }>;
-};
-
 // ── Device dedup helpers ──────────────────────────────────────────────────────
 
 function extractDeviceName(label: string): { name: string; modeLabel: string } {
@@ -619,8 +613,6 @@ export default function DevicesPage() {
   const [selectedOutputLabel, setSelectedOutputLabel] = useLocalStorage<string>('isa:audioOutputLabel', 'System Default');
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [diag, setDiag] = useState<DiagInfo | null>(null);
-  const [showDiag, setShowDiag] = useState(false);
   const [ayahFav, setAyahFav] = useState(false);
   const [showPermModal, setShowPermModal] = useState(false);
   const [permModalState, setPermModalState] = useState<'prompt' | 'denied'>('prompt');
@@ -831,29 +823,6 @@ export default function DevicesPage() {
     }
   };
 
-  const captureDiag = async () => {
-    if (typeof navigator === 'undefined') return;
-    const md = navigator.mediaDevices;
-    const all =
-      md && typeof md.enumerateDevices === 'function'
-        ? await md.enumerateDevices().catch(() => [] as MediaDeviceInfo[])
-        : ([] as MediaDeviceInfo[]);
-    const byKind: Record<string, number> = {};
-    all.forEach((d) => { byKind[d.kind] = (byKind[d.kind] ?? 0) + 1; });
-    setDiag({
-      ua: navigator.userAgent,
-      hasMediaDevices: !!md,
-      hasEnumerate: !!md && typeof md.enumerateDevices === 'function',
-      hasSelectOutput: !!md && typeof (md as any).selectAudioOutput === 'function',
-      hasSetSinkId: typeof (HTMLMediaElement.prototype as any).setSinkId === 'function',
-      totalDevices: all.length,
-      byKind,
-      rawOutputs: all
-        .filter((d) => d.kind === 'audiooutput')
-        .map((d) => ({ id: d.deviceId.slice(0, 12) + '…', label: d.label || '(label hidden)' })),
-    });
-  };
-
   const refreshList = async () => {
     setError(null);
     setScanning(true);
@@ -861,7 +830,6 @@ export default function DevicesPage() {
     try {
       if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
         setError("This browser doesn't support audio-device enumeration. Open the site in Chrome or Edge.");
-        await captureDiag();
         return;
       }
       let devs = await navigator.mediaDevices.enumerateDevices();
@@ -893,10 +861,8 @@ export default function DevicesPage() {
       });
 
       setDeviceGroups(buildDeviceGroups(labelled));
-      await captureDiag();
     } catch (e: any) {
       setError(`Couldn't list audio devices: ${e?.message ?? e}`);
-      await captureDiag();
     } finally {
       const elapsed = Date.now() - startedAt;
       if (elapsed < MIN_SPIN_MS) await new Promise((r) => setTimeout(r, MIN_SPIN_MS - elapsed));
@@ -1560,30 +1526,21 @@ export default function DevicesPage() {
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
               className={`p-5 sm:p-6 ${T.card}`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <Monitor size={18} className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
-                  <div>
-                    <h3 className={`font-bold ${T.heading}`}>Detected on this PC</h3>
-                    <p className={`text-xs ${T.sub}`}>
-                      {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected  -  select your preferred device.
-                    </p>
-                  </div>
+              <div className="flex items-center gap-2.5 mb-4">
+                <Monitor size={18} className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
+                <div>
+                  <h3 className={`font-bold ${T.heading}`}>Detected on this PC</h3>
+                  <p className={`text-xs ${T.sub}`}>
+                    {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected  -  select your preferred device.
+                  </p>
                 </div>
-                <button
-                  onClick={() => setShowDiag((s) => !s)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500 hover:underline shrink-0"
-                >
-                  <Activity size={13} /> {showDiag ? 'Hide diagnostics' : 'Show diagnostics'}
-                </button>
               </div>
 
               {deviceGroups.length === 0 ? (
                 <div className={`rounded-2xl p-5 text-sm ${T.innerNote} ${T.sub}`}>
                   <p className={`font-semibold ${T.heading} mb-1`}>No outputs detected yet.</p>
                   Bluetooth earbuds must be <strong>Connected</strong> (not just Paired) in Windows, then
-                  click <strong>Rescan</strong>. Use <strong>Show diagnostics</strong> to see exactly what
-                  the browser detects.
+                  click <strong>Rescan</strong>.
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1649,18 +1606,6 @@ export default function DevicesPage() {
                     );
                   })}
                 </div>
-              )}
-
-              {showDiag && diag && (
-                <pre className={`mt-4 rounded-xl p-4 text-[11px] leading-relaxed overflow-x-auto ${isDark ? 'bg-black/40 border border-white/10 text-parchment/70' : 'bg-slate-50 border border-slate-200 text-slate-700'}`}>
-{`Browser:        ${diag.ua}
-mediaDevices:   ${diag.hasMediaDevices}    enumerate: ${diag.hasEnumerate}
-selectAudioOut: ${diag.hasSelectOutput}    setSinkId: ${diag.hasSetSinkId}
-mic permission: ${enumPermission}
-Total devices:  ${diag.totalDevices}  |  By kind: ${JSON.stringify(diag.byKind)}
-Outputs raw:
-${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${d.id}  ${d.label}`).join('\n')}`}
-                </pre>
               )}
             </motion.div>
 

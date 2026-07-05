@@ -18,6 +18,7 @@ import { useDownloadedAyahs, useLangDownloadProgress, localAudioUrl, localAudioL
 import { fetchWordTimings, wordProgressAtTime, countSpokenWords, isSpokenWord, basmalaPrefixWords } from '@/lib/wordTimings';
 import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
+import { RecitationDeviceMenu } from '@/components/RecitationDeviceMenu';
 
 type Stage = 'arabic' | 'translation';
 
@@ -1156,6 +1157,15 @@ export function QuranPlayer({
               )}
             </AnimatePresence>
           </div>
+
+          {/* Play on devices — system speakers/Bluetooth + network cast targets */}
+          <RecitationDeviceMenu
+            url={stageUrl}
+            playing={playing}
+            title={`${surahMeta.englishName} — Ayah ${currentAyah?.numberInSurah ?? ayahIdx + 1}`}
+            mainAudioRef={activeAudioRef}
+            isDark={isDark}
+          />
         </div>
       </div>
 
