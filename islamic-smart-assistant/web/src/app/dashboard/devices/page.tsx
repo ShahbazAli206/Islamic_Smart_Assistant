@@ -1521,94 +1521,6 @@ export default function DevicesPage() {
               </div>
             )}
 
-            {/* ── Detected on this PC ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-              className={`p-5 sm:p-6 ${T.card}`}
-            >
-              <div className="flex items-center gap-2.5 mb-4">
-                <Monitor size={18} className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
-                <div>
-                  <h3 className={`font-bold ${T.heading}`}>Detected on this PC</h3>
-                  <p className={`text-xs ${T.sub}`}>
-                    {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected  -  select your preferred device.
-                  </p>
-                </div>
-              </div>
-
-              {deviceGroups.length === 0 ? (
-                <div className={`rounded-2xl p-5 text-sm ${T.innerNote} ${T.sub}`}>
-                  <p className={`font-semibold ${T.heading} mb-1`}>No outputs detected yet.</p>
-                  Bluetooth earbuds must be <strong>Connected</strong> (not just Paired) in Windows, then
-                  click <strong>Rescan</strong>.
-                </div>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {deviceGroups.map((group) => {
-                    const isGroupActive = group.modes.some((m) => m.deviceId === selectedOutputId);
-                    const selectedMode =
-                      group.modes.find((m) => m.deviceId === selectedOutputId) ?? group.modes[0];
-                    const isHeadphones = /headphone|earbud|airpod|g\d+\s*pro/i.test(group.name);
-                    const Icon = isHeadphones
-                      ? Headphones
-                      : group.isBluetooth
-                      ? Bluetooth
-                      : group.isDefault
-                      ? Volume2
-                      : Speaker;
-
-                    return (
-                      <motion.div
-                        key={group.id}
-                        whileHover={{ y: -3 }}
-                        className={`rounded-2xl p-4 transition flex flex-col gap-3 ${isGroupActive ? T.deviceSel : T.deviceCard}`}
-                      >
-                        {/* Click header to select best/current mode */}
-                        <button
-                          className="flex items-center gap-3 w-full text-left"
-                          onClick={() => selectMode(group, selectedMode)}
-                        >
-                          <span className={`w-11 h-11 shrink-0 grid place-items-center rounded-xl ${isGroupActive ? 'bg-emerald-500 text-white' : T.tile}`}>
-                            <Icon size={18} />
-                          </span>
-                          <span className="flex-1 min-w-0">
-                            <span className={`block font-semibold truncate ${T.heading}`}>{group.name}</span>
-                            <span className={`text-xs ${T.sub} flex items-center gap-1.5`}>
-                              {group.isBluetooth ? 'Bluetooth' : group.isDefault ? 'System Default' : 'Wired / System'}
-                              {isGroupActive && (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-emerald-500 font-semibold">Connected</span>
-                                </>
-                              )}
-                            </span>
-                          </span>
-                          {isGroupActive ? <SignalBars active /> : <ChevronRight size={18} className={T.faint} />}
-                        </button>
-
-                        {/* Mode pills  -  only for multi-mode devices (e.g. Stereo | Hands-Free) */}
-                        {group.modes.length > 1 && (
-                          <div className="flex flex-wrap gap-1.5 pl-14">
-                            {group.modes.map((mode) => (
-                              <button
-                                key={mode.deviceId}
-                                onClick={() => selectMode(group, mode)}
-                                className={`text-xs font-semibold px-2.5 py-1 rounded-full transition ${
-                                  mode.deviceId === selectedOutputId ? T.modeActive : T.modePill
-                                }`}
-                              >
-                                {mode.modeLabel}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-
             {/* ── Devices on your network (DESKTOP ONLY  -  real LAN scan) ── */}
             {lan.supported && (
               <motion.div
@@ -1782,6 +1694,97 @@ export default function DevicesPage() {
               </motion.div>
             )}
 
+            {/* ── Detected on this PC + Other devices on your account, side by side ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+            {/* ── Detected on this PC ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className={`p-5 sm:p-6 ${T.card}`}
+            >
+              <div className="flex items-center gap-2.5 mb-4">
+                <Monitor size={18} className={isDark ? 'text-emerald-300' : 'text-emerald-600'} />
+                <div>
+                  <h3 className={`font-bold ${T.heading}`}>Detected on this PC</h3>
+                  <p className={`text-xs ${T.sub}`}>
+                    {deviceGroups.length} audio device{deviceGroups.length === 1 ? '' : 's'} detected  -  select your preferred device.
+                  </p>
+                </div>
+              </div>
+
+              {deviceGroups.length === 0 ? (
+                <div className={`rounded-2xl p-5 text-sm ${T.innerNote} ${T.sub}`}>
+                  <p className={`font-semibold ${T.heading} mb-1`}>No outputs detected yet.</p>
+                  Bluetooth earbuds must be <strong>Connected</strong> (not just Paired) in Windows, then
+                  click <strong>Rescan</strong>.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                  {deviceGroups.map((group) => {
+                    const isGroupActive = group.modes.some((m) => m.deviceId === selectedOutputId);
+                    const selectedMode =
+                      group.modes.find((m) => m.deviceId === selectedOutputId) ?? group.modes[0];
+                    const isHeadphones = /headphone|earbud|airpod|g\d+\s*pro/i.test(group.name);
+                    const Icon = isHeadphones
+                      ? Headphones
+                      : group.isBluetooth
+                      ? Bluetooth
+                      : group.isDefault
+                      ? Volume2
+                      : Speaker;
+
+                    return (
+                      <motion.div
+                        key={group.id}
+                        whileHover={{ y: -3 }}
+                        className={`rounded-2xl p-4 transition flex flex-col gap-3 ${isGroupActive ? T.deviceSel : T.deviceCard}`}
+                      >
+                        {/* Click header to select best/current mode */}
+                        <button
+                          className="flex items-center gap-3 w-full text-left"
+                          onClick={() => selectMode(group, selectedMode)}
+                        >
+                          <span className={`w-11 h-11 shrink-0 grid place-items-center rounded-xl ${isGroupActive ? 'bg-emerald-500 text-white' : T.tile}`}>
+                            <Icon size={18} />
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className={`block font-semibold truncate ${T.heading}`}>{group.name}</span>
+                            <span className={`text-xs ${T.sub} flex items-center gap-1.5`}>
+                              {group.isBluetooth ? 'Bluetooth' : group.isDefault ? 'System Default' : 'Wired / System'}
+                              {isGroupActive && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-emerald-500 font-semibold">Connected</span>
+                                </>
+                              )}
+                            </span>
+                          </span>
+                          {isGroupActive ? <SignalBars active /> : <ChevronRight size={18} className={T.faint} />}
+                        </button>
+
+                        {/* Mode pills  -  only for multi-mode devices (e.g. Stereo | Hands-Free) */}
+                        {group.modes.length > 1 && (
+                          <div className="flex flex-wrap gap-1.5 pl-14">
+                            {group.modes.map((mode) => (
+                              <button
+                                key={mode.deviceId}
+                                onClick={() => selectMode(group, mode)}
+                                className={`text-xs font-semibold px-2.5 py-1 rounded-full transition ${
+                                  mode.deviceId === selectedOutputId ? T.modeActive : T.modePill
+                                }`}
+                              >
+                                {mode.modeLabel}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+
             {/* ── Other devices on your account ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -1817,7 +1820,7 @@ export default function DevicesPage() {
 
               {linkedLoading ? (
                 /* Loading skeletons */
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[0, 1, 2].map((i) => (
                     <div key={i} className={`rounded-2xl p-4 h-[124px] animate-pulse ${isDark ? 'bg-white/5' : 'bg-emerald-50/60'}`} />
                   ))}
@@ -1841,7 +1844,7 @@ export default function DevicesPage() {
                 </div>
               ) : (
                 /* Real linked devices */
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
                   {linked.map((d, i) => {
                     const Icon = deviceIcon(d);
                     const online = !!d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 5 * 60_000;
@@ -1885,6 +1888,8 @@ export default function DevicesPage() {
                 </div>
               )}
             </motion.div>
+
+            </div>
 
             {/* ── Bottom feature strip ── */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
