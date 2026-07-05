@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -1289,25 +1289,32 @@ const HERO_AYAT = [
   },
 ];
 
+// Deep-link support: /dashboard/advanced?tab=duas opens straight on that tab
+// (e.g. from the overview page's Quick Actions), then behaves like any other tab
+// switch. Isolated in its own component because useSearchParams() requires a
+// Suspense boundary to statically prerender the page.
+function AdvancedTabSync({ onTab }: { onTab: (t: Tab) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const requested = searchParams.get('tab') as Tab | null;
+    if (requested && TABS.some((t) => t.id === requested)) onTab(requested);
+  }, [searchParams, onTab]);
+  return null;
+}
+
 export default function IslamicLibraryPage() {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'hadees');
   const [heroIdx, setHeroIdx] = useState(0);
   const [language] = useLocalStorage<string>('isa:language', 'en');
 
-  // Deep-link support: /dashboard/advanced?tab=duas opens straight on that tab
-  // (e.g. from the overview page's Quick Actions), then behaves like any other tab switch.
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    const requested = searchParams.get('tab') as Tab | null;
-    if (requested && TABS.some((t) => t.id === requested)) setActiveTab(requested);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
 
   return (
     <div className={`-m-5 sm:-m-8 min-h-full ${isDark ? 'text-parchment page-dark' : 'text-ink page-light'}`}
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}>
+      <Suspense fallback={null}>
+        <AdvancedTabSync onTab={setActiveTab} />
+      </Suspense>
 
       {/* ── Full-bleed header ── */}
       <div className="relative overflow-hidden">
