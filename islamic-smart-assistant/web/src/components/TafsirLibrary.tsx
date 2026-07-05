@@ -165,7 +165,6 @@ function PdfReader({ target, onClose, isDark }: {
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);      // document loading
   const [rendering, setRendering] = useState(false); // page rendering
-  const [progress, setProgress] = useState(0);       // initial fetch %
   const [error, setError] = useState<string | null>(null);
   const [pageInput, setPageInput] = useState('');
 
@@ -190,10 +189,18 @@ function PdfReader({ target, onClose, isDark }: {
         // Worker is served from /public (copied from pdfjs-dist/build) — bundling
         // it via new URL() makes Next's compiler choke on the minified file.
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-        const task = pdfjs.getDocument({ url: bookStreamUrl(volume.file) });
-        task.onProgress = (p: { loaded: number; total: number }) => {
-          if (p.total > 0 && !cancelled) setProgress(Math.min(100, Math.round((p.loaded / p.total) * 100)));
-        };
+        // TRUE page-by-page streaming: without these flags pdf.js keeps the
+        // initial request open and downloads the ENTIRE file in the background
+        // (hundreds of MB for these scans). disableStream aborts that request
+        // once headers confirm range support, and disableAutoFetch stops the
+        // background full fetch — after that pdf.js requests only the byte
+        // ranges needed for the page being viewed (~2-4 chunks per page).
+        const task = pdfjs.getDocument({
+          url: bookStreamUrl(volume.file),
+          disableStream: true,
+          disableAutoFetch: true,
+          rangeChunkSize: 262144, // 256 KB — scanned pages span 1-2 chunks
+        });
         doc = await task.promise;
         if (cancelled) { doc.destroy(); return; }
         docRef.current = doc;
@@ -244,6 +251,18 @@ function PdfReader({ target, onClose, isDark }: {
         const task = pg.render({ canvasContext: ctx, viewport, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined });
         renderTaskRef.current = task;
         await task.promise;
+
+        // Quietly warm the NEXT page's byte ranges (tiny offscreen render) so
+        // flipping forward is instant. Chunks land in pdf.js's transport cache.
+        if (!cancelled && page < doc.numPages) {
+          doc.getPage(page + 1).then((nx: any) => {
+            if (cancelled) return;
+            const vp = nx.getViewport({ scale: 0.15 });
+            const off = document.createElement('canvas');
+            off.width = Math.ceil(vp.width); off.height = Math.ceil(vp.height);
+            nx.render({ canvasContext: off.getContext('2d')!, viewport: vp }).promise.catch(() => {});
+          }).catch(() => {});
+        }
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.error(e);
       } finally {
@@ -335,8 +354,8 @@ function PdfReader({ target, onClose, isDark }: {
         {loading && !error && (
           <div className="m-auto flex flex-col items-center gap-3 text-white/80">
             <Loader2 size={28} className="animate-spin" />
-            <p className="text-sm">Opening book… {progress > 0 && `${progress}%`}</p>
-            <p className="text-[11px] text-white/45">Streaming from the library — pages appear without downloading the whole {sizeLabel(volume.sizeMb)} file.</p>
+            <p className="text-sm">Opening book…</p>
+            <p className="text-[11px] text-white/45">Only the page you read is fetched — never the whole {sizeLabel(volume.sizeMb)} file.</p>
           </div>
         )}
         {error && (
