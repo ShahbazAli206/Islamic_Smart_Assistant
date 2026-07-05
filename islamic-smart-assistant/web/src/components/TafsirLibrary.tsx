@@ -1,50 +1,124 @@
 'use client';
 
 // ── Tafsir-ul-Quran section (Islamic Library page) ───────────────────────────
-// Bookshelf of official Dawat-e-Islami tafsir books + an in-app page-by-page
-// PDF reader + ayah search.
+// ONE uniform library: every tafsir — scanned book (PDF) or structured text —
+// is a card in the same grid, opening the same themed reader popup with the
+// same controls (chapter/parah navigation, next/prev, current/total, zoom,
+// download where a file exists).
 //
-// The PDFs are page scans (no text layer), so the reader streams the original
-// book pages via pdf.js (HTTP range requests — no full download needed), while
-// search runs over the STRUCTURED Kanzul Iman translation text from
-// alquran.cloud and maps each hit to its Parah so the reader can jump there.
+// PDF books stream page-by-page via pdf.js range requests through the
+// same-origin /api/tafsir-book proxy; text tafsirs read verse-wise from the
+// Quran.com API (CORS-open). Search runs over the structured Kanzul Iman
+// translation text and links every hit into the books.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronLeft, ChevronRight, ChevronDown, X, Search, Loader2,
-  ZoomIn, ZoomOut, Download, ExternalLink, BookMarked, AlertCircle, Layers,
-  Check, ListFilter, RefreshCw,
+  ZoomIn, ZoomOut, Download, ExternalLink, BookMarked, AlertCircle,
+  Check, ListFilter, RefreshCw, Layers, FileText,
 } from 'lucide-react';
 import {
   TAFSIR_BOOKS, bookPdfUrl, bookStreamUrl, bookSizeMb, sizeLabel, volumeForPara,
   fetchKanzulImanText, searchKanz, AYAH_TAFSIRS, fetchAyahTafsir,
-  type TafsirBook, type TafsirVolume, type KanzAyah,
+  type TafsirBook, type TafsirVolume, type KanzAyah, type AyahTafsir,
 } from '@/lib/tafsirBooks';
 import { SURAHS } from '@/lib/surahs';
 
-// ── Themed chapter (surah) dropdown ──────────────────────────────────────────
-// The native <select> renders with OS styling that ignores the app theme (and
-// was near-invisible in light mode), so the filter uses a custom scrollable
-// listbox styled like the rest of the dashboard dropdowns, with a quick
-// type-to-filter box for the 114 chapters.
+// ── Unified library catalogue ────────────────────────────────────────────────
 
-function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
-  value: number; onChange: (v: number) => void; isDark: boolean; allowAll?: boolean;
+type LibBook =
+  | { kind: 'pdf'; id: string; pdf: TafsirBook }
+  | { kind: 'text'; id: string; taf: AyahTafsir; urduTitle: string; cover: string };
+
+const TEXT_META: Record<number, { urduTitle: string; cover: string }> = {
+  169: { urduTitle: 'تفسير ابن كثير', cover: 'from-midnight-600 via-midnight-700 to-midnight-900' },
+  160: { urduTitle: 'تفسير ابن كثير', cover: 'from-emerald-600 via-emerald-700 to-emerald-950' },
+  14:  { urduTitle: 'تفسير ابن كثير', cover: 'from-midnight-700 via-midnight-800 to-black' },
+  168: { urduTitle: 'معارف القرآن',   cover: 'from-gold-500 via-gold-600 to-gold-900' },
+  159: { urduTitle: 'بیان القرآن',    cover: 'from-emerald-700 via-emerald-800 to-midnight-900' },
+  818: { urduTitle: 'تذکیر القرآن',   cover: 'from-rose-600 via-rose-700 to-rose-950' },
+};
+
+const LIB_BOOKS: LibBook[] = [
+  ...TAFSIR_BOOKS.map((pdf): LibBook => ({ kind: 'pdf', id: pdf.id, pdf })),
+  ...AYAH_TAFSIRS.map((taf): LibBook => ({
+    kind: 'text', id: `text-${taf.id}`, taf,
+    urduTitle: TEXT_META[taf.id]?.urduTitle ?? taf.name,
+    cover: TEXT_META[taf.id]?.cover ?? 'from-emerald-700 to-emerald-950',
+  })),
+];
+
+// ── Shared reader theme tokens ───────────────────────────────────────────────
+
+function readerTokens(isDark: boolean) {
+  return isDark
+    ? {
+        panel: 'border-white/12 text-parchment',
+        panelBg: 'linear-gradient(165deg, rgba(16,42,28,0.96) 0%, rgba(9,24,16,0.97) 100%)',
+        bar: 'border-white/10',
+        sub: 'text-parchment/50',
+        iconBtn: 'hover:bg-white/10 text-parchment/70',
+        ctrl: 'bg-white/8 hover:bg-white/[0.14] text-parchment',
+        pageWell: 'bg-black/25',
+        input: 'bg-white/8 border-white/15 text-parchment placeholder:text-parchment/50 focus:border-gold-300/60',
+        faint: 'text-parchment/45',
+      }
+    : {
+        panel: 'border-emerald-900/[0.10] text-emerald-950',
+        panelBg: 'linear-gradient(165deg, rgba(255,255,255,0.97) 0%, rgba(240,250,244,0.98) 100%)',
+        bar: 'border-emerald-900/[0.08]',
+        sub: 'text-emerald-900/50',
+        iconBtn: 'hover:bg-emerald-50 text-emerald-800/70',
+        ctrl: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-100',
+        pageWell: 'bg-emerald-900/[0.05]',
+        input: 'bg-white border-emerald-200 text-emerald-950 placeholder:text-emerald-900/45 focus:border-emerald-400',
+        faint: 'text-emerald-900/45',
+      };
+}
+
+// ── Small themed listbox helpers ─────────────────────────────────────────────
+
+function useClickAway(ref: React.RefObject<HTMLDivElement | null>, onAway: () => void, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onAway();
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [active, ref, onAway]);
+}
+
+const popCls = (isDark: boolean) =>
+  `absolute top-full mt-2 right-0 z-50 rounded-2xl border shadow-2xl overflow-hidden ${
+    isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
+  }`;
+
+const rowCls = (isDark: boolean, sel: boolean) =>
+  `w-full flex items-center justify-between gap-2 px-3.5 py-2 text-left text-[13px] transition ${
+    sel
+      ? (isDark ? 'bg-emerald-600 text-white font-semibold' : 'bg-emerald-500 text-white font-semibold')
+      : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
+  }`;
+
+const trigCls = (isDark: boolean) =>
+  `flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+    isDark
+      ? 'bg-white/8 border-white/12 text-parchment/85 hover:bg-white/[0.14]'
+      : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'
+  }`;
+
+// ── Themed chapter (surah) dropdown ──────────────────────────────────────────
+
+function ChapterDropdown({ value, onChange, isDark, allowAll = true, compact = false }: {
+  value: number; onChange: (v: number) => void; isDark: boolean; allowAll?: boolean; compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [open]);
+  useClickAway(wrapRef, () => setOpen(false), open);
 
   const options = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -58,20 +132,22 @@ function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
   const label = selected ? `${selected.number}. ${selected.englishName}` : allowAll ? 'All chapters' : 'Choose chapter';
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className="relative shrink-0">
       <button
         type="button"
         onClick={() => { setOpen((o) => !o); setFilter(''); }}
         aria-label="Filter by chapter"
-        className={`w-full sm:w-52 flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm font-medium transition ${
-          isDark
-            ? 'bg-white/[0.06] border-white/12 text-parchment hover:bg-white/[0.10] hover:border-white/20'
-            : 'bg-white border-emerald-200 text-emerald-950 hover:bg-emerald-50'
-        }`}
+        className={compact
+          ? trigCls(isDark)
+          : `w-full sm:w-52 flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm font-medium transition ${
+              isDark
+                ? 'bg-white/[0.06] border-white/12 text-parchment hover:bg-white/[0.10] hover:border-white/20'
+                : 'bg-white border-emerald-200 text-emerald-950 hover:bg-emerald-50'
+            }`}
       >
-        <ListFilter size={14} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-gold-600'}`} />
-        <span className="flex-1 min-w-0 truncate text-left">{label}</span>
-        <ChevronDown size={14} className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
+        <ListFilter size={compact ? 12 : 14} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-gold-600'}`} />
+        <span className={`min-w-0 truncate text-left ${compact ? 'max-w-[9rem]' : 'flex-1'}`}>{label}</span>
+        <ChevronDown size={compact ? 12 : 14} className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
       </button>
 
       <AnimatePresence>
@@ -81,9 +157,7 @@ function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className={`absolute top-full mt-2 left-0 z-50 w-64 rounded-2xl border shadow-2xl overflow-hidden ${
-              isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
-            }`}
+            className={`${popCls(isDark)} ${compact ? '' : 'left-0 right-auto'} w-64`}
           >
             {/* quick filter */}
             <div className={`p-2 border-b ${isDark ? 'border-white/8' : 'border-emerald-50'}`}>
@@ -108,16 +182,7 @@ function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
                 const isSel = num === value;
                 if (s === null && filter.trim()) return null;
                 return (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => { onChange(num); setOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-[13px] transition ${
-                      isSel
-                        ? (isDark ? 'bg-emerald-600 text-white font-semibold' : 'bg-emerald-500 text-white font-semibold')
-                        : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
-                    }`}
-                  >
+                  <button key={num} type="button" onClick={() => { onChange(num); setOpen(false); }} className={rowCls(isDark, isSel)}>
                     {s === null ? (
                       <span className="flex-1">All chapters</span>
                     ) : (
@@ -146,8 +211,7 @@ function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
   );
 }
 
-// ── Parah jump dropdown (reader top bar) ─────────────────────────────────────
-// Compact searchable dropdown replacing the old row of numbered chips.
+// ── Parah jump dropdown (PDF reader top bar) ─────────────────────────────────
 
 function ParaDropdown({ paras, onJump, isDark }: {
   paras: number[]; onJump: (p: number) => void; isDark: boolean;
@@ -156,29 +220,13 @@ function ParaDropdown({ paras, onJump, isDark }: {
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [open]);
+  useClickAway(wrapRef, () => setOpen(false), open);
 
   const shown = filter.trim() ? paras.filter((p) => String(p).startsWith(filter.trim())) : paras;
 
   return (
     <div ref={wrapRef} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => { setOpen((o) => !o); setFilter(''); }}
-        className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-          isDark
-            ? 'bg-white/8 border-white/12 text-parchment/85 hover:bg-white/[0.14]'
-            : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'
-        }`}
-      >
+      <button type="button" onClick={() => { setOpen((o) => !o); setFilter(''); }} className={trigCls(isDark)}>
         <BookMarked size={12} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
         {selected ? `Parah ${selected}` : 'Jump to Parah'}
         <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
@@ -191,11 +239,8 @@ function ParaDropdown({ paras, onJump, isDark }: {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className={`absolute top-full mt-2 right-0 z-50 w-44 rounded-2xl border shadow-2xl overflow-hidden ${
-              isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
-            }`}
+            className={`${popCls(isDark)} w-44`}
           >
-            {/* quick search */}
             <div className={`p-2 border-b ${isDark ? 'border-white/8' : 'border-emerald-50'}`}>
               <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${isDark ? 'bg-white/[0.06]' : 'bg-emerald-50/60'}`}>
                 <Search size={12} className={isDark ? 'text-parchment/40' : 'text-emerald-700/40'} />
@@ -213,24 +258,14 @@ function ParaDropdown({ paras, onJump, isDark }: {
             </div>
 
             <div className="max-h-56 overflow-y-auto overscroll-contain py-1">
-              {shown.map((p) => {
-                const isSel = p === selected;
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => { setSelected(p); setOpen(false); onJump(p); }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2 text-left text-[13px] transition ${
-                      isSel
-                        ? (isDark ? 'bg-emerald-600 text-white font-semibold' : 'bg-emerald-500 text-white font-semibold')
-                        : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
-                    }`}
-                  >
-                    <span>Parah {p}</span>
-                    {isSel && <Check size={13} className="shrink-0" />}
-                  </button>
-                );
-              })}
+              {shown.map((p) => (
+                <button key={p} type="button"
+                  onClick={() => { setSelected(p); setOpen(false); onJump(p); }}
+                  className={rowCls(isDark, p === selected)}>
+                  <span>Parah {p}</span>
+                  {p === selected && <Check size={13} className="shrink-0" />}
+                </button>
+              ))}
               {shown.length === 0 && (
                 <p className={`px-3.5 py-3 text-xs ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>No Parah matches.</p>
               )}
@@ -242,14 +277,130 @@ function ParaDropdown({ paras, onJump, isDark }: {
   );
 }
 
-// ── Page-by-page PDF reader (modal) ──────────────────────────────────────────
+// ── Volume dropdown (PDF reader top bar, multi-volume books) ────────────────
 
-type ReaderTarget = { book: TafsirBook; volume: TafsirVolume; page?: number };
-
-function PdfReader({ target, onClose, isDark }: {
-  target: ReaderTarget; onClose: () => void; isDark: boolean;
+function VolumeDropdown({ volumes, value, onChange, isDark }: {
+  volumes: TafsirVolume[]; value: TafsirVolume; onChange: (v: TafsirVolume) => void; isDark: boolean;
 }) {
-  const { book, volume } = target;
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useClickAway(wrapRef, () => setOpen(false), open);
+
+  return (
+    <div ref={wrapRef} className="relative shrink-0">
+      <button type="button" onClick={() => setOpen((o) => !o)} className={trigCls(isDark)}>
+        <Layers size={12} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+        Volume {value.n}
+        <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`${popCls(isDark)} w-60`}
+          >
+            <div className="max-h-64 overflow-y-auto overscroll-contain py-1">
+              {volumes.map((v) => (
+                <button key={v.n} type="button"
+                  onClick={() => { setOpen(false); if (v.n !== value.n) onChange(v); }}
+                  className={rowCls(isDark, v.n === value.n)}>
+                  <span className="font-semibold">Volume {v.n}</span>
+                  <span className={`text-[11px] ${v.n === value.n ? 'text-white/75' : isDark ? 'text-parchment/45' : 'text-ink/45'}`}>
+                    Parah {v.paras[0]}–{v.paras[1]} · {sizeLabel(v.sizeMb)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Shared reader shell ──────────────────────────────────────────────────────
+// One popup frame used by BOTH readers so every book looks and behaves alike.
+
+function ReaderShell({ isDark, onClose, coverGrad, title, subtitle, headerRight, footer, children, fitWidth }: {
+  isDark: boolean; onClose: () => void;
+  coverGrad: string; title: string; subtitle: string;
+  headerRight: React.ReactNode; footer: React.ReactNode | null; children: React.ReactNode;
+  fitWidth?: boolean; // true = panel hugs content width (PDF pages)
+}) {
+  const t = readerTokens(isDark);
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-5"
+      style={{ background: isDark ? 'rgba(3,10,6,0.60)' : 'rgba(8,20,14,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        className={`relative ${fitWidth ? 'w-fit min-w-[min(94vw,560px)]' : 'w-full max-w-3xl'} max-w-[96vw] h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${t.panel}`}
+        style={{ background: t.panelBg, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+      >
+        {/* gold accent — same signature as the app's cards */}
+        <div className="shrink-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
+
+        {/* top bar */}
+        <div className={`shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b ${t.bar}`}>
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${coverGrad}`}>
+            <BookOpen size={16} className="text-white/90" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display font-bold text-sm truncate">{title}</p>
+            <p className={`text-[11px] truncate ${t.sub}`}>{subtitle}</p>
+          </div>
+          {headerRight}
+          <button onClick={onClose} className={`p-2 rounded-lg transition ${t.iconBtn}`} aria-label="Close reader">
+            <X size={18} />
+          </button>
+        </div>
+
+        {children}
+
+        {footer && (
+          <div className={`shrink-0 flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 py-3 border-t ${t.bar}`}>
+            {footer}
+          </div>
+        )}
+      </motion.div>
+    </motion.div>,
+    document.body,
+  );
+}
+
+/** Friendly network-error body shared by both readers. */
+function ReaderError({ isDark, onReload }: { isDark: boolean; onReload: () => void }) {
+  const t = readerTokens(isDark);
+  return (
+    <div className="m-auto max-w-xs text-center space-y-4 px-6">
+      <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${isDark ? 'bg-amber-500/15' : 'bg-amber-50'}`}>
+        <AlertCircle size={24} className="text-amber-500" />
+      </span>
+      <p className="text-sm font-semibold">Network error</p>
+      <p className={`text-xs leading-relaxed ${t.faint}`}>The book couldn&apos;t load. Check your internet connection and try again.</p>
+      <button onClick={onReload}
+        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 transition">
+        <RefreshCw size={14} /> Reload
+      </button>
+    </div>
+  );
+}
+
+// ── PDF reader (scanned books, page by page) ─────────────────────────────────
+
+function PdfReader({ book, initialVolume, onClose, isDark }: {
+  book: TafsirBook; initialVolume: TafsirVolume; onClose: () => void; isDark: boolean;
+}) {
+  const [volume, setVolume] = useState(initialVolume);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const holderRef = useRef<HTMLDivElement>(null);
@@ -265,7 +416,7 @@ function PdfReader({ target, onClose, isDark }: {
   }, []);
 
   const [numPages, setNumPages] = useState(0);
-  const [page, setPage] = useState(target.page ?? 1);
+  const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);      // document loading
   const [rendering, setRendering] = useState(false); // page rendering
@@ -286,11 +437,7 @@ function PdfReader({ target, onClose, isDark }: {
         // it via new URL() makes Next's compiler choke on the minified file.
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
         // TRUE page-by-page streaming: without these flags pdf.js keeps the
-        // initial request open and downloads the ENTIRE file in the background
-        // (hundreds of MB for these scans). disableStream aborts that request
-        // once headers confirm range support, and disableAutoFetch stops the
-        // background full fetch — after that pdf.js requests only the byte
-        // ranges needed for the page being viewed (~2-4 chunks per page).
+        // initial request open and downloads the ENTIRE file in the background.
         const task = pdfjs.getDocument({
           url: bookStreamUrl(volume.file),
           disableStream: true,
@@ -384,7 +531,6 @@ function PdfReader({ target, onClose, isDark }: {
   }, [go, onClose]);
 
   // Approximate page for a Parah (linear across the volume's Parah span).
-  // Scanned books have no reliable per-Parah bookmarks, so this lands close by.
   const paraJump = (para: number) => {
     if (!numPages) return;
     const [from, to] = volume.paras;
@@ -393,300 +539,132 @@ function PdfReader({ target, onClose, isDark }: {
     setPage(Math.min(numPages, Math.max(1, Math.round(8 + frac * (numPages - 8)))));
   };
 
+  const switchVolume = (v: TafsirVolume) => { setVolume(v); setPage(1); setZoom(1); };
+
   const paras = useMemo(() => {
     const [from, to] = volume.paras;
     return Array.from({ length: to - from + 1 }, (_, i) => from + i);
   }, [volume.paras]);
 
-  // Theme tokens — the reader is a themed in-app panel, not a stark takeover.
-  const t = isDark
-    ? {
-        panel: 'border-white/12 text-parchment',
-        panelBg: 'linear-gradient(165deg, rgba(16,42,28,0.96) 0%, rgba(9,24,16,0.97) 100%)',
-        bar: 'border-white/10',
-        sub: 'text-parchment/50',
-        chip: 'bg-white/8 hover:bg-emerald-500/20 text-parchment/85',
-        chipLabel: 'text-parchment/45',
-        iconBtn: 'hover:bg-white/10 text-parchment/70',
-        ctrl: 'bg-white/8 hover:bg-white/[0.14] text-parchment',
-        pageWell: 'bg-black/25',
-        input: 'bg-white/8 border-white/15 text-parchment placeholder:text-parchment/50 focus:border-gold-300/60',
-        faint: 'text-parchment/45',
-      }
-    : {
-        panel: 'border-emerald-900/[0.10] text-emerald-950',
-        panelBg: 'linear-gradient(165deg, rgba(255,255,255,0.97) 0%, rgba(240,250,244,0.98) 100%)',
-        bar: 'border-emerald-900/[0.08]',
-        sub: 'text-emerald-900/50',
-        chip: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-100',
-        chipLabel: 'text-emerald-900/45',
-        iconBtn: 'hover:bg-emerald-50 text-emerald-800/70',
-        ctrl: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-100',
-        pageWell: 'bg-emerald-900/[0.05]',
-        input: 'bg-white border-emerald-200 text-emerald-950 placeholder:text-emerald-900/45 focus:border-emerald-400',
-        faint: 'text-emerald-900/45',
-      };
+  const t = readerTokens(isDark);
 
-  return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-5"
-      style={{ background: isDark ? 'rgba(3,10,6,0.60)' : 'rgba(8,20,14,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 14 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-        className={`relative w-fit min-w-[min(94vw,560px)] max-w-[96vw] h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${t.panel}`}
-        style={{ background: t.panelBg, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
-      >
-        {/* gold accent — same signature as the app's cards */}
-        <div className="shrink-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
-
-        {/* ── top bar ── */}
-        <div className={`shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b ${t.bar}`}>
-          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${book.cover}`}>
-            <BookOpen size={16} className="text-white/90" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display font-bold text-sm truncate">{book.title}</p>
-            <p className={`text-[11px] truncate ${t.sub}`}>
-              {book.volumes.length > 1 ? `Volume ${volume.n} · Parah ${volume.paras[0]}–${volume.paras[1]} · ` : ''}
-              {book.author}
-            </p>
-          </div>
-
-          {/* Parah jump — searchable dropdown */}
+  return (
+    <ReaderShell
+      isDark={isDark} onClose={onClose} fitWidth
+      coverGrad={book.cover}
+      title={book.title}
+      subtitle={`${book.volumes.length > 1 ? `Volume ${volume.n} · Parah ${volume.paras[0]}–${volume.paras[1]} · ` : ''}${book.author}`}
+      headerRight={
+        <div className="flex items-center gap-1.5">
+          {book.volumes.length > 1 && (
+            <VolumeDropdown volumes={book.volumes} value={volume} onChange={switchVolume} isDark={isDark} />
+          )}
           <ParaDropdown paras={paras} onJump={paraJump} isDark={isDark} />
-
           <a href={bookPdfUrl(volume.file)} download target="_blank" rel="noreferrer"
-            title={`Download PDF (${sizeLabel(volume.sizeMb)})`}
+            title={`Download this ${book.volumes.length > 1 ? `volume (${sizeLabel(volume.sizeMb)})` : `book (${sizeLabel(volume.sizeMb)})`}`}
             className={`p-2 rounded-lg transition ${t.iconBtn}`}>
             <Download size={16} />
           </a>
-          <button onClick={onClose} className={`p-2 rounded-lg transition ${t.iconBtn}`} aria-label="Close reader">
-            <X size={18} />
+        </div>
+      }
+      footer={loading || error ? null : (
+        <>
+          {/* RTL book: "next page" moves left */}
+          <button onClick={() => go(1)} disabled={page >= numPages}
+            className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+            <ChevronLeft size={16} /> Next
           </button>
-        </div>
 
-        {/* ── page canvas ── */}
-        <div ref={holderRef} className={`flex-1 overflow-auto flex p-2 ${t.pageWell}`}>
-          {loading && !error && (
-            <div className="m-auto flex flex-col items-center gap-3">
-              <Loader2 size={28} className="animate-spin text-emerald-500" />
-              <p className="text-sm font-medium">Opening book…</p>
-              <p className={`text-[11px] ${t.faint}`}>Only the page you read is fetched — never the whole {sizeLabel(volume.sizeMb)} file.</p>
-            </div>
-          )}
-          {error && (
-            <div className="m-auto max-w-xs text-center space-y-4 px-6">
-              <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${isDark ? 'bg-amber-500/15' : 'bg-amber-50'}`}>
-                <AlertCircle size={24} className="text-amber-500" />
-              </span>
-              <p className="text-sm font-semibold">Network error</p>
-              <p className={`text-xs leading-relaxed ${t.faint}`}>The book couldn&apos;t load. Check your internet connection and try again.</p>
-              <button
-                onClick={() => setLoadTick((n) => n + 1)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 transition"
-              >
-                <RefreshCw size={14} /> Reload
-              </button>
-            </div>
-          )}
-          {!loading && !error && (
-            <div className={`relative m-auto rounded-lg overflow-hidden bg-white ${isDark ? 'shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)]' : 'shadow-[0_18px_50px_-16px_rgba(16,40,30,0.35)] ring-1 ring-emerald-900/[0.06]'}`}>
-              <canvas ref={canvasRef} />
-              {rendering && (
-                <div className="absolute inset-0 grid place-items-center bg-white/40">
-                  <Loader2 size={22} className="animate-spin text-emerald-700" />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── bottom controls ── */}
-        {!loading && !error && (
-          <div className={`shrink-0 flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 border-t ${t.bar}`}>
-            {/* RTL book: "next page" moves left */}
-            <button onClick={() => go(1)} disabled={page >= numPages}
-              className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
-              <ChevronLeft size={16} /> Next
-            </button>
-
-            <div className="flex items-center gap-1.5 text-sm tabular-nums">
-              {/* Shows the CURRENT page number; type to jump (Enter or blur) */}
-              <input
-                value={pageInput ?? String(page)}
-                onFocus={(e) => { setPageInput(String(page)); e.target.select(); }}
-                onChange={(e) => setPageInput(e.target.value.replace(/[^0-9]/g, ''))}
-                onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-                onBlur={() => {
-                  const n = Number(pageInput);
-                  if (pageInput && Number.isFinite(n) && n >= 1) {
-                    setPage(Math.min(numPages || 1, Math.round(n)));
-                  }
-                  setPageInput(null);
-                }}
-                className={`w-16 px-2 py-1.5 rounded-lg border text-center text-sm font-bold focus:outline-none ${t.input}`}
-                aria-label="Current page — type to jump"
-              />
-              <span className={t.faint}>/ {numPages}</span>
-            </div>
-
-            <button onClick={() => go(-1)} disabled={page <= 1}
-              className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
-              Prev <ChevronRight size={16} />
-            </button>
-
-            <span className={`mx-1 h-6 w-px hidden sm:block ${isDark ? 'bg-white/15' : 'bg-emerald-900/10'}`} />
-            <button onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}
-              className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom out"><ZoomOut size={15} /></button>
-            <span className={`text-xs tabular-nums w-10 text-center ${t.faint}`}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(1)))}
-              className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom in"><ZoomIn size={15} /></button>
+          <div className="flex items-center gap-1.5 text-sm tabular-nums">
+            {/* Shows the CURRENT page number; type to jump (Enter or blur) */}
+            <input
+              value={pageInput ?? String(page)}
+              onFocus={(e) => { setPageInput(String(page)); e.target.select(); }}
+              onChange={(e) => setPageInput(e.target.value.replace(/[^0-9]/g, ''))}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+              onBlur={() => {
+                const n = Number(pageInput);
+                if (pageInput && Number.isFinite(n) && n >= 1) {
+                  setPage(Math.min(numPages || 1, Math.round(n)));
+                }
+                setPageInput(null);
+              }}
+              className={`w-16 px-2 py-1.5 rounded-lg border text-center text-sm font-bold focus:outline-none ${t.input}`}
+              aria-label="Current page — type to jump"
+            />
+            <span className={t.faint}>/ {numPages}</span>
           </div>
-        )}
-      </motion.div>
-    </motion.div>,
-    document.body,
-  );
-}
 
-// ── Book card ────────────────────────────────────────────────────────────────
+          <button onClick={() => go(-1)} disabled={page <= 1}
+            className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+            Prev <ChevronRight size={16} />
+          </button>
 
-function BookCard({ book, onRead, isDark, delay }: {
-  book: TafsirBook; onRead: (volume: TafsirVolume) => void; isDark: boolean; delay: number;
-}) {
-  const multi = book.volumes.length > 1;
-  const [volOpen, setVolOpen] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.4 }}
-      className={`relative overflow-hidden rounded-3xl border p-5 ${
-        isDark ? 'border-white/10 bg-white/[0.04]' : 'border-emerald-900/[0.08] bg-white shadow-[0_1px_3px_rgba(16,40,30,0.04),0_16px_38px_-18px_rgba(16,40,30,0.18)]'
-      }`}
+          <span className={`mx-1 h-6 w-px hidden sm:block ${isDark ? 'bg-white/15' : 'bg-emerald-900/10'}`} />
+          <button onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}
+            className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom out"><ZoomOut size={15} /></button>
+          <span className={`text-xs tabular-nums w-10 text-center ${t.faint}`}>{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(1)))}
+            className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom in"><ZoomIn size={15} /></button>
+        </>
+      )}
     >
-      <div className="flex gap-4">
-        {/* book spine */}
-        <div className={`relative shrink-0 w-24 h-32 rounded-xl bg-gradient-to-br ${book.cover} shadow-lg grid place-items-center`}>
-          <BookMarked size={26} className="text-white/85" />
-          <span className="absolute inset-x-0 bottom-2 text-center text-[9px] font-bold text-white/75 px-1">
-            {multi ? `${book.volumes.length} VOLUMES` : `${book.pages?.toLocaleString()} PAGES`}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p dir="rtl" className={`font-arabic text-xl leading-snug ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{book.urduTitle}</p>
-          <h3 className={`mt-1 text-sm font-bold leading-snug ${isDark ? 'text-parchment/90' : 'text-emerald-950'}`}>{book.title}</h3>
-          <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-parchment/60' : 'text-ink/60'}`}>
-            by: {book.author}{book.tafsirBy ? ` · ${book.tafsirBy}` : ''}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
-            <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-white/8 text-parchment/70' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{book.language}</span>
-            <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-white/8 text-parchment/70' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{sizeLabel(bookSizeMb(book))}</span>
-            <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-gold-400/10 text-gold-300' : 'bg-gold-50 text-gold-700 border border-gold-200/60'}`}>{book.source}</span>
+      <div ref={holderRef} className={`flex-1 overflow-auto flex p-2 ${t.pageWell}`}>
+        {loading && !error && (
+          <div className="m-auto flex flex-col items-center gap-3">
+            <Loader2 size={28} className="animate-spin text-emerald-500" />
+            <p className="text-sm font-medium">Opening book…</p>
+            <p className={`text-[11px] ${t.faint}`}>Only the page you read is fetched — never the whole {sizeLabel(volume.sizeMb)} file.</p>
           </div>
-        </div>
-      </div>
-
-      <p className={`mt-3 text-xs leading-relaxed ${isDark ? 'text-parchment/65' : 'text-ink/65'}`}>{book.blurb}</p>
-      <p className={`mt-1.5 text-[11px] leading-relaxed font-medium ${isDark ? 'text-emerald-300/80' : 'text-emerald-700'}`}>
-        Soft copy — read page by page in this book, or search any chapter and filter by topic below.
-      </p>
-
-      <div className="mt-4 flex items-center gap-2">
-        {multi ? (
-          <div className="relative flex-1">
-            <button onClick={() => setVolOpen((o) => !o)}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 transition">
-              <Layers size={15} /> Read — choose volume <ChevronDown size={14} className={`transition-transform ${volOpen ? 'rotate-180' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {volOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}
-                  className={`absolute bottom-full mb-2 left-0 right-0 z-30 rounded-2xl border shadow-2xl overflow-hidden max-h-64 overflow-y-auto ${
-                    isDark ? 'bg-[#0d2018] border-emerald-500/20' : 'bg-white border-emerald-100'
-                  }`}
-                >
-                  {book.volumes.map((v) => (
-                    <button key={v.n} onClick={() => { setVolOpen(false); onRead(v); }}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
-                        isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50'
-                      }`}>
-                      <span className="font-semibold">Volume {v.n}</span>
-                      <span className={`text-xs ${isDark ? 'text-parchment/50' : 'text-ink/45'}`}>
-                        Parah {v.paras[0]}–{v.paras[1]} · {sizeLabel(v.sizeMb)}
-                      </span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <button onClick={() => onRead(book.volumes[0])}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 transition">
-            <BookOpen size={15} /> Read this book
-          </button>
         )}
-        <a href={book.sourceUrl} target="_blank" rel="noreferrer" title={`Original source: ${book.source}`}
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl border transition ${
-            isDark ? 'border-white/15 text-parchment/60 hover:bg-white/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-          }`}>
-          <ExternalLink size={15} />
-        </a>
+        {error && <ReaderError isDark={isDark} onReload={() => setLoadTick((n) => n + 1)} />}
+        {!loading && !error && (
+          <div className={`relative m-auto rounded-lg overflow-hidden bg-white ${isDark ? 'shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)]' : 'shadow-[0_18px_50px_-16px_rgba(16,40,30,0.35)] ring-1 ring-emerald-900/[0.06]'}`}>
+            <canvas ref={canvasRef} />
+            {rendering && (
+              <div className="absolute inset-0 grid place-items-center bg-white/40">
+                <Loader2 size={22} className="animate-spin text-emerald-700" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </motion.div>
+    </ReaderShell>
   );
 }
 
-// ── Ayah-by-ayah tafsir panel (Quran.com API) ────────────────────────────────
-// Verse-wise tafsir text fetched live from api.quran.com (CORS-open, verified
-// ids in AYAH_TAFSIRS) — Ibn Kathir (en/ur/ar), Ma'ariful Quran (en) and more.
+// ── Text reader (structured tafsir, ayah by ayah) — same shell & controls ────
 
-function AyahTafsirPanel({ isDark }: { isDark: boolean }) {
-  const [tafsirId, setTafsirId] = useState(AYAH_TAFSIRS[0].id);
-  const [surah, setSurah] = useState(1);
-  const [ayah, setAyah] = useState(1);
+function TextReader({ taf, urduTitle, coverGrad, onClose, isDark, initialSurah = 1, initialAyah = 1 }: {
+  taf: AyahTafsir; urduTitle: string; coverGrad: string; onClose: () => void; isDark: boolean;
+  initialSurah?: number; initialAyah?: number;
+}) {
+  const [surah, setSurah] = useState(initialSurah);
+  const [ayah, setAyah] = useState(initialAyah);
+  const [fontScale, setFontScale] = useState(1); // zoom for text
   const [html, setHtml] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tafOpen, setTafOpen] = useState(false);
-  const tafRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [loadTick, setLoadTick] = useState(0);
+  // null = not editing (input mirrors the current ayah number)
+  const [ayahInput, setAyahInput] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!tafOpen) return;
-    const close = (e: MouseEvent) => {
-      if (tafRef.current && !tafRef.current.contains(e.target as Node)) setTafOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [tafOpen]);
-
-  const tafsir = AYAH_TAFSIRS.find((x) => x.id === tafsirId)!;
   const surahMeta = SURAHS.find((s) => s.number === surah)!;
   const maxAyah = surahMeta.ayahs;
-
-  // Clamp ayah when the chapter changes
-  useEffect(() => { setAyah((a) => Math.min(a, SURAHS.find((s) => s.number === surah)!.ayahs)); }, [surah]);
 
   // Fetch on any selection change
   useEffect(() => {
     let cancelled = false;
-    setLoading(true); setError(null);
-    fetchAyahTafsir(tafsirId, surah, ayah)
+    setLoading(true); setError(false);
+    fetchAyahTafsir(taf.id, surah, ayah)
       .then((text) => { if (!cancelled) setHtml(text); })
-      .catch(() => { if (!cancelled) setError('Tafsir service is unreachable right now — please try again.'); })
+      .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [tafsirId, surah, ayah]);
+  }, [taf.id, surah, ayah, loadTick]);
 
   // Step across surah boundaries
-  const step = (d: 1 | -1) => {
+  const step = useCallback((d: 1 | -1) => {
     if (d === 1) {
       if (ayah < maxAyah) setAyah(ayah + 1);
       else if (surah < 114) { setSurah(surah + 1); setAyah(1); }
@@ -694,138 +672,234 @@ function AyahTafsirPanel({ isDark }: { isDark: boolean }) {
       if (ayah > 1) setAyah(ayah - 1);
       else if (surah > 1) { const prev = SURAHS.find((s) => s.number === surah - 1)!; setSurah(surah - 1); setAyah(prev.ayahs); }
     }
-  };
+  }, [ayah, surah, maxAyah]);
 
-  const isRtl = tafsir.dir === 'rtl';
-  const ctrl = isDark
-    ? 'bg-white/8 hover:bg-white/[0.14] text-parchment border border-white/12'
-    : 'bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-200';
+  // Keyboard: match the PDF reader (left = next for RTL reading flow)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') step(1);
+      else if (e.key === 'ArrowRight') step(-1);
+      else if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step, onClose]);
+
+  const pickSurah = (n: number) => { setSurah(n); setAyah(1); };
+
+  const isRtl = taf.dir === 'rtl';
+  const t = readerTokens(isDark);
 
   return (
-    <div className={`rounded-3xl border p-5 ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-emerald-900/[0.08] bg-white shadow-sm'}`}>
-      <div className="flex items-center gap-2.5">
-        <span className={`grid h-9 w-9 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}>
-          <BookOpen size={16} />
-        </span>
-        <div>
-          <h3 className={`font-bold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Tafsir ayah by ayah</h3>
-          <p className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
-            Ibn Kathir · Ma&apos;ariful Quran · Bayan-ul-Quran — live from Quran.com, verse by verse.
-          </p>
-        </div>
-      </div>
-
-      {/* controls */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {/* tafsir picker */}
-        <div ref={tafRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setTafOpen((o) => !o)}
-            className={`flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${ctrl}`}
-          >
-            <BookMarked size={14} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
-            <span className="max-w-[16rem] truncate">{tafsir.name}</span>
-            <ChevronDown size={14} className={`transition-transform duration-200 ${tafOpen ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
-          </button>
-          <AnimatePresence>
-            {tafOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}
-                className={`absolute top-full mt-2 left-0 z-50 w-80 rounded-2xl border shadow-2xl overflow-hidden ${
-                  isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
-                }`}
-              >
-                {AYAH_TAFSIRS.map((x) => {
-                  const isSel = x.id === tafsirId;
-                  return (
-                    <button key={x.id} type="button"
-                      onClick={() => { setTafsirId(x.id); setTafOpen(false); }}
-                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-[13px] transition ${
-                        isSel
-                          ? (isDark ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-white')
-                          : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
-                      }`}
-                    >
-                      <span className="min-w-0">
-                        <span className={`block truncate ${isSel ? 'font-semibold' : ''}`}>{x.name}</span>
-                        <span className={`block text-[10px] ${isSel ? 'text-white/75' : isDark ? 'text-parchment/45' : 'text-ink/45'}`}>{x.author} · {x.school}</span>
-                      </span>
-                      {isSel && <Check size={13} className="shrink-0" />}
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* chapter + ayah */}
-        <ChapterDropdown value={surah} onChange={setSurah} isDark={isDark} allowAll={false} />
+    <ReaderShell
+      isDark={isDark} onClose={onClose}
+      coverGrad={coverGrad}
+      title={taf.name}
+      subtitle={`${taf.author} · ${taf.school}`}
+      headerRight={
         <div className="flex items-center gap-1.5">
-          <button onClick={() => step(-1)} disabled={surah === 1 && ayah === 1}
-            className={`p-2.5 rounded-2xl transition disabled:opacity-30 ${ctrl}`} title="Previous ayah">
-            <ChevronLeft size={15} />
-          </button>
-          <div className={`flex items-center gap-1 rounded-2xl px-3 py-2 text-sm tabular-nums ${ctrl}`}>
-            <span className={isDark ? 'text-parchment/50' : 'text-emerald-900/50'}>Ayah</span>
-            <input
-              value={ayah}
-              onChange={(e) => {
-                const n = Number(e.target.value.replace(/[^0-9]/g, ''));
-                if (n >= 1 && n <= maxAyah) setAyah(n);
-              }}
-              className="w-10 bg-transparent text-center font-semibold focus:outline-none"
-              aria-label="Ayah number"
-            />
-            <span className={isDark ? 'text-parchment/50' : 'text-emerald-900/50'}>/ {maxAyah}</span>
-          </div>
-          <button onClick={() => step(1)} disabled={surah === 114 && ayah === maxAyah}
-            className={`p-2.5 rounded-2xl transition disabled:opacity-30 ${ctrl}`} title="Next ayah">
-            <ChevronRight size={15} />
-          </button>
+          <ChapterDropdown value={surah} onChange={pickSurah} isDark={isDark} allowAll={false} compact />
         </div>
-      </div>
+      }
+      footer={loading && !html ? null : (
+        <>
+          <button onClick={() => step(1)} disabled={surah === 114 && ayah === maxAyah}
+            className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+            <ChevronLeft size={16} /> Next
+          </button>
 
-      {/* content */}
-      <div className={`mt-4 rounded-2xl border px-5 py-4 min-h-[8rem] ${isDark ? 'border-white/8 bg-white/[0.03]' : 'border-emerald-900/[0.06] bg-emerald-50/40'}`}>
+          <div className="flex items-center gap-1.5 text-sm tabular-nums">
+            <span className={t.faint}>Ayah</span>
+            {/* Shows the CURRENT ayah number; type to jump (Enter or blur) */}
+            <input
+              value={ayahInput ?? String(ayah)}
+              onFocus={(e) => { setAyahInput(String(ayah)); e.target.select(); }}
+              onChange={(e) => setAyahInput(e.target.value.replace(/[^0-9]/g, ''))}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+              onBlur={() => {
+                const n = Number(ayahInput);
+                if (ayahInput && Number.isFinite(n) && n >= 1) setAyah(Math.min(maxAyah, Math.round(n)));
+                setAyahInput(null);
+              }}
+              className={`w-16 px-2 py-1.5 rounded-lg border text-center text-sm font-bold focus:outline-none ${t.input}`}
+              aria-label="Current ayah — type to jump"
+            />
+            <span className={t.faint}>/ {maxAyah}</span>
+          </div>
+
+          <button onClick={() => step(-1)} disabled={surah === 1 && ayah === 1}
+            className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+            Prev <ChevronRight size={16} />
+          </button>
+
+          <span className={`mx-1 h-6 w-px hidden sm:block ${isDark ? 'bg-white/15' : 'bg-emerald-900/10'}`} />
+          <button onClick={() => setFontScale((z) => Math.max(0.75, +(z - 0.125).toFixed(3)))}
+            className={`p-2 rounded-xl transition ${t.ctrl}`} title="Smaller text"><ZoomOut size={15} /></button>
+          <span className={`text-xs tabular-nums w-10 text-center ${t.faint}`}>{Math.round(fontScale * 100)}%</span>
+          <button onClick={() => setFontScale((z) => Math.min(1.75, +(z + 0.125).toFixed(3)))}
+            className={`p-2 rounded-xl transition ${t.ctrl}`} title="Larger text"><ZoomIn size={15} /></button>
+        </>
+      )}
+    >
+      <div className={`flex-1 overflow-y-auto px-5 sm:px-8 py-5 ${t.pageWell}`}>
         <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? 'text-gold-300/80' : 'text-gold-700'}`}>
-          {surahMeta.englishName} {surah}:{ayah} · {tafsir.name}
+          {surahMeta.englishName} {surah}:{ayah}
         </p>
         {loading && (
-          <div className="flex items-center gap-2 py-6 justify-center">
-            <Loader2 size={18} className={`animate-spin ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} />
-            <span className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>Loading tafsir…</span>
+          <div className="flex items-center gap-2 py-16 justify-center">
+            <Loader2 size={20} className={`animate-spin ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} />
+            <span className={`text-xs ${t.faint}`}>Loading tafsir…</span>
           </div>
         )}
         {error && !loading && (
-          <p className={`mt-3 text-xs flex items-center gap-1.5 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-            <AlertCircle size={13} /> {error}
-          </p>
+          <div className="flex py-10"><ReaderError isDark={isDark} onReload={() => setLoadTick((n) => n + 1)} /></div>
         )}
         {!loading && !error && (
           html ? (
             <div
-              dir={tafsir.dir}
-              lang={tafsir.language === 'english' ? 'en' : tafsir.language === 'urdu' ? 'ur' : 'ar'}
-              className={`mt-3 leading-relaxed break-words
-                ${isRtl ? 'font-arabic text-xl leading-loose text-right' : 'text-[15px]'}
+              dir={taf.dir}
+              lang={taf.language === 'english' ? 'en' : taf.language === 'urdu' ? 'ur' : 'ar'}
+              style={{ fontSize: `${(isRtl ? 20 : 15) * fontScale}px`, lineHeight: 1.95 }}
+              className={`mt-3 break-words ${isRtl ? 'font-arabic text-right' : ''}
                 ${isDark ? 'text-parchment/90' : 'text-emerald-950/90'}
                 [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold
-                [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-base
-                [&_h1]:mt-4 [&_h2]:mt-4 [&_h3]:mt-3 [&_p]:mt-2
+                [&_h1]:text-[1.15em] [&_h2]:text-[1.08em] [&_h3]:text-[1.04em]
+                [&_h1]:mt-5 [&_h2]:mt-5 [&_h3]:mt-4 [&_p]:mt-3
                 ${isDark ? '[&_h1]:text-gold-300 [&_h2]:text-gold-300 [&_h3]:text-gold-300' : '[&_h1]:text-emerald-800 [&_h2]:text-emerald-800 [&_h3]:text-emerald-800'}`}
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (
-            <p className={`mt-3 text-sm ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
-              No tafsir text for this ayah in this collection — it may be covered under a nearby ayah. Try the next or previous ayah.
+            <p className={`mt-6 text-sm text-center ${t.faint}`}>
+              No tafsir text for this ayah in this collection — it may be covered under a nearby ayah. Try Next or Prev.
             </p>
           )
         )}
       </div>
-    </div>
+    </ReaderShell>
+  );
+}
+
+// ── First-page thumbnail for PDF books (card cover) ─────────────────────────
+// Streams ~300 KB of ranges to render page 1 once, then caches the JPEG in
+// localStorage so future visits never fetch again.
+
+function PdfThumb({ file, alt }: { file: string; alt: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const key = `isa:tafsir-thumb:${file}`;
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached) { setSrc(cached); return; }
+    } catch {}
+    (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+        const task = pdfjs.getDocument({
+          url: bookStreamUrl(file),
+          disableStream: true, disableAutoFetch: true, rangeChunkSize: 262144,
+        });
+        const doc: any = await task.promise;
+        if (cancelled) { doc.destroy(); return; }
+        const pg = await doc.getPage(1);
+        const vw1 = pg.getViewport({ scale: 1 });
+        const scale = 360 / vw1.width;
+        const viewport = pg.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await pg.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        doc.destroy();
+        if (!cancelled) {
+          setSrc(dataUrl);
+          try { localStorage.setItem(key, dataUrl); } catch {}
+        }
+      } catch { /* keep gradient fallback */ }
+    })();
+    return () => { cancelled = true; };
+  }, [file]);
+
+  if (!src) return null;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover object-top select-none" />;
+}
+
+// ── Unified book card ────────────────────────────────────────────────────────
+
+function LibraryCard({ book, onOpen, isDark, delay }: {
+  book: LibBook; onOpen: () => void; isDark: boolean; delay: number;
+}) {
+  const coverGrad = book.kind === 'pdf' ? book.pdf.cover : book.cover;
+  const title = book.kind === 'pdf' ? book.pdf.title : book.taf.name;
+  const urduTitle = book.kind === 'pdf' ? book.pdf.urduTitle : book.urduTitle;
+  const author = book.kind === 'pdf'
+    ? `${book.pdf.author}${book.pdf.tafsirBy ? ` · ${book.pdf.tafsirBy}` : ''}`
+    : book.taf.author;
+  const volumeLine = book.kind === 'pdf'
+    ? (book.pdf.volumes.length > 1
+        ? `${book.pdf.volumes.length} volumes · ${sizeLabel(bookSizeMb(book.pdf))}`
+        : `1 volume · ${book.pdf.pages?.toLocaleString()} pages · ${sizeLabel(bookSizeMb(book.pdf))}`)
+    : 'Text · all 114 surahs, ayah by ayah';
+  const langLabel = book.kind === 'pdf' ? book.pdf.language : book.taf.language[0].toUpperCase() + book.taf.language.slice(1);
+  const source = book.kind === 'pdf' ? book.pdf.source : 'Quran.com';
+  const sourceUrl = book.kind === 'pdf' ? book.pdf.sourceUrl : 'https://quran.com';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.4 }}
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 ${
+        isDark
+          ? 'border-white/10 bg-white/[0.04] hover:border-emerald-400/30'
+          : 'border-emerald-900/[0.08] bg-white shadow-[0_1px_3px_rgba(16,40,30,0.04),0_16px_38px_-18px_rgba(16,40,30,0.18)] hover:border-emerald-300'
+      }`}
+    >
+      {/* cover — first page image for PDF books, calligraphic cover for text */}
+      <button type="button" onClick={onOpen} aria-label={`Read ${title}`}
+        className={`relative h-44 w-full overflow-hidden bg-gradient-to-br ${coverGrad} text-left`}>
+        {book.kind === 'pdf' && <PdfThumb file={book.pdf.volumes[0].file} alt="" />}
+        {/* uniform veil so every cover reads the same */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/20 to-black/10" />
+        <p dir="rtl" className="absolute top-3 right-4 font-arabic text-2xl leading-snug text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
+          {urduTitle}
+        </p>
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold text-white/90 backdrop-blur-sm">
+          {book.kind === 'pdf' ? <BookOpen size={9} /> : <FileText size={9} />}
+          {book.kind === 'pdf' ? 'Book scan' : 'Text'}
+        </span>
+        <div className="absolute bottom-3 left-3 right-3">
+          <p className="text-[11px] font-bold text-white/95 leading-snug line-clamp-2">{title}</p>
+          <p className="mt-0.5 text-[10px] text-white/70">{volumeLine}</p>
+        </div>
+      </button>
+
+      {/* body */}
+      <div className="flex flex-1 flex-col p-4">
+        <p className={`text-xs leading-relaxed ${isDark ? 'text-parchment/70' : 'text-ink/70'}`}>
+          by: {author}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
+          <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-white/8 text-parchment/70' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{langLabel}</span>
+          <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-gold-400/10 text-gold-300' : 'bg-gold-50 text-gold-700 border border-gold-200/60'}`}>{source}</span>
+        </div>
+
+        <div className="mt-auto pt-3 flex items-center gap-2">
+          <button onClick={onOpen}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 transition">
+            <BookOpen size={15} /> Read
+          </button>
+          <a href={sourceUrl} target="_blank" rel="noreferrer" title={`Original source: ${source}`}
+            onClick={(e) => e.stopPropagation()}
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl border transition ${
+              isDark ? 'border-white/15 text-parchment/60 hover:bg-white/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+            }`}>
+            <ExternalLink size={15} />
+          </a>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -927,33 +1001,45 @@ function TafsirSearch({ onOpenPara, isDark }: {
 
 // ── Section root ─────────────────────────────────────────────────────────────
 
+type ReaderState =
+  | { kind: 'pdf'; book: TafsirBook; volume: TafsirVolume }
+  | { kind: 'text'; book: Extract<LibBook, { kind: 'text' }> }
+  | null;
+
 export function TafsirSection({ isDark }: { isDark: boolean }) {
-  const [reader, setReader] = useState<ReaderTarget | null>(null);
+  const [reader, setReader] = useState<ReaderState>(null);
+
+  const openBook = (book: LibBook) => {
+    if (book.kind === 'pdf') setReader({ kind: 'pdf', book: book.pdf, volume: book.pdf.volumes[0] });
+    else setReader({ kind: 'text', book });
+  };
 
   const openPara = (book: TafsirBook, para: number) => {
-    const volume = volumeForPara(book, para);
-    // Approximate page within the volume for this Parah (reader refines via its own jump)
-    setReader({ book, volume });
+    setReader({ kind: 'pdf', book, volume: volumeForPara(book, para) });
   };
 
   return (
     <div className="space-y-5">
-      {/* bookshelf */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        {TAFSIR_BOOKS.map((book, i) => (
-          <BookCard key={book.id} book={book} isDark={isDark} delay={i * 0.06}
-            onRead={(volume) => setReader({ book, volume })} />
+      {/* unified bookshelf — every tafsir, same card, same reader */}
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {LIB_BOOKS.map((book, i) => (
+          <LibraryCard key={book.id} book={book} isDark={isDark} delay={i * 0.05}
+            onOpen={() => openBook(book)} />
         ))}
       </div>
-
-      {/* ayah-by-ayah tafsir (live from Quran.com) */}
-      <AyahTafsirPanel isDark={isDark} />
 
       {/* search */}
       <TafsirSearch isDark={isDark} onOpenPara={openPara} />
 
-      {/* reader modal */}
-      {reader && <PdfReader target={reader} onClose={() => setReader(null)} isDark={isDark} />}
+      {/* readers — one shared shell, two bodies */}
+      {reader?.kind === 'pdf' && (
+        <PdfReader book={reader.book} initialVolume={reader.volume}
+          onClose={() => setReader(null)} isDark={isDark} />
+      )}
+      {reader?.kind === 'text' && (
+        <TextReader taf={reader.book.taf} urduTitle={reader.book.urduTitle} coverGrad={reader.book.cover}
+          onClose={() => setReader(null)} isDark={isDark} />
+      )}
     </div>
   );
 }
