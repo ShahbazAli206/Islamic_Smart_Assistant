@@ -82,14 +82,32 @@ export function normalizeFiqh(raw: string): Fiqh {
   return 'hanafi'; // default
 }
 
+// IP-geolocation services (e.g. the desktop app's "detect via IP" step) often
+// return a 2-letter ISO 3166-1 country code — "PK", not "Pakistan" — while GPS/
+// address reverse-geocoding (Nominatim) and manually typed countries return the
+// full name. Normalize recognized codes to their full name before matching below,
+// otherwise every IP-detected desktop user silently misses their country's
+// convention and falls back to a generic sect default instead.
+const ISO2_TO_NAME: Record<string, string> = {
+  pk: 'Pakistan', bd: 'Bangladesh', in: 'India',
+  sa: 'Saudi Arabia', kw: 'Kuwait', qa: 'Qatar', ae: 'United Arab Emirates',
+  bh: 'Bahrain', om: 'Oman', iq: 'Iraq', ye: 'Yemen',
+  eg: 'Egypt', jo: 'Jordan', ps: 'Palestine', sy: 'Syria', lb: 'Lebanon',
+  ly: 'Libya', tn: 'Tunisia', dz: 'Algeria', ma: 'Morocco', sd: 'Sudan',
+  ir: 'Iran', tr: 'Turkey',
+  sg: 'Singapore', my: 'Malaysia', id: 'Indonesia', bn: 'Brunei',
+  us: 'United States', ca: 'Canada', mx: 'Mexico',
+};
+
 /**
  * Returns the most widely-used AlAdhan calculation method id for a given country,
  * or null when the country is unrecognised (callers should fall back to a sect default).
  * Centralised here so onboarding, prayer-times page, and Azan scheduler all agree.
  */
 export function methodByCountry(country: string): number | null {
-  const c = (country ?? '').toLowerCase();
+  let c = (country ?? '').toLowerCase();
   if (!c) return null;
+  if (/^[a-z]{2}$/.test(c) && ISO2_TO_NAME[c]) c = ISO2_TO_NAME[c].toLowerCase();
   // South Asia
   if (c.includes('pakistan')) return METHODS.Karachi;
   if (c.includes('bangladesh') || c.includes('india')) return METHODS.Karachi;

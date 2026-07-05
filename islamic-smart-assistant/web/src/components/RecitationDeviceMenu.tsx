@@ -288,12 +288,18 @@ export function RecitationDeviceMenu({ url, playing, title, mainAudioRef }: Prop
                     </p>
                     {output.devices.map((d) => {
                       const on = outputIds.includes(d.id);
+                      // Before any device is explicitly selected here, the main
+                      // <audio> element is unmuted and already routes sound to
+                      // whichever output the OS currently treats as default —
+                      // so that device is genuinely playing even though this
+                      // menu never toggled it on.
+                      const playingHere = on ? playing : (playing && outputIds.length === 0 && d.isDefault);
                       return (
                         <DeviceRow
                           key={d.id}
                           icon={d.isBluetooth ? <Bluetooth size={15} /> : <Speaker size={15} />}
                           name={d.name}
-                          status={on ? (playing ? 'Playing' : 'Selected') : 'Not playing'}
+                          status={playingHere ? 'Playing' : (on ? 'Selected' : 'Not playing')}
                           on={on}
                           onClick={() => toggleOutput(d.id)}
                         />
