@@ -160,6 +160,48 @@ export function fetchKanzulImanText(): Promise<KanzAyah[]> {
   return kanzPromise;
 }
 
+// ── Ayah-by-ayah tafsir (Quran.com API v4) ──────────────────────────────────
+// These tafsirs exist as STRUCTURED verse-wise text on api.quran.com (all ids
+// verified against /api/v4/resources/tafsirs; the API sends
+// Access-Control-Allow-Origin: * so the browser fetches it directly — no
+// scraping, storage, or proxy needed). Text arrives as trusted HTML.
+
+export type AyahTafsir = {
+  id: number;        // quran.com tafsir resource id
+  name: string;
+  author: string;
+  language: 'english' | 'arabic' | 'urdu';
+  dir: 'ltr' | 'rtl';
+  school: string;    // shown as a small provenance badge
+};
+
+export const AYAH_TAFSIRS: AyahTafsir[] = [
+  { id: 169, name: 'Tafsir Ibn Kathir (English, abridged)', author: 'Hafiz Ibn Kathir', language: 'english', dir: 'ltr', school: 'Classical Sunni' },
+  { id: 160, name: 'Tafsir Ibn Kathir (Urdu)',              author: 'Hafiz Ibn Kathir', language: 'urdu',    dir: 'rtl', school: 'Classical Sunni' },
+  { id: 14,  name: 'Tafsir Ibn Kathir (Arabic)',            author: 'Hafiz Ibn Kathir', language: 'arabic',  dir: 'rtl', school: 'Classical Sunni' },
+  { id: 168, name: "Ma'ariful Quran (English)",             author: 'Mufti Muhammad Shafi Usmani', language: 'english', dir: 'ltr', school: 'Deobandi / Sunni' },
+  { id: 159, name: 'Bayan-ul-Quran (Urdu)',                 author: 'Dr. Israr Ahmad',  language: 'urdu',    dir: 'rtl', school: 'Sunni' },
+  { id: 818, name: 'Tazkir-ul-Quran (Urdu)',                author: 'Maulana Wahiduddin Khan', language: 'urdu', dir: 'rtl', school: 'Sunni' },
+];
+
+/** Fetch one ayah's tafsir text (HTML) from the Quran.com API, session-cached. */
+const ayahTafsirCache = new Map<string, string>();
+export async function fetchAyahTafsir(
+  tafsirId: number,
+  surah: number,
+  ayah: number,
+): Promise<string> {
+  const key = `${tafsirId}:${surah}:${ayah}`;
+  const hit = ayahTafsirCache.get(key);
+  if (hit !== undefined) return hit;
+  const res = await fetch(`https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surah}:${ayah}`);
+  if (!res.ok) throw new Error(`Quran.com API ${res.status}`);
+  const json = await res.json();
+  const text = (json?.tafsir?.text as string) ?? '';
+  ayahTafsirCache.set(key, text);
+  return text;
+}
+
 /** Case/whitespace-insensitive substring search over the Kanzul Iman text. */
 export function searchKanz(ayahs: KanzAyah[], query: string, surah?: number): KanzAyah[] {
   const q = query.trim().replace(/\s+/g, ' ');

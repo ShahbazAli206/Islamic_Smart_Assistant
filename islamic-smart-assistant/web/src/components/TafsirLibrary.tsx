@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {
   TAFSIR_BOOKS, bookPdfUrl, bookStreamUrl, bookSizeMb, sizeLabel, volumeForPara,
-  fetchKanzulImanText, searchKanz,
+  fetchKanzulImanText, searchKanz, AYAH_TAFSIRS, fetchAyahTafsir,
   type TafsirBook, type TafsirVolume, type KanzAyah,
 } from '@/lib/tafsirBooks';
 import { SURAHS } from '@/lib/surahs';
@@ -30,8 +30,8 @@ import { SURAHS } from '@/lib/surahs';
 // listbox styled like the rest of the dashboard dropdowns, with a quick
 // type-to-filter box for the 114 chapters.
 
-function ChapterDropdown({ value, onChange, isDark }: {
-  value: number; onChange: (v: number) => void; isDark: boolean;
+function ChapterDropdown({ value, onChange, isDark, allowAll = true }: {
+  value: number; onChange: (v: number) => void; isDark: boolean; allowAll?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
@@ -55,7 +55,7 @@ function ChapterDropdown({ value, onChange, isDark }: {
   }, [filter]);
 
   const selected = value ? SURAHS.find((s) => s.number === value) : null;
-  const label = selected ? `${selected.number}. ${selected.englishName}` : 'All chapters';
+  const label = selected ? `${selected.number}. ${selected.englishName}` : allowAll ? 'All chapters' : 'Choose chapter';
 
   return (
     <div ref={wrapRef} className="relative">
@@ -103,7 +103,7 @@ function ChapterDropdown({ value, onChange, isDark }: {
 
             {/* scrollable list */}
             <div className="max-h-64 overflow-y-auto overscroll-contain py-1">
-              {[null, ...options].map((s) => {
+              {[...(allowAll ? [null] : []), ...options].map((s) => {
                 const num = s?.number ?? 0;
                 const isSel = num === value;
                 if (s === null && filter.trim()) return null;
@@ -658,6 +658,191 @@ function BookCard({ book, onRead, isDark, delay }: {
   );
 }
 
+// ── Ayah-by-ayah tafsir panel (Quran.com API) ────────────────────────────────
+// Verse-wise tafsir text fetched live from api.quran.com (CORS-open, verified
+// ids in AYAH_TAFSIRS) — Ibn Kathir (en/ur/ar), Ma'ariful Quran (en) and more.
+
+function AyahTafsirPanel({ isDark }: { isDark: boolean }) {
+  const [tafsirId, setTafsirId] = useState(AYAH_TAFSIRS[0].id);
+  const [surah, setSurah] = useState(1);
+  const [ayah, setAyah] = useState(1);
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tafOpen, setTafOpen] = useState(false);
+  const tafRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!tafOpen) return;
+    const close = (e: MouseEvent) => {
+      if (tafRef.current && !tafRef.current.contains(e.target as Node)) setTafOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [tafOpen]);
+
+  const tafsir = AYAH_TAFSIRS.find((x) => x.id === tafsirId)!;
+  const surahMeta = SURAHS.find((s) => s.number === surah)!;
+  const maxAyah = surahMeta.ayahs;
+
+  // Clamp ayah when the chapter changes
+  useEffect(() => { setAyah((a) => Math.min(a, SURAHS.find((s) => s.number === surah)!.ayahs)); }, [surah]);
+
+  // Fetch on any selection change
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true); setError(null);
+    fetchAyahTafsir(tafsirId, surah, ayah)
+      .then((text) => { if (!cancelled) setHtml(text); })
+      .catch(() => { if (!cancelled) setError('Tafsir service is unreachable right now — please try again.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [tafsirId, surah, ayah]);
+
+  // Step across surah boundaries
+  const step = (d: 1 | -1) => {
+    if (d === 1) {
+      if (ayah < maxAyah) setAyah(ayah + 1);
+      else if (surah < 114) { setSurah(surah + 1); setAyah(1); }
+    } else {
+      if (ayah > 1) setAyah(ayah - 1);
+      else if (surah > 1) { const prev = SURAHS.find((s) => s.number === surah - 1)!; setSurah(surah - 1); setAyah(prev.ayahs); }
+    }
+  };
+
+  const isRtl = tafsir.dir === 'rtl';
+  const ctrl = isDark
+    ? 'bg-white/8 hover:bg-white/[0.14] text-parchment border border-white/12'
+    : 'bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-200';
+
+  return (
+    <div className={`rounded-3xl border p-5 ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-emerald-900/[0.08] bg-white shadow-sm'}`}>
+      <div className="flex items-center gap-2.5">
+        <span className={`grid h-9 w-9 place-items-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}>
+          <BookOpen size={16} />
+        </span>
+        <div>
+          <h3 className={`font-bold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Tafsir ayah by ayah</h3>
+          <p className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
+            Ibn Kathir · Ma&apos;ariful Quran · Bayan-ul-Quran — live from Quran.com, verse by verse.
+          </p>
+        </div>
+      </div>
+
+      {/* controls */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {/* tafsir picker */}
+        <div ref={tafRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setTafOpen((o) => !o)}
+            className={`flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${ctrl}`}
+          >
+            <BookMarked size={14} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+            <span className="max-w-[16rem] truncate">{tafsir.name}</span>
+            <ChevronDown size={14} className={`transition-transform duration-200 ${tafOpen ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
+          </button>
+          <AnimatePresence>
+            {tafOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.15 }}
+                className={`absolute top-full mt-2 left-0 z-50 w-80 rounded-2xl border shadow-2xl overflow-hidden ${
+                  isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
+                }`}
+              >
+                {AYAH_TAFSIRS.map((x) => {
+                  const isSel = x.id === tafsirId;
+                  return (
+                    <button key={x.id} type="button"
+                      onClick={() => { setTafsirId(x.id); setTafOpen(false); }}
+                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-[13px] transition ${
+                        isSel
+                          ? (isDark ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-white')
+                          : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className={`block truncate ${isSel ? 'font-semibold' : ''}`}>{x.name}</span>
+                        <span className={`block text-[10px] ${isSel ? 'text-white/75' : isDark ? 'text-parchment/45' : 'text-ink/45'}`}>{x.author} · {x.school}</span>
+                      </span>
+                      {isSel && <Check size={13} className="shrink-0" />}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* chapter + ayah */}
+        <ChapterDropdown value={surah} onChange={setSurah} isDark={isDark} allowAll={false} />
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => step(-1)} disabled={surah === 1 && ayah === 1}
+            className={`p-2.5 rounded-2xl transition disabled:opacity-30 ${ctrl}`} title="Previous ayah">
+            <ChevronLeft size={15} />
+          </button>
+          <div className={`flex items-center gap-1 rounded-2xl px-3 py-2 text-sm tabular-nums ${ctrl}`}>
+            <span className={isDark ? 'text-parchment/50' : 'text-emerald-900/50'}>Ayah</span>
+            <input
+              value={ayah}
+              onChange={(e) => {
+                const n = Number(e.target.value.replace(/[^0-9]/g, ''));
+                if (n >= 1 && n <= maxAyah) setAyah(n);
+              }}
+              className="w-10 bg-transparent text-center font-semibold focus:outline-none"
+              aria-label="Ayah number"
+            />
+            <span className={isDark ? 'text-parchment/50' : 'text-emerald-900/50'}>/ {maxAyah}</span>
+          </div>
+          <button onClick={() => step(1)} disabled={surah === 114 && ayah === maxAyah}
+            className={`p-2.5 rounded-2xl transition disabled:opacity-30 ${ctrl}`} title="Next ayah">
+            <ChevronRight size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* content */}
+      <div className={`mt-4 rounded-2xl border px-5 py-4 min-h-[8rem] ${isDark ? 'border-white/8 bg-white/[0.03]' : 'border-emerald-900/[0.06] bg-emerald-50/40'}`}>
+        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? 'text-gold-300/80' : 'text-gold-700'}`}>
+          {surahMeta.englishName} {surah}:{ayah} · {tafsir.name}
+        </p>
+        {loading && (
+          <div className="flex items-center gap-2 py-6 justify-center">
+            <Loader2 size={18} className={`animate-spin ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} />
+            <span className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>Loading tafsir…</span>
+          </div>
+        )}
+        {error && !loading && (
+          <p className={`mt-3 text-xs flex items-center gap-1.5 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+            <AlertCircle size={13} /> {error}
+          </p>
+        )}
+        {!loading && !error && (
+          html ? (
+            <div
+              dir={tafsir.dir}
+              lang={tafsir.language === 'english' ? 'en' : tafsir.language === 'urdu' ? 'ur' : 'ar'}
+              className={`mt-3 leading-relaxed break-words
+                ${isRtl ? 'font-arabic text-xl leading-loose text-right' : 'text-[15px]'}
+                ${isDark ? 'text-parchment/90' : 'text-emerald-950/90'}
+                [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold
+                [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-base
+                [&_h1]:mt-4 [&_h2]:mt-4 [&_h3]:mt-3 [&_p]:mt-2
+                ${isDark ? '[&_h1]:text-gold-300 [&_h2]:text-gold-300 [&_h3]:text-gold-300' : '[&_h1]:text-emerald-800 [&_h2]:text-emerald-800 [&_h3]:text-emerald-800'}`}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          ) : (
+            <p className={`mt-3 text-sm ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
+              No tafsir text for this ayah in this collection — it may be covered under a nearby ayah. Try the next or previous ayah.
+            </p>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Search panel (structured Kanzul Iman text) ───────────────────────────────
 
 function TafsirSearch({ onOpenPara, isDark }: {
@@ -774,6 +959,9 @@ export function TafsirSection({ isDark }: { isDark: boolean }) {
             onRead={(volume) => setReader({ book, volume })} />
         ))}
       </div>
+
+      {/* ayah-by-ayah tafsir (live from Quran.com) */}
+      <AyahTafsirPanel isDark={isDark} />
 
       {/* search */}
       <TafsirSearch isDark={isDark} onOpenPara={openPara} />
