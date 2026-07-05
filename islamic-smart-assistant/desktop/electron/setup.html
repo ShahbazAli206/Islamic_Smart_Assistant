@@ -608,16 +608,48 @@ const PILL_ON  = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12p
 const PILL_OFF = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;border:1.5px solid #ddd;background:#fff;color:#555;font-size:12px;font-weight:600;cursor:pointer';
 
 function buildPrefs() {
-  document.getElementById('prefLangs').innerHTML = PREF_LANGS.map((l) => `
-    <span style="${l.id === prefLang ? PILL_ON : PILL_OFF}" onclick="setPrefLang('${l.id}')">
-      ${l.label} <span style="opacity:.65;font-weight:500">${l.native}</span>
-    </span>`).join('');
+  const cur = PREF_LANGS.find((l) => l.id === prefLang);
+  document.getElementById('prefLangBtn').innerHTML = cur
+    ? `<span>${cur.label} <span class="native">${cur.native}</span></span><span class="caret">▾</span>`
+    : `<span>Select language</span><span class="caret">▾</span>`;
+  renderPrefLangList(document.getElementById('prefLangSearch') ? document.getElementById('prefLangSearch').value : '');
+
   document.getElementById('prefSchools').innerHTML = PREF_SCHOOLS.map((s) => `
     <span style="${s.id === prefSchool ? PILL_ON : PILL_OFF}" onclick="setPrefSchool('${s.id}')">${s.label}</span>`).join('');
   const sch = PREF_SCHOOLS.find((s) => s.id === prefSchool);
   document.getElementById('prefSchoolDesc').textContent = sch ? sch.desc : '';
 }
-function setPrefLang(id)   { prefLang = id;   buildPrefs(); }
+
+function renderPrefLangList(query) {
+  const q = (query || '').trim().toLowerCase();
+  const list = !q ? PREF_LANGS : PREF_LANGS.filter((l) =>
+    l.label.toLowerCase().includes(q) || l.native.toLowerCase().includes(q));
+  document.getElementById('prefLangList').innerHTML = list.length
+    ? list.map((l) => `
+      <div class="lang-dd-item ${l.id === prefLang ? 'sel' : ''}" onclick="setPrefLang('${l.id}')">
+        <span>${l.label}</span><span class="native">${l.native}</span>
+      </div>`).join('')
+    : '<div class="lang-dd-empty">No matching language</div>';
+}
+
+function toggleLangDropdown(forceOpen) {
+  const panel = document.getElementById('prefLangPanel');
+  const open  = typeof forceOpen === 'boolean' ? forceOpen : panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  if (open) {
+    const search = document.getElementById('prefLangSearch');
+    search.value = '';
+    renderPrefLangList('');
+    setTimeout(() => search.focus(), 0);
+  }
+}
+
+// Close the dropdown when clicking anywhere outside it.
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('prefLangDd').contains(e.target)) toggleLangDropdown(false);
+});
+
+function setPrefLang(id)   { prefLang = id;   buildPrefs(); toggleLangDropdown(false); }
 function setPrefSchool(id) { prefSchool = id; buildPrefs(); }
 
 // ── Init ──────────────────────────────────────────────────
