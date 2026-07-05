@@ -874,10 +874,68 @@ function LibraryCard({ book, onOpen, isDark, delay }: {
   );
 }
 
-// ── Search panel (structured Kanzul Iman text) ───────────────────────────────
+// ── "Open in" dropdown — per search result, jumps into ANY of the 8 books ────
 
-function TafsirSearch({ onOpenPara, isDark }: {
-  onOpenPara: (book: TafsirBook, para: number) => void; isDark: boolean;
+function OpenInDropdown({ ayah, onOpen, isDark }: {
+  ayah: KanzAyah; onOpen: (book: LibBook, ayah: KanzAyah) => void; isDark: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useClickAway(wrapRef, () => setOpen(false), open);
+
+  return (
+    <div ref={wrapRef} className="relative shrink-0">
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition bg-emerald-600 text-white hover:bg-emerald-700">
+        <BookOpen size={11} /> Read tafsir
+        <ChevronDown size={11} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`${popCls(isDark)} w-64`}
+          >
+            <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wide ${isDark ? 'border-white/8 text-parchment/45' : 'border-emerald-50 text-ink/45'}`}>
+              Choose a book
+            </div>
+            <div className="max-h-64 overflow-y-auto overscroll-contain py-1">
+              {LIB_BOOKS.map((b) => {
+                const label = b.kind === 'pdf' ? b.pdf.title : b.taf.name;
+                return (
+                  <button key={b.id} type="button"
+                    onClick={() => { setOpen(false); onOpen(b, ayah); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-[12px] transition ${
+                      isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50'
+                    }`}
+                  >
+                    {b.kind === 'pdf' ? <BookOpen size={12} className="shrink-0 opacity-60" /> : <FileText size={12} className="shrink-0 opacity-60" />}
+                    <span className="min-w-0 truncate">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Search panel (structured Kanzul Iman text) ───────────────────────────────
+// This searches ONE full-text index — the Kanzul Iman Urdu translation, the
+// only Quran text we hold in full, ayah-by-ayah — to LOCATE a verse. It is a
+// verse finder, not a full-text search across every tafsir's commentary (the
+// scanned books have no text layer, and fetching all 6,236 ayahs from each of
+// the 6 API tafsirs just to search them isn't practical). Once a verse is
+// found, "Read tafsir" opens ANY of the 8 books at that exact ayah.
+
+function TafsirSearch({ onOpenBook, isDark }: {
+  onOpenBook: (book: LibBook, ayah: KanzAyah) => void; isDark: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [surahFilter, setSurahFilter] = useState(0); // 0 = all chapters
@@ -909,9 +967,9 @@ function TafsirSearch({ onOpenPara, isDark }: {
           <Search size={16} />
         </span>
         <div>
-          <h3 className={`font-bold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Search inside the tafsir</h3>
+          <h3 className={`font-bold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Find an ayah, read its tafsir</h3>
           <p className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
-            Searches the Kanzul Iman translation text (Urdu) — every match links to its Parah in the books.
+            Type a word from the Kanzul Iman Urdu translation to locate the ayah, then open its commentary in any of the 8 books below.
           </p>
         </div>
       </div>
@@ -953,14 +1011,7 @@ function TafsirSearch({ onOpenPara, isDark }: {
                   {r.surahName} {r.surah}:{r.ayah} · Parah {r.juz}
                 </span>
                 <span className="flex-1" />
-                {TAFSIR_BOOKS.map((b) => (
-                  <button key={b.id} onClick={() => onOpenPara(b, r.juz)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition ${
-                      isDark ? 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25' : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    }`}>
-                    <BookOpen size={10} /> {b.id === 'kanzul-iman' ? 'Kanzul Iman' : 'Sirat-ul-Jinan'}
-                  </button>
-                ))}
+                <OpenInDropdown ayah={r} onOpen={onOpenBook} isDark={isDark} />
               </div>
             </div>
           ))}
@@ -974,7 +1025,7 @@ function TafsirSearch({ onOpenPara, isDark }: {
 
 type ReaderState =
   | { kind: 'pdf'; book: TafsirBook; volume: TafsirVolume }
-  | { kind: 'text'; book: Extract<LibBook, { kind: 'text' }> }
+  | { kind: 'text'; book: Extract<LibBook, { kind: 'text' }>; initialSurah?: number; initialAyah?: number }
   | null;
 
 export function TafsirSection({ isDark }: { isDark: boolean }) {
@@ -985,12 +1036,20 @@ export function TafsirSection({ isDark }: { isDark: boolean }) {
     else setReader({ kind: 'text', book });
   };
 
-  const openPara = (book: TafsirBook, para: number) => {
-    setReader({ kind: 'pdf', book, volume: volumeForPara(book, para) });
+  // From a search hit: jump straight to that ayah, in whichever book the
+  // user picked (scanned books land on the nearest Parah page; text tafsirs
+  // open exactly on that surah:ayah).
+  const openBookAtAyah = (book: LibBook, ayah: KanzAyah) => {
+    if (book.kind === 'pdf') setReader({ kind: 'pdf', book: book.pdf, volume: volumeForPara(book.pdf, ayah.juz) });
+    else setReader({ kind: 'text', book, initialSurah: ayah.surah, initialAyah: ayah.ayah });
   };
 
   return (
     <div className="space-y-5">
+      {/* find an ayah, then open its tafsir — sits above the shelf since it
+          applies across all 8 books, not any one of them */}
+      <TafsirSearch isDark={isDark} onOpenBook={openBookAtAyah} />
+
       {/* unified bookshelf — every tafsir, same card, same reader */}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {LIB_BOOKS.map((book, i) => (
@@ -999,16 +1058,17 @@ export function TafsirSection({ isDark }: { isDark: boolean }) {
         ))}
       </div>
 
-      {/* search */}
-      <TafsirSearch isDark={isDark} onOpenPara={openPara} />
-
       {/* readers — one shared shell, two bodies */}
       {reader?.kind === 'pdf' && (
         <PdfReader book={reader.book} initialVolume={reader.volume}
           onClose={() => setReader(null)} isDark={isDark} />
       )}
       {reader?.kind === 'text' && (
-        <TextReader taf={reader.book.taf} urduTitle={reader.book.urduTitle} coverGrad={reader.book.cover}
+        // key forces a remount when a fresh search jump targets an ayah while
+        // the same book is already open — initialSurah/Ayah only seed state once
+        <TextReader key={`${reader.book.id}-${reader.initialSurah ?? 1}-${reader.initialAyah ?? 1}`}
+          taf={reader.book.taf} urduTitle={reader.book.urduTitle} coverGrad={reader.book.cover}
+          initialSurah={reader.initialSurah} initialAyah={reader.initialAyah}
           onClose={() => setReader(null)} isDark={isDark} />
       )}
     </div>
