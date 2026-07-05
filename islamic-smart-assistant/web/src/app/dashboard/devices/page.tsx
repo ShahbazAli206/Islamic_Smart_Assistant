@@ -1195,10 +1195,13 @@ export default function DevicesPage() {
         <div className={`grid gap-5 items-start ${isDark ? 'grid-cols-1' : 'xl:grid-cols-[1fr_330px]'}`}>
           <div className="space-y-5 min-w-0">
 
+            {/* ── Audio Output + Cast, side-by-side on the same row ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
             {/* ── Audio Output header card ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-              className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
+              className={`relative overflow-hidden p-5 sm:p-6 h-full ${(isDesktop && lan.supported && lan.devices.length > 0) ? 'lg:col-span-2' : ''} ${T.card}`}
             >
               {isDark && <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/40 to-transparent" />}
               <div className="flex flex-col xl:flex-row xl:items-center gap-5">
@@ -1245,6 +1248,287 @@ export default function DevicesPage() {
                 </div>
               </div>
             </motion.div>
+
+            {/* ── Cast ── (moved up next to Audio Output; only shown when no LAN devices are detected) */}
+            {/* Chromecast / Google Home / Nest casting relies on LAN discovery that
+                only the desktop app can do. On the WEBSITE we replace this whole card
+                with a blinking "desktop-only" notice + a direct installer download.
+                In the DESKTOP app it renders exactly as before. */}
+            {!isDesktop ? (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className={`relative overflow-hidden p-5 sm:p-6 h-full ${T.card}`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white">
+                  <Cast size={20} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
+                    {/* softly blinking badge — signals this feature lives in the desktop app */}
+                    <motion.span
+                      animate={{ opacity: [1, 0.35, 1] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/40 bg-gold-400/15 text-gold-500 text-[11px] font-bold px-2.5 py-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold-500" /> Desktop app only
+                    </motion.span>
+                  </div>
+                  <p className={`text-sm mt-1.5 ${T.sub}`}>
+                    Discovering and streaming Azan &amp; Quran to Chromecast, Google Home, Nest and
+                    other Wi-Fi speakers on your network needs the ISMAA Desktop app — a web browser
+                    can&apos;t scan your local network for these devices.
+                  </p>
+                  <a
+                    href={desktopDownloadUrl}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-semibold text-sm px-4 py-2.5 shadow-md shadow-emerald-700/25 hover:brightness-105 transition"
+                  >
+                    <Download size={16} /> Download Desktop App
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+            ) : (!lan.supported || lan.devices.length === 0) ? (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+                <div className="flex items-start gap-3">
+                  <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white">
+                    <Cast size={20} />
+                  </span>
+                  <div>
+                    <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
+                    <p className={`text-sm ${T.sub}`}>{lan.supported ? "Or use your browser's built-in casting (Chrome picker)." : 'Stream Azan & Quran audio to your smart devices on the same Wi-Fi.'}</p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${castPill}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    cast.state === 'connected' || cast.state === 'not_connected' ? 'bg-emerald-500 animate-pulse-soft'
+                    : cast.state === 'connecting' || cast.state === 'loading' ? 'bg-amber-500 animate-pulse-soft'
+                    : 'bg-slate-400'}`} />
+                  {castStatusLabel}
+                </span>
+              </div>
+
+              <div className={`relative overflow-hidden rounded-2xl p-4 ${T.innerNote}`}>
+                <div aria-hidden className="absolute right-4 bottom-0 hidden md:flex items-end gap-3 opacity-90 pointer-events-none">
+                  <motion.span
+                    className="absolute -bottom-2 right-6 w-40 h-16 rounded-full"
+                    style={{ background: isDark ? 'radial-gradient(circle, rgba(16,185,129,0.45) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)' }}
+                    animate={{ opacity: [0.5, 1, 0.5], scale: [0.95, 1.05, 0.95] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <span className={`relative w-10 h-12 rounded-b-full rounded-t-2xl ${isDark ? 'bg-emerald-900/60 border border-emerald-500/30' : 'bg-emerald-100 border border-emerald-200'}`} />
+                  <MonitorSpeaker size={48} className={isDark ? 'relative text-emerald-300/80' : 'relative text-emerald-500/70'} />
+                </div>
+
+                <div className="relative flex items-start gap-2 max-w-xl">
+                  <motion.span animate={cast.state === 'connected' ? { scale: [1, 1.15, 1] } : undefined} transition={{ duration: 2.4, repeat: Infinity }}>
+                    {cast.state === 'no_sdk' ? <WifiOff size={16} className="shrink-0 mt-0.5 text-slate-400" /> : <Wifi size={16} className="shrink-0 mt-0.5 text-emerald-500" />}
+                  </motion.span>
+                  <div className="min-w-0">
+                    {/* Headline + helper text per state */}
+                    <p className={`font-semibold text-sm ${cast.state === 'no_sdk' ? (isDark ? 'text-parchment/80' : 'text-slate-600') : 'text-emerald-600'}`}>
+                      {cast.state === 'loading'        ? 'Looking for Cast devices on your network…'
+                        : cast.state === 'no_sdk'      ? 'Casting needs desktop Chrome, Edge or Brave.'
+                        : cast.state === 'no_devices'  ? 'No Cast devices found yet.'
+                        : cast.state === 'connecting'  ? 'Connecting to the device…'
+                        : cast.state === 'connected'   ? `Casting to ${cast.deviceName || 'your device'}`
+                        :                                'Cast devices are available.'}
+                    </p>
+
+                    {cast.state === 'no_sdk' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Your current browser can&apos;t reach Cast devices. Open this page in
+                        desktop <strong>Chrome</strong>, <strong>Edge</strong> or <strong>Brave</strong>  -  Safari, Firefox and phone
+                        browsers don&apos;t support Google Cast.
+                      </p>
+                    ) : cast.state === 'no_devices' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Power on your Chromecast / Google Home / Nest on the <strong>same Wi-Fi</strong> as this computer  -  devices appear on their own, no rescan needed. The steps below help if yours doesn&apos;t show up.
+                      </p>
+                    ) : cast.state === 'connected' ? (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        {cast.mediaTitle ? <>Now playing: <strong>{cast.mediaTitle}</strong>. </> : null}
+                        Azan &amp; recitations you start will stream straight to this device.
+                      </p>
+                    ) : (
+                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
+                        Connect, then send the adhan or a recitation. Make sure the device is on the same Wi-Fi as this computer.
+                      </p>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {(cast.state === 'not_connected' || cast.state === 'connecting') && (
+                        <button
+                          onClick={cast.selectDevice} disabled={cast.state === 'connecting'}
+                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
+                        >
+                          {cast.state === 'connecting' ? <Loader2 size={15} className="animate-spin" /> : <Cast size={15} />}
+                          {cast.state === 'connecting' ? 'Connecting…' : 'Connect a device'}
+                        </button>
+                      )}
+                      {cast.state === 'connecting' && (
+                        <button
+                          onClick={() => { safeStopCasting(); cast.clearError(); }}
+                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
+                        >
+                          <X size={15} /> Cancel
+                        </button>
+                      )}
+                      {(cast.state === 'not_connected' || cast.state === 'connected') && (
+                        <>
+                          <button
+                            onClick={castAzan} disabled={castBusy}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
+                          >
+                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Bell size={15} />}
+                            Cast Adhan
+                          </button>
+                          <button
+                            onClick={castRecitation} disabled={castBusy}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}
+                          >
+                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Volume2 size={15} />}
+                            Cast recitation
+                          </button>
+                        </>
+                      )}
+                      {cast.state === 'connected' && cast.mediaState !== 'idle' && (
+                        <button
+                          onClick={safePauseResume}
+                          className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${T.ghost}`}
+                          aria-label={cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
+                        >
+                          {cast.mediaState === 'playing' ? <Pause size={15} /> : <Play size={15} />}
+                          {cast.mediaState === 'buffering' ? 'Buffering…' : cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
+                        </button>
+                      )}
+                      {cast.state === 'connected' && (
+                        <button
+                          onClick={safeStopCasting}
+                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
+                        >
+                          <X size={15} /> Stop casting
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Volume control while connected */}
+                    {cast.state === 'connected' && (
+                      <div className="flex items-center gap-2 mt-3 max-w-xs">
+                        <button onClick={() => safeSetVolume(cast.volume > 0 ? 0 : 0.5)} className={T.sub} aria-label="Toggle mute">
+                          {cast.volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                        </button>
+                        <input
+                          type="range" min={0} max={1} step={0.05} value={cast.volume}
+                          onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) safeSetVolume(v); }}
+                          className="flex-1 accent-emerald-500 cursor-pointer"
+                          aria-label="Cast device volume"
+                        />
+                        <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(cast.volume * 100)}%</span>
+                      </div>
+                    )}
+
+                    {/* How-to-connect toggle (hidden once actively casting) */}
+                    {cast.state !== 'connected' && (
+                      <button
+                        onClick={() => setShowCastHelp((v) => !v)}
+                        className={`inline-flex items-center gap-1.5 mt-3 text-xs font-semibold ${isDark ? 'text-parchment/70 hover:text-parchment' : 'text-emerald-700 hover:text-emerald-900'}`}
+                        aria-expanded={showCastHelp}
+                      >
+                        <HelpCircle size={13} /> How to connect a device
+                        <ChevronDown size={13} className={`transition-transform ${showCastHelp ? 'rotate-180' : ''}`} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Guided steps + system-settings shortcuts (auto-opens when no devices found) */}
+              {(showCastHelp || cast.state === 'no_devices') && (
+                <div className={`mt-3 rounded-xl px-4 py-3 text-xs leading-relaxed ${isDark ? 'bg-white/[0.03] border border-white/10 text-parchment/75' : 'bg-slate-50 border border-slate-200 text-emerald-900/70'}`}>
+                  <p className={`font-semibold mb-2 ${T.heading}`}>How to connect Chromecast / Google Home / Nest</p>
+                  <ol className="space-y-1.5 list-decimal list-inside">
+                    <li>Power on the device and put it on the <strong>same Wi-Fi</strong> as this computer (not a Guest network; turn off any VPN).</li>
+                    <li>Use <strong>desktop Chrome, Edge or Brave</strong>  -  Safari, Firefox and phone browsers can&apos;t cast.</li>
+                    <li>Click <strong>“Connect a device”</strong> above. Chrome opens its own picker and <em>lists your devices there</em>  -  for privacy the browser, not this page, shows them.</li>
+                    <li>Choose your device in that picker to approve the connection, then press <strong>Cast Adhan</strong> or <strong>Cast recitation</strong>.</li>
+                  </ol>
+                  <p className={`mt-2 ${T.faint}`}>
+                    Still not showing? Some routers block discovery  -  turn off <em>AP/client isolation</em> in your router, or the device may be in use by another app/phone. Casting needs no in-browser permission to grant; it&apos;s purely a network/Wi-Fi matter.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    {detectOS() === 'linux' ? (
+                      <span className={T.faint}>On Linux, open your system network settings to confirm the Wi-Fi.</span>
+                    ) : (
+                      <button onClick={openOSWifi} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}>
+                        <Settings size={13} /> Open Wi-Fi settings
+                      </button>
+                    )}
+                    <a
+                      href="https://support.google.com/chromecast/answer/3212934"
+                      target="_blank" rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}
+                    >
+                      <ExternalLink size={13} /> Google Cast help
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Pre-emptive heads-up: selected azan voice can't be reached from here */}
+              {(cast.state === 'not_connected' || cast.state === 'connected') && !azanCastable.exact && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
+                  <Info size={14} className="shrink-0 mt-0.5" />
+                  <p>{azanCastable.note}</p>
+                </div>
+              )}
+
+              {/* Runtime substitution note (set when a cast actually fell back) */}
+              {castNote && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
+                  <Info size={14} className="shrink-0 mt-0.5" /> <p>{castNote}</p>
+                </div>
+              )}
+
+              {/* Errors (from the SDK or a cast attempt) */}
+              {(cast.error || castError) && (
+                <div className="mt-3 flex items-start justify-between gap-3 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
+                  <span className="flex items-start gap-2"><AlertTriangle size={15} className="shrink-0 mt-0.5" /> {cast.error || castError}</span>
+                  <button onClick={() => { cast.clearError(); setCastError(null); }} className="shrink-0 opacity-70 hover:opacity-100" aria-label="Dismiss">
+                    <X size={15} />
+                  </button>
+                </div>
+              )}
+
+              {!isDark && (
+                <div className="mt-3 flex items-start justify-between gap-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <Info size={14} className="shrink-0 mt-0.5 text-slate-500" />
+                    <p className="text-xs text-emerald-900/55">
+                      <strong>Other device types:</strong> Bluetooth speakers &amp; earbuds work through
+                      the list above  -  pair them in Windows first, then pick them. Amazon Alexa/Echo needs
+                      a published Alexa Skill, and some devices need a companion app.
+                    </p>
+                  </div>
+                  <a
+                    href="https://support.google.com/chromecast"
+                    target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 hover:bg-emerald-50 transition"
+                  >
+                    Learn more <ChevronRight size={12} />
+                  </a>
+                </div>
+              )}
+            </motion.div>
+            ) : null}
+
+            </div>
 
             {error && (
               <div className="rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
@@ -1552,285 +1836,6 @@ ${diag.rawOutputs.length === 0 ? '  (none)' : diag.rawOutputs.map((d) => `  - ${
                 )}
               </motion.div>
             )}
-
-            {/* ── Cast ── (only shown when no LAN devices are detected) */}
-            {/* Chromecast / Google Home / Nest casting relies on LAN discovery that
-                only the desktop app can do. On the WEBSITE we replace this whole card
-                with a blinking "desktop-only" notice + a direct installer download.
-                In the DESKTOP app it renders exactly as before. */}
-            {!isDesktop ? (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-              className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
-            >
-              <div className="flex items-start gap-3">
-                <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white">
-                  <Cast size={20} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
-                    {/* softly blinking badge — signals this feature lives in the desktop app */}
-                    <motion.span
-                      animate={{ opacity: [1, 0.35, 1] }}
-                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/40 bg-gold-400/15 text-gold-500 text-[11px] font-bold px-2.5 py-1"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-gold-500" /> Desktop app only
-                    </motion.span>
-                  </div>
-                  <p className={`text-sm mt-1.5 ${T.sub}`}>
-                    Discovering and streaming Azan &amp; Quran to Chromecast, Google Home, Nest and
-                    other Wi-Fi speakers on your network needs the ISMAA Desktop app — a web browser
-                    can&apos;t scan your local network for these devices.
-                  </p>
-                  <a
-                    href={desktopDownloadUrl}
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-semibold text-sm px-4 py-2.5 shadow-md shadow-emerald-700/25 hover:brightness-105 transition"
-                  >
-                    <Download size={16} /> Download Desktop App
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-            ) : (!lan.supported || lan.devices.length === 0) ? (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-              className={`relative overflow-hidden p-5 sm:p-6 ${T.card}`}
-            >
-              <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-                <div className="flex items-start gap-3">
-                  <span className="w-11 h-11 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white">
-                    <Cast size={20} />
-                  </span>
-                  <div>
-                    <h3 className={`font-bold ${T.heading}`}>Cast to Chromecast, Google Home &amp; Nest</h3>
-                    <p className={`text-sm ${T.sub}`}>{lan.supported ? "Or use your browser's built-in casting (Chrome picker)." : 'Stream Azan & Quran audio to your smart devices on the same Wi-Fi.'}</p>
-                  </div>
-                </div>
-                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${castPill}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    cast.state === 'connected' || cast.state === 'not_connected' ? 'bg-emerald-500 animate-pulse-soft'
-                    : cast.state === 'connecting' || cast.state === 'loading' ? 'bg-amber-500 animate-pulse-soft'
-                    : 'bg-slate-400'}`} />
-                  {castStatusLabel}
-                </span>
-              </div>
-
-              <div className={`relative overflow-hidden rounded-2xl p-4 ${T.innerNote}`}>
-                <div aria-hidden className="absolute right-4 bottom-0 hidden md:flex items-end gap-3 opacity-90 pointer-events-none">
-                  <motion.span
-                    className="absolute -bottom-2 right-6 w-40 h-16 rounded-full"
-                    style={{ background: isDark ? 'radial-gradient(circle, rgba(16,185,129,0.45) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)' }}
-                    animate={{ opacity: [0.5, 1, 0.5], scale: [0.95, 1.05, 0.95] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                  <span className={`relative w-10 h-12 rounded-b-full rounded-t-2xl ${isDark ? 'bg-emerald-900/60 border border-emerald-500/30' : 'bg-emerald-100 border border-emerald-200'}`} />
-                  <MonitorSpeaker size={48} className={isDark ? 'relative text-emerald-300/80' : 'relative text-emerald-500/70'} />
-                </div>
-
-                <div className="relative flex items-start gap-2 max-w-xl">
-                  <motion.span animate={cast.state === 'connected' ? { scale: [1, 1.15, 1] } : undefined} transition={{ duration: 2.4, repeat: Infinity }}>
-                    {cast.state === 'no_sdk' ? <WifiOff size={16} className="shrink-0 mt-0.5 text-slate-400" /> : <Wifi size={16} className="shrink-0 mt-0.5 text-emerald-500" />}
-                  </motion.span>
-                  <div className="min-w-0">
-                    {/* Headline + helper text per state */}
-                    <p className={`font-semibold text-sm ${cast.state === 'no_sdk' ? (isDark ? 'text-parchment/80' : 'text-slate-600') : 'text-emerald-600'}`}>
-                      {cast.state === 'loading'        ? 'Looking for Cast devices on your network…'
-                        : cast.state === 'no_sdk'      ? 'Casting needs desktop Chrome, Edge or Brave.'
-                        : cast.state === 'no_devices'  ? 'No Cast devices found yet.'
-                        : cast.state === 'connecting'  ? 'Connecting to the device…'
-                        : cast.state === 'connected'   ? `Casting to ${cast.deviceName || 'your device'}`
-                        :                                'Cast devices are available.'}
-                    </p>
-
-                    {cast.state === 'no_sdk' ? (
-                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                        Your current browser can&apos;t reach Cast devices. Open this page in
-                        desktop <strong>Chrome</strong>, <strong>Edge</strong> or <strong>Brave</strong>  -  Safari, Firefox and phone
-                        browsers don&apos;t support Google Cast.
-                      </p>
-                    ) : cast.state === 'no_devices' ? (
-                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                        Power on your Chromecast / Google Home / Nest on the <strong>same Wi-Fi</strong> as this computer  -  devices appear on their own, no rescan needed. The steps below help if yours doesn&apos;t show up.
-                      </p>
-                    ) : cast.state === 'connected' ? (
-                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                        {cast.mediaTitle ? <>Now playing: <strong>{cast.mediaTitle}</strong>. </> : null}
-                        Azan &amp; recitations you start will stream straight to this device.
-                      </p>
-                    ) : (
-                      <p className={`text-xs ${T.sub} mt-0.5 leading-relaxed`}>
-                        Connect, then send the adhan or a recitation. Make sure the device is on the same Wi-Fi as this computer.
-                      </p>
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                      {(cast.state === 'not_connected' || cast.state === 'connecting') && (
-                        <button
-                          onClick={cast.selectDevice} disabled={cast.state === 'connecting'}
-                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
-                        >
-                          {cast.state === 'connecting' ? <Loader2 size={15} className="animate-spin" /> : <Cast size={15} />}
-                          {cast.state === 'connecting' ? 'Connecting…' : 'Connect a device'}
-                        </button>
-                      )}
-                      {cast.state === 'connecting' && (
-                        <button
-                          onClick={() => { safeStopCasting(); cast.clearError(); }}
-                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
-                        >
-                          <X size={15} /> Cancel
-                        </button>
-                      )}
-                      {(cast.state === 'not_connected' || cast.state === 'connected') && (
-                        <>
-                          <button
-                            onClick={castAzan} disabled={castBusy}
-                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.primary} disabled:opacity-70`}
-                          >
-                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Bell size={15} />}
-                            Cast Adhan
-                          </button>
-                          <button
-                            onClick={castRecitation} disabled={castBusy}
-                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost} disabled:opacity-70`}
-                          >
-                            {castBusy ? <Loader2 size={15} className="animate-spin" /> : <Volume2 size={15} />}
-                            Cast recitation
-                          </button>
-                        </>
-                      )}
-                      {cast.state === 'connected' && cast.mediaState !== 'idle' && (
-                        <button
-                          onClick={safePauseResume}
-                          className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${T.ghost}`}
-                          aria-label={cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
-                        >
-                          {cast.mediaState === 'playing' ? <Pause size={15} /> : <Play size={15} />}
-                          {cast.mediaState === 'buffering' ? 'Buffering…' : cast.mediaState === 'playing' ? 'Pause' : 'Resume'}
-                        </button>
-                      )}
-                      {cast.state === 'connected' && (
-                        <button
-                          onClick={safeStopCasting}
-                          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${T.ghost}`}
-                        >
-                          <X size={15} /> Stop casting
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Volume control while connected */}
-                    {cast.state === 'connected' && (
-                      <div className="flex items-center gap-2 mt-3 max-w-xs">
-                        <button onClick={() => safeSetVolume(cast.volume > 0 ? 0 : 0.5)} className={T.sub} aria-label="Toggle mute">
-                          {cast.volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                        </button>
-                        <input
-                          type="range" min={0} max={1} step={0.05} value={cast.volume}
-                          onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) safeSetVolume(v); }}
-                          className="flex-1 accent-emerald-500 cursor-pointer"
-                          aria-label="Cast device volume"
-                        />
-                        <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(cast.volume * 100)}%</span>
-                      </div>
-                    )}
-
-                    {/* How-to-connect toggle (hidden once actively casting) */}
-                    {cast.state !== 'connected' && (
-                      <button
-                        onClick={() => setShowCastHelp((v) => !v)}
-                        className={`inline-flex items-center gap-1.5 mt-3 text-xs font-semibold ${isDark ? 'text-parchment/70 hover:text-parchment' : 'text-emerald-700 hover:text-emerald-900'}`}
-                        aria-expanded={showCastHelp}
-                      >
-                        <HelpCircle size={13} /> How to connect a device
-                        <ChevronDown size={13} className={`transition-transform ${showCastHelp ? 'rotate-180' : ''}`} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Guided steps + system-settings shortcuts (auto-opens when no devices found) */}
-              {(showCastHelp || cast.state === 'no_devices') && (
-                <div className={`mt-3 rounded-xl px-4 py-3 text-xs leading-relaxed ${isDark ? 'bg-white/[0.03] border border-white/10 text-parchment/75' : 'bg-slate-50 border border-slate-200 text-emerald-900/70'}`}>
-                  <p className={`font-semibold mb-2 ${T.heading}`}>How to connect Chromecast / Google Home / Nest</p>
-                  <ol className="space-y-1.5 list-decimal list-inside">
-                    <li>Power on the device and put it on the <strong>same Wi-Fi</strong> as this computer (not a Guest network; turn off any VPN).</li>
-                    <li>Use <strong>desktop Chrome, Edge or Brave</strong>  -  Safari, Firefox and phone browsers can&apos;t cast.</li>
-                    <li>Click <strong>“Connect a device”</strong> above. Chrome opens its own picker and <em>lists your devices there</em>  -  for privacy the browser, not this page, shows them.</li>
-                    <li>Choose your device in that picker to approve the connection, then press <strong>Cast Adhan</strong> or <strong>Cast recitation</strong>.</li>
-                  </ol>
-                  <p className={`mt-2 ${T.faint}`}>
-                    Still not showing? Some routers block discovery  -  turn off <em>AP/client isolation</em> in your router, or the device may be in use by another app/phone. Casting needs no in-browser permission to grant; it&apos;s purely a network/Wi-Fi matter.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    {detectOS() === 'linux' ? (
-                      <span className={T.faint}>On Linux, open your system network settings to confirm the Wi-Fi.</span>
-                    ) : (
-                      <button onClick={openOSWifi} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}>
-                        <Settings size={13} /> Open Wi-Fi settings
-                      </button>
-                    )}
-                    <a
-                      href="https://support.google.com/chromecast/answer/3212934"
-                      target="_blank" rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold ${T.ghost}`}
-                    >
-                      <ExternalLink size={13} /> Google Cast help
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Pre-emptive heads-up: selected azan voice can't be reached from here */}
-              {(cast.state === 'not_connected' || cast.state === 'connected') && !azanCastable.exact && (
-                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
-                  <Info size={14} className="shrink-0 mt-0.5" />
-                  <p>{azanCastable.note}</p>
-                </div>
-              )}
-
-              {/* Runtime substitution note (set when a cast actually fell back) */}
-              {castNote && (
-                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-700 text-xs px-4 py-3">
-                  <Info size={14} className="shrink-0 mt-0.5" /> <p>{castNote}</p>
-                </div>
-              )}
-
-              {/* Errors (from the SDK or a cast attempt) */}
-              {(cast.error || castError) && (
-                <div className="mt-3 flex items-start justify-between gap-3 rounded-xl bg-rose-500/10 border border-rose-400/30 text-rose-500 text-sm px-4 py-3">
-                  <span className="flex items-start gap-2"><AlertTriangle size={15} className="shrink-0 mt-0.5" /> {cast.error || castError}</span>
-                  <button onClick={() => { cast.clearError(); setCastError(null); }} className="shrink-0 opacity-70 hover:opacity-100" aria-label="Dismiss">
-                    <X size={15} />
-                  </button>
-                </div>
-              )}
-
-              {!isDark && (
-                <div className="mt-3 flex items-start justify-between gap-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
-                  <div className="flex items-start gap-2">
-                    <Info size={14} className="shrink-0 mt-0.5 text-slate-500" />
-                    <p className="text-xs text-emerald-900/55">
-                      <strong>Other device types:</strong> Bluetooth speakers &amp; earbuds work through
-                      the list above  -  pair them in Windows first, then pick them. Amazon Alexa/Echo needs
-                      a published Alexa Skill, and some devices need a companion app.
-                    </p>
-                  </div>
-                  <a
-                    href="https://support.google.com/chromecast"
-                    target="_blank" rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 hover:bg-emerald-50 transition"
-                  >
-                    Learn more <ChevronRight size={12} />
-                  </a>
-                </div>
-              )}
-            </motion.div>
-            ) : null}
 
             {/* ── Other devices on your account ── */}
             <motion.div
