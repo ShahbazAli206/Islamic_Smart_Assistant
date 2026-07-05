@@ -191,7 +191,7 @@ function TajweedAyah({ text, activeWordIdx, wordPosRef, isDark }: {
 
   return (
     <div ref={containerRef} className="relative">
-      <p className="font-arabic text-4xl md:text-5xl leading-[3.1] text-center" dir="rtl">
+      <p className="font-arabic text-3xl md:text-4xl leading-[3.8] text-center" dir="rtl">
         {words.map((segment, wi) => {
           if (/^\s+$/.test(segment)) return <span key={wi}>{segment}</span>;
           const myIdx = isSpokenWord(segment) ? ++spoken : null;
