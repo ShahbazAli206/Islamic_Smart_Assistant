@@ -472,7 +472,7 @@ const STEPS = [
   { id:'s3',      title:'Your Location',      sub:'Needed for accurate prayer times and Qibla' },
   { id:'s4',      title:'Preferences',        sub:'Language and school of thought' },
   { id:'s5',      title:'Permissions',        sub:'Choose which features to enable' },
-  { id:'s6',      title:'Translation Audio',  sub:'Optional — offline audio for 28 languages' },
+  { id:'s6',      title:'Translation Audio',  sub:'Optional — offline audio for 27 languages' },
   { id:'s7',      title:'Ready to Install',   sub:'Review your settings before proceeding' },
 ];
 const FINISH_STEP = 8; // virtual index
@@ -498,7 +498,9 @@ const AUDIO_LANGS = [
   { c:'cs', n:'Czech — I. Hrbek',                    s:'Čeština',     mb:283 },
   { c:'nl', n:'Dutch — Leemhuis',                    s:'Nederlands',  mb:308 },
   { c:'de', n:'German — Bubenheim & Elyas',          s:'Deutsch',     mb:361 },
-  { c:'hi', n:'Hindi — Farooq Khan & Nadwi',         s:'हिन्दी',        mb:467 },
+  // 'hi' (Hindi) intentionally absent — Hindi now streams Urdu's CDN audio
+  // instead of downloading its own TTS pack (spoken Hindi/Urdu are the same
+  // language, only the script differs).
   { c:'id', n:'Indonesian — Kemenag RI',             s:'Indonesia',   mb:387 },
   { c:'it', n:'Italian — Hamza R. Piccardo',         s:'Italiano',    mb:287 },
   { c:'ja', n:'Japanese — Ryoichi Mita',             s:'日本語',       mb:394 },

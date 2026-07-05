@@ -49,6 +49,9 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Persian',      ids: ['fa.fooladvand'] },
   { label: 'Russian',      ids: ['ru.kuliev'] },
   { label: 'Kazakh',       ids: ['kk.khalifahaltai'] },
+  // Hindi shares Urdu's human CDN recording (spoken Hindi/Urdu are the same
+  // language) rather than downloadable TTS audio — see AUDIO_TRANSLATION in quran.ts.
+  { label: 'Hindi',        ids: ['hi.hindi'] },
   // — Downloadable offline audio (desktop app) ——————————————————————————————
   { label: 'German',       ids: ['de.bubenheim'] },
   { label: 'Spanish',      ids: ['es.cortes'] },
@@ -61,7 +64,6 @@ const LANG_GROUPS: { label: string | null; ids: string[] }[] = [
   { label: 'Portuguese',   ids: ['pt.elhayek'] },
   { label: 'Indonesian',   ids: ['id.indonesian'] },
   { label: 'Malay',        ids: ['ms.basmeih'] },
-  { label: 'Hindi',        ids: ['hi.hindi'] },
   { label: 'Tamil',        ids: ['ta.tamil'] },
   { label: 'Malayalam',    ids: ['ml.abdulhameed'] },
   { label: 'Japanese',     ids: ['ja.japanese'] },

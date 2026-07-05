@@ -130,6 +130,11 @@ const AUDIO_TRANSLATION: Record<string, { edition: string; bitrate: 40 | 64 | 12
   'fa.fooladvand':    { edition: 'fa.hedayatfarfooladvand', bitrate: 40  }, // Fooladvand - Hedayatfar
   'ru.kuliev':        { edition: 'ru.kuliev-audio',         bitrate: 128 }, // Elmir Kuliev (1MuslimApp)
   'kk.khalifahaltai': { edition: 'kk.khalifahaltai-audio',  bitrate: 128 }, // Khalifah Altai
+  // Hindi has no free human ayah-by-ayah recording, and spoken Hindi/Urdu are
+  // the same language (Hindustani) — only the script differs. Reuse Urdu's
+  // human recording rather than a robotic TTS voice; the on-screen TEXT stays
+  // Hindi (Devanagari), only the SPOKEN audio is shared with Urdu.
+  'hi.hindi':      { edition: 'ur.khan',                 bitrate: 64  }, // shared with Urdu (Shamshad Ali Khan)
 };
 
 // Translation editions for which we generate TTS audio. The generator reads the
@@ -182,7 +187,8 @@ export const LOCAL_AUDIO_EDITIONS: Partial<Record<TranslationId, string>> = {
   'pt.elhayek':      'pt',
   'id.indonesian':   'id',
   'ms.basmeih':      'ms',
-  'hi.hindi':        'hi',
+  // Hindi intentionally NOT here — it now reuses Urdu's human CDN recording
+  // (see AUDIO_TRANSLATION above), so there is nothing to download.
   'ta.tamil':        'ta',
   'ml.abdulhameed':  'ml',
   'ja.japanese':     'ja',

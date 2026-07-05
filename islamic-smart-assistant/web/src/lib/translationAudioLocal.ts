@@ -39,9 +39,10 @@ function getApi(): TransAudioApi | null {
 }
 
 // Approximate download size per language (MB), measured from the generated audio.
-// Lets the UI show disk usage before downloading.
+// Lets the UI show disk usage before downloading. 'hi' intentionally absent —
+// Hindi no longer downloads audio, it streams Urdu's CDN recording instead.
 export const LANG_AUDIO_SIZE_MB: Record<string, number> = {
-  am: 284, az: 451, bg: 299, bs: 288, cs: 283, de: 361, es: 296, hi: 467,
+  am: 284, az: 451, bg: 299, bs: 288, cs: 283, de: 361, es: 296,
   id: 387, it: 287, ja: 394, ko: 333, ml: 401, ms: 541, my: 777, nl: 308,
   pl: 321, ps: 330, pt: 279, ro: 317, si: 428, so: 273, sq: 335, sv: 404,
   sw: 317, ta: 500, th: 359, uz: 576,
