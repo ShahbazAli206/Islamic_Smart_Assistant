@@ -62,9 +62,9 @@ const DHIKR_TRANS: Record<string, string> = {
   ps: 'او الله ډیر زیاد یادوئ',
 };
 
-type Props = { lat?: number; lng?: number; city?: string; country?: string; method?: number };
+type Props = { lat?: number; lng?: number; city?: string; country?: string; method?: number; school?: 0 | 1 };
 
-export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan', method }: Props) {
+export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan', method, school = 0 }: Props) {
   const [language] = useLocalStorage<string>('isa:language', 'en');
   // Only fetch live data once the visitor has actually saved a location — a brand
   // new visitor (no stored keys) sees the design's London mockup instead of the
@@ -79,10 +79,10 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
 
   const byCoords = typeof lat === 'number' && typeof lng === 'number';
   const { data, isError } = useQuery({
-    queryKey: byCoords ? ['hero-timings', 'coords', lat, lng, method] : ['hero-timings', 'city', city, country],
+    queryKey: byCoords ? ['hero-timings', 'coords', lat, lng, method, school] : ['hero-timings', 'city', city, country],
     queryFn: () =>
       byCoords
-        ? fetchTimingsByCoords(lat!, lng!, { method, school: 0, label: [city, country].filter(Boolean).join(', ') })
+        ? fetchTimingsByCoords(lat!, lng!, { method, school, label: [city, country].filter(Boolean).join(', ') })
         : fetchTimingsByCity(city, country),
     enabled: located,
     staleTime: 5 * 60 * 1000,

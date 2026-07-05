@@ -25,7 +25,7 @@ import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';
-import { useStoredLocation } from '@/lib/useStoredLocation';
+import { usePrayerParams } from '@/lib/usePrayerParams';
 
 // Top-nav links (match the reference design).
 const NAV_LINKS = [
@@ -51,9 +51,11 @@ const STRIP = [
 
 /** Renders the full marketing landing page. */
 export default function HomePage() {
-  // Visitor's saved location (if any) — passed to the hero card so it can show
-  // real prayer times immediately instead of the placeholder.
-  const loc = useStoredLocation();
+  // Visitor's saved location + calculation params (if any) — passed to the hero
+  // card so it can show real prayer times immediately instead of the placeholder.
+  // Uses the same source of truth as the dashboard so Asr (school-dependent)
+  // matches instead of silently defaulting to the Standard/Shafi calculation.
+  const loc = usePrayerParams();
   const desktopDownloadUrl = useDesktopDownloadUrl();
 
   // Nav is transparent over the hero photo at the top, then gains a dark blurred
@@ -182,6 +184,7 @@ export default function HomePage() {
                 city={loc.city}
                 country={loc.country}
                 method={loc.method}
+                school={loc.school}
               />
             </motion.div>
           </div>
