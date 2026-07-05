@@ -14,8 +14,19 @@
 //     supports true simultaneous multi-device casting the browser SDK cannot).
 // Browser audio-output enumeration is a standalone copy (see
 // lib/audioOutputDevices.ts) so this feature can never affect the Devices page.
+//
+// The panel is rendered through a portal into document.body, positioned from
+// the trigger button's live bounding rect. The player card that hosts the
+// trigger has `overflow-hidden` (for its rounded photographic background), so
+// an ordinary CSS-absolute panel gets clipped whenever it grows past the
+// card's edge — a portal escapes that ancestor entirely. The panel is always
+// styled as dark glass (not toggled by the app-wide light/dark setting): the
+// player card itself is a permanently dark, photographic surface in both
+// modes, so a panel that switched to a plain white background looked out of
+// place sitting on top of it.
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Cast, Speaker, Bluetooth, Tv, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAudioOutputDevices } from '@/lib/audioOutputDevices';
@@ -31,13 +42,20 @@ type Props = {
   /** The main player's active <audio> element — muted (not paused) while this
    *  menu is driving one or more local outputs, so it keeps firing its own
    *  `ended` events (ayah advance keeps working) without also being audible. */
-  mainAudioRef: RefObject<HTMLAudioElement | null>;
-  isDark?: boolean;
+  mainAudioRef: React.RefObject<HTMLAudioElement | null>;
 };
 
-export function RecitationDeviceMenu({ url, playing, title, mainAudioRef, isDark = false }: Props) {
+const PANEL_W = 300;
+const PANEL_MAX_H = 380;
+const GAP = 12;
+
+type Anchor = { left: number; openUp: boolean; edgeTop: number; edgeBottom: number };
+
+export function RecitationDeviceMenu({ url, playing, title, mainAudioRef }: Props) {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [anchor, setAnchor] = useState<Anchor | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const output = useAudioOutputDevices();
   const lan = useDesktopDevices();
@@ -47,10 +65,36 @@ export function RecitationDeviceMenu({ url, playing, title, mainAudioRef, isDark
   const [lanIds, setLanIds] = useLocalStorage<string[]>('isa:quranLanDeviceIds', []);
   const [gcastOn, setGcastOn] = useLocalStorage<boolean>('isa:quranGcastOn', false);
 
+  const measure = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const spaceAbove = r.top;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const openUp = spaceAbove > PANEL_MAX_H || spaceAbove > spaceBelow;
+    const left = Math.min(Math.max(8, r.right - PANEL_W), window.innerWidth - PANEL_W - 8);
+    setAnchor({ left, openUp, edgeTop: r.top - GAP, edgeBottom: r.bottom + GAP });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    measure();
+    // `true` (capture) so scrolling any ancestor — not just the window — re-anchors the panel.
+    window.addEventListener('scroll', measure, true);
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('scroll', measure, true);
+      window.removeEventListener('resize', measure);
+    };
+  }, [open, measure]);
+
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
@@ -179,169 +223,170 @@ export function RecitationDeviceMenu({ url, playing, title, mainAudioRef, isDark
   };
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div className="relative">
       <motion.button
+        ref={btnRef}
         onClick={() => setOpen((o) => !o)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.88 }}
         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         title="Play on devices"
         className={`relative p-2.5 rounded-full transition-colors ${
-          totalSelected > 0
-            ? (isDark ? 'text-gold-300 bg-gold-400/10' : 'text-emerald-600 bg-emerald-100')
-            : (isDark ? 'text-white/80 hover:bg-white/10' : 'text-emerald-700 hover:bg-emerald-100')
+          totalSelected > 0 ? 'text-gold-300 bg-gold-400/10' : 'text-white/80 hover:bg-white/10'
         }`}
       >
         <Cast size={18} />
         {totalSelected > 0 && (
-          <span className={`absolute -top-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full text-[9px] font-bold ${isDark ? 'bg-gold-400 text-[#0c2018]' : 'bg-emerald-600 text-white'}`}>
+          <span className="absolute -top-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full text-[9px] font-bold bg-gold-400 text-[#0c2018]">
             {totalSelected}
           </span>
         )}
       </motion.button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.88, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.88, y: 10 }}
-            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute bottom-full mb-3 right-0 z-50 rounded-2xl border shadow-2xl overflow-hidden"
-            style={{
-              background: isDark ? 'rgba(4,12,8,0.97)' : 'rgba(255,255,255,0.98)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(16,185,129,0.18)',
-              width: 300,
-              boxShadow: isDark
-                ? '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(233,207,122,0.08)'
-                : '0 16px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(16,185,129,0.06)',
-            }}
-          >
-            <div className={`flex items-center justify-between px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-emerald-100'}`}>
-              <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-parchment/60' : 'text-emerald-700/70'}`}>
-                Play on devices
-              </span>
-              {totalSelectable > 0 && (
-                <button
-                  onClick={allSelected ? deselectAll : selectAll}
-                  className={`text-xs font-semibold ${isDark ? 'text-gold-300 hover:text-gold-200' : 'text-emerald-600 hover:text-emerald-700'}`}
-                >
-                  {allSelected ? 'Deselect all' : 'Select all'}
-                </button>
-              )}
-            </div>
+      {anchor && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              ref={panelRef}
+              initial={{ opacity: 0, scale: 0.88, y: anchor.openUp ? 10 : -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.88, y: anchor.openUp ? 10 : -10 }}
+              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed z-[999] rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
+              style={{
+                left: anchor.left,
+                width: PANEL_W,
+                background: 'rgba(4,12,8,0.97)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderColor: 'rgba(255,255,255,0.10)',
+                boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(233,207,122,0.08)',
+                ...(anchor.openUp
+                  ? { bottom: window.innerHeight - anchor.edgeTop, maxHeight: anchor.edgeTop - 8 }
+                  : { top: anchor.edgeBottom, maxHeight: window.innerHeight - anchor.edgeBottom - 8 }),
+              }}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
+                <span className="text-xs font-bold uppercase tracking-wide text-parchment/60">
+                  Play on devices
+                </span>
+                {totalSelectable > 0 && (
+                  <button
+                    onClick={allSelected ? deselectAll : selectAll}
+                    className="text-xs font-semibold text-gold-300 hover:text-gold-200"
+                  >
+                    {allSelected ? 'Deselect all' : 'Select all'}
+                  </button>
+                )}
+              </div>
 
-            <div className="max-h-[320px] overflow-y-auto py-1.5">
-              {output.devices.length > 0 && (
-                <div className="px-2 pb-1.5">
-                  <p className={`px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide ${isDark ? 'text-parchment/40' : 'text-emerald-700/50'}`}>
-                    This device
-                  </p>
-                  {output.devices.map((d) => {
-                    const on = outputIds.includes(d.id);
-                    return (
-                      <DeviceRow
-                        key={d.id}
-                        icon={d.isBluetooth ? <Bluetooth size={15} /> : <Speaker size={15} />}
-                        name={d.name}
-                        status={on ? (playing ? 'Playing' : 'Selected') : 'Not playing'}
-                        on={on}
-                        isDark={isDark}
-                        onClick={() => toggleOutput(d.id)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {lan.supported && (
-                <div className="px-2 pb-1.5">
-                  <p className={`px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide ${isDark ? 'text-parchment/40' : 'text-emerald-700/50'}`}>
-                    Cast to network devices
-                  </p>
-                  {castableLan.length === 0 ? (
-                    <p className={`px-2.5 py-1.5 text-xs ${isDark ? 'text-parchment/45' : 'text-emerald-700/50'}`}>
-                      Searching your Wi-Fi network…
+              <div className="overflow-y-auto py-1.5">
+                {output.devices.length > 0 && (
+                  <div className="px-2 pb-1.5">
+                    <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-parchment/40">
+                      This device
                     </p>
-                  ) : castableLan.map((d) => {
-                    const on = lanIds.includes(d.id);
-                    return (
-                      <DeviceRow
-                        key={d.id}
-                        icon={<Tv size={15} />}
-                        name={d.name}
-                        status={on ? (playing ? 'Playing' : 'Selected') : 'Not playing'}
-                        busy={lan.busyId === d.id}
-                        on={on}
-                        isDark={isDark}
-                        onClick={() => toggleLan(d.id)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+                    {output.devices.map((d) => {
+                      const on = outputIds.includes(d.id);
+                      return (
+                        <DeviceRow
+                          key={d.id}
+                          icon={d.isBluetooth ? <Bluetooth size={15} /> : <Speaker size={15} />}
+                          name={d.name}
+                          status={on ? (playing ? 'Playing' : 'Selected') : 'Not playing'}
+                          on={on}
+                          onClick={() => toggleOutput(d.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
 
-              {!lan.supported && gcast.browserSupported && (
-                <div className="px-2 pb-1.5">
-                  <p className={`px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide ${isDark ? 'text-parchment/40' : 'text-emerald-700/50'}`}>
-                    Google Cast
-                  </p>
-                  <DeviceRow
-                    icon={<Tv size={15} />}
-                    name={gcastOn ? (gcast.deviceName || 'Cast device') : 'Chromecast / Nest speaker'}
-                    status={gcastOn ? (gcast.mediaState === 'playing' ? 'Playing' : 'Selected') : 'Not playing'}
-                    on={gcastOn}
-                    isDark={isDark}
-                    onClick={toggleGcast}
-                  />
-                  <p className={`px-2.5 pt-1 text-[10px] ${isDark ? 'text-parchment/40' : 'text-emerald-700/45'}`}>
-                    Only one Cast device can play at a time from a browser tab. Use the desktop app to cast to several at once.
-                  </p>
-                </div>
-              )}
+                {lan.supported && (
+                  <div className="px-2 pb-1.5">
+                    <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-parchment/40">
+                      Cast to network devices
+                    </p>
+                    {castableLan.length === 0 ? (
+                      <p className="px-2.5 py-1.5 text-xs text-parchment/45">
+                        Searching your Wi-Fi network…
+                      </p>
+                    ) : castableLan.map((d) => {
+                      const on = lanIds.includes(d.id);
+                      return (
+                        <DeviceRow
+                          key={d.id}
+                          icon={<Tv size={15} />}
+                          name={d.name}
+                          status={on ? (playing ? 'Playing' : 'Selected') : 'Not playing'}
+                          busy={lan.busyId === d.id}
+                          on={on}
+                          onClick={() => toggleLan(d.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
 
-              {output.devices.length === 0 && !lan.supported && !gcast.browserSupported && (
-                <p className={`px-4 py-4 text-sm text-center ${isDark ? 'text-parchment/50' : 'text-emerald-700/60'}`}>
-                  No devices found.
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {!lan.supported && gcast.browserSupported && (
+                  <div className="px-2 pb-1.5">
+                    <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wide text-parchment/40">
+                      Google Cast
+                    </p>
+                    <DeviceRow
+                      icon={<Tv size={15} />}
+                      name={gcastOn ? (gcast.deviceName || 'Cast device') : 'Chromecast / Nest speaker'}
+                      status={gcastOn ? (gcast.mediaState === 'playing' ? 'Playing' : 'Selected') : 'Not playing'}
+                      on={gcastOn}
+                      onClick={toggleGcast}
+                    />
+                    <p className="px-2.5 pt-1 text-[10px] text-parchment/40">
+                      Only one Cast device can play at a time from a browser tab. Use the desktop app to cast to several at once.
+                    </p>
+                  </div>
+                )}
+
+                {output.devices.length === 0 && !lan.supported && !gcast.browserSupported && (
+                  <p className="px-4 py-4 text-sm text-center text-parchment/50">
+                    No devices found.
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }
 
 function DeviceRow({
-  icon, name, status, on, busy, isDark, onClick,
+  icon, name, status, on, busy, onClick,
 }: {
   icon: ReactNode; name: string; status: string; on: boolean; busy?: boolean;
-  isDark: boolean; onClick: () => void;
+  onClick: () => void;
 }) {
   const playingNow = status === 'Playing';
   return (
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${
-        on ? (isDark ? 'bg-gold-400/12' : 'bg-emerald-50') : (isDark ? 'hover:bg-white/5' : 'hover:bg-emerald-50/60')
+        on ? 'bg-gold-400/12' : 'hover:bg-white/5'
       }`}
     >
       <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-        on ? (isDark ? 'bg-gold-400/20 text-gold-300' : 'bg-emerald-100 text-emerald-600')
-           : (isDark ? 'bg-white/[0.06] text-parchment/60' : 'bg-emerald-900/[0.06] text-emerald-700/60')
+        on ? 'bg-gold-400/20 text-gold-300' : 'bg-white/[0.06] text-parchment/60'
       }`}>
         {busy ? <Loader2 size={15} className="animate-spin" /> : icon}
       </span>
       <span className="min-w-0 flex-1">
-        <p className={`truncate text-sm font-medium ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{name}</p>
-        <p className={`text-[11px] ${playingNow ? (isDark ? 'text-gold-300' : 'text-emerald-600') : (isDark ? 'text-parchment/40' : 'text-emerald-700/40')}`}>
+        <p className="truncate text-sm font-medium text-parchment">{name}</p>
+        <p className={`text-[11px] ${playingNow ? 'text-gold-300' : 'text-parchment/40'}`}>
           {status}
         </p>
       </span>
-      {on && <CheckCircle2 size={15} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-emerald-600'}`} />}
+      {on && <CheckCircle2 size={15} className="shrink-0 text-gold-300" />}
     </button>
   );
 }

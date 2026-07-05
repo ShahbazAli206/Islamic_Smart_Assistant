@@ -1164,7 +1164,6 @@ export function QuranPlayer({
             playing={playing}
             title={`${surahMeta.englishName} — Ayah ${currentAyah?.numberInSurah ?? ayahIdx + 1}`}
             mainAudioRef={activeAudioRef}
-            isDark={isDark}
           />
         </div>
       </div>
