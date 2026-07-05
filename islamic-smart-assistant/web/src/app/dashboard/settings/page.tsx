@@ -7,6 +7,7 @@ import {
   MapPin, Globe, BellRing, BellOff, Check, Loader2, Settings,
   Activity, Volume2, Clock, Calendar, Heart, ChevronRight, Sparkles, Mic2,
   Music2, ArrowRight, Bell, Smartphone, Zap, BookOpen, HardDrive, Download,
+  Landmark,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { useTheme } from '@/lib/ThemeContext';
@@ -352,10 +353,36 @@ export default function SettingsPage() {
         />
       <div className="relative px-6 sm:px-10 py-6 flex flex-col gap-4">
 
+        {/* ── Smart Azan Settings — full-width section header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+          className={`rounded-xl border overflow-hidden shadow-sm ${
+            isDark ? 'bg-[#0d1f17] border-emerald-800/40' : 'bg-white border-emerald-100'
+          }`}
+        >
+          <div className="flex items-center gap-3 px-5 py-4">
+            <span
+              className="w-11 h-11 shrink-0 grid place-items-center rounded-xl text-white shadow-sm"
+              style={{ background: 'linear-gradient(135deg,#065f46 0%,#047857 100%)' }}
+            >
+              <Landmark size={20} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <h2 className={`font-bold text-lg leading-tight ${isDark ? 'text-emerald-50' : 'text-emerald-950'}`}>Smart Azan Settings</h2>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-emerald-900/50'}`}>Personalise every call to prayer</p>
+            </div>
+            <span className={`inline-flex items-center gap-1 rounded-full text-xs font-semibold px-3 py-1 shrink-0 border ${
+              isDark ? 'bg-emerald-900/30 border-emerald-700/40 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+            }`}>
+              <Sparkles size={12} /> Smart
+            </span>
+          </div>
+        </motion.div>
+
         {/* ── Main 2-col grid (items-start so Smart Azan card doesn't stretch) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-          {/* ══ Left: Smart Azan Settings + Auto Azan ══ */}
+          {/* ══ Left: Smart Azan rows + Auto Azan ══ */}
           <div className="flex flex-col gap-4">
             <motion.div
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
@@ -363,39 +390,8 @@ export default function SettingsPage() {
               isDark ? 'border-emerald-800/40' : 'border-emerald-200'
             }`}
           >
-            {/* Gradient header */}
-            <div
-              className="relative overflow-hidden px-5 py-4 shrink-0"
-              style={{ background: 'linear-gradient(135deg,#064e3b 0%,#065f46 55%,#047857 100%)' }}
-            >
-              {/* arabesque overlay */}
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-[0.07]"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 0L25 8H15L20 0zM20 40L15 32H25L20 40zM0 20L8 15V25L0 20zM40 20L32 25V15L40 20z'/%3E%3C/g%3E%3C/svg%3E")`,
-                }}
-              />
-              <div className="relative flex items-center gap-3">
-                <motion.span
-                  className="w-10 h-10 grid place-items-center rounded-xl bg-white/15 text-white shrink-0"
-                  animate={{ opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <Activity size={20} />
-                </motion.span>
-                <div className="flex-1">
-                  <h2 className="font-bold text-white text-lg leading-tight">Smart Azan Settings</h2>
-                  <p className="text-emerald-200/70 text-xs mt-0.5">Personalise every call to prayer</p>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/20 text-emerald-200 text-xs font-semibold px-3 py-1 shrink-0">
-                  <Sparkles size={12} /> Smart
-                </span>
-              </div>
-            </div>
-
             {/* Body: relative so the mosque silhouette can be absolutely placed */}
-            <div className={`relative px-5 overflow-hidden ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
+            <div className={`relative px-5 pt-4 overflow-hidden ${isDark ? 'bg-[#0d1f17]' : 'bg-white'}`}>
               {/* Mosque silhouette watermark */}
               <MosqueSilhouette
                 className={`absolute bottom-0 right-0 w-64 pointer-events-none select-none ${
@@ -668,53 +664,53 @@ export default function SettingsPage() {
               </div>
             </SectionCard>
 
-            {/* School of Thought + Translation Language side-by-side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <SectionCard
-                title="School of Thought"
-                isDark={isDark}
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M2 22h20M6 18V12M18 18V12M10 18V12M14 18V12M12 2l4 4H8l4-4zM4 12h16" />
-                  </svg>
-                }
-              >
-                <div className="flex flex-wrap gap-2">
-                  {SECTS.map((s) => (
-                    <Pill key={s.id} label={s.label} active={activeSectId === s.id} onClick={() => selectSect(s.id)} isDark={isDark} />
-                  ))}
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Translation Language" icon={<Globe size={16} />} isDark={isDark}>
-                <LanguageSelect value={language} onChange={selectLang} options={LANGUAGES} isDark={isDark} />
-              </SectionCard>
-            </div>
-
-            {/* Offline translation audio */}
-            <SectionCard title="Offline Translation Audio" icon={<HardDrive size={16} />} isDark={isDark}>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm ${isDark ? 'text-emerald-50/80' : 'text-emerald-950/80'}`}>
-                    Download clear spoken audio for <span className="font-semibold">{LOCAL_AUDIO_LANG_COUNT} translations</span> (German,
-                    Spanish, Indonesian, Hindi, Tamil, Uzbek and more) to play each ayah&apos;s translation offline.
-                  </p>
-                  <p className={`mt-1 text-xs ${isDark ? 'text-white/40' : 'text-black/45'}`}>
-                    {isLocalAudioSupported()
-                      ? 'Choose languages to download — stored on this device, plays without internet.'
-                      : 'Available in the Noor desktop app. Download the app to use offline audio.'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAudioModal(true)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-95 shrink-0
-                    ${isDark ? 'bg-emerald-700/60 hover:bg-emerald-600/70 text-emerald-50' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-                >
-                  {isLocalAudioSupported() ? <><HardDrive size={15} /> Manage Downloads</> : <><Download size={15} /> Get the App</>}
-                </button>
-              </div>
-            </SectionCard>
           </div>
+        </div>
+
+        {/* ── School of Thought · Translation Language · Offline Translation Audio ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <SectionCard
+            title="School of Thought"
+            isDark={isDark}
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M2 22h20M6 18V12M18 18V12M10 18V12M14 18V12M12 2l4 4H8l4-4zM4 12h16" />
+              </svg>
+            }
+          >
+            <div className="flex flex-wrap gap-2">
+              {SECTS.map((s) => (
+                <Pill key={s.id} label={s.label} active={activeSectId === s.id} onClick={() => selectSect(s.id)} isDark={isDark} />
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Translation Language" icon={<Globe size={16} />} isDark={isDark}>
+            <LanguageSelect value={language} onChange={selectLang} options={LANGUAGES} isDark={isDark} />
+          </SectionCard>
+
+          <SectionCard title="Offline Translation Audio" icon={<HardDrive size={16} />} isDark={isDark}>
+            <div className="flex flex-col gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm ${isDark ? 'text-emerald-50/80' : 'text-emerald-950/80'}`}>
+                  Download clear spoken audio for <span className="font-semibold">{LOCAL_AUDIO_LANG_COUNT} translations</span> (German,
+                  Spanish, Indonesian, Hindi, Tamil, Uzbek and more) to play each ayah&apos;s translation offline.
+                </p>
+                <p className={`mt-1 text-xs ${isDark ? 'text-white/40' : 'text-black/45'}`}>
+                  {isLocalAudioSupported()
+                    ? 'Choose languages to download — stored on this device, plays without internet.'
+                    : 'Available in the Noor desktop app. Download the app to use offline audio.'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAudioModal(true)}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-95 shrink-0
+                  ${isDark ? 'bg-emerald-700/60 hover:bg-emerald-600/70 text-emerald-50' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+              >
+                {isLocalAudioSupported() ? <><HardDrive size={15} /> Manage Downloads</> : <><Download size={15} /> Get the App</>}
+              </button>
+            </div>
+          </SectionCard>
         </div>
 
         {/* Offline-audio modals: download manager (desktop) or app promo (web) */}
