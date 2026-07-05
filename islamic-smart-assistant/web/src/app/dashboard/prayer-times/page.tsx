@@ -588,7 +588,7 @@ export default function PrayerTimesPage() {
               onMapClick={handleMapClick}
             />
 
-            <p className="text-xs text-parchment/50 flex items-center gap-1.5">
+            <p className={`text-[1.125rem] flex items-center gap-1.5 ${isDark ? 'text-parchment/50' : 'text-white'}`}>
               <Navigation size={12} /> Click anywhere on the map to find mosques at that location. Pan or zoom to explore. Data © OpenStreetMap.
             </p>
           </div>

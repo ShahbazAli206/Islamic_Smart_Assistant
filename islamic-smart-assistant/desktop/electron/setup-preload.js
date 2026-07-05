@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('setup', {
   getAppDataPath:  ()          => ipcRenderer.invoke('setup:getAppDataPath'),
+  getVersion:      ()          => ipcRenderer.invoke('setup:getVersion'),
   detectIp:        ()          => ipcRenderer.invoke('setup:detectIp'),
   reverseGeocode:  (lat, lng)  => ipcRenderer.invoke('setup:reverseGeocode', lat, lng),
   selectFolder:    ()          => ipcRenderer.invoke('setup:selectFolder'),

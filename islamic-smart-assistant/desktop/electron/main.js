@@ -39,9 +39,9 @@ const PROD_PORT = 3001;
 const DEV_URL   = 'http://localhost:3000';
 const PROD_URL  = `http://localhost:${PROD_PORT}`;
 
-// Brand logo (ismaa_logo4.png) bundled in assets/ — used for the window icon,
-// tray and anywhere else the app identifies itself.
-const APP_ICON = path.join(__dirname, '../assets/ismaa_logo4.png');
+// Brand logo bundled in assets/ — used for the window icon, tray and anywhere
+// else the app identifies itself.
+const APP_ICON = path.join(__dirname, '../assets/ismaa_logo.png');
 
 // In packaged builds electron-builder places extraResources at process.resourcesPath.
 const WEB_STANDALONE = isDev
@@ -404,6 +404,8 @@ ipcMain.handle('trans-audio:download', async (_event, lang, archiveUrl) => {
 // ── Setup wizard IPC handlers ─────────────────────────────────────────────────
 
 ipcMain.handle('setup:getAppDataPath', () => app.getPath('userData'));
+
+ipcMain.handle('setup:getVersion', () => app.getVersion());
 
 ipcMain.handle('setup:detectIp', async () => {
   // Use Electron's net.fetch() (Chromium networking — no certificate issues).

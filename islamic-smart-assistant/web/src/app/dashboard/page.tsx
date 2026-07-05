@@ -372,9 +372,9 @@ export default function Overview() {
         <img src="/overview_first_section_bg_image.png" alt="" className="absolute inset-0 h-full w-full select-none object-cover object-center" />
 
         <div className="relative p-5 sm:p-6">
-          {/* top bar: centered search + right-aligned status */}
-          <div className="relative flex flex-col gap-4 sm:block">
-            <div className="mx-auto w-full sm:max-w-[560px]">
+          {/* top bar: search (left, flexible) + right-aligned status */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="w-full min-w-0 sm:max-w-[420px] sm:flex-1">
               <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/60 px-4 py-2.5 text-black backdrop-blur-sm shadow-[0_1px_3px_rgba(16,40,30,0.06),0_10px_24px_-14px_rgba(16,40,30,0.25)]">
                 <Search size={18} className="text-black/90" />
                 <input placeholder="Search anything..." className="flex-1 bg-transparent text-sm font-semibold text-black placeholder:text-black/80 focus:outline-none" />
@@ -384,7 +384,7 @@ export default function Overview() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 text-black sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+            <div className="flex items-center justify-end gap-3 text-black shrink-0">
               <div className="flex items-center gap-5 rounded-2xl border border-white/60 bg-white/60 px-4 py-2 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
                   <MapPin size={18} className="text-emerald-700" />
@@ -740,7 +740,7 @@ export default function Overview() {
                   </div>
                 </div>
 
-                <p className="mt-7 font-display text-[3.25rem] font-bold tabular-nums leading-none text-emerald-700">
+                <p className={`mt-7 font-display text-[3.25rem] font-bold tabular-nums leading-none ${isDark ? 'text-white' : 'text-emerald-700'}`}>
                   {next ? formatCountdown(next.inMs) : '--:--:--'}
                 </p>
 
@@ -826,8 +826,8 @@ export default function Overview() {
                 </span>
               </div>
 
-              {/* Scrolling voices list — top 7, compact */}
-              <div className="relative overflow-hidden rounded-2xl" style={{ height: '224px' }}>
+              {/* Scrolling voices list — top 7, compact; grows to fill the card so no dead space is left above the button */}
+              <div className="relative overflow-hidden rounded-2xl flex-1 min-h-[224px]">
                 {/* Top fade */}
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-8 z-10 ${isDark ? 'bg-gradient-to-b from-midnight-800/80 to-transparent' : 'bg-gradient-to-b from-white to-transparent'}`} />
                 {/* Bottom fade */}
