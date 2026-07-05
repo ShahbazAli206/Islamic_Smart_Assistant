@@ -7,6 +7,7 @@ import { BellRing, X, Square, Radio, MapPin } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTimes } from '@/lib/prayer';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { readAzanDeviceSetting } from '@/lib/useAzanDeviceStorage';
 import { usePrayerParams } from '@/lib/usePrayerParams';
 import { customAzanUrl, isCustomAzan, type CustomAzan } from '@/lib/customAzan';
 import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
@@ -269,11 +270,7 @@ export function AutoAzanScheduler() {
   const startLocalClones = (srcs: string[]) => {
     stopLocalClones();
     if (srcs.length === 0 || typeof (HTMLMediaElement.prototype as any).setSinkId !== 'function') return;
-    let ids: string[] = [];
-    try {
-      const raw = localStorage.getItem('isa:azanLocalDeviceIds');
-      if (raw) ids = JSON.parse(raw);
-    } catch {}
+    const ids = readAzanDeviceSetting<string[]>('isa:azanLocalDeviceIds', []);
     ids.forEach(async (id) => {
       const clone = new Audio();
       try { await (clone as any).setSinkId(id); } catch { return; } // sink unreachable — skip this device
@@ -422,13 +419,11 @@ export function AutoAzanScheduler() {
     // trusting this component's own possibly-stale useLocalStorage state.
     const lanPath = azanLocalPath(v);
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    let freshAzanIds: string[] = [];
+    const freshAzanIds = readAzanDeviceSetting<string[]>('isa:azanDeviceIds', []);
+    const freshCastId = readAzanDeviceSetting<string>('isa:castDeviceId', '');
     let freshDefaultIds: string[] = [];
-    let freshCastId = '';
     try {
-      const a = localStorage.getItem('isa:azanDeviceIds');    if (a) freshAzanIds = JSON.parse(a);
       const df = localStorage.getItem('isa:defaultDeviceIds'); if (df) freshDefaultIds = JSON.parse(df);
-      const ci = localStorage.getItem('isa:castDeviceId');    if (ci) freshCastId = JSON.parse(ci);
     } catch {}
     // Merge azan-specific + default devices; fall back to legacy single-device key
     const combined = [...new Set([...freshAzanIds, ...freshDefaultIds])];

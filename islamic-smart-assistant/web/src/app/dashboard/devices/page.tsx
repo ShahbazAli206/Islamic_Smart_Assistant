@@ -11,6 +11,7 @@ import {
   HelpCircle, Settings, ExternalLink,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useAzanDeviceStorage } from '@/lib/useAzanDeviceStorage';
 import { useGoogleCast } from '@/lib/useGoogleCast';
 import { useTheme } from '@/lib/ThemeContext';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
@@ -648,8 +649,8 @@ export default function DevicesPage() {
   // the desktop download. Local audio devices (speaker/USB/Bluetooth) still work on web.
   const isDesktop = useIsDesktop();
   const desktopDownloadUrl = useDesktopDownloadUrl();
-  const [castDeviceId, setCastDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
-  const [, setCastDeviceName] = useLocalStorage<string>('isa:castDeviceName', '');
+  const [castDeviceId, setCastDeviceId] = useAzanDeviceStorage<string>('isa:castDeviceId', '');
+  const [, setCastDeviceName] = useAzanDeviceStorage<string>('isa:castDeviceName', '');
   const [lanVol, setLanVol] = useState(0.6);
   const [lanScanning, setLanScanning] = useState(false);
 
@@ -662,13 +663,13 @@ export default function DevicesPage() {
   }, [selectedAzanVoice]);
 
   // Multi-select: which devices are selected per purpose.
-  const [azanDeviceIds, setAzanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
+  const [azanDeviceIds, setAzanDeviceIds] = useAzanDeviceStorage<string[]>('isa:azanDeviceIds', []);
   const [recitationDeviceIds, setRecitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
   const [defaultDeviceIds, setDefaultDeviceIds] = useLocalStorage<string[]>('isa:defaultDeviceIds', []);
   // Same idea as azanDeviceIds above, but for THIS PC's own audio outputs (system
   // speakers / Bluetooth) rather than LAN cast devices — AutoAzanScheduler mirrors
   // the Adhan onto every id in this list via cloned <audio> elements + setSinkId.
-  const [azanLocalDeviceIds, setAzanLocalDeviceIds] = useLocalStorage<string[]>('isa:azanLocalDeviceIds', []);
+  const [azanLocalDeviceIds, setAzanLocalDeviceIds] = useAzanDeviceStorage<string[]>('isa:azanLocalDeviceIds', []);
 
   const rescanLan = async () => {
     setLanScanning(true);

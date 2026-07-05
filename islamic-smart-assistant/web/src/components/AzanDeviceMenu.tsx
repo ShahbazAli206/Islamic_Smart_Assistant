@@ -22,7 +22,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Speaker, Bluetooth, Tv, CheckCircle2, ChevronDown } from 'lucide-react';
 import { useAudioOutputDevices } from '@/lib/audioOutputDevices';
 import { useDesktopDevices } from '@/lib/useDesktopDevices';
-import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useAzanDeviceStorage } from '@/lib/useAzanDeviceStorage';
 
 const PANEL_W = 300;
 const PANEL_MAX_H = 380;
@@ -39,8 +39,8 @@ export function AzanDeviceMenu() {
   const output = useAudioOutputDevices();
   const lan = useDesktopDevices();
 
-  const [localIds, setLocalIds] = useLocalStorage<string[]>('isa:azanLocalDeviceIds', []);
-  const [lanIds, setLanIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
+  const [localIds, setLocalIds] = useAzanDeviceStorage<string[]>('isa:azanLocalDeviceIds', []);
+  const [lanIds, setLanIds] = useAzanDeviceStorage<string[]>('isa:azanDeviceIds', []);
 
   const measure = useCallback(() => {
     const btn = btnRef.current;
