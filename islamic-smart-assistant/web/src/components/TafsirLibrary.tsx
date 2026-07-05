@@ -17,7 +17,7 @@ import {
   ZoomIn, ZoomOut, Download, ExternalLink, BookMarked, AlertCircle, Layers,
 } from 'lucide-react';
 import {
-  TAFSIR_BOOKS, bookPdfUrl, bookSizeMb, sizeLabel, volumeForPara,
+  TAFSIR_BOOKS, bookPdfUrl, bookStreamUrl, bookSizeMb, sizeLabel, volumeForPara,
   fetchKanzulImanText, searchKanz,
   type TafsirBook, type TafsirVolume, type KanzAyah,
 } from '@/lib/tafsirBooks';
@@ -67,7 +67,7 @@ function PdfReader({ target, onClose, isDark }: {
         // Worker is served from /public (copied from pdfjs-dist/build) — bundling
         // it via new URL() makes Next's compiler choke on the minified file.
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-        const task = pdfjs.getDocument({ url: bookPdfUrl(volume.file) });
+        const task = pdfjs.getDocument({ url: bookStreamUrl(volume.file) });
         task.onProgress = (p: { loaded: number; total: number }) => {
           if (p.total > 0 && !cancelled) setProgress(Math.min(100, Math.round((p.loaded / p.total) * 100)));
         };

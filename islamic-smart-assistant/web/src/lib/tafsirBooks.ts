@@ -43,8 +43,18 @@ export function booksBase(): string {
   return (env || DEFAULT_BOOKS_BASE).replace(/\/+$/, '');
 }
 
+/** Direct release-asset URL — used for the "download the PDF" link. */
 export function bookPdfUrl(file: string): string {
   return `${booksBase()}/${file}`;
+}
+
+/**
+ * Same-origin streaming URL for the in-app reader. GitHub release assets send
+ * no CORS headers, so pdf.js must fetch through /api/tafsir-book (a proxy that
+ * forwards Range requests) instead of hitting GitHub directly.
+ */
+export function bookStreamUrl(file: string): string {
+  return `/api/tafsir-book/${encodeURIComponent(file)}`;
 }
 
 export const TAFSIR_BOOKS: TafsirBook[] = [
