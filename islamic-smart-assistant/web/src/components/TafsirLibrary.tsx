@@ -146,6 +146,102 @@ function ChapterDropdown({ value, onChange, isDark }: {
   );
 }
 
+// ── Parah jump dropdown (reader top bar) ─────────────────────────────────────
+// Compact searchable dropdown replacing the old row of numbered chips.
+
+function ParaDropdown({ paras, onJump, isDark }: {
+  paras: number[]; onJump: (p: number) => void; isDark: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+  const [selected, setSelected] = useState<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const shown = filter.trim() ? paras.filter((p) => String(p).startsWith(filter.trim())) : paras;
+
+  return (
+    <div ref={wrapRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setFilter(''); }}
+        className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+          isDark
+            ? 'bg-white/8 border-white/12 text-parchment/85 hover:bg-white/[0.14]'
+            : 'bg-white border-emerald-200 text-emerald-900 hover:bg-emerald-50'
+        }`}
+      >
+        <BookMarked size={12} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+        {selected ? `Parah ${selected}` : 'Jump to Parah'}
+        <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute top-full mt-2 right-0 z-50 w-44 rounded-2xl border shadow-2xl overflow-hidden ${
+              isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
+            }`}
+          >
+            {/* quick search */}
+            <div className={`p-2 border-b ${isDark ? 'border-white/8' : 'border-emerald-50'}`}>
+              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${isDark ? 'bg-white/[0.06]' : 'bg-emerald-50/60'}`}>
+                <Search size={12} className={isDark ? 'text-parchment/40' : 'text-emerald-700/40'} />
+                <input
+                  autoFocus
+                  inputMode="numeric"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="Parah number…"
+                  className={`w-full bg-transparent text-xs focus:outline-none ${
+                    isDark ? 'text-parchment placeholder:text-parchment/35' : 'text-emerald-950 placeholder:text-emerald-900/35'
+                  }`}
+                />
+              </div>
+            </div>
+
+            <div className="max-h-56 overflow-y-auto overscroll-contain py-1">
+              {shown.map((p) => {
+                const isSel = p === selected;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setSelected(p); setOpen(false); onJump(p); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2 text-left text-[13px] transition ${
+                      isSel
+                        ? (isDark ? 'bg-emerald-600 text-white font-semibold' : 'bg-emerald-500 text-white font-semibold')
+                        : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
+                    }`}
+                  >
+                    <span>Parah {p}</span>
+                    {isSel && <Check size={13} className="shrink-0" />}
+                  </button>
+                );
+              })}
+              {shown.length === 0 && (
+                <p className={`px-3.5 py-3 text-xs ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>No Parah matches.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Page-by-page PDF reader (modal) ──────────────────────────────────────────
 
 type ReaderTarget = { book: TafsirBook; volume: TafsirVolume; page?: number };
@@ -157,8 +253,17 @@ function PdfReader({ target, onClose, isDark }: {
   const storageKey = `isa:tafsir-page:${book.id}:${volume.n}`;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const holderRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
+
+  // Re-render the page when the window resizes so it keeps filling the height
+  const [viewTick, setViewTick] = useState(0);
+  useEffect(() => {
+    const onResize = () => setViewTick((t) => t + 1);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(target.page ?? 1);
@@ -238,9 +343,15 @@ function PdfReader({ target, onClose, isDark }: {
         renderTaskRef.current?.cancel?.();
         const pg = await doc.getPage(page);
         if (cancelled) return;
-        // Fit-to-width base scale, then apply user zoom (crisp on HiDPI)
-        const holder = canvas.parentElement!;
-        const base = (holder.clientWidth - 8) / pg.getViewport({ scale: 1 }).width;
+        // Fit the FULL page into the available viewer area (height-bound for
+        // these tall book scans), then apply user zoom. Measured from the
+        // scroll container itself — measuring the canvas's wrapper fed the
+        // previous canvas size back in and shrank the page on every flip.
+        const holder = holderRef.current ?? canvas.parentElement!;
+        const vw1 = pg.getViewport({ scale: 1 });
+        const availW = holder.clientWidth - 24;
+        const availH = holder.clientHeight - 24;
+        const base = Math.min(availW / vw1.width, availH / vw1.height);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const viewport = pg.getViewport({ scale: base * zoom });
         canvas.width = Math.floor(viewport.width * dpr);
@@ -270,7 +381,7 @@ function PdfReader({ target, onClose, isDark }: {
       }
     })();
     return () => { cancelled = true; };
-  }, [page, zoom, loading]);
+  }, [page, zoom, loading, viewTick]);
 
   // Persist last-read page
   useEffect(() => {
@@ -372,16 +483,8 @@ function PdfReader({ target, onClose, isDark }: {
             </p>
           </div>
 
-          {/* Parah jump */}
-          <div className="hidden md:flex items-center gap-1.5">
-            <span className={`text-[11px] font-semibold ${t.chipLabel}`}>Parah:</span>
-            {paras.map((p) => (
-              <button key={p} onClick={() => paraJump(p)}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${t.chip}`}>
-                {p}
-              </button>
-            ))}
-          </div>
+          {/* Parah jump — searchable dropdown */}
+          <ParaDropdown paras={paras} onJump={paraJump} isDark={isDark} />
 
           <a href={bookPdfUrl(volume.file)} download target="_blank" rel="noreferrer"
             title={`Download PDF (${sizeLabel(volume.sizeMb)})`}
@@ -394,7 +497,7 @@ function PdfReader({ target, onClose, isDark }: {
         </div>
 
         {/* ── page canvas ── */}
-        <div className={`flex-1 overflow-auto flex items-start justify-center p-3 sm:p-5 ${t.pageWell}`}>
+        <div ref={holderRef} className={`flex-1 overflow-auto flex p-2 ${t.pageWell}`}>
           {loading && !error && (
             <div className="m-auto flex flex-col items-center gap-3">
               <Loader2 size={28} className="animate-spin text-emerald-500" />
@@ -413,7 +516,7 @@ function PdfReader({ target, onClose, isDark }: {
             </div>
           )}
           {!loading && !error && (
-            <div className={`relative rounded-lg overflow-hidden bg-white ${isDark ? 'shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)]' : 'shadow-[0_18px_50px_-16px_rgba(16,40,30,0.35)] ring-1 ring-emerald-900/[0.06]'}`}>
+            <div className={`relative m-auto rounded-lg overflow-hidden bg-white ${isDark ? 'shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)]' : 'shadow-[0_18px_50px_-16px_rgba(16,40,30,0.35)] ring-1 ring-emerald-900/[0.06]'}`}>
               <canvas ref={canvasRef} />
               {rendering && (
                 <div className="absolute inset-0 grid place-items-center bg-white/40">
