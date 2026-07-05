@@ -1439,7 +1439,7 @@ export default function AzanPage() {
 
         {/* ══════ Durood Sharif & Dua ══════ */}
         <div className="mt-8">
-          <div className="flex items-center gap-3 mb-5">
+          <div className={`flex items-center gap-3 mb-5 rounded-2xl px-4 py-3 ${isDark ? '' : 'bg-emerald-50/60 border border-emerald-900/[0.05]'}`}>
             <span className="text-2xl select-none">🌿</span>
             <div>
               <h2 className={`font-display font-bold text-xl ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>
