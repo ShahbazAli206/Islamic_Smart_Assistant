@@ -322,6 +322,116 @@ function VolumeDropdown({ volumes, value, onChange, isDark }: {
   );
 }
 
+/** Approximate page for a Parah, linear across the volume's Parah span — scanned
+ *  books have no reliable per-Parah bookmarks, so this lands close by. */
+function computeParaPage(volume: TafsirVolume, numPages: number, para: number): number {
+  const [from, to] = volume.paras;
+  const span = to - from + 1;
+  const frac = (para - from) / span;
+  return Math.min(numPages, Math.max(1, Math.round(8 + frac * (numPages - 8))));
+}
+
+// ── In-reader ayah search ─────────────────────────────────────────────────────
+// Lives INSIDE every reader's top bar (both PDF and text) rather than as a
+// separate section — the same control, same behaviour, on every book. It
+// searches the one Quran text we hold complete ayah-by-ayah (the Kanzul Iman
+// Urdu translation — the scans have no text layer, and fetching every ayah's
+// commentary from the 6 API tafsirs just to search them isn't practical), then
+// jumps THIS open book straight to the matched verse: exact surah:ayah for
+// text tafsirs, nearest Parah page for scanned books.
+
+function AyahSearchDropdown({ onJump, isDark }: {
+  onJump: (ayah: KanzAyah) => void; isDark: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<KanzAyah[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useClickAway(wrapRef, () => setOpen(false), open);
+
+  const runSearch = async () => {
+    if (query.trim().length < 2) return;
+    setSearching(true); setError(null);
+    try {
+      const text = await fetchKanzulImanText();
+      setResults(searchKanz(text, query));
+    } catch {
+      setError('Search unavailable right now.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <div ref={wrapRef} className="relative shrink-0">
+      <button type="button" onClick={() => setOpen((o) => !o)} className={trigCls(isDark)}>
+        <Search size={12} className={isDark ? 'text-gold-300' : 'text-gold-600'} />
+        Search ayah
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`${popCls(isDark)} w-80`}
+          >
+            <div className={`p-2.5 border-b ${isDark ? 'border-white/8' : 'border-emerald-50'}`}>
+              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${isDark ? 'bg-white/[0.06]' : 'bg-emerald-50/60'}`}>
+                <Search size={12} className={isDark ? 'text-parchment/40' : 'text-emerald-700/40'} />
+                <input
+                  autoFocus
+                  dir="auto"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+                  placeholder="e.g. رحمت — Urdu word, jumps to that ayah"
+                  className={`w-full bg-transparent text-xs focus:outline-none ${
+                    isDark ? 'text-parchment placeholder:text-parchment/35' : 'text-emerald-950 placeholder:text-emerald-900/35'
+                  }`}
+                />
+                <button onClick={runSearch} disabled={searching || query.trim().length < 2}
+                  className={`shrink-0 ${isDark ? 'text-parchment/60' : 'text-emerald-700/60'} disabled:opacity-40`}>
+                  {searching ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <p className={`px-3.5 py-2.5 text-xs flex items-center gap-1.5 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                <AlertCircle size={12} /> {error}
+              </p>
+            )}
+
+            {results !== null && !error && (
+              <div className="max-h-72 overflow-y-auto overscroll-contain py-1">
+                {results.length === 0 && (
+                  <p className={`px-3.5 py-3 text-xs ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>No matches found.</p>
+                )}
+                {results.map((r, i) => (
+                  <button key={`${r.surah}:${r.ayah}-${i}`} type="button"
+                    onClick={() => { setOpen(false); onJump(r); }}
+                    className={`w-full text-left px-3.5 py-2.5 transition ${isDark ? 'hover:bg-emerald-500/10' : 'hover:bg-emerald-50'}`}
+                  >
+                    <p dir="rtl" className={`font-arabic text-sm leading-relaxed line-clamp-2 ${isDark ? 'text-parchment/90' : 'text-emerald-950'}`}>{r.text}</p>
+                    <p className={`mt-1 text-[10px] font-bold ${isDark ? 'text-gold-300/80' : 'text-gold-700'}`}>
+                      {r.surahName} {r.surah}:{r.ayah} · Parah {r.juz}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Shared reader shell ──────────────────────────────────────────────────────
 // One popup frame used by BOTH readers so every book looks and behaves alike.
 
@@ -349,19 +459,26 @@ function ReaderShell({ isDark, onClose, coverGrad, title, subtitle, headerRight,
         {/* gold accent — same signature as the app's cards */}
         <div className="shrink-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
 
-        {/* top bar */}
-        <div className={`shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b ${t.bar}`}>
-          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${coverGrad}`}>
-            <BookOpen size={16} className="text-white/90" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display font-bold text-sm truncate">{title}</p>
-            <p className={`text-[11px] truncate ${t.sub}`}>{subtitle}</p>
+        {/* top bar — title row keeps the close button anchored top-right;
+            controls wrap onto their own row below rather than overflowing
+            when a book (PDF, multi-volume) has volume + parah + search all
+            present at once */}
+        <div className={`shrink-0 border-b ${t.bar}`}>
+          <div className="flex items-center gap-3 px-4 sm:px-5 pt-3">
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${coverGrad}`}>
+              <BookOpen size={16} className="text-white/90" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display font-bold text-sm truncate">{title}</p>
+              <p className={`text-[11px] truncate ${t.sub}`}>{subtitle}</p>
+            </div>
+            <button onClick={onClose} className={`p-2 rounded-lg transition shrink-0 ${t.iconBtn}`} aria-label="Close reader">
+              <X size={18} />
+            </button>
           </div>
-          {headerRight}
-          <button onClick={onClose} className={`p-2 rounded-lg transition ${t.iconBtn}`} aria-label="Close reader">
-            <X size={18} />
-          </button>
+          <div className="flex flex-wrap items-center justify-end gap-1.5 px-4 sm:px-5 py-3">
+            {headerRight}
+          </div>
         </div>
 
         {children}
@@ -406,6 +523,10 @@ function PdfReader({ book, initialVolume, onClose, isDark }: {
   const holderRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
+  // Set by jumpToAyah when the target Parah lives in a DIFFERENT volume than
+  // the one currently open — the doc-load effect below consumes it once the
+  // new volume's page count is known (can't compute the target page sooner).
+  const pendingParaRef = useRef<number | null>(null);
 
   // Re-render the page when the window resizes so it keeps filling the height
   const [viewTick, setViewTick] = useState(0);
@@ -448,7 +569,13 @@ function PdfReader({ book, initialVolume, onClose, isDark }: {
         if (cancelled) { doc.destroy(); return; }
         docRef.current = doc;
         setNumPages(doc.numPages);
-        setPage((p) => Math.min(Math.max(1, p), doc.numPages));
+        if (pendingParaRef.current != null) {
+          const para = pendingParaRef.current;
+          pendingParaRef.current = null;
+          setPage(computeParaPage(volume, doc.numPages, para));
+        } else {
+          setPage((p) => Math.min(Math.max(1, p), doc.numPages));
+        }
         setLoading(false);
       } catch {
         // Whatever failed underneath, the user-facing story is the same:
@@ -530,13 +657,22 @@ function PdfReader({ book, initialVolume, onClose, isDark }: {
     return () => window.removeEventListener('keydown', onKey);
   }, [go, onClose]);
 
-  // Approximate page for a Parah (linear across the volume's Parah span).
   const paraJump = (para: number) => {
     if (!numPages) return;
-    const [from, to] = volume.paras;
-    const span = to - from + 1;
-    const frac = (para - from) / span;
-    setPage(Math.min(numPages, Math.max(1, Math.round(8 + frac * (numPages - 8)))));
+    setPage(computeParaPage(volume, numPages, para));
+  };
+
+  // From the in-reader ayah search: switch volume first if the match's Parah
+  // isn't in the one currently open, then jump once that volume has loaded.
+  const jumpToAyah = (ayah: KanzAyah) => {
+    const target = volumeForPara(book, ayah.juz);
+    if (target.file !== volume.file) {
+      pendingParaRef.current = ayah.juz;
+      setZoom(1);
+      setVolume(target);
+    } else {
+      paraJump(ayah.juz);
+    }
   };
 
   const switchVolume = (v: TafsirVolume) => { setVolume(v); setPage(1); setZoom(1); };
@@ -555,7 +691,8 @@ function PdfReader({ book, initialVolume, onClose, isDark }: {
       title={book.title}
       subtitle={`${book.volumes.length > 1 ? `Volume ${volume.n} · Parah ${volume.paras[0]}–${volume.paras[1]} · ` : ''}${book.author}`}
       headerRight={
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <AyahSearchDropdown onJump={jumpToAyah} isDark={isDark} />
           {book.volumes.length > 1 && (
             <VolumeDropdown volumes={book.volumes} value={volume} onChange={switchVolume} isDark={isDark} />
           )}
@@ -687,6 +824,10 @@ function TextReader({ taf, urduTitle, coverGrad, onClose, isDark, initialSurah =
 
   const pickSurah = (n: number) => { setSurah(n); setAyah(1); };
 
+  // From the in-reader ayah search — text tafsirs read exactly by surah:ayah,
+  // so (unlike the PDF reader) this jump is always exact, no approximation.
+  const jumpToAyah = (a: KanzAyah) => { setSurah(a.surah); setAyah(a.ayah); };
+
   const isRtl = taf.dir === 'rtl';
   const t = readerTokens(isDark);
 
@@ -697,7 +838,8 @@ function TextReader({ taf, urduTitle, coverGrad, onClose, isDark, initialSurah =
       title={taf.name}
       subtitle={`${taf.author} · ${taf.school}`}
       headerRight={
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <AyahSearchDropdown onJump={jumpToAyah} isDark={isDark} />
           <ChapterDropdown value={surah} onChange={pickSurah} isDark={isDark} allowAll={false} compact />
         </div>
       }
@@ -874,158 +1016,11 @@ function LibraryCard({ book, onOpen, isDark, delay }: {
   );
 }
 
-// ── "Open in" dropdown — per search result, jumps into ANY of the 8 books ────
-
-function OpenInDropdown({ ayah, onOpen, isDark }: {
-  ayah: KanzAyah; onOpen: (book: LibBook, ayah: KanzAyah) => void; isDark: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  useClickAway(wrapRef, () => setOpen(false), open);
-
-  return (
-    <div ref={wrapRef} className="relative shrink-0">
-      <button type="button" onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition bg-emerald-600 text-white hover:bg-emerald-700">
-        <BookOpen size={11} /> Read tafsir
-        <ChevronDown size={11} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className={`${popCls(isDark)} w-64`}
-          >
-            <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wide ${isDark ? 'border-white/8 text-parchment/45' : 'border-emerald-50 text-ink/45'}`}>
-              Choose a book
-            </div>
-            <div className="max-h-64 overflow-y-auto overscroll-contain py-1">
-              {LIB_BOOKS.map((b) => {
-                const label = b.kind === 'pdf' ? b.pdf.title : b.taf.name;
-                return (
-                  <button key={b.id} type="button"
-                    onClick={() => { setOpen(false); onOpen(b, ayah); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-[12px] transition ${
-                      isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50'
-                    }`}
-                  >
-                    {b.kind === 'pdf' ? <BookOpen size={12} className="shrink-0 opacity-60" /> : <FileText size={12} className="shrink-0 opacity-60" />}
-                    <span className="min-w-0 truncate">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ── Search panel (structured Kanzul Iman text) ───────────────────────────────
-// This searches ONE full-text index — the Kanzul Iman Urdu translation, the
-// only Quran text we hold in full, ayah-by-ayah — to LOCATE a verse. It is a
-// verse finder, not a full-text search across every tafsir's commentary (the
-// scanned books have no text layer, and fetching all 6,236 ayahs from each of
-// the 6 API tafsirs just to search them isn't practical). Once a verse is
-// found, "Read tafsir" opens ANY of the 8 books at that exact ayah.
-
-function TafsirSearch({ onOpenBook, isDark }: {
-  onOpenBook: (book: LibBook, ayah: KanzAyah) => void; isDark: boolean;
-}) {
-  const [query, setQuery] = useState('');
-  const [surahFilter, setSurahFilter] = useState(0); // 0 = all chapters
-  const [results, setResults] = useState<KanzAyah[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const runSearch = async () => {
-    if (query.trim().length < 2) return;
-    setSearching(true); setError(null);
-    try {
-      const text = await fetchKanzulImanText();
-      setResults(searchKanz(text, query, surahFilter || undefined));
-    } catch {
-      setError('Search is unavailable right now (Quran text service unreachable). Please try again.');
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const inputCls = isDark
-    ? 'bg-white/[0.06] border-white/12 text-parchment placeholder:text-parchment/35'
-    : 'bg-white border-emerald-200 text-emerald-950 placeholder:text-emerald-900/35';
-
-  return (
-    <div className={`rounded-3xl border p-5 ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-emerald-900/[0.08] bg-white shadow-sm'}`}>
-      <div className="flex items-center gap-2.5">
-        <span className={`grid h-9 w-9 place-items-center rounded-xl ${isDark ? 'bg-gold-400/15 text-gold-300' : 'bg-gold-100 text-gold-600'}`}>
-          <Search size={16} />
-        </span>
-        <div>
-          <h3 className={`font-bold leading-tight ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>Find an ayah, read its tafsir</h3>
-          <p className={`text-xs ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
-            Type a word from the Kanzul Iman Urdu translation to locate the ayah, then open its commentary in any of the 8 books below.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-col sm:flex-row gap-2">
-        <input
-          dir="auto"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
-          placeholder="e.g. رحمت — type any Urdu word or phrase"
-          className={`flex-1 rounded-2xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 ${inputCls}`}
-        />
-        {/* chapter (surah) filter — themed scrollable dropdown */}
-        <ChapterDropdown value={surahFilter} onChange={setSurahFilter} isDark={isDark} />
-        <button onClick={runSearch} disabled={searching || query.trim().length < 2}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold px-5 py-2.5 transition">
-          {searching ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />} Search
-        </button>
-      </div>
-
-      {error && (
-        <p className={`mt-3 text-xs flex items-center gap-1.5 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-          <AlertCircle size={13} /> {error}
-        </p>
-      )}
-
-      {results !== null && !error && (
-        <div className="mt-4 space-y-2 max-h-[26rem] overflow-y-auto pr-1">
-          <p className={`text-xs font-semibold ${isDark ? 'text-parchment/55' : 'text-ink/55'}`}>
-            {results.length === 0 ? 'No matches found.' : `${results.length}${results.length >= 60 ? '+' : ''} matching ayahs`}
-          </p>
-          {results.map((r, i) => (
-            <div key={`${r.surah}:${r.ayah}-${i}`}
-              className={`rounded-2xl border px-4 py-3 ${isDark ? 'border-white/8 bg-white/[0.03]' : 'border-emerald-900/[0.06] bg-emerald-50/40'}`}>
-              <p dir="rtl" className={`font-arabic text-lg leading-relaxed ${isDark ? 'text-parchment/90' : 'text-emerald-950'}`}>{r.text}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className={`text-[11px] font-bold ${isDark ? 'text-gold-300' : 'text-gold-700'}`}>
-                  {r.surahName} {r.surah}:{r.ayah} · Parah {r.juz}
-                </span>
-                <span className="flex-1" />
-                <OpenInDropdown ayah={r} onOpen={onOpenBook} isDark={isDark} />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Section root ─────────────────────────────────────────────────────────────
 
 type ReaderState =
   | { kind: 'pdf'; book: TafsirBook; volume: TafsirVolume }
-  | { kind: 'text'; book: Extract<LibBook, { kind: 'text' }>; initialSurah?: number; initialAyah?: number }
+  | { kind: 'text'; book: Extract<LibBook, { kind: 'text' }> }
   | null;
 
 export function TafsirSection({ isDark }: { isDark: boolean }) {
@@ -1036,21 +1031,11 @@ export function TafsirSection({ isDark }: { isDark: boolean }) {
     else setReader({ kind: 'text', book });
   };
 
-  // From a search hit: jump straight to that ayah, in whichever book the
-  // user picked (scanned books land on the nearest Parah page; text tafsirs
-  // open exactly on that surah:ayah).
-  const openBookAtAyah = (book: LibBook, ayah: KanzAyah) => {
-    if (book.kind === 'pdf') setReader({ kind: 'pdf', book: book.pdf, volume: volumeForPara(book.pdf, ayah.juz) });
-    else setReader({ kind: 'text', book, initialSurah: ayah.surah, initialAyah: ayah.ayah });
-  };
-
   return (
     <div className="space-y-5">
-      {/* find an ayah, then open its tafsir — sits above the shelf since it
-          applies across all 8 books, not any one of them */}
-      <TafsirSearch isDark={isDark} onOpenBook={openBookAtAyah} />
-
-      {/* unified bookshelf — every tafsir, same card, same reader */}
+      {/* unified bookshelf — every tafsir, same card, same reader. Ayah
+          search now lives INSIDE each reader's own top bar (see
+          AyahSearchDropdown) rather than as a separate section-wide box. */}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {LIB_BOOKS.map((book, i) => (
           <LibraryCard key={book.id} book={book} isDark={isDark} delay={i * 0.05}
@@ -1064,11 +1049,7 @@ export function TafsirSection({ isDark }: { isDark: boolean }) {
           onClose={() => setReader(null)} isDark={isDark} />
       )}
       {reader?.kind === 'text' && (
-        // key forces a remount when a fresh search jump targets an ayah while
-        // the same book is already open — initialSurah/Ayah only seed state once
-        <TextReader key={`${reader.book.id}-${reader.initialSurah ?? 1}-${reader.initialAyah ?? 1}`}
-          taf={reader.book.taf} urduTitle={reader.book.urduTitle} coverGrad={reader.book.cover}
-          initialSurah={reader.initialSurah} initialAyah={reader.initialAyah}
+        <TextReader taf={reader.book.taf} urduTitle={reader.book.urduTitle} coverGrad={reader.book.cover}
           onClose={() => setReader(null)} isDark={isDark} />
       )}
     </div>
