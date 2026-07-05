@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronLeft, ChevronRight, ChevronDown, X, Search, Loader2,
   ZoomIn, ZoomOut, Download, ExternalLink, BookMarked, AlertCircle, Layers,
+  Check, ListFilter,
 } from 'lucide-react';
 import {
   TAFSIR_BOOKS, bookPdfUrl, bookStreamUrl, bookSizeMb, sizeLabel, volumeForPara,
@@ -22,6 +23,128 @@ import {
   type TafsirBook, type TafsirVolume, type KanzAyah,
 } from '@/lib/tafsirBooks';
 import { SURAHS } from '@/lib/surahs';
+
+// ── Themed chapter (surah) dropdown ──────────────────────────────────────────
+// The native <select> renders with OS styling that ignores the app theme (and
+// was near-invisible in light mode), so the filter uses a custom scrollable
+// listbox styled like the rest of the dashboard dropdowns, with a quick
+// type-to-filter box for the 114 chapters.
+
+function ChapterDropdown({ value, onChange, isDark }: {
+  value: number; onChange: (v: number) => void; isDark: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const options = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return SURAHS;
+    return SURAHS.filter(
+      (s) => s.englishName.toLowerCase().includes(q) || String(s.number) === q || s.arabic.includes(filter.trim()),
+    );
+  }, [filter]);
+
+  const selected = value ? SURAHS.find((s) => s.number === value) : null;
+  const label = selected ? `${selected.number}. ${selected.englishName}` : 'All chapters';
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setFilter(''); }}
+        aria-label="Filter by chapter"
+        className={`w-full sm:w-52 flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm font-medium transition ${
+          isDark
+            ? 'bg-white/[0.06] border-white/12 text-parchment hover:bg-white/[0.10] hover:border-white/20'
+            : 'bg-white border-emerald-200 text-emerald-950 hover:bg-emerald-50'
+        }`}
+      >
+        <ListFilter size={14} className={`shrink-0 ${isDark ? 'text-gold-300' : 'text-gold-600'}`} />
+        <span className="flex-1 min-w-0 truncate text-left">{label}</span>
+        <ChevronDown size={14} className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isDark ? 'text-parchment/50' : 'text-emerald-700/50'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute top-full mt-2 left-0 z-50 w-64 rounded-2xl border shadow-2xl overflow-hidden ${
+              isDark ? 'bg-[#0d2018] border-emerald-500/25 shadow-black/60' : 'bg-white border-emerald-100 shadow-emerald-900/15'
+            }`}
+          >
+            {/* quick filter */}
+            <div className={`p-2 border-b ${isDark ? 'border-white/8' : 'border-emerald-50'}`}>
+              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 ${isDark ? 'bg-white/[0.06]' : 'bg-emerald-50/60'}`}>
+                <Search size={12} className={isDark ? 'text-parchment/40' : 'text-emerald-700/40'} />
+                <input
+                  autoFocus
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Find a chapter…"
+                  className={`w-full bg-transparent text-xs focus:outline-none ${
+                    isDark ? 'text-parchment placeholder:text-parchment/35' : 'text-emerald-950 placeholder:text-emerald-900/35'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* scrollable list */}
+            <div className="max-h-64 overflow-y-auto overscroll-contain py-1">
+              {[null, ...options].map((s) => {
+                const num = s?.number ?? 0;
+                const isSel = num === value;
+                if (s === null && filter.trim()) return null;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => { onChange(num); setOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-[13px] transition ${
+                      isSel
+                        ? (isDark ? 'bg-emerald-600 text-white font-semibold' : 'bg-emerald-500 text-white font-semibold')
+                        : (isDark ? 'text-parchment/85 hover:bg-emerald-500/10' : 'text-emerald-950 hover:bg-emerald-50')
+                    }`}
+                  >
+                    {s === null ? (
+                      <span className="flex-1">All chapters</span>
+                    ) : (
+                      <>
+                        <span className={`w-7 shrink-0 text-[11px] font-bold tabular-nums ${isSel ? 'text-white/80' : isDark ? 'text-gold-300/80' : 'text-gold-600'}`}>
+                          {s.number}
+                        </span>
+                        <span className="flex-1 min-w-0 truncate">{s.englishName}</span>
+                        <span dir="rtl" className={`font-arabic text-sm shrink-0 ${isSel ? 'text-white/90' : isDark ? 'text-parchment/55' : 'text-emerald-900/50'}`}>
+                          {s.arabic}
+                        </span>
+                      </>
+                    )}
+                    {isSel && <Check size={13} className="shrink-0" />}
+                  </button>
+                );
+              })}
+              {options.length === 0 && (
+                <p className={`px-3.5 py-3 text-xs ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>No chapter matches.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ── Page-by-page PDF reader (modal) ──────────────────────────────────────────
 
@@ -419,18 +542,8 @@ function TafsirSearch({ onOpenPara, isDark }: {
           placeholder="e.g. رحمت — type any Urdu word or phrase"
           className={`flex-1 rounded-2xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 ${inputCls}`}
         />
-        {/* chapter (surah) filter */}
-        <select
-          value={surahFilter}
-          onChange={(e) => setSurahFilter(Number(e.target.value))}
-          className={`rounded-2xl border px-3 py-2.5 text-sm focus:outline-none ${inputCls}`}
-          aria-label="Filter by chapter"
-        >
-          <option value={0}>All chapters</option>
-          {SURAHS.map((s) => (
-            <option key={s.number} value={s.number}>{s.number}. {s.englishName}</option>
-          ))}
-        </select>
+        {/* chapter (surah) filter — themed scrollable dropdown */}
+        <ChapterDropdown value={surahFilter} onChange={setSurahFilter} isDark={isDark} />
         <button onClick={runSearch} disabled={searching || query.trim().length < 2}
           className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold px-5 py-2.5 transition">
           {searching ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />} Search
