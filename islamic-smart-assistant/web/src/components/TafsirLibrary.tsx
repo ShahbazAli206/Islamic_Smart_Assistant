@@ -779,53 +779,22 @@ function TextReader({ taf, urduTitle, coverGrad, onClose, isDark, initialSurah =
   );
 }
 
-// ── First-page thumbnail for PDF books (card cover) ─────────────────────────
-// Streams ~300 KB of ranges to render page 1 once, then caches the JPEG in
-// localStorage so future visits never fetch again.
-
-function PdfThumb({ file, alt }: { file: string; alt: string }) {
-  const [src, setSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const key = `isa:tafsir-thumb:${file}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached) { setSrc(cached); return; }
-    } catch {}
-    (async () => {
-      try {
-        const pdfjs = await import('pdfjs-dist');
-        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-        const task = pdfjs.getDocument({
-          url: bookStreamUrl(file),
-          disableStream: true, disableAutoFetch: true, rangeChunkSize: 262144,
-        });
-        const doc: any = await task.promise;
-        if (cancelled) { doc.destroy(); return; }
-        const pg = await doc.getPage(1);
-        const vw1 = pg.getViewport({ scale: 1 });
-        const scale = 360 / vw1.width;
-        const viewport = pg.getViewport({ scale });
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.ceil(viewport.width);
-        canvas.height = Math.ceil(viewport.height);
-        await pg.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        doc.destroy();
-        if (!cancelled) {
-          setSrc(dataUrl);
-          try { localStorage.setItem(key, dataUrl); } catch {}
-        }
-      } catch { /* keep gradient fallback */ }
-    })();
-    return () => { cancelled = true; };
-  }, [file]);
-
-  if (!src) return null;
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover object-top select-none" />;
-}
+// ── Real cover art ───────────────────────────────────────────────────────────
+// Official publisher cover photos (Dawat-e-Islami for the two scanned books;
+// Idara Ma'ariful Quran / Darussalam / Markazi Anjuman Khuddam-ul-Quran /
+// Wahiduddin Khan's own edition for the text tafsirs), saved under
+// /public/tafsir-covers. The three Ibn Kathir language editions share one
+// physical set's cover. Falls back to the gradient block if an id has none.
+const COVER_IMAGE: Record<string, string> = {
+  'kanzul-iman':    '/tafsir-covers/kanzul-iman.jpg',
+  'sirat-ul-jinan': '/tafsir-covers/sirat-ul-jinan.jpg',
+  'text-169':       '/tafsir-covers/ibn-kathir.jpg',      // Ibn Kathir (English)
+  'text-160':       '/tafsir-covers/ibn-kathir.jpg',      // Ibn Kathir (Urdu)
+  'text-14':        '/tafsir-covers/ibn-kathir.jpg',      // Ibn Kathir (Arabic)
+  'text-168':       '/tafsir-covers/maariful-quran.jpg',
+  'text-159':       '/tafsir-covers/bayan-ul-quran.jpg',
+  'text-818':       '/tafsir-covers/tazkir-ul-quran.jpg',
+};
 
 // ── Unified book card ────────────────────────────────────────────────────────
 
@@ -833,6 +802,8 @@ function LibraryCard({ book, onOpen, isDark, delay }: {
   book: LibBook; onOpen: () => void; isDark: boolean; delay: number;
 }) {
   const coverGrad = book.kind === 'pdf' ? book.pdf.cover : book.cover;
+  const coverImg = COVER_IMAGE[book.id];
+  const [imgFailed, setImgFailed] = useState(false);
   const title = book.kind === 'pdf' ? book.pdf.title : book.taf.name;
   const urduTitle = book.kind === 'pdf' ? book.pdf.urduTitle : book.urduTitle;
   const author = book.kind === 'pdf'
@@ -850,49 +821,49 @@ function LibraryCard({ book, onOpen, isDark, delay }: {
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.4 }}
-      className={`group relative flex flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 ${
+      className={`group relative flex gap-4 overflow-hidden rounded-3xl border p-4 transition hover:-translate-y-0.5 ${
         isDark
           ? 'border-white/10 bg-white/[0.04] hover:border-emerald-400/30'
           : 'border-emerald-900/[0.08] bg-white shadow-[0_1px_3px_rgba(16,40,30,0.04),0_16px_38px_-18px_rgba(16,40,30,0.18)] hover:border-emerald-300'
       }`}
     >
-      {/* cover — first page image for PDF books, calligraphic cover for text */}
+      {/* cover — real published book photo, book-spine shaped */}
       <button type="button" onClick={onOpen} aria-label={`Read ${title}`}
-        className={`relative h-44 w-full overflow-hidden bg-gradient-to-br ${coverGrad} text-left`}>
-        {book.kind === 'pdf' && <PdfThumb file={book.pdf.volumes[0].file} alt="" />}
-        {/* uniform veil so every cover reads the same */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/20 to-black/10" />
-        <p dir="rtl" className="absolute top-3 right-4 font-arabic text-2xl leading-snug text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
-          {urduTitle}
-        </p>
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold text-white/90 backdrop-blur-sm">
-          {book.kind === 'pdf' ? <BookOpen size={9} /> : <FileText size={9} />}
-          {book.kind === 'pdf' ? 'Book scan' : 'Text'}
+        className={`relative w-24 sm:w-28 shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-gradient-to-br ${coverGrad} shadow-md ring-1 ${isDark ? 'ring-white/10' : 'ring-black/5'}`}>
+        {coverImg && !imgFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverImg} alt={`${title} — cover`} loading="lazy" onError={() => setImgFailed(true)}
+            className="absolute inset-0 h-full w-full object-cover select-none" />
+        ) : (
+          <span className="absolute inset-0 grid place-items-center">
+            <BookMarked size={26} className="text-white/85" />
+          </span>
+        )}
+        <span className="absolute top-1.5 left-1.5 grid h-5 w-5 place-items-center rounded-md bg-black/50 text-white/90 backdrop-blur-sm">
+          {book.kind === 'pdf' ? <BookOpen size={10} /> : <FileText size={10} />}
         </span>
-        <div className="absolute bottom-3 left-3 right-3">
-          <p className="text-[11px] font-bold text-white/95 leading-snug line-clamp-2">{title}</p>
-          <p className="mt-0.5 text-[10px] text-white/70">{volumeLine}</p>
-        </div>
       </button>
 
       {/* body */}
-      <div className="flex flex-1 flex-col p-4">
-        <p className={`text-xs leading-relaxed ${isDark ? 'text-parchment/70' : 'text-ink/70'}`}>
-          by: {author}
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
+      <div className="flex flex-1 min-w-0 flex-col">
+        <p dir="rtl" className={`font-arabic text-lg leading-snug ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{urduTitle}</p>
+        <h3 className={`mt-0.5 text-[13px] font-bold leading-snug line-clamp-2 ${isDark ? 'text-parchment/90' : 'text-emerald-950'}`}>{title}</h3>
+        <p className={`mt-1 text-[11px] leading-relaxed line-clamp-1 ${isDark ? 'text-parchment/60' : 'text-ink/60'}`}>by: {author}</p>
+        <p className={`text-[10px] ${isDark ? 'text-parchment/45' : 'text-ink/45'}`}>{volumeLine}</p>
+
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
           <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-white/8 text-parchment/70' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{langLabel}</span>
           <span className={`rounded-full px-2 py-0.5 ${isDark ? 'bg-gold-400/10 text-gold-300' : 'bg-gold-50 text-gold-700 border border-gold-200/60'}`}>{source}</span>
         </div>
 
-        <div className="mt-auto pt-3 flex items-center gap-2">
+        <div className="mt-auto pt-2.5 flex items-center gap-2">
           <button onClick={onOpen}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 transition">
-            <BookOpen size={15} /> Read
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold py-2 sm:py-2.5 transition">
+            <BookOpen size={14} /> Read
           </button>
           <a href={sourceUrl} target="_blank" rel="noreferrer" title={`Original source: ${source}`}
             onClick={(e) => e.stopPropagation()}
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl border transition ${
+            className={`grid h-9 w-9 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-2xl border transition ${
               isDark ? 'border-white/15 text-parchment/60 hover:bg-white/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
             }`}>
             <ExternalLink size={15} />
