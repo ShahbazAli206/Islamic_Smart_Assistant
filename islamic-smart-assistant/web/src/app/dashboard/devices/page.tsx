@@ -1733,7 +1733,7 @@ export default function DevicesPage() {
                   click <strong>Rescan</strong>.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3 max-h-[420px] overflow-y-auto pr-1">
                   {deviceGroups.map((group) => {
                     const isGroupActive = group.modes.some((m) => m.deviceId === selectedOutputId);
                     const selectedMode =
@@ -1751,7 +1751,7 @@ export default function DevicesPage() {
                       <motion.div
                         key={group.id}
                         whileHover={{ y: -3 }}
-                        className={`rounded-2xl p-4 transition flex flex-col gap-3 min-w-[240px] ${isGroupActive ? T.deviceSel : T.deviceCard}`}
+                        className={`rounded-2xl p-4 transition flex flex-col gap-3 ${isGroupActive ? T.deviceSel : T.deviceCard}`}
                       >
                         {/* Click header to select best/current mode */}
                         <button
