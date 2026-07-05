@@ -313,109 +313,154 @@ function PdfReader({ target, onClose, isDark }: {
     return Array.from({ length: to - from + 1 }, (_, i) => from + i);
   }, [volume.paras]);
 
+  // Theme tokens — the reader is a themed in-app panel, not a stark takeover.
+  const t = isDark
+    ? {
+        panel: 'border-white/12 text-parchment',
+        panelBg: 'linear-gradient(165deg, rgba(16,42,28,0.96) 0%, rgba(9,24,16,0.97) 100%)',
+        bar: 'border-white/10',
+        sub: 'text-parchment/50',
+        chip: 'bg-white/8 hover:bg-emerald-500/20 text-parchment/85',
+        chipLabel: 'text-parchment/45',
+        iconBtn: 'hover:bg-white/10 text-parchment/70',
+        ctrl: 'bg-white/8 hover:bg-white/[0.14] text-parchment',
+        pageWell: 'bg-black/25',
+        input: 'bg-white/8 border-white/15 text-parchment placeholder:text-parchment/50 focus:border-gold-300/60',
+        faint: 'text-parchment/45',
+      }
+    : {
+        panel: 'border-emerald-900/[0.10] text-emerald-950',
+        panelBg: 'linear-gradient(165deg, rgba(255,255,255,0.97) 0%, rgba(240,250,244,0.98) 100%)',
+        bar: 'border-emerald-900/[0.08]',
+        sub: 'text-emerald-900/50',
+        chip: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-100',
+        chipLabel: 'text-emerald-900/45',
+        iconBtn: 'hover:bg-emerald-50 text-emerald-800/70',
+        ctrl: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-100',
+        pageWell: 'bg-emerald-900/[0.05]',
+        input: 'bg-white border-emerald-200 text-emerald-950 placeholder:text-emerald-900/45 focus:border-emerald-400',
+        faint: 'text-emerald-900/45',
+      };
+
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex flex-col"
-      style={{ background: isDark ? 'rgba(3,10,6,0.92)' : 'rgba(8,20,14,0.88)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-5"
+      style={{ background: isDark ? 'rgba(3,10,6,0.60)' : 'rgba(8,20,14,0.38)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        className={`relative w-full max-w-5xl h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${t.panel}`}
+        style={{ background: t.panelBg, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+      >
+        {/* gold accent — same signature as the app's cards */}
+        <div className="shrink-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#D4AF37] to-emerald-600" />
 
-      {/* ── top bar ── */}
-      <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 py-3 border-b border-white/10 text-white">
-        <BookOpen size={18} className="shrink-0 text-gold-300" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm truncate">{book.title}</p>
-          <p className="text-[11px] text-white/50 truncate">
-            {book.volumes.length > 1 ? `Volume ${volume.n} · Parah ${volume.paras[0]}–${volume.paras[1]} · ` : ''}
-            {book.author}
-          </p>
+        {/* ── top bar ── */}
+        <div className={`shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b ${t.bar}`}>
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${book.cover}`}>
+            <BookOpen size={16} className="text-white/90" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display font-bold text-sm truncate">{book.title}</p>
+            <p className={`text-[11px] truncate ${t.sub}`}>
+              {book.volumes.length > 1 ? `Volume ${volume.n} · Parah ${volume.paras[0]}–${volume.paras[1]} · ` : ''}
+              {book.author}
+            </p>
+          </div>
+
+          {/* Parah jump */}
+          <div className="hidden md:flex items-center gap-1.5">
+            <span className={`text-[11px] font-semibold ${t.chipLabel}`}>Parah:</span>
+            {paras.map((p) => (
+              <button key={p} onClick={() => paraJump(p)}
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${t.chip}`}>
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <a href={bookPdfUrl(volume.file)} download target="_blank" rel="noreferrer"
+            title={`Download PDF (${sizeLabel(volume.sizeMb)})`}
+            className={`p-2 rounded-lg transition ${t.iconBtn}`}>
+            <Download size={16} />
+          </a>
+          <button onClick={onClose} className={`p-2 rounded-lg transition ${t.iconBtn}`} aria-label="Close reader">
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Parah jump */}
-        <div className="hidden sm:flex items-center gap-1.5">
-          <span className="text-[11px] text-white/45">Parah:</span>
-          {paras.map((p) => (
-            <button key={p} onClick={() => paraJump(p)}
-              className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-white/10 hover:bg-white/20 transition">
-              {p}
-            </button>
-          ))}
+        {/* ── page canvas ── */}
+        <div className={`flex-1 overflow-auto flex items-start justify-center p-3 sm:p-5 ${t.pageWell}`}>
+          {loading && !error && (
+            <div className="m-auto flex flex-col items-center gap-3">
+              <Loader2 size={28} className="animate-spin text-emerald-500" />
+              <p className="text-sm font-medium">Opening book…</p>
+              <p className={`text-[11px] ${t.faint}`}>Only the page you read is fetched — never the whole {sizeLabel(volume.sizeMb)} file.</p>
+            </div>
+          )}
+          {error && (
+            <div className="m-auto max-w-sm text-center space-y-3">
+              <AlertCircle size={26} className="mx-auto text-amber-500" />
+              <p className="text-sm leading-relaxed">{error}</p>
+              <a href={book.sourceUrl} target="_blank" rel="noreferrer"
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold hover:underline ${isDark ? 'text-gold-300' : 'text-gold-700'}`}>
+                <ExternalLink size={12} /> Original source ({book.source})
+              </a>
+            </div>
+          )}
+          {!loading && !error && (
+            <div className={`relative rounded-lg overflow-hidden bg-white ${isDark ? 'shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)]' : 'shadow-[0_18px_50px_-16px_rgba(16,40,30,0.35)] ring-1 ring-emerald-900/[0.06]'}`}>
+              <canvas ref={canvasRef} />
+              {rendering && (
+                <div className="absolute inset-0 grid place-items-center bg-white/40">
+                  <Loader2 size={22} className="animate-spin text-emerald-700" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <a href={bookPdfUrl(volume.file)} download target="_blank" rel="noreferrer"
-          title={`Download PDF (${sizeLabel(volume.sizeMb)})`}
-          className="p-2 rounded-lg hover:bg-white/10 transition text-white/70">
-          <Download size={16} />
-        </a>
-        <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition text-white/80" aria-label="Close reader">
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* ── page canvas ── */}
-      <div className="flex-1 overflow-auto flex items-start justify-center p-3 sm:p-5">
-        {loading && !error && (
-          <div className="m-auto flex flex-col items-center gap-3 text-white/80">
-            <Loader2 size={28} className="animate-spin" />
-            <p className="text-sm">Opening book…</p>
-            <p className="text-[11px] text-white/45">Only the page you read is fetched — never the whole {sizeLabel(volume.sizeMb)} file.</p>
-          </div>
-        )}
-        {error && (
-          <div className="m-auto max-w-sm text-center text-white/85 space-y-3">
-            <AlertCircle size={26} className="mx-auto text-amber-400" />
-            <p className="text-sm leading-relaxed">{error}</p>
-            <a href={book.sourceUrl} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold-300 hover:underline">
-              <ExternalLink size={12} /> Original source ({book.source})
-            </a>
-          </div>
-        )}
+        {/* ── bottom controls ── */}
         {!loading && !error && (
-          <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
-            <canvas ref={canvasRef} />
-            {rendering && (
-              <div className="absolute inset-0 grid place-items-center bg-white/40">
-                <Loader2 size={22} className="animate-spin text-emerald-700" />
-              </div>
-            )}
+          <div className={`shrink-0 flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 border-t ${t.bar}`}>
+            {/* RTL book: "next page" moves left */}
+            <button onClick={() => go(1)} disabled={page >= numPages}
+              className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+              <ChevronLeft size={16} /> Next
+            </button>
+
+            <div className="flex items-center gap-1.5 text-sm tabular-nums">
+              <input
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value.replace(/[^0-9]/g, ''))}
+                onKeyDown={(e) => e.key === 'Enter' && jumpToInput()}
+                onBlur={() => pageInput && jumpToInput()}
+                placeholder={String(page)}
+                className={`w-14 px-2 py-1.5 rounded-lg border text-center text-sm focus:outline-none ${t.input}`}
+                aria-label="Go to page"
+              />
+              <span className={t.faint}>/ {numPages}</span>
+            </div>
+
+            <button onClick={() => go(-1)} disabled={page <= 1}
+              className={`flex items-center gap-1 px-3 py-2 rounded-xl disabled:opacity-30 transition text-sm font-semibold ${t.ctrl}`}>
+              Prev <ChevronRight size={16} />
+            </button>
+
+            <span className={`mx-1 h-6 w-px hidden sm:block ${isDark ? 'bg-white/15' : 'bg-emerald-900/10'}`} />
+            <button onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}
+              className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom out"><ZoomOut size={15} /></button>
+            <span className={`text-xs tabular-nums w-10 text-center ${t.faint}`}>{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(1)))}
+              className={`p-2 rounded-xl transition ${t.ctrl}`} title="Zoom in"><ZoomIn size={15} /></button>
           </div>
         )}
-      </div>
-
-      {/* ── bottom controls ── */}
-      {!loading && !error && (
-        <div className="shrink-0 flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 border-t border-white/10 text-white">
-          {/* RTL book: "next page" moves left */}
-          <button onClick={() => go(1)} disabled={page >= numPages}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 transition text-sm font-semibold">
-            <ChevronLeft size={16} /> Next
-          </button>
-
-          <div className="flex items-center gap-1.5 text-sm tabular-nums">
-            <input
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value.replace(/[^0-9]/g, ''))}
-              onKeyDown={(e) => e.key === 'Enter' && jumpToInput()}
-              onBlur={() => pageInput && jumpToInput()}
-              placeholder={String(page)}
-              className="w-14 px-2 py-1.5 rounded-lg bg-white/10 border border-white/15 text-center text-sm placeholder:text-white/60 focus:outline-none focus:border-gold-300/60"
-              aria-label="Go to page"
-            />
-            <span className="text-white/50">/ {numPages}</span>
-          </div>
-
-          <button onClick={() => go(-1)} disabled={page <= 1}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 transition text-sm font-semibold">
-            Prev <ChevronRight size={16} />
-          </button>
-
-          <span className="mx-1 h-6 w-px bg-white/15 hidden sm:block" />
-          <button onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition" title="Zoom out"><ZoomOut size={15} /></button>
-          <span className="text-xs text-white/55 tabular-nums w-10 text-center">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(1)))}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition" title="Zoom in"><ZoomIn size={15} /></button>
-        </div>
-      )}
-    </div>,
+      </motion.div>
+    </motion.div>,
     document.body,
   );
 }
