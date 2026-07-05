@@ -665,6 +665,10 @@ export default function DevicesPage() {
   const [azanDeviceIds, setAzanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
   const [recitationDeviceIds, setRecitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
   const [defaultDeviceIds, setDefaultDeviceIds] = useLocalStorage<string[]>('isa:defaultDeviceIds', []);
+  // Same idea as azanDeviceIds above, but for THIS PC's own audio outputs (system
+  // speakers / Bluetooth) rather than LAN cast devices — AutoAzanScheduler mirrors
+  // the Adhan onto every id in this list via cloned <audio> elements + setSinkId.
+  const [azanLocalDeviceIds, setAzanLocalDeviceIds] = useLocalStorage<string[]>('isa:azanLocalDeviceIds', []);
 
   const rescanLan = async () => {
     setLanScanning(true);
@@ -706,6 +710,14 @@ export default function DevicesPage() {
   };
   const toggleRecitationDevice = (id: string) => {
     setRecitationDeviceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  // Toggle a "Detected on this PC" output in/out of the Auto-Azan set — same
+  // multi-select idea as toggleAzanDevice above, just for local system outputs.
+  const toggleAzanLocalDevice = (id: string) => {
+    setAzanLocalDeviceIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
@@ -1778,6 +1790,23 @@ export default function DevicesPage() {
                             ))}
                           </div>
                         )}
+
+                        {/* Auto-Azan toggle — same idea as the LAN cards' chip below,
+                            but for this system output. AutoAzanScheduler mirrors the
+                            Adhan onto every selected id via setSinkId() clones. */}
+                        {(() => {
+                          const isAzanLocal = azanLocalDeviceIds.includes(selectedMode.deviceId);
+                          return (
+                            <div className="flex items-center gap-2 pl-14 pt-1 border-t border-emerald-900/[0.07]">
+                              <button
+                                onClick={() => toggleAzanLocalDevice(selectedMode.deviceId)}
+                                className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-2.5 py-1 transition ${isAzanLocal ? 'bg-emerald-600 text-white' : (isDark ? 'bg-white/5 text-parchment/55 hover:bg-white/10' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100')}`}
+                              >
+                                <Bell size={11} /> Auto-Azan{isAzanLocal ? ' ✓' : ''}
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </motion.div>
                     );
                   })}

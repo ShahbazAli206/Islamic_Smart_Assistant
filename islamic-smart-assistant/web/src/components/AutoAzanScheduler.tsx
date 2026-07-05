@@ -241,18 +241,53 @@ export function AutoAzanScheduler() {
   // Currently-firing prayer name (needed inside advanceQueueRef for pending state)
   const firingPrayerRef = useRef<string | null>(null);
 
-  const [azanDeviceIds] = useLocalStorage<string[]>('isa:azanDeviceIds', []);
-  const [defaultDeviceIds] = useLocalStorage<string[]>('isa:defaultDeviceIds', []);
-  const [castDeviceId] = useLocalStorage<string>('isa:castDeviceId', '');
-  const azanDeviceIdsRef = useRef(azanDeviceIds);
-  azanDeviceIdsRef.current = azanDeviceIds;
-  const defaultDeviceIdsRef = useRef(defaultDeviceIds);
-  defaultDeviceIdsRef.current = defaultDeviceIds;
-  const castDeviceIdRef = useRef(castDeviceId);
-  castDeviceIdRef.current = castDeviceId;
+  // Device selections (LAN cast + this PC's own outputs) are edited on the Devices
+  // page / Azan Voices page — separate component instances of useLocalStorage, so
+  // (like preAzanQueue/duroodId etc. below) their writes never reach this
+  // component's React state within the same tab. Read fresh from localStorage at
+  // fire() time instead; activeLanIdsRef then remembers exactly which LAN ids this
+  // fire actually targeted, so stop() cancels the right ones even if the user
+  // changes the selection again while the Azan is still playing.
+  const activeLanIdsRef = useRef<string[]>([]);
+  // Cloned <audio> elements currently mirroring the Adhan onto this PC's selected
+  // outputs (isa:azanLocalDeviceIds) — one per device, routed via setSinkId().
+  const localCloneElsRef = useRef<HTMLAudioElement[]>([]);
   const castClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearCastTimer = () => {
     if (castClearTimerRef.current) { clearTimeout(castClearTimerRef.current); castClearTimerRef.current = null; }
+  };
+
+  // Stop and release every local-output clone (called on fire() start, and on stop()).
+  const stopLocalClones = () => {
+    localCloneElsRef.current.forEach((clone) => { clone.onended = null; clone.pause(); clone.src = ''; });
+    localCloneElsRef.current = [];
+  };
+
+  // Mirror `srcs` (played in order) onto every device id in isa:azanLocalDeviceIds,
+  // each through its own cloned <audio> element so all selected outputs — plus the
+  // main element — genuinely play simultaneously rather than fighting over one sink.
+  const startLocalClones = (srcs: string[]) => {
+    stopLocalClones();
+    if (srcs.length === 0 || typeof (HTMLMediaElement.prototype as any).setSinkId !== 'function') return;
+    let ids: string[] = [];
+    try {
+      const raw = localStorage.getItem('isa:azanLocalDeviceIds');
+      if (raw) ids = JSON.parse(raw);
+    } catch {}
+    ids.forEach(async (id) => {
+      const clone = new Audio();
+      try { await (clone as any).setSinkId(id); } catch { return; } // sink unreachable — skip this device
+      if (abortRef.current) return; // stop() fired while we were awaiting setSinkId
+      localCloneElsRef.current.push(clone);
+      let idx = 0;
+      const advance = () => {
+        if (abortRef.current || idx >= srcs.length) { clone.pause(); clone.src = ''; return; }
+        clone.src = srcs[idx++];
+        clone.play().catch(() => advance()); // this clone's own failure shouldn't block its sequence
+      };
+      clone.onended = advance;
+      advance();
+    });
   };
 
   const { data } = useQuery({
@@ -326,6 +361,7 @@ export function AutoAzanScheduler() {
     firingPrayerRef.current = prayer;
     clearCastTimer();
     revokeCustomUrl();
+    stopLocalClones(); // clear any leftover clones from a previous fire
     extraUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
     extraUrlsRef.current = [];
     playQueueRef.current = [];
@@ -371,14 +407,34 @@ export function AutoAzanScheduler() {
     const v = freshVoice;
     const { name: voiceLabel } = resolveVoiceInfo(v);
 
-    // LAN devices (Chromecast/DLNA) — cast the main azan on all selected devices simultaneously
+    // Resolve main azan src (needed both for the LAN branch below and local playback).
+    let mainSrc: string;
+    if (isCustomAzan(v)) {
+      const url = await customAzanUrl(v);
+      if (url) { customUrlRef.current = url; mainSrc = url; }
+      else mainSrc = UNLOCK_SRC;
+    } else {
+      mainSrc = azanLocalPath(v) ?? UNLOCK_SRC;
+    }
+
+    // LAN devices (Chromecast/DLNA) — cast the main azan on all selected devices simultaneously.
+    // Read fresh from localStorage (see activeLanIdsRef comment above) rather than
+    // trusting this component's own possibly-stale useLocalStorage state.
     const lanPath = azanLocalPath(v);
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
+    let freshAzanIds: string[] = [];
+    let freshDefaultIds: string[] = [];
+    let freshCastId = '';
+    try {
+      const a = localStorage.getItem('isa:azanDeviceIds');    if (a) freshAzanIds = JSON.parse(a);
+      const df = localStorage.getItem('isa:defaultDeviceIds'); if (df) freshDefaultIds = JSON.parse(df);
+      const ci = localStorage.getItem('isa:castDeviceId');    if (ci) freshCastId = JSON.parse(ci);
+    } catch {}
     // Merge azan-specific + default devices; fall back to legacy single-device key
-    const combined = [...new Set([...azanDeviceIdsRef.current, ...defaultDeviceIdsRef.current])];
-    const effectiveIds = combined.length > 0
-      ? combined
-      : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
+    const combined = [...new Set([...freshAzanIds, ...freshDefaultIds])];
+    const effectiveIds = combined.length > 0 ? combined : (freshCastId ? [freshCastId] : []);
+    activeLanIdsRef.current = effectiveIds;
+
     if (effectiveIds.length > 0 && desktopApi && lanPath) {
       const source = { kind: 'lan' as const, path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url };
       const results = await Promise.allSettled(
@@ -386,6 +442,9 @@ export function AutoAzanScheduler() {
       );
       const anyOk = results.some((r) => r.status === 'fulfilled');
       if (anyOk) {
+        // This PC's own selected outputs (independent of the LAN selection above) get
+        // just the raw Adhan too, matching what the LAN devices themselves get here.
+        startLocalClones([mainSrc]);
         setFiring({ prayer, voiceId: v });
         firingRef.current = true;
         clearCastTimer();
@@ -397,16 +456,6 @@ export function AutoAzanScheduler() {
         return;
       }
       // All devices unreachable — fall through to local playback
-    }
-
-    // Resolve main azan src
-    let mainSrc: string;
-    if (isCustomAzan(v)) {
-      const url = await customAzanUrl(v);
-      if (url) { customUrlRef.current = url; mainSrc = url; }
-      else mainSrc = UNLOCK_SRC;
-    } else {
-      mainSrc = azanLocalPath(v) ?? UNLOCK_SRC;
     }
 
     // Show popup immediately (even during TTS announcement)
@@ -488,6 +537,7 @@ export function AutoAzanScheduler() {
     }
 
     playQueueRef.current = queue;
+    startLocalClones(queue); // mirror the full pre/post durood-dua sequence, in sync with the main element
     await setAudioOutput(el);
     advanceQueueRef.current();
   }, [setAudioOutput]);
@@ -531,16 +581,16 @@ export function AutoAzanScheduler() {
     const el = audioRef.current;
     if (el) { el.pause(); el.currentTime = 0; }
     revokeCustomUrl();
+    stopLocalClones();
     firingRef.current = false;
     firingPrayerRef.current = null;
     clearCastTimer();
     const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
     if (api) {
-      const combinedStop = [...new Set([...azanDeviceIdsRef.current, ...defaultDeviceIdsRef.current])];
-      const ids = combinedStop.length > 0
-        ? combinedStop
-        : (castDeviceIdRef.current ? [castDeviceIdRef.current] : []);
-      ids.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
+      // Stop exactly the LAN ids this fire() actually targeted, not whatever the
+      // selection currently reads as (it may have changed while the Azan was playing).
+      activeLanIdsRef.current.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
+      activeLanIdsRef.current = [];
     }
     setFiring(null);
     setMinimized(false);

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
+import { AzanDeviceMenu } from '@/components/AzanDeviceMenu';
 import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
   customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan,
@@ -1094,6 +1095,8 @@ export default function AzanPage() {
                   >
                     {autoplay ? <><BellRing size={16} /> Auto-Azan: ON</> : <><BellOff size={16} /> Auto-Azan: OFF</>}
                   </motion.button>
+                  {/* Pick which output(s) the Adhan plays on when a prayer time arrives */}
+                  <AzanDeviceMenu />
                 </div>
               </div>
             </div>
