@@ -1189,10 +1189,10 @@ export default function DevicesPage() {
           </div>
         )}
 
-        <div className="relative max-w-[1500px] mx-auto space-y-5 pt-5">
+        <div className="relative space-y-5 pt-5">
 
         {/* ════════ MAIN + SIDEBAR ════════ */}
-        <div className={`grid gap-5 items-start ${isDark ? 'grid-cols-1' : 'xl:grid-cols-[1fr_330px]'}`}>
+        <div className="grid gap-5 items-start grid-cols-1 xl:grid-cols-[1fr_330px]">
           <div className="space-y-5 min-w-0">
 
             {/* ── Audio Output + Cast, side-by-side on the same row ── */}
@@ -1204,7 +1204,7 @@ export default function DevicesPage() {
               className={`relative overflow-hidden p-5 sm:p-6 h-full ${(isDesktop && lan.supported && lan.devices.length > 0) ? 'lg:col-span-2' : ''} ${T.card}`}
             >
               {isDark && <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/40 to-transparent" />}
-              <div className="flex flex-col xl:flex-row xl:items-center gap-5">
+              <div className="flex flex-col xl:flex-row xl:flex-wrap xl:items-center gap-5">
 
                 {/* identity */}
                 <div className="flex items-start gap-4 xl:w-72 shrink-0">
