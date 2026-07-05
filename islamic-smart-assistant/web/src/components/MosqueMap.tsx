@@ -6,7 +6,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Mosque } from '@/lib/overpass';
 
 // OpenFreeMap: free vector tiles, no API key, no usage limits.
-const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+const STYLE_URL_LIGHT = 'https://tiles.openfreemap.org/styles/liberty';
+const STYLE_URL_DARK = 'https://tiles.openfreemap.org/styles/dark';
 
 type Props = {
   center: { lat: number; lng: number };
@@ -16,6 +17,7 @@ type Props = {
   clickPin?: { lat: number; lng: number } | null;
   /** The user's saved location — drawn as a precise, static pin-point marker. */
   userLocation?: { lat: number; lng: number } | null;
+  isDark?: boolean;
   onMoveEnd?: (center: { lat: number; lng: number }, zoom: number) => void;
   onSelectMosque?: (m: Mosque) => void;
   onMapClick?: (latlng: { lat: number; lng: number }) => void;
@@ -28,6 +30,7 @@ export default function MosqueMap({
   selectedId,
   clickPin,
   userLocation,
+  isDark = false,
   onMoveEnd,
   onSelectMosque,
   onMapClick,
@@ -46,7 +49,7 @@ export default function MosqueMap({
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
+      style: isDark ? STYLE_URL_DARK : STYLE_URL_LIGHT,
       center: [center.lng, center.lat],
       zoom,
       attributionControl: { compact: true },
@@ -71,6 +74,16 @@ export default function MosqueMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Swap the vector-tile style when the app's dark-mode setting changes
+  // (skip the first run — the init effect above already picked the right style).
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    map.setStyle(isDark ? STYLE_URL_DARK : STYLE_URL_LIGHT);
+  }, [isDark]);
 
   // Recenter when the parent changes center (e.g. geolocate / city jump).
   useEffect(() => {
