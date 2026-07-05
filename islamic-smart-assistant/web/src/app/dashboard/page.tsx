@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   Search, MapPin, Sun, Sunrise, Sunset, Moon, Clock, ChevronDown,
-  Compass, Bell, Play, BookOpen, Bookmark, Hand, CircleDot, Calendar, Star,
-  StickyNote, MoreHorizontal, Globe, GraduationCap, Calculator,
+  Compass, Bell, Play, BookOpen, Hand, Calendar, Star, Library, Scale,
+  Globe, GraduationCap, Calculator,
   User, Check, X, Crosshair, Loader2, BookMarked, AlertTriangle,
 } from 'lucide-react';
 import {
@@ -179,7 +179,6 @@ export default function Overview() {
   const [language]  = useLocalStorage<string>('isa:language', 'en');
   const [sect]      = useLocalStorage<string>('isa:sect', 'sunni');
   const [fiqh]      = useLocalStorage<string>('isa:fiqh', '');
-  const [methodRaw] = useLocalStorage<number>('isa:method', -1);
   const [selectedAzanVoice] = useLocalStorage<string>('isa:azanVoice', 'azan-best-sound-quality');
 
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -230,7 +229,7 @@ export default function Overview() {
   }, [data, next, currentName, now]);
 
   const bearing = byCoords ? qiblaBearing(params.lat!, params.lng!) : 256;
-  const methodLabel = CALC_METHODS.find(m => m.id === (methodRaw >= 0 ? methodRaw : 3))?.label ?? 'Muslim World League';
+  const methodLabel = CALC_METHODS.find(m => m.id === params.method)?.label ?? 'Muslim World League';
 
   const persistPref = (key: string, val: unknown) => {
     const j = JSON.stringify(val);
@@ -532,7 +531,7 @@ export default function Overview() {
             {/* Calculation Method dropdown */}
             <PrefDropdown
               label="Calculation Method" icon={Calculator}
-              value={String(methodRaw >= 0 ? methodRaw : 3)}
+              value={String(params.method)}
               displayValue={methodLabel}
               options={METHOD_OPTIONS}
               onSelect={(v) => persistPref('isa:method', Number(v))}
@@ -961,20 +960,24 @@ export default function Overview() {
           {/* Quick Actions */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5`}>
             <h3 className="text-lg font-bold">Quick Actions</h3>
-            <div className="mt-4 grid grid-cols-4 gap-y-4">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: 'Quran Library',  icon: BookOpen,       tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
-                { label: 'Bookmarks',      icon: Bookmark,       tint: 'text-amber-600',   bg: 'bg-amber-100',   href: '/dashboard/quran' },
-                { label: 'Duas',           icon: Hand,           tint: 'text-violet-600',  bg: 'bg-violet-100',  href: '/dashboard/quran' },
-                { label: 'Tasbih',         icon: CircleDot,      tint: 'text-rose-500',    bg: 'bg-rose-100',    href: '/dashboard/quran' },
-                { label: 'Calendar',       icon: Calendar,       tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/prayer-times' },
-                { label: 'Islamic Events', icon: Star,           tint: 'text-teal-600',    bg: 'bg-teal-100',    href: '/dashboard/prayer-times' },
-                { label: 'Notes',          icon: StickyNote,     tint: 'text-amber-600',   bg: 'bg-amber-100',   href: '/dashboard/quran' },
-                { label: 'More',           icon: MoreHorizontal, tint: c.faint,            bg: isDark ? 'bg-white/[0.06]' : 'bg-emerald-900/[0.05]', href: '/dashboard/settings' },
+                { label: 'Quran Library',      sub: 'Read, listen & bookmark Surahs',   icon: BookOpen,   tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
+                { label: 'Duas & Supplications', sub: 'Masnoon duas for every moment',  icon: Hand,       tint: 'text-violet-600',  bg: 'bg-violet-100',  href: '/dashboard/advanced?tab=duas' },
+                { label: 'Hadees Library',      sub: 'Authentic hadith collections',     icon: BookMarked, tint: 'text-rose-500',    bg: 'bg-rose-100',    href: '/dashboard/advanced?tab=hadees' },
+                { label: 'Tafsir-ul-Quran',     sub: 'Verse-by-verse Quran commentary',  icon: Library,    tint: 'text-sky-600',     bg: 'bg-sky-100',     href: '/dashboard/advanced?tab=tafsir' },
+                { label: 'Islamic Masail',      sub: 'Hanafi rulings & fatawa',          icon: Scale,      tint: 'text-amber-600',   bg: 'bg-amber-100',   href: '/dashboard/advanced?tab=masail' },
+                { label: 'Islamic Calculators', sub: 'Zakat, Ushr & inheritance',        icon: Calculator, tint: 'text-teal-600',    bg: 'bg-teal-100',    href: '/dashboard/advanced?tab=calculators' },
+                { label: 'Azan Voices',         sub: 'Choose your favorite Muezzin',     icon: Bell,       tint: 'text-orange-500',  bg: 'bg-orange-100',  href: '/dashboard/azan-voices' },
+                { label: 'Schedule Recitation', sub: 'Daily Quran recitation reminders', icon: Clock,      tint: 'text-indigo-600',  bg: 'bg-indigo-100',  href: '/dashboard/recitation' },
               ].map((a) => (
-                <Link key={a.label} href={a.href} className="group flex flex-col items-center gap-1.5 text-center">
-                  <span className={`grid h-12 w-12 place-items-center rounded-2xl ${a.bg} transition group-hover:scale-105`}><a.icon size={20} className={a.tint} /></span>
-                  <span className={`text-[11px] font-medium leading-tight ${c.muted}`}>{a.label}</span>
+                <Link key={a.label} href={a.href}
+                  className={`group flex items-start gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-white/[0.03] hover:bg-white/[0.06]' : 'bg-white hover:bg-emerald-50/40'} p-3.5 transition hover:shadow-md`}>
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${a.bg} transition group-hover:scale-105`}><a.icon size={19} className={a.tint} /></span>
+                  <span className="min-w-0">
+                    <span className={`block text-sm font-bold leading-tight ${c.text}`}>{a.label}</span>
+                    <span className={`block text-[11px] mt-0.5 leading-snug ${c.faint}`}>{a.sub}</span>
+                  </span>
                 </Link>
               ))}
             </div>

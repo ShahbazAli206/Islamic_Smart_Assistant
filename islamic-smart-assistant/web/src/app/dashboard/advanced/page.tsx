@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookMarked, BookOpen, Search, Calculator, X, ChevronDown, ChevronRight, ChevronLeft,
@@ -1293,6 +1294,15 @@ export default function IslamicLibraryPage() {
   const [activeTab, setActiveTab] = useLocalStorage<Tab>('isa:advancedTab', 'hadees');
   const [heroIdx, setHeroIdx] = useState(0);
   const [language] = useLocalStorage<string>('isa:language', 'en');
+
+  // Deep-link support: /dashboard/advanced?tab=duas opens straight on that tab
+  // (e.g. from the overview page's Quick Actions), then behaves like any other tab switch.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const requested = searchParams.get('tab') as Tab | null;
+    if (requested && TABS.some((t) => t.id === requested)) setActiveTab(requested);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
 
   return (
