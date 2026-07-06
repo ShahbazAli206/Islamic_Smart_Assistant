@@ -13,10 +13,19 @@ export const isCustomAzan = (id: string) => id.startsWith(CUSTOM_AZAN_PREFIX);
 export const BUILTIN_PREFIX = 'builtin:';
 export const isBuiltinClip = (id: string) => id.startsWith(BUILTIN_PREFIX);
 
+// Built-in durood recordings hosted on Supabase storage (public bucket) so they
+// don't bloat the app bundle and are shared by web + desktop alike.
+const SUPABASE_AUDIO =
+  'https://jqrflmqacliezkwmxqiv.supabase.co/storage/v1/object/public/azan-audio';
+
 const BUILTIN_PATHS: Record<string, string> = {
   'builtin:asalatu-wasalamu': '/audio/Asalatu_Wasalamu_Alaika_Ya_Rasool_Allah,%20Drood.mp3',
   'builtin:darood-ibrahimi': '/audio/Darood_e_Ibrahimi%20Drood.mp3',
   'builtin:dua-after-azan': '/audio/Dua_After_Azan.mp3',
+  'builtin:salat-o-salam-classic': `${SUPABASE_AUDIO}/durood/salat-o-salam-classic.mp3`,
+  'builtin:asalatu-saleh-ali': `${SUPABASE_AUDIO}/durood/asalatu-wasalamu-saleh-ali.mp3`,
+  'builtin:asalatu-abdul-basit': `${SUPABASE_AUDIO}/durood/asalatu-wasalamu-abdul-basit.mp3`,
+  'builtin:ya-damin': `${SUPABASE_AUDIO}/durood/ya-damin-ya-qurrat-al-ain.mp3`,
 };
 
 export type AudioType = 'azan' | 'durood' | 'dua';
@@ -39,6 +48,10 @@ export type CustomAzan = {
 export const BUILT_IN_DUROODS: CustomAzan[] = [
   { id: 'builtin:asalatu-wasalamu', name: 'Asalatu Wasalamu Alaika Ya Rasool Allah', createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
   { id: 'builtin:darood-ibrahimi',  name: 'Darood-e-Ibrahimi',                        createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
+  { id: 'builtin:salat-o-salam-classic', name: 'Salat-o-Salam — Ya Rasool Allah',        createdAt: 0, durationSec: 20, audioType: 'durood', badge: 'new' },
+  { id: 'builtin:asalatu-saleh-ali',     name: 'Asalatu Wasalamu — Saleh Ali',           createdAt: 0, durationSec: 15, audioType: 'durood', badge: 'new' },
+  { id: 'builtin:asalatu-abdul-basit',   name: 'Asalatu Wasalamu — Sheikh Abdul Basit',  createdAt: 0, durationSec: 55, audioType: 'durood', badge: 'new' },
+  { id: 'builtin:ya-damin',              name: 'Ya Damin Ya Qurrata Al-Ain',             createdAt: 0, durationSec: 58, audioType: 'durood', badge: 'new' },
 ];
 
 export const BUILT_IN_DUAS: CustomAzan[] = [
