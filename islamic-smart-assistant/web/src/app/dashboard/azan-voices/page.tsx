@@ -385,6 +385,20 @@ function UploadedCard({
 
         <div className="min-w-0 flex-1">
           <h4 className={`font-bold text-sm leading-tight truncate pr-2 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{meta.name}</h4>
+          {(meta.badge || meta.tags?.length) ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {meta.badge && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-tight ${meta.badge === 'popular' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-amber-950'}`}>
+                  {meta.badge === 'popular' ? '★ Popular' : 'New'}
+                </span>
+              )}
+              {meta.tags?.map((tag) => (
+                <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-tight ${isDark ? 'bg-white/10 text-parchment/75' : 'bg-emerald-900/8 text-emerald-900/65'}`}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <p className={`text-[10px] font-mono mt-0.5 ${isDark ? 'text-emerald-400/55' : 'text-emerald-900/35'}`}>{formatClock(meta.durationSec)}</p>
         </div>
       </div>

@@ -19,7 +19,9 @@ const SUPABASE_AUDIO =
   'https://jqrflmqacliezkwmxqiv.supabase.co/storage/v1/object/public/azan-audio';
 
 const BUILTIN_PATHS: Record<string, string> = {
-  'builtin:asalatu-wasalamu': '/audio/Asalatu_Wasalamu_Alaika_Ya_Rasool_Allah,%20Drood.mp3',
+  // The original local file was removed from public/audio during the asset
+  // reshuffle; it is byte-identical to salat-o-salam-classic on Supabase.
+  'builtin:asalatu-wasalamu': `${SUPABASE_AUDIO}/durood/salat-o-salam-classic.mp3`,
   'builtin:darood-ibrahimi': '/audio/Darood_e_Ibrahimi%20Drood.mp3',
   'builtin:dua-after-azan': '/audio/Dua_After_Azan.mp3',
   'builtin:salat-o-salam-classic': `${SUPABASE_AUDIO}/durood/salat-o-salam-classic.mp3`,
@@ -45,13 +47,14 @@ export type CustomAzan = {
   remoteUrl?: string;
 };
 
+// Array order = display order in the Durood panel.
 export const BUILT_IN_DUROODS: CustomAzan[] = [
-  { id: 'builtin:asalatu-wasalamu', name: 'Asalatu Wasalamu Alaika Ya Rasool Allah', createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
-  { id: 'builtin:darood-ibrahimi',  name: 'Darood-e-Ibrahimi',                        createdAt: 0, durationSec: 0, audioType: 'durood', badge: 'popular' },
-  { id: 'builtin:salat-o-salam-classic', name: 'Salat-o-Salam — Ya Rasool Allah',        createdAt: 0, durationSec: 20, audioType: 'durood', badge: 'new' },
-  { id: 'builtin:asalatu-saleh-ali',     name: 'Asalatu Wasalamu — Saleh Ali',           createdAt: 0, durationSec: 15, audioType: 'durood', badge: 'new' },
-  { id: 'builtin:asalatu-abdul-basit',   name: 'Asalatu Wasalamu — Sheikh Abdul Basit',  createdAt: 0, durationSec: 55, audioType: 'durood', badge: 'new' },
-  { id: 'builtin:ya-damin',              name: 'Ya Damin Ya Qurrata Al-Ain',             createdAt: 0, durationSec: 58, audioType: 'durood', badge: 'new' },
+  { id: 'builtin:ya-damin',              name: 'Ya Damin Ya Qurrata Al-Ain',             createdAt: 0, durationSec: 58, audioType: 'durood', badge: 'popular', tags: ['Most Listened'] },
+  { id: 'builtin:asalatu-abdul-basit',   name: 'Asalatu Wasalamu — Sheikh Abdul Basit',  createdAt: 0, durationSec: 55, audioType: 'durood', badge: 'popular', tags: ['Most Listened'] },
+  { id: 'builtin:salat-o-salam-classic', name: 'Salat-o-Salam — Ya Rasool Allah',        createdAt: 0, durationSec: 20, audioType: 'durood', tags: ['Most Listened'] },
+  { id: 'builtin:asalatu-wasalamu',      name: 'Asalatu Wasalamu Alaika Ya Rasool Allah', createdAt: 0, durationSec: 20, audioType: 'durood' },
+  { id: 'builtin:darood-ibrahimi',       name: 'Darood-e-Ibrahimi',                       createdAt: 0, durationSec: 65, audioType: 'durood' },
+  { id: 'builtin:asalatu-saleh-ali',     name: 'Asalatu Wasalamu — Saleh Ali',            createdAt: 0, durationSec: 15, audioType: 'durood' },
 ];
 
 export const BUILT_IN_DUAS: CustomAzan[] = [
