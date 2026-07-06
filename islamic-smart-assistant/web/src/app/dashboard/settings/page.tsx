@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -21,7 +21,7 @@ import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
 
 const LOCAL_AUDIO_LANG_COUNT = Object.keys(LOCAL_AUDIO_EDITIONS).length;
 
-// ── helpers ────────────────────────────────────────────────────────────────
+// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function persist(key: string, val: unknown) {
   const json = JSON.stringify(val);
@@ -36,22 +36,22 @@ type QueueItem = { id: string; name: string; audioType: string };
 
 const COMING_SOON = [
   {
-    emoji: '🔔', title: 'Smart Notifications',
+    emoji: 'ðŸ””', title: 'Smart Notifications',
     desc: 'Receive Azan alerts even when the browser tab is closed or the app runs in the background.',
     accent: 'amber',
   },
   {
-    emoji: '📊', title: 'Prayer Streak Tracker',
+    emoji: 'ðŸ“Š', title: 'Prayer Streak Tracker',
     desc: 'Log each salah and visualise your consistency with streaks and monthly heatmaps.',
     accent: 'sky',
   },
   {
-    emoji: '🔄', title: 'Multi-device Sync',
+    emoji: 'ðŸ”„', title: 'Multi-device Sync',
     desc: 'Your chosen Azan voice and all settings sync instantly across every linked device.',
     accent: 'violet',
   },
   {
-    emoji: '🤖', title: 'AI Islamic Assistant',
+    emoji: 'ðŸ¤–', title: 'AI Islamic Assistant',
     desc: 'Ask questions about fiqh, get Hadith explanations and personalised daily reminders.',
     accent: 'rose',
   },
@@ -66,20 +66,20 @@ const accentMap: Record<string, { bg: string; text: string; border: string; badg
 
 const AYAH_TRANSLATION: Record<string, string> = {
   en: 'Establish prayer at the decline of the sun until the darkness of the night.',
-  ar: 'أَقِمِ ٱلصَّلَوٰةَ لِدُلُوكِ ٱلشَّمْسِ إِلَىٰ غَسَقِ ٱلَّيْلِ',
-  ur: 'نماز قائم کرو سورج کے ڈھلنے سے رات کے اندھیرے تک۔',
-  tr: 'Güneşin batıya meyletmesinden gecenin karanlığına kadar namazı kıl.',
-  fr: "Établis la prière au déclin du soleil jusqu'aux ténèbres de la nuit.",
+  ar: 'Ø£ÙŽÙ‚ÙÙ…Ù Ù±Ù„ØµÙŽÙ‘Ù„ÙŽÙˆÙ°Ø©ÙŽ Ù„ÙØ¯ÙÙ„ÙÙˆÙƒÙ Ù±Ù„Ø´ÙŽÙ‘Ù…Ù’Ø³Ù Ø¥ÙÙ„ÙŽÙ‰Ù° ØºÙŽØ³ÙŽÙ‚Ù Ù±Ù„ÙŽÙ‘ÙŠÙ’Ù„Ù',
+  ur: 'Ù†Ù…Ø§Ø² Ù‚Ø§Ø¦Ù… Ú©Ø±Ùˆ Ø³ÙˆØ±Ø¬ Ú©Û’ ÚˆÚ¾Ù„Ù†Û’ Ø³Û’ Ø±Ø§Øª Ú©Û’ Ø§Ù†Ø¯Ú¾ÛŒØ±Û’ ØªÚ©Û”',
+  tr: 'GÃ¼neÅŸin batÄ±ya meyletmesinden gecenin karanlÄ±ÄŸÄ±na kadar namazÄ± kÄ±l.',
+  fr: "Ã‰tablis la priÃ¨re au dÃ©clin du soleil jusqu'aux tÃ©nÃ¨bres de la nuit.",
   id: 'Dirikanlah shalat sejak matahari tergelincir hingga kegelapan malam.',
   ms: 'Dirikanlah solat dari waktu gelincir matahari sehingga ke gelap malam.',
-  bn: 'সূর্য ঢলে পড়া থেকে রাতের অন্ধকার পর্যন্ত সালাত কায়েম করো।',
-  hi: 'सूर्य के ढलने से रात के अंधेरे तक नमाज़ क़ायम करो।',
+  bn: 'à¦¸à§‚à¦°à§à¦¯ à¦¢à¦²à§‡ à¦ªà¦¡à¦¼à¦¾ à¦¥à§‡à¦•à§‡ à¦°à¦¾à¦¤à§‡à¦° à¦…à¦¨à§à¦§à¦•à¦¾à¦° à¦ªà¦°à§à¦¯à¦¨à§à¦¤ à¦¸à¦¾à¦²à¦¾à¦¤ à¦•à¦¾à¦¯à¦¼à§‡à¦® à¦•à¦°à§‹à¥¤',
+  hi: 'à¤¸à¥‚à¤°à¥à¤¯ à¤•à¥‡ à¤¢à¤²à¤¨à¥‡ à¤¸à¥‡ à¤°à¤¾à¤¤ à¤•à¥‡ à¤…à¤‚à¤§à¥‡à¤°à¥‡ à¤¤à¤• à¤¨à¤®à¤¾à¤œà¤¼ à¤•à¤¼à¤¾à¤¯à¤® à¤•à¤°à¥‹à¥¤',
   de: 'Verrichte das Gebet beim Sinken der Sonne bis zur Dunkelheit der Nacht.',
-  es: 'Establece la oración desde el declive del sol hasta la oscuridad de la noche.',
-  zh: '从太阳偏斜直到黑夜来临，你当谨守拜功。',
+  es: 'Establece la oraciÃ³n desde el declive del sol hasta la oscuridad de la noche.',
+  zh: 'ä»Žå¤ªé˜³åæ–œç›´åˆ°é»‘å¤œæ¥ä¸´ï¼Œä½ å½“è°¨å®ˆæ‹œåŠŸã€‚',
 };
 
-// ── Shared UI pieces ───────────────────────────────────────────────────────
+// â”€â”€ Shared UI pieces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Toggle({ on, onToggle, isDark }: { on: boolean; onToggle: () => void; isDark: boolean }) {
   return (
@@ -165,7 +165,7 @@ function AzanRow({
   );
 }
 
-// ── Mosque silhouette SVG ──────────────────────────────────────────────────
+// â”€â”€ Mosque silhouette SVG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MosqueSilhouette({ className }: { className?: string }) {
   return (
@@ -196,7 +196,7 @@ function MosqueSilhouette({ className }: { className?: string }) {
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function SettingsPage() {
   const { isDark } = useTheme();
@@ -266,7 +266,7 @@ export default function SettingsPage() {
       await setLocationByCity(c, cn);
       setSaved(true);
     } catch {
-      setLocErr('Location not found — check spelling.');
+      setLocErr('Location not found â€” check spelling.');
     } finally {
       setSaving(false);
     }
@@ -288,7 +288,7 @@ export default function SettingsPage() {
       style={isDark ? { background: 'linear-gradient(180deg,#0B231A 0%,#0A1D15 55%,#08160F 100%)' } : undefined}
     >
 
-      {/* ── Hero section ── */}
+      {/* â”€â”€ Hero section â”€â”€ */}
       <div className="relative overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -322,10 +322,10 @@ export default function SettingsPage() {
               <div>
                 <div className="flex items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-midnight-900 shadow ring-2 ring-white/60">
-                    ٧٨
+                    Ù§Ù¨
                   </span>
                   <p dir="rtl" className="font-arabic text-2xl leading-snug text-black">
-                    أَقِمِ ٱلصَّلَوٰةَ لِدُلُوكِ ٱلشَّمْسِ إِلَىٰ غَسَقِ ٱلَّيْلِ
+                    Ø£ÙŽÙ‚ÙÙ…Ù Ù±Ù„ØµÙŽÙ‘Ù„ÙŽÙˆÙ°Ø©ÙŽ Ù„ÙØ¯ÙÙ„ÙÙˆÙƒÙ Ù±Ù„Ø´ÙŽÙ‘Ù…Ù’Ø³Ù Ø¥ÙÙ„ÙŽÙ‰Ù° ØºÙŽØ³ÙŽÙ‚Ù Ù±Ù„ÙŽÙ‘ÙŠÙ’Ù„Ù
                   </p>
                 </div>
                 <p className="mt-3 max-w-sm text-[15px] font-semibold leading-snug text-black">
@@ -338,7 +338,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── Content area — same bg image as the hero, under a dark transparent veil ── */}
+      {/* â”€â”€ Content area â€” same bg image as the hero, under a dark transparent veil â”€â”€ */}
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -353,7 +353,7 @@ export default function SettingsPage() {
         />
       <div className="relative px-6 sm:px-10 py-6 flex flex-col gap-4">
 
-        {/* ── Smart Azan Settings — full-width section header ── */}
+        {/* â”€â”€ Smart Azan Settings â€” full-width section header â”€â”€ */}
         <motion.div
           initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
           className={`rounded-xl border overflow-hidden shadow-sm ${
@@ -379,10 +379,10 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        {/* ── Main 2-col grid (items-start so Smart Azan card doesn't stretch) ── */}
+        {/* â”€â”€ Main 2-col grid (items-start so Smart Azan card doesn't stretch) â”€â”€ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-          {/* ══ Left: Smart Azan rows + Auto Azan ══ */}
+          {/* â•â• Left: Smart Azan rows + Auto Azan â•â• */}
           <div className="flex flex-col gap-4">
             <motion.div
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
@@ -407,7 +407,7 @@ export default function SettingsPage() {
                 />
               )}
 
-              {/* Prayer announcement row — inline so we can add the Test button */}
+              {/* Prayer announcement row â€” inline so we can add the Test button */}
               <div className={`flex items-center gap-3.5 py-3 border-b ${isDark ? 'border-white/5' : 'border-emerald-50'}`}>
                 <span className={`w-9 h-9 shrink-0 grid place-items-center rounded-xl ${
                   isDark ? 'bg-white/10 text-emerald-400'
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => {
                     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-                    // useLocalStorage doesn't sync same-tab writes — QuickSettings
+                    // useLocalStorage doesn't sync same-tab writes â€” QuickSettings
                     // changes isa:language in localStorage but the React state here
                     // stays stale. Always read directly from localStorage.
                     const currentLang = (() => {
@@ -441,16 +441,16 @@ export default function SettingsPage() {
                     };
                     const SAMPLE: Record<string, string> = {
                       en: 'Fajr prayer time',
-                      ar: 'حان وقت صلاة الفجر',
-                      ur: 'فجر کی نماز کا وقت آ گیا',
-                      fr: "Il est l'heure de la prière de Fajr",
-                      tr: 'Sabah namazı vakti geldi',
+                      ar: 'Ø­Ø§Ù† ÙˆÙ‚Øª ØµÙ„Ø§Ø© Ø§Ù„ÙØ¬Ø±',
+                      ur: 'ÙØ¬Ø± Ú©ÛŒ Ù†Ù…Ø§Ø² Ú©Ø§ ÙˆÙ‚Øª Ø¢ Ú¯ÛŒØ§',
+                      fr: "Il est l'heure de la priÃ¨re de Fajr",
+                      tr: 'Sabah namazÄ± vakti geldi',
                       id: 'Waktu sholat Subuh telah tiba',
                       ms: 'Waktu solat Subuh telah tiba',
-                      bn: 'ফজর নামাযের সময় হয়েছে',
-                      hi: 'फजर की नमाज़ का वक्त हो गया है',
-                      de: 'Es ist Zeit für das Sabah-Gebet',
-                      es: 'Es hora de la oración de Fajr',
+                      bn: 'à¦«à¦œà¦° à¦¨à¦¾à¦®à¦¾à¦¯à§‡à¦° à¦¸à¦®à¦¯à¦¼ à¦¹à¦¯à¦¼à§‡à¦›à§‡',
+                      hi: 'à¤«à¤œà¤° à¤•à¥€ à¤¨à¤®à¤¾à¤œà¤¼ à¤•à¤¾ à¤µà¤•à¥à¤¤ à¤¹à¥‹ à¤—à¤¯à¤¾ à¤¹à¥ˆ',
+                      de: 'Es ist Zeit fÃ¼r das Sabah-Gebet',
+                      es: 'Es hora de la oraciÃ³n de Fajr',
                     };
                     window.speechSynthesis.cancel();
                     const doSpeak = () => {
@@ -534,7 +534,7 @@ export default function SettingsPage() {
             </div>
             </motion.div>
 
-            {/* ── Auto Azan (below Smart Azan Settings, same column) ── */}
+            {/* â”€â”€ Auto Azan (below Smart Azan Settings, same column) â”€â”€ */}
             <SectionCard
             title="Auto Azan"
             isDark={isDark}
@@ -551,7 +551,7 @@ export default function SettingsPage() {
             </SectionCard>
           </div>
 
-          {/* ══ Right: stacked cards ══ */}
+          {/* â•â• Right: stacked cards â•â• */}
           <div className="flex flex-col gap-3">
 
             {/* Location */}
@@ -582,13 +582,13 @@ export default function SettingsPage() {
                 disabled={saving}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-60 transition"
               >
-                {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                {saving ? <><Loader2 size={14} className="animate-spin" /> Savingâ€¦</>
                  : saved ? <><Check size={14} /> Saved!</>
                  : 'Save Location'}
               </button>
             </SectionCard>
 
-            {/* ── Pre & Post Azan Audio ── */}
+            {/* â”€â”€ Pre & Post Azan Audio â”€â”€ */}
             <SectionCard
               title="Pre & Post Azan Audio"
               icon={<Music2 size={16} />}
@@ -615,7 +615,7 @@ export default function SettingsPage() {
                     isDark ? 'bg-white/5 border-white/10' : 'bg-emerald-50 border-emerald-100'
                   }`}>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-emerald-600 font-bold text-sm">⏮</span>
+                      <span className="text-emerald-600 font-bold text-sm">â®</span>
                       <p className={`text-xs font-semibold ${isDark ? 'text-white/50' : 'text-emerald-700'}`}>Before Azan</p>
                     </div>
                     <p className={`text-xl font-bold leading-none ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
@@ -629,7 +629,7 @@ export default function SettingsPage() {
                     isDark ? 'bg-white/5 border-white/10' : 'bg-amber-50 border-amber-100'
                   }`}>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-amber-600 font-bold text-sm">⏭</span>
+                      <span className="text-amber-600 font-bold text-sm">â­</span>
                       <p className={`text-xs font-semibold ${isDark ? 'text-amber-300/70' : 'text-amber-700'}`}>After Azan</p>
                     </div>
                     <p className={`text-xl font-bold leading-none ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
@@ -643,7 +643,7 @@ export default function SettingsPage() {
 
                 {/* Hint */}
                 <p className={`text-xs mb-3 leading-relaxed ${isDark ? 'text-white/35' : 'text-emerald-900/45'}`}>
-                  Upload your own Durood Sharif or Dua recordings and assign them to play before or after every Azan — individually or in sequence.
+                  Upload your own Durood Sharif or Dua recordings and assign them to play before or after every Azan â€” individually or in sequence.
                 </p>
 
                 {/* Link to Azan Voices */}
@@ -667,7 +667,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── School of Thought · Translation Language · Offline Translation Audio ── */}
+        {/* â”€â”€ School of Thought Â· Translation Language Â· Offline Translation Audio â”€â”€ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <SectionCard
             title="School of Thought"
@@ -698,8 +698,8 @@ export default function SettingsPage() {
                 </p>
                 <p className={`mt-1 text-xs ${isDark ? 'text-white/40' : 'text-black/45'}`}>
                   {isLocalAudioSupported()
-                    ? 'Choose languages to download — stored on this device, plays without internet.'
-                    : 'Available in the Noor desktop app. Download the app to use offline audio.'}
+                    ? 'Choose languages to download â€” stored on this device, plays without internet.'
+                    : 'Available in the ISMAA desktop app. Download the app to use offline audio.'}
                 </p>
               </div>
               <button
@@ -729,7 +729,7 @@ export default function SettingsPage() {
           />
         )}
 
-        {/* ── Coming Soon ── */}
+        {/* â”€â”€ Coming Soon â”€â”€ */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={18} className="text-amber-500" />
