@@ -31,6 +31,8 @@ import { fetchCommunityUploads, deleteCommunityUpload, subscribeToUploads, isCom
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
+import { useIsDesktop } from '@/lib/useIsDesktop';
+import { UploadDesktopPromoModal } from '@/components/UploadDesktopPromoModal';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 type AzanVoice = {
@@ -493,6 +495,11 @@ export default function AzanPage() {
   const [customAzans, setCustomAzans] = useLocalStorage<CustomAzan[]>('isa:customAzans', []);
   const [uploaderOpen, setUploaderOpen] = useState(false);
   const customUrlRef = useRef<string | null>(null);
+
+  // Uploading is an app-only feature: on the plain web build every upload
+  // trigger opens this promo (download desktop / mobile coming soon) instead.
+  const isDesktopApp = useIsDesktop();
+  const [uploadPromo, setUploadPromo] = useState<AudioType | 'generic' | null>(null);
 
   // Built-in voices the user has hidden (deleted)
   const [hiddenVoices, setHiddenVoices] = useLocalStorage<string[]>('isa:hiddenVoices', []);
@@ -1083,7 +1090,7 @@ export default function AzanPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2.5">
                   <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setTypePicker(true)}
+                    onClick={() => (isDesktopApp ? setTypePicker(true) : setUploadPromo('generic'))}
                     className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 shadow-md hover:bg-white transition"
                   >
                     <UploadCloud size={16} /> Upload
@@ -1529,7 +1536,7 @@ export default function AzanPage() {
               </div>
               {customDuroods.length === 0 && communityDuroods.length === 0 && (
                 <button
-                  onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
+                  onClick={() => { if (!isDesktopApp) { setUploadPromo('durood'); return; } setUploadType('durood'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
                     isDark ? 'border-emerald-700/50 text-emerald-400 hover:bg-emerald-900/30'
                            : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
@@ -1616,7 +1623,7 @@ export default function AzanPage() {
               </div>
               {customDuas.length === 0 && communityDuas.length === 0 && (
                 <button
-                  onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
+                  onClick={() => { if (!isDesktopApp) { setUploadPromo('dua'); return; } setUploadType('dua'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
                     isDark ? 'border-rose-700/50 text-rose-400 hover:bg-rose-900/20'
                            : 'border-rose-200 text-rose-500 hover:bg-rose-50'
@@ -1775,6 +1782,13 @@ export default function AzanPage() {
         onClose={() => { setUploaderOpen(false); setUploadType(null); }}
         onSaved={onSaved}
         audioType={uploadType ?? 'azan'}
+      />
+
+      <UploadDesktopPromoModal
+        open={uploadPromo !== null}
+        onClose={() => setUploadPromo(null)}
+        audioType={uploadPromo === 'generic' ? null : uploadPromo}
+        isDark={isDark}
       />
 
       <AzanTrimmer
