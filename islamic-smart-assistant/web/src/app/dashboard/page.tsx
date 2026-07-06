@@ -21,11 +21,25 @@ import { useTheme } from '@/lib/ThemeContext';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AyahDisplay } from '@/components/AyahDisplay';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
+import { QuickActionsMarquee, type QuickAction } from '@/components/QuickActionsMarquee';
 import { setLocationByCoords, setLocationByCity } from '@/lib/location';
 import { METHOD_LABELS as CALC_METHODS } from '@/lib/sect';
 import { LANGUAGE_OPTIONS as QURAN_LANGUAGE_OPTIONS } from '@/lib/quran';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+// Overview page's bottom "Quick Actions" row — see QuickActionsMarquee.tsx for
+// the responsive static-row / infinite-loop behaviour.
+const QUICK_ACTIONS: QuickAction[] = [
+  { label: 'Quran Library',       sub: 'Read, listen & bookmark Surahs',   icon: BookOpen,   tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
+  { label: 'Duas & Supplications', sub: 'Masnoon duas for every moment',   icon: Hand,       tint: 'text-violet-600',  bg: 'bg-violet-100',  href: '/dashboard/advanced?tab=duas' },
+  { label: 'Hadees Library',       sub: 'Authentic hadith collections',    icon: BookMarked, tint: 'text-rose-500',    bg: 'bg-rose-100',    href: '/dashboard/advanced?tab=hadees' },
+  { label: 'Tafsir-ul-Quran',      sub: 'Verse-by-verse Quran commentary', icon: Library,    tint: 'text-sky-600',     bg: 'bg-sky-100',     href: '/dashboard/advanced?tab=tafsir' },
+  { label: 'Islamic Masail',       sub: 'Hanafi rulings & fatawa',         icon: Scale,      tint: 'text-amber-600',   bg: 'bg-amber-100',   href: '/dashboard/advanced?tab=masail' },
+  { label: 'Islamic Calculators',  sub: 'Zakat, Ushr & inheritance',       icon: Calculator, tint: 'text-teal-600',    bg: 'bg-teal-100',    href: '/dashboard/advanced?tab=calculators' },
+  { label: 'Azan Voices',          sub: 'Choose your favorite Muezzin',    icon: Bell,       tint: 'text-orange-500',  bg: 'bg-orange-100',  href: '/dashboard/azan-voices' },
+  { label: 'Schedule Recitation',  sub: 'Daily Quran recitation reminders', icon: Clock,      tint: 'text-indigo-600',  bg: 'bg-indigo-100',  href: '/dashboard/recitation' },
+];
 
 // Per-prayer icon + accent, tuned to the reference design (warm dawn → cool night).
 const PRAYER_META: Record<keyof PrayerTimes, { icon: any; tint: string; badge: string }> = {
@@ -956,37 +970,19 @@ export default function Overview() {
               </Link>
             </div>
           </motion.section>
-
-          {/* Quick Actions — this card lives in the fixed ~340px sidebar column, not
-              the full page width, so the grid stays at 2 columns regardless of
-              viewport size (a wider breakpoint here would squeeze 4 columns into
-              ~300px and truncate every label). */}
-          <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5`}>
-            <h3 className="text-lg font-bold">Quick Actions</h3>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {[
-                { label: 'Quran Library',      sub: 'Read, listen & bookmark Surahs',   icon: BookOpen,   tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
-                { label: 'Duas & Supplications', sub: 'Masnoon duas for every moment',  icon: Hand,       tint: 'text-violet-600',  bg: 'bg-violet-100',  href: '/dashboard/advanced?tab=duas' },
-                { label: 'Hadees Library',      sub: 'Authentic hadith collections',     icon: BookMarked, tint: 'text-rose-500',    bg: 'bg-rose-100',    href: '/dashboard/advanced?tab=hadees' },
-                { label: 'Tafsir-ul-Quran',     sub: 'Verse-by-verse Quran commentary',  icon: Library,    tint: 'text-sky-600',     bg: 'bg-sky-100',     href: '/dashboard/advanced?tab=tafsir' },
-                { label: 'Islamic Masail',      sub: 'Hanafi rulings & fatawa',          icon: Scale,      tint: 'text-amber-600',   bg: 'bg-amber-100',   href: '/dashboard/advanced?tab=masail' },
-                { label: 'Islamic Calculators', sub: 'Zakat, Ushr & inheritance',        icon: Calculator, tint: 'text-teal-600',    bg: 'bg-teal-100',    href: '/dashboard/advanced?tab=calculators' },
-                { label: 'Azan Voices',         sub: 'Choose your favorite Muezzin',     icon: Bell,       tint: 'text-orange-500',  bg: 'bg-orange-100',  href: '/dashboard/azan-voices' },
-                { label: 'Schedule Recitation', sub: 'Daily Quran recitation reminders', icon: Clock,      tint: 'text-indigo-600',  bg: 'bg-indigo-100',  href: '/dashboard/recitation' },
-              ].map((a) => (
-                <Link key={a.label} href={a.href}
-                  className={`group flex items-start gap-3 rounded-2xl border ${c.divider} ${isDark ? 'bg-white/[0.03] hover:bg-white/[0.06]' : 'bg-white hover:bg-emerald-50/40'} p-3.5 transition hover:shadow-md`}>
-                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${a.bg} transition group-hover:scale-105`}><a.icon size={19} className={a.tint} /></span>
-                  <span className="min-w-0">
-                    <span className={`block text-sm font-bold leading-tight ${c.text}`}>{a.label}</span>
-                    <span className={`block text-[11px] mt-0.5 leading-snug ${c.faint}`}>{a.sub}</span>
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </motion.section>
         </div>
       </div>
+
+      {/* Quick Actions — full width, at the bottom of the page (moved out of the
+          sidebar so it isn't squeezed into ~340px). Row-based: loops right-to-left
+          on its own once the viewport is too narrow to fit every card — see
+          QuickActionsMarquee.tsx. */}
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5`}>
+        <h3 className="text-lg font-bold">Quick Actions</h3>
+        <div className="mt-4">
+          <QuickActionsMarquee actions={QUICK_ACTIONS} isDark={isDark} c={c} />
+        </div>
+      </motion.section>
 
       </ContentBackdrop>
       </div>
