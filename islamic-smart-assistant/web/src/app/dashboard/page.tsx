@@ -825,8 +825,8 @@ export default function Overview() {
                 </span>
               </div>
 
-              {/* Scrolling voices list — top 7, compact; grows to fill the card so no dead space is left above the button */}
-              <div className="relative overflow-hidden rounded-2xl flex-1 min-h-[224px]">
+              {/* Scrolling voices list — top 7, compact; fixed height so the card doesn't stretch with taller siblings */}
+              <div className="relative overflow-hidden rounded-2xl h-56">
                 {/* Top fade */}
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-8 z-10 ${isDark ? 'bg-gradient-to-b from-midnight-800/80 to-transparent' : 'bg-gradient-to-b from-white to-transparent'}`} />
                 {/* Bottom fade */}
@@ -957,10 +957,13 @@ export default function Overview() {
             </div>
           </motion.section>
 
-          {/* Quick Actions */}
+          {/* Quick Actions — this card lives in the fixed ~340px sidebar column, not
+              the full page width, so the grid stays at 2 columns regardless of
+              viewport size (a wider breakpoint here would squeeze 4 columns into
+              ~300px and truncate every label). */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${cardCls} p-5`}>
             <h3 className="text-lg font-bold">Quick Actions</h3>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               {[
                 { label: 'Quran Library',      sub: 'Read, listen & bookmark Surahs',   icon: BookOpen,   tint: 'text-emerald-600', bg: 'bg-emerald-100', href: '/dashboard/quran' },
                 { label: 'Duas & Supplications', sub: 'Masnoon duas for every moment',  icon: Hand,       tint: 'text-violet-600',  bg: 'bg-violet-100',  href: '/dashboard/advanced?tab=duas' },
