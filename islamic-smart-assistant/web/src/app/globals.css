@@ -28,6 +28,12 @@ html.is-desktop body {
 html.is-desktop .landing-nav {
   top: var(--titlebar-h);
 }
+/* The Azan popups are fixed inside the zoom(0.85) dashboard wrapper, so their
+   `top` is scaled down and they slide under the title bar — divide the offset
+   by the zoom so the rendered position clears the bar with a small gap. */
+html.is-desktop .azan-popup {
+  top: calc((var(--titlebar-h) + 12px) / 0.85) !important;
+}
 @media (min-width: 1024px) {
   html.is-desktop .dashboard-zoom {
     height: calc((100vh - var(--titlebar-h)) / 0.85) !important;
