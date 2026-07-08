@@ -47,7 +47,7 @@ export async function reverseGeocodeDetails(lat: number, lng: number): Promise<G
     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}` +
     `&zoom=12&accept-language=en`;
   const res = await fetch(url, {
-    headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' },
+    headers: { Accept: 'application/json', 'User-Agent': 'SyediIsmaaApp/1.0' },
     cache: 'no-store',
   });
   if (!res.ok) return { label: 'Selected location', city: '', country: '' };

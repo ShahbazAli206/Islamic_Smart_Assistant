@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 /**
- * True only when running inside the Noor Desktop (Electron) app.
+ * True only when running inside the Syedi-ISMAA Desktop (Electron) app.
  *
  * The Electron preload exposes `window.desktop` (see desktop/electron/preload.js);
  * on the plain web build that global is undefined. We also accept an "Electron"

@@ -302,7 +302,7 @@ export default function Overview() {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&addressdetails=1&q=${encodeURIComponent(`${city}, ${country}`)}`,
-        { headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' }, cache: 'no-store' },
+        { headers: { Accept: 'application/json', 'User-Agent': 'SyediIsmaaApp/1.0' }, cache: 'no-store' },
       );
       const hits: any[] = res.ok ? await res.json() : [];
       if (!hits.length) {

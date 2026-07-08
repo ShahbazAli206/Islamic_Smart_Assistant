@@ -175,7 +175,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
-            { headers: { 'User-Agent': 'NoorIslamicApp/1.0' } },
+            { headers: { 'User-Agent': 'SyediIsmaaApp/1.0' } },
           );
           const data = await res.json();
           const addr = data.address ?? {};
@@ -255,7 +255,7 @@ export function OnboardingSetup({ forceOpen = false, onClose }: Props) {
         `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&addressdetails=1` +
         `&q=${encodeURIComponent(`${city}, ${country}`)}`;
       const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'User-Agent': 'NoorIslamicApp/1.0' },
+        headers: { Accept: 'application/json', 'User-Agent': 'SyediIsmaaApp/1.0' },
         cache: 'no-store',
       });
       const hits: any[] = res.ok ? await res.json() : [];

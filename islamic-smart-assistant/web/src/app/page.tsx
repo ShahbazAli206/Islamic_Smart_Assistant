@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Public marketing landing page for Noor (the "/" route).
+ * Public marketing landing page for Syedi-ISMAA (the "/" route).
  *
  * Layout, top to bottom: scroll-aware nav → dark hero (background photo + headline,
  * CTAs, social proof on the left; the live prayer card on the right; a feature strip
@@ -132,7 +132,7 @@ export default function HomePage() {
                 <span className="bg-clip-text text-transparent bg-gold-gradient">Our Guidance.</span>
               </h1>
               <p className="text-lg text-parchment/75 max-w-xl leading-relaxed">
-                Noor unites Prayer, Quran, and daily Islamic tools in one intelligent assistant —
+                Syedi-ISMAA unites Prayer, Quran, and daily Islamic tools in one intelligent assistant —
                 beautifully designed to elevate your connection with Allah.
               </p>
               <div className="flex flex-wrap gap-3 pt-1">

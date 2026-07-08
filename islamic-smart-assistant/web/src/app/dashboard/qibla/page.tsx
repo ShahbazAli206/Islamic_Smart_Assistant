@@ -529,7 +529,7 @@ export default function QiblaPage() {
   const shareDirection = async () => {
     const text = bearing != null
       ? `Qibla from ${loc.label}: ${bearing.toFixed(1)}° (${compassPoint(bearing)}), ${distKm != null ? formatDistance(distKm) : ''} from Makkah.`
-      : 'Find the Qibla direction with Noor.';
+      : 'Find the Qibla direction with Syedi-ISMAA.';
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
         await navigator.share({ title: 'Qibla Direction', text });

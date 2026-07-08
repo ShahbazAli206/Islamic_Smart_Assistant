@@ -51,7 +51,7 @@ class CastController {
           : 'This device can’t be cast to.',
       );
     }
-    const title = meta.title || 'Noor — Islamic Assistant';
+    const title = meta.title || 'Syedi-ISMAA — Islamic Smart Assistant';
     const contentType = meta.contentType || 'audio/mpeg';
     return this._chain(device.id, () => this._doPlay(device, url, title, contentType));
   }
@@ -123,7 +123,7 @@ class CastController {
       client.load(url, {
         autoplay: true,
         contentType,
-        metadata: { title, type: 'audio', creator: 'Noor' },
+        metadata: { title, type: 'audio', creator: 'Syedi-ISMAA' },
       }, (err) => {
         if (err) reject(err instanceof Error ? err : new Error(String(err)));
         else resolve(client);

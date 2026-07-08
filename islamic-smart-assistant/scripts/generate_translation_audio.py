@@ -90,7 +90,7 @@ def fetch_ayahs(edition: str) -> list[tuple[int, str]]:
     """Return [(global_ayah_number, text), ...] for the whole Quran."""
     url = f"{API}/quran/{edition}"
     print(f"  fetching text: {url}")
-    req = Request(url, headers={"Accept": "application/json", "User-Agent": "noor-tts/1.0"})
+    req = Request(url, headers={"Accept": "application/json", "User-Agent": "syedi-ismaa-tts/1.0"})
     with urlopen(req, timeout=60) as r:
         data = json.loads(r.read().decode("utf-8"))
     if data.get("code") != 200:

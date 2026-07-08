@@ -489,7 +489,7 @@ export default function RecitationSchedulerPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-emerald-950'}`}>No recitation scheduled yet</h3>
-              <p className={`text-xs mt-0.5 ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>Create your first schedule and Noor will recite the Quran at the time you choose.</p>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-white/55' : 'text-emerald-900/55'}`}>Create your first schedule and Syedi-ISMAA will recite the Quran at the time you choose.</p>
             </div>
           </div>
         ) : (
@@ -659,7 +659,7 @@ export default function RecitationSchedulerPage() {
       </div>
 
       <p className="text-xs text-emerald-900/45 flex items-center gap-1.5">
-        <Clock size={12} /> Recitation plays in your browser, so a schedule only rings while Noor is open in a tab (just like auto-Azan).
+        <Clock size={12} /> Recitation plays in your browser, so a schedule only rings while Syedi-ISMAA is open in a tab (just like auto-Azan).
       </p>
 
       </div>
