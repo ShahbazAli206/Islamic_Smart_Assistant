@@ -91,6 +91,9 @@ export type MushafWord = {
   textIndopak: string;
   textUthmani: string;
   verseKey: string;
+  /** 'end' = the small ayah-number marker glyph (e.g. ١، ٢), rendered as a
+   *  circular roundel rather than an inline word. */
+  charType: 'word' | 'end';
 };
 
 export type MushafPage = {
@@ -119,6 +122,7 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
         textIndopak: word.text_indopak ?? '',
         textUthmani: word.text_uthmani ?? '',
         verseKey: word.verse_key ?? verse.verse_key,
+        charType: word.char_type_name === 'end' ? 'end' : 'word',
       });
       wordsByLine.set(word.line_number, line);
     }

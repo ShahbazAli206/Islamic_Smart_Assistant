@@ -22,6 +22,8 @@ export type MushafWord = {
   textIndopak: string;
   textUthmani: string;
   verseKey: string;
+  /** 'end' = the small ayah-number marker glyph, rendered as a circular roundel. */
+  charType: 'word' | 'end';
 };
 
 export type MushafPage = {
