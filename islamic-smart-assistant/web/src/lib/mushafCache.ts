@@ -13,6 +13,24 @@ const DB_NAME = 'isa-mushaf';
 const STORE = 'pages';
 const INDEX_KEY = 'index';
 
+// Bump whenever MushafPage/MushafWord's shape changes (e.g. a new field like
+// charType or tajweedHtml is added) so previously-cached entries — which won't
+// have that field — are treated as misses instead of being served stale and
+// silently rendering incomplete/blank content. A version mismatch just means
+// one extra network fetch to repopulate the cache with the current shape.
+const SCHEMA_VERSION = 2;
+
+type CacheEntry<T> = { v: number; data: T };
+
+function wrap<T>(data: T): CacheEntry<T> {
+  return { v: SCHEMA_VERSION, data };
+}
+
+function unwrap<T>(entry: CacheEntry<T> | undefined): T | null {
+  if (!entry || entry.v !== SCHEMA_VERSION) return null;
+  return entry.data;
+}
+
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') { reject(new Error('IndexedDB unavailable')); return; }
@@ -40,26 +58,26 @@ function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequ
 
 export async function getCachedMushafPage(pageNumber: number): Promise<MushafPage | null> {
   try {
-    const page = await tx<MushafPage | undefined>('readonly', (store) => store.get(pageNumber));
-    return page ?? null;
+    const entry = await tx<CacheEntry<MushafPage> | undefined>('readonly', (store) => store.get(pageNumber));
+    return unwrap(entry);
   } catch {
     return null;
   }
 }
 
 export function putCachedMushafPage(pageNumber: number, page: MushafPage): Promise<void> {
-  return tx('readwrite', (store) => store.put(page, pageNumber)).then(() => undefined).catch(() => undefined);
+  return tx('readwrite', (store) => store.put(wrap(page), pageNumber)).then(() => undefined).catch(() => undefined);
 }
 
 export async function getCachedMushafIndex(): Promise<MushafIndex | null> {
   try {
-    const index = await tx<MushafIndex | undefined>('readonly', (store) => store.get(INDEX_KEY));
-    return index ?? null;
+    const entry = await tx<CacheEntry<MushafIndex> | undefined>('readonly', (store) => store.get(INDEX_KEY));
+    return unwrap(entry);
   } catch {
     return null;
   }
 }
 
 export function putCachedMushafIndex(index: MushafIndex): Promise<void> {
-  return tx('readwrite', (store) => store.put(index, INDEX_KEY)).then(() => undefined).catch(() => undefined);
+  return tx('readwrite', (store) => store.put(wrap(index), INDEX_KEY)).then(() => undefined).catch(() => undefined);
 }
