@@ -833,7 +833,7 @@ export function AutoAzanScheduler() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 40, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-            className="fixed top-20 right-4 lg:top-4 z-[200] w-72 rounded-2xl overflow-hidden shadow-2xl"
+            className="azan-popup fixed top-20 right-4 lg:top-4 z-[200] w-72 rounded-2xl overflow-hidden shadow-2xl"
             style={{
               background: 'rgba(255,255,255,0.97)',
               border: '1px solid rgba(16,185,129,0.18)',
@@ -877,7 +877,7 @@ export function AutoAzanScheduler() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 40, scale: 0.92 }}
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
-              className="fixed top-20 right-4 lg:top-4 z-[200] w-80 rounded-3xl overflow-hidden"
+              className="azan-popup fixed top-20 right-4 lg:top-4 z-[200] w-80 rounded-3xl overflow-hidden"
               style={{
                 background: 'linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(244,250,246,0.94) 100%)',
                 border: '1px solid rgba(16,185,129,0.20)',

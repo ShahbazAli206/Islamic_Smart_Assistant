@@ -220,7 +220,7 @@ export function PrayerCountdownHero({
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`,
-            { headers: { 'User-Agent': 'NoorIslamicApp/1.0' } },
+            { headers: { 'User-Agent': 'SyediIsmaaApp/1.0' } },
           );
           const data = await res.json();
           const addr = data.address ?? {};

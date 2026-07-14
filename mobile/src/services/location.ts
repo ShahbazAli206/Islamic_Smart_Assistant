@@ -47,7 +47,7 @@ async function gpsLocation(timezone: string): Promise<ResolvedLocation> {
 async function reverseGeocode(lat: number, lng: number): Promise<{ city?: string; country?: string }> {
   const r = await axios.get('https://nominatim.openstreetmap.org/reverse', {
     params: { format: 'json', lat, lon: lng, zoom: 10, 'accept-language': 'en' },
-    headers: { 'User-Agent': 'NoorIslamicApp/1.0 (mobile)' },
+    headers: { 'User-Agent': 'SyediIsmaaApp/1.0 (mobile)' },
     timeout: 8000,
   });
   const a = r.data?.address ?? {};

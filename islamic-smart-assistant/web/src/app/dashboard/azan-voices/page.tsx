@@ -31,6 +31,8 @@ import { fetchCommunityUploads, deleteCommunityUpload, subscribeToUploads, isCom
 import { useStoredLocation } from '@/lib/useStoredLocation';
 import { qiblaBearing, compassPoint } from '@/lib/qibla';
 import { useTheme } from '@/lib/ThemeContext';
+import { useIsDesktop } from '@/lib/useIsDesktop';
+import { UploadDesktopPromoModal } from '@/components/UploadDesktopPromoModal';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
 
 type AzanVoice = {
@@ -383,6 +385,20 @@ function UploadedCard({
 
         <div className="min-w-0 flex-1">
           <h4 className={`font-bold text-sm leading-tight truncate pr-2 ${isDark ? 'text-parchment' : 'text-emerald-950'}`}>{meta.name}</h4>
+          {(meta.badge || meta.tags?.length) ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {meta.badge && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-tight ${meta.badge === 'popular' ? 'bg-emerald-600 text-white' : 'bg-amber-400 text-amber-950'}`}>
+                  {meta.badge === 'popular' ? '★ Popular' : 'New'}
+                </span>
+              )}
+              {meta.tags?.map((tag) => (
+                <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-tight ${isDark ? 'bg-white/10 text-parchment/75' : 'bg-emerald-900/8 text-emerald-900/65'}`}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <p className={`text-[10px] font-mono mt-0.5 ${isDark ? 'text-emerald-400/55' : 'text-emerald-900/35'}`}>{formatClock(meta.durationSec)}</p>
         </div>
       </div>
@@ -493,6 +509,11 @@ export default function AzanPage() {
   const [customAzans, setCustomAzans] = useLocalStorage<CustomAzan[]>('isa:customAzans', []);
   const [uploaderOpen, setUploaderOpen] = useState(false);
   const customUrlRef = useRef<string | null>(null);
+
+  // Uploading is an app-only feature: on the plain web build every upload
+  // trigger opens this promo (download desktop / mobile coming soon) instead.
+  const isDesktopApp = useIsDesktop();
+  const [uploadPromo, setUploadPromo] = useState<AudioType | 'generic' | null>(null);
 
   // Built-in voices the user has hidden (deleted)
   const [hiddenVoices, setHiddenVoices] = useLocalStorage<string[]>('isa:hiddenVoices', []);
@@ -1083,7 +1104,7 @@ export default function AzanPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2.5">
                   <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setTypePicker(true)}
+                    onClick={() => (isDesktopApp ? setTypePicker(true) : setUploadPromo('generic'))}
                     className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white/90 backdrop-blur border border-emerald-200 text-emerald-800 shadow-md hover:bg-white transition"
                   >
                     <UploadCloud size={16} /> Upload
@@ -1529,7 +1550,7 @@ export default function AzanPage() {
               </div>
               {customDuroods.length === 0 && communityDuroods.length === 0 && (
                 <button
-                  onClick={() => { setUploadType('durood'); setUploaderOpen(true); }}
+                  onClick={() => { if (!isDesktopApp) { setUploadPromo('durood'); return; } setUploadType('durood'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
                     isDark ? 'border-emerald-700/50 text-emerald-400 hover:bg-emerald-900/30'
                            : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
@@ -1616,7 +1637,7 @@ export default function AzanPage() {
               </div>
               {customDuas.length === 0 && communityDuas.length === 0 && (
                 <button
-                  onClick={() => { setUploadType('dua'); setUploaderOpen(true); }}
+                  onClick={() => { if (!isDesktopApp) { setUploadPromo('dua'); return; } setUploadType('dua'); setUploaderOpen(true); }}
                   className={`mt-3 w-full py-2 rounded-xl border-2 border-dashed text-xs font-semibold transition ${
                     isDark ? 'border-rose-700/50 text-rose-400 hover:bg-rose-900/20'
                            : 'border-rose-200 text-rose-500 hover:bg-rose-50'
@@ -1775,6 +1796,13 @@ export default function AzanPage() {
         onClose={() => { setUploaderOpen(false); setUploadType(null); }}
         onSaved={onSaved}
         audioType={uploadType ?? 'azan'}
+      />
+
+      <UploadDesktopPromoModal
+        open={uploadPromo !== null}
+        onClose={() => setUploadPromo(null)}
+        audioType={uploadPromo === 'generic' ? null : uploadPromo}
+        isDark={isDark}
       />
 
       <AzanTrimmer

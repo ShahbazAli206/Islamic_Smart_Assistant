@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 // Profile route. Profile management is desktop-only: the editable form renders
-// inside the Noor Desktop app; on the web build we show the download notice.
+// inside the Syedi-ISMAA Desktop app; on the web build we show the download notice.
 // (The sidebar "Profile" item opens this same content as a popup.)
 
 import { Sparkles } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function ProfilePage() {
         <p className="text-ink/60 mt-1">
           {isDesktop
             ? 'Your details are saved to your account and synced to every device.'
-            : 'Profile management is available in the Noor Desktop app.'}
+            : 'Profile management is available in the ISMAA Desktop app.'}
         </p>
       </div>
 

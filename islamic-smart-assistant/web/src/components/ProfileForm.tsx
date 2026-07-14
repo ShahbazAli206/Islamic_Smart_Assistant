@@ -4,13 +4,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   User, Mail, BookOpen, Globe2, MapPin, Check, Loader2, Crosshair,
-  MonitorDown, Download,
+  MonitorDown,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Me, type MeProfile, type SetLocation } from '@/lib/api';
 import { setLocationByCoords, readStoredLocation } from '@/lib/location';
 import { useLocalStorage } from '@/lib/useLocalStorage';
-import { useDesktopDownloadUrl } from '@/lib/desktopApp';
+import { useTheme } from '@/lib/ThemeContext';
+import { DownloadDesktopButton, MobileSoonPill } from '@/components/IsmaaPromoKit';
 import { LANGUAGE_OPTIONS } from '@/lib/quran';
 
 // Same list the Qur'an translation dropdown, onboarding, settings and quick
@@ -311,32 +312,34 @@ export function ProfileForm() {
 }
 
 export function DesktopRequiredNotice() {
-  const desktopDownloadUrl = useDesktopDownloadUrl();
+  const { isDark } = useTheme();
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="card card-pad text-center"
+      className="card card-pad max-w-md mx-auto text-center"
     >
-      <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-mosque-gradient text-gold-300 shadow-lg">
-        <MonitorDown size={28} />
+      <div className="relative mx-auto mb-3 h-12 w-12">
+        <motion.span
+          className="absolute inset-0 rounded-xl border-2 border-emerald-400/50"
+          initial={{ opacity: 0.7, scale: 1 }}
+          animate={{ opacity: 0, scale: 1.55 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+        />
+        <span className="relative grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md">
+          <MonitorDown size={22} />
+        </span>
       </div>
-      <h3 className="h-display text-2xl font-bold">Manage your profile in the Desktop app</h3>
-      <p className="mx-auto mt-2 max-w-md text-ink/60 leading-relaxed">
-        To keep your personal details private and in sync, your name, language, sect and
-        location are managed in the <span className="font-semibold text-ink/80">Noor Desktop</span> app.
-        Download and install it to set up and save your profile.
+      <h3 className="h-display text-lg font-bold">Profile lives in the Desktop app</h3>
+      <p className="mx-auto mt-1 max-w-xs text-xs text-ink/60 leading-relaxed">
+        Manage your name, language, sect &amp; location in the{' '}
+        <span className="font-semibold text-emerald-600">ISMAA Desktop</span> app — your details stay private on your device.
       </p>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <a
-          href={desktopDownloadUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient text-midnight-900 px-6 py-3 font-bold shadow-glow-gold hover:brightness-105 transition"
-        >
-          <Download size={18} /> Download Noor Desktop
-        </a>
+      <div className="mt-4">
+        <DownloadDesktopButton />
       </div>
-      <p className="mt-4 text-xs text-ink/40">Available for Windows, macOS and Linux.</p>
+      <div className="mt-3 flex justify-center">
+        <MobileSoonPill isDark={isDark} />
+      </div>
     </motion.div>
   );
 }

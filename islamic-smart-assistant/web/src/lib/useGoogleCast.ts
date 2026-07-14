@@ -317,7 +317,7 @@ export function useGoogleCast(): UseGoogleCast {
     }
   }, []);
 
-  const castAudio = useCallback(async (url: string, title = 'Noor — Islamic Assistant') => {
+  const castAudio = useCallback(async (url: string, title = 'Syedi-ISMAA — Islamic Smart Assistant') => {
     setError(null);
     const w = window as any;
     const cast = w.cast, chrome = w.chrome, ctx = ctxRef.current;

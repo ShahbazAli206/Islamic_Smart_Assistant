@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity,
-  Dimensions,
+  Dimensions, Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
@@ -224,13 +224,12 @@ export function DashboardScreen() {
       {/* ── App header ── */}
       <View style={S.appBar}>
         <View style={S.appBarLeft}>
-          <View style={S.logoBox}>
-            <Text style={{ fontSize: 20 }}>🕌</Text>
-          </View>
-          <View>
-            <Text style={S.appName}>Noor</Text>
-            <Text style={S.appTagline}>Smart Assistant</Text>
-          </View>
+          <Image
+            source={require('../../assets/ismaa_logo_dark.png')}
+            style={S.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Syedi-ISMAA — Islamic Smart Assistant"
+          />
         </View>
         <TouchableOpacity style={S.bellWrap}>
           <Text style={{ fontSize: 22 }}>🔔</Text>
@@ -435,13 +434,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8,
   },
   appBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoBox: {
-    width: 38, height: 38, borderRadius: 10,
-    backgroundColor: EMERALD + '25',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  appName:    { color: WHITE, fontSize: 17, fontWeight: '700' },
-  appTagline: { color: WHITE70, fontSize: 11 },
+  brandLogo: { width: 118, height: 42 },
   bellWrap:   { padding: 4, position: 'relative' },
   bellDot: {
     position: 'absolute', top: 4, right: 4,
