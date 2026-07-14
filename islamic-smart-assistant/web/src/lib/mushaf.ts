@@ -24,6 +24,11 @@ export type MushafWord = {
   verseKey: string;
   /** 'end' = the small ayah-number marker glyph, rendered as a circular roundel. */
   charType: 'word' | 'end';
+  /** Uthmani text with tajweed-rule colors, pre-sanitized at ingest time to
+   *  `<span class="tajweed-RULE">…</span>` + plain text only — safe to render
+   *  via dangerouslySetInnerHTML as-is. Falls back to plain escaped Uthmani
+   *  text when the source verse had no tajweed markup. */
+  tajweedHtml: string;
 };
 
 export type MushafPage = {

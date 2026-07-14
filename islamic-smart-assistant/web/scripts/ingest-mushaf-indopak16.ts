@@ -79,6 +79,7 @@ type ApiVerse = {
   verse_key: string;
   juz_number: number;
   words: ApiWord[];
+  text_uthmani_tajweed?: string; // whole-ayah HTML with <tajweed class=X>…</tajweed> spans
 };
 
 type ApiPageResponse = {
@@ -94,7 +95,63 @@ export type MushafWord = {
   /** 'end' = the small ayah-number marker glyph (e.g. ١، ٢), rendered as a
    *  circular roundel rather than an inline word. */
   charType: 'word' | 'end';
+  /** Uthmani text for this word with tajweed-rule colors, pre-sanitized to
+   *  `<span class="tajweed-RULE">…</span>` + plain text only (see
+   *  sanitizeTajweedFragment). Falls back to plain textUthmani (HTML-escaped)
+   *  when the source verse had no tajweed markup or didn't parse cleanly. */
+  tajweedHtml: string;
 };
+
+// ── Tajweed markup handling ──────────────────────────────────────────────────
+// text_uthmani_tajweed is a whole-ayah HTML string, e.g.:
+//   "بِسْمِ <tajweed class=ham_wasl>ٱ</tajweed>للَّهِ … <span class=end>١</span>"
+// We need it split into PER-WORD fragments aligned with the verse's `words`
+// array (same order/count, confirmed against real API responses) so each
+// fragment can be attached to the matching MushafWord.
+
+/** Split on whitespace that is NOT inside an HTML tag (tags like <tajweed
+ *  class=ham_wasl> contain spaces of their own, so a naive .split(/\s+/)
+ *  breaks tags apart instead of separating words). */
+function splitWordsOutsideTags(html: string): string[] {
+  const tokens: string[] = [];
+  let cur = '';
+  let depth = 0;
+  for (const ch of html) {
+    if (ch === '<') depth++;
+    if (ch === '>') depth = Math.max(0, depth - 1);
+    if (depth === 0 && /\s/.test(ch)) {
+      if (cur) tokens.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur) tokens.push(cur);
+  return tokens;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Converts one word's raw tajweed-tagged fragment into a strictly-limited safe
+ * subset: `<span class="tajweed-RULE">…</span>` and plain text only — nothing
+ * else survives. Returns null if the fragment doesn't reduce to that safe
+ * subset (upstream format changed unexpectedly), so the caller can fall back
+ * to plain escaped text instead of trusting arbitrary markup.
+ */
+function sanitizeTajweedFragment(raw: string): string | null {
+  let out = raw.replace(/<tajweed\s+class=([a-zA-Z_]+)[^>]*>/g, '<span class="tajweed-$1">');
+  out = out.replace(/<\/tajweed>/g, '</span>');
+  // Ayah-end markers are rendered separately via charType === 'end' — never
+  // through tajweedHtml — so strip that wrapper down to plain text here.
+  out = out.replace(/<span class=end>([^<]*)<\/span>/g, '$1');
+
+  const stripped = out.replace(/<span class="tajweed-[a-z_]+">|<\/span>/g, '');
+  if (/[<>]/.test(stripped)) return null; // unexpected leftover markup — bail
+  return out;
+}
 
 export type MushafPage = {
   pageNumber: number;
@@ -113,9 +170,22 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
     const surahNum = Number(verse.verse_key.split(':')[0]);
     surahSet.add(surahNum);
 
-    for (const word of verse.words) {
-      if (word.char_type_name && word.char_type_name !== 'word' && word.char_type_name !== 'end') continue;
+    // Tajweed HTML is one string for the WHOLE verse — split it into per-word
+    // fragments aligned with verse.words (same order/count as the raw,
+    // unfiltered words array). If the split count doesn't match, the upstream
+    // format changed unexpectedly; skip tajweed for this verse rather than
+    // risk misaligned colors (falls back to plain text below).
+    const tajweedTokens = verse.text_uthmani_tajweed ? splitWordsOutsideTags(verse.text_uthmani_tajweed) : [];
+    const tajweedAligned = tajweedTokens.length === verse.words.length;
+    if (verse.text_uthmani_tajweed && !tajweedAligned) {
+      console.warn(`Tajweed token count mismatch on ${verse.verse_key}: ${tajweedTokens.length} tokens vs ${verse.words.length} words — falling back to plain text for this verse.`);
+    }
+
+    verse.words.forEach((word, wordIdx) => {
+      if (word.char_type_name && word.char_type_name !== 'word' && word.char_type_name !== 'end') return;
       const line = wordsByLine.get(word.line_number) ?? [];
+      const plain = escapeHtml(word.text_uthmani ?? '');
+      const sanitized = tajweedAligned ? sanitizeTajweedFragment(tajweedTokens[wordIdx]) : null;
       line.push({
         line: word.line_number,
         position: word.position,
@@ -123,9 +193,10 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
         textUthmani: word.text_uthmani ?? '',
         verseKey: word.verse_key ?? verse.verse_key,
         charType: word.char_type_name === 'end' ? 'end' : 'word',
+        tajweedHtml: sanitized ?? plain,
       });
       wordsByLine.set(word.line_number, line);
-    }
+    });
   }
 
   // Always emit exactly 16 slots (index 0 = line 1, ... index 15 = line 16), even
@@ -153,7 +224,7 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
 }
 
 async function fetchPage(pageNumber: number, token: string, clientId: string): Promise<ApiPageResponse> {
-  const url = `${API_HOST}/content/api/v4/verses/by_page/${pageNumber}?mushaf=${MUSHAF_ID}&words=true&word_fields=text_indopak,text_uthmani,line_number,position,page_number,verse_key,char_type_name&per_page=300`;
+  const url = `${API_HOST}/content/api/v4/verses/by_page/${pageNumber}?mushaf=${MUSHAF_ID}&fields=text_uthmani_tajweed&words=true&word_fields=text_indopak,text_uthmani,line_number,position,page_number,verse_key,char_type_name&per_page=300`;
   const res = await fetch(url, {
     headers: { 'x-auth-token': token, 'x-client-id': clientId },
   });

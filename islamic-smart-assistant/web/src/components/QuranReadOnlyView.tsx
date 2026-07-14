@@ -84,6 +84,30 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
         </button>
       </div>
 
+      {/* Tajweed rule → color legend. Class names come from Quran Foundation's
+          text_uthmani_tajweed markup (sanitized to tajweed-RULE at ingest time);
+          colors follow the standard tajweed-quran color convention. Several
+          rules list two spellings because different tajweed datasets in the
+          wild disagree on spelling (e.g. "laam_shamsiyah" vs "…yyah") — both
+          are mapped so whichever one the API actually returns still resolves. */}
+      <style>{`
+        .tajweed-ham_wasl, .tajweed-silent,
+        .tajweed-laam_shamsiyah, .tajweed-laam_shamsiyyah { color: #AAAAAA; }
+        .tajweed-madda_normal { color: #537FFF; }
+        .tajweed-madda_permissible { color: #4050FF; }
+        .tajweed-madda_necessary, .tajweed-madda_obligatory { color: #000EBC; }
+        .tajweed-qalqalah, .tajweed-qalaqah { color: #DD0008; }
+        .tajweed-ikhafa_shafawi, .tajweed-ikhfa_shafawi { color: #D500B7; }
+        .tajweed-ikhafa, .tajweed-ikhfa { color: #9400A8; }
+        .tajweed-idgham_shafawi { color: #58B800; }
+        .tajweed-iqlab { color: #26BFFD; }
+        .tajweed-idgham_with_ghunnah, .tajweed-idgham_ghunnah { color: #169777; }
+        .tajweed-idgham_without_ghunnah, .tajweed-idgham_no_ghunnah { color: #169200; }
+        .tajweed-idgham_mutajanisayn, .tajweed-idgham_mutajaanisain { color: #A1A1A1; }
+        .tajweed-idgham_mutaqaribayn, .tajweed-idgham_mutaqaaribain { color: #A1A1A1; }
+        .tajweed-ghunnah { color: #FF7E1E; }
+      `}</style>
+
       {/* ── The mushaf page itself — ornate double-border frame, like a printed mushaf ── */}
       <div
         className={`relative rounded-2xl p-[6px] shadow-card-soft ${
@@ -159,13 +183,13 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
                     // which the API doesn't return content for) taking up their real
                     // vertical space instead of collapsing — an empty flex row has no
                     // intrinsic height on its own.
-                    className={`font-mushaf flex flex-nowrap justify-between items-baseline gap-x-2 text-[1.7rem] sm:text-[1.9rem] leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
+                    className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-2 text-[1.7rem] sm:text-[1.9rem] leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
                       isDark ? 'text-parchment' : 'text-ink'
                     }`}
                     style={{
                       // Real mushaf lines never wrap — a printed line is exactly one row.
-                      // If the placeholder/substitute font renders wider than the source
-                      // dataset assumed, compress words to fit rather than wrapping.
+                      // If the font renders wider than the source dataset assumed,
+                      // compress words to fit rather than wrapping.
                       fontSize: line.length > 9 ? '1.35rem' : undefined,
                     }}
                   >
@@ -179,10 +203,17 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
                               : 'border-amber-700/50 text-amber-800 bg-amber-50/80'
                           }`}
                         >
-                          {word.textIndopak}
+                          {word.textUthmani}
                         </span>
                       ) : (
-                        <span key={wi} className="shrink whitespace-nowrap">{word.textIndopak}</span>
+                        // tajweedHtml is pre-sanitized at ingest time to `<span
+                        // class="tajweed-RULE">…</span>` + plain text only — see
+                        // sanitizeTajweedFragment in the ingestion script.
+                        <span
+                          key={wi}
+                          className="shrink whitespace-nowrap"
+                          dangerouslySetInnerHTML={{ __html: word.tajweedHtml }}
+                        />
                       ),
                     )}
                   </div>
