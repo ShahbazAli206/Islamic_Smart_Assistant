@@ -124,7 +124,11 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
                 <div
                   key={i}
                   dir="rtl"
-                  className={`font-mushaf flex flex-nowrap justify-between items-baseline gap-x-2 text-[1.7rem] sm:text-[1.9rem] leading-[2.6rem] whitespace-nowrap ${
+                  // min-h keeps blank lines (e.g. page 1's decorative Al-Fatihah header,
+                  // which the API doesn't return content for) taking up their real
+                  // vertical space instead of collapsing — an empty flex row has no
+                  // intrinsic height on its own.
+                  className={`font-mushaf flex flex-nowrap justify-between items-baseline gap-x-2 text-[1.7rem] sm:text-[1.9rem] leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
                     isDark ? 'text-parchment' : 'text-ink'
                   }`}
                   style={{

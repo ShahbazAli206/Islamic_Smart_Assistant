@@ -22,6 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const TOTAL_PAGES = 548;
 const MUSHAF_ID = 7; // IndoPak 16-line layout
+const LINES_PER_PAGE = 16;
 const OUT_DIR = join(__dirname, '..', 'public', 'data', 'mushaf-indopak16');
 const REQUEST_DELAY_MS = 200;
 const FORCE = process.argv.includes('--force');
@@ -123,8 +124,21 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
     }
   }
 
-  const lineNumbers = [...wordsByLine.keys()].sort((a, b) => a - b);
-  const lines = lineNumbers.map(n => wordsByLine.get(n)!.sort((a, b) => a.position - b.position));
+  // Always emit exactly 16 slots (index 0 = line 1, ... index 15 = line 16), even
+  // when a page has no content on some lines — e.g. page 1's decorative
+  // Al-Fatihah header occupies lines 1-10, so its content only starts at line 11.
+  // Rendering blank rows for those lines preserves the real page's vertical
+  // rhythm instead of compressing content to the top.
+  //
+  // IMPORTANT: do NOT sort each line's words by `position` — that field is only
+  // the word's index WITHIN ITS OWN VERSE, not a line-relative reading order.
+  // When one line contains the tail of a verse followed by the start of the
+  // next (very common), sorting by position alone interleaves them (e.g. verse
+  // A's word #1 and verse B's word #1 would tie). Words are pushed in the order
+  // they're encountered while iterating data.verses (already correct Quran
+  // order) and each verse's own words array (already position-ascending), so
+  // insertion order alone is already correct reading order — just keep it.
+  const lines: MushafWord[][] = Array.from({ length: LINES_PER_PAGE }, (_, i) => wordsByLine.get(i + 1) ?? []);
 
   return {
     pageNumber,
