@@ -43,6 +43,11 @@ export default {
         sans:    ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
         display: ['"Playfair Display"', 'Georgia', 'serif'],
         arabic:  ['"Scheherazade New"', '"Amiri"', '"Noto Naskh Arabic"', 'serif'],
+        // Nastaleeq-style font for the 16-line Indo-Pak mushaf reading view — visually
+        // distinct from the Naskh-style `arabic` font used by the recitation player.
+        // Placeholder pending a licensed Indo-Pak Quran font (see plan notes); Noto
+        // Nastaliq Urdu is OFL-licensed and safe to bundle as-is.
+        mushaf:  ['"Noto Nastaliq Urdu"', '"Scheherazade New"', 'serif'],
       },
       backgroundImage: {
         'mosque-gradient':

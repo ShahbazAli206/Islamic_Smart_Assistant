@@ -1,0 +1,65 @@
+// Offline read-through cache for the 16-line Indo-Pak mushaf dataset.
+//
+// Read Only Mode must keep working once a page has been viewed, even fully
+// offline — relying on the browser's HTTP cache alone isn't guaranteed (varies
+// by browser/storage pressure). This mirrors the IndexedDB pattern already used
+// for custom Azan clips in customAzan.ts: 'isa-azan' / 'clips' there, 'isa-mushaf'
+// / 'pages' here. Unlike audio Blobs, these JSON pages are stored directly
+// (IndexedDB natively supports structured-cloneable objects — no Blob needed).
+
+import type { MushafPage, MushafIndex } from './mushaf';
+
+const DB_NAME = 'isa-mushaf';
+const STORE = 'pages';
+const INDEX_KEY = 'index';
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') { reject(new Error('IndexedDB unavailable')); return; }
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  return openDb().then(
+    (db) =>
+      new Promise<T>((resolve, reject) => {
+        const t = db.transaction(STORE, mode);
+        const request = run(t.objectStore(STORE));
+        t.oncomplete = () => { resolve(request.result); db.close(); };
+        t.onerror = () => { reject(t.error); db.close(); };
+        t.onabort = () => { reject(t.error); db.close(); };
+      }),
+  );
+}
+
+export async function getCachedMushafPage(pageNumber: number): Promise<MushafPage | null> {
+  try {
+    const page = await tx<MushafPage | undefined>('readonly', (store) => store.get(pageNumber));
+    return page ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function putCachedMushafPage(pageNumber: number, page: MushafPage): Promise<void> {
+  return tx('readwrite', (store) => store.put(page, pageNumber)).then(() => undefined).catch(() => undefined);
+}
+
+export async function getCachedMushafIndex(): Promise<MushafIndex | null> {
+  try {
+    const index = await tx<MushafIndex | undefined>('readonly', (store) => store.get(INDEX_KEY));
+    return index ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function putCachedMushafIndex(index: MushafIndex): Promise<void> {
+  return tx('readwrite', (store) => store.put(index, INDEX_KEY)).then(() => undefined).catch(() => undefined);
+}
