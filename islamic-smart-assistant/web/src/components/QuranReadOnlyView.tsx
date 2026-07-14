@@ -222,13 +222,24 @@ function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: bool
     const el = ref.current;
     if (!el) return;
     const fit = () => {
-      el.style.fontSize = `${LINE_BASE_REM}rem`;
-      if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth) {
-        const scale = Math.max(0.45, (el.clientWidth / el.scrollWidth) * 0.98);
-        el.style.fontSize = `${LINE_BASE_REM * scale}rem`;
+      // Iterative: the gap between words is fixed rem (doesn't shrink with the
+      // font), so a single proportional pass undershoots on dense lines —
+      // repeat until it actually fits (or the floor is reached).
+      let size = LINE_BASE_REM;
+      el.style.fontSize = `${size}rem`;
+      for (let pass = 0; pass < 8; pass++) {
+        if (el.clientWidth <= 0 || el.scrollWidth <= el.clientWidth) break;
+        size = Math.max(0.85, size * (el.clientWidth / el.scrollWidth) * 0.97);
+        el.style.fontSize = `${size}rem`;
+        if (size <= 0.85) break;
       }
     };
     fit();
+    // The Arabic webfont may finish loading after the first measurement — its
+    // glyphs are wider than the fallback font's, so re-fit once fonts settle.
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready.then(fit).catch(() => {});
+    }
     // Container width changes (window resize, sidebar toggle) need a re-fit.
     // Font-size changes don't alter the row's own box (line-height and padding
     // are in fixed rem), so this doesn't feed back into itself.
@@ -246,7 +257,9 @@ function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: bool
       // vertical space instead of collapsing — an empty flex row has no
       // intrinsic height on its own. Every row except the last carries a
       // thin rule underneath, like the ruled lines of a printed page.
-      className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-2 py-1.5 font-bold leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
+      // gap is em-based so word spacing shrinks along with the font — a fixed
+      // px gap makes very dense lines (19-20 words) unfittable at any size.
+      className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-[0.3em] py-1.5 font-bold leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
         isDark ? 'text-parchment' : 'text-ink'
       } ${
         isLast ? '' : isDark ? 'border-b border-gold-400/15' : 'border-b border-amber-800/15'
