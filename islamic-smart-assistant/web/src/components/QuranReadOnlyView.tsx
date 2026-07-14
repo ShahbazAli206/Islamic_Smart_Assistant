@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, WifiOff } from 'lucide-react';
-import { useMushafPage, useMushafIndex, usePrefetchMushafNeighbors, MUSHAF_TOTAL_PAGES } from '@/lib/mushaf';
+import { useMushafPage, useMushafIndex, usePrefetchMushafNeighbors, MUSHAF_TOTAL_PAGES, type MushafWord } from '@/lib/mushaf';
 import { SURAHS } from '@/lib/surahs';
 
 type Props = {
@@ -11,6 +11,9 @@ type Props = {
   onPageChange: (page: number) => void;
   isDark: boolean;
 };
+
+/** 3 → ٣ — printed mushaf headers/roundels use Arabic-Indic digits. */
+const toArabicDigits = (n: number) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
 
 /**
  * Page-by-page reading view of the 16-line Indo-Pak mushaf — a real "read the
@@ -29,10 +32,9 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
   const goTo = (n: number) => onPageChange(Math.min(MUSHAF_TOTAL_PAGES, Math.max(1, n)));
 
   const juzLabel = data?.juz.length ? `Juz ${data.juz[0]}` : '';
-  const surahLabel = data?.surahs
-    .map((n) => SURAHS.find((s) => s.number === n)?.arabic)
-    .filter(Boolean)
-    .join(' — ') ?? '';
+  // The surah the page opens with (smallest number on the page) — what a
+  // printed mushaf shows in the page's top corner cartouche.
+  const headerSurah = data ? SURAHS.find((s) => s.number === data.surahs[0]) : undefined;
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
@@ -108,36 +110,49 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
         .tajweed-ghunnah { color: #FF7E1E; }
       `}</style>
 
-      {/* ── The mushaf page itself — ornate double-border frame, like a printed mushaf ── */}
-      <div
-        className={`relative rounded-2xl p-[6px] shadow-card-soft ${
-          isDark ? 'bg-gold-gradient/90' : 'bg-gold-gradient'
-        }`}
-      >
+      {/* ── The mushaf page itself — layered frame like a printed mushaf:
+             gold band → double rule → thin inner rule → plain cream page ── */}
+      <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient">
         <div
-          className={`relative rounded-[14px] border-2 px-6 py-6 sm:px-10 sm:py-8 pattern-bg ${
-            isDark
-              ? 'border-gold-400/30 bg-emerald-950/85'
-              : 'border-amber-700/25 bg-[rgba(255,250,238,0.92)]'
+          className={`rounded-xl border-4 border-double p-[3px] ${
+            isDark ? 'border-gold-400/60' : 'border-amber-700/60'
           }`}
         >
-          {/* In-page header: Juz badge · Surah name · (page number already shown above) */}
+          <div
+            className={`relative rounded-lg border px-5 py-5 sm:px-8 sm:py-6 ${
+              isDark
+                ? 'border-gold-400/25 bg-emerald-950/90'
+                : 'border-amber-700/25 bg-[#FBF4E2]'
+            }`}
+          >
+          {/* Page-top cartouches, printed-mushaf style: surah name+number (left),
+              page number in Arabic digits (center), para/juz number (right). */}
           {data && (
-            <div className={`flex items-center justify-between mb-5 pb-3 border-b ${isDark ? 'border-gold-400/20' : 'border-amber-700/20'}`}>
-              <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-xs font-display font-bold shrink-0 ${
-                isDark ? 'bg-gold-gradient text-midnight-900' : 'bg-gold-gradient text-midnight-900'
-              }`}>
-                {data.juz[0]}
+            <div className={`flex items-center justify-between gap-2 mb-4 pb-3 border-b ${isDark ? 'border-gold-400/25' : 'border-amber-700/25'}`}>
+              <span
+                dir="rtl"
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
+                  isDark
+                    ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
+                    : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
+                }`}
+              >
+                {headerSurah ? `${headerSurah.arabic} ${toArabicDigits(headerSurah.number)}` : ''}
               </span>
-              {surahLabel && (
-                <span dir="rtl" className={`font-arabic text-xl ${isDark ? 'text-gold-200' : 'text-amber-900'}`}>
-                  {surahLabel}
-                </span>
-              )}
-              <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-xs font-display font-bold shrink-0 ${
-                isDark ? 'bg-gold-gradient text-midnight-900' : 'bg-gold-gradient text-midnight-900'
-              }`}>
-                {page}
+
+              <span className="inline-flex items-center justify-center rounded-full px-4 py-0.5 font-arabic text-lg font-bold bg-gold-gradient text-midnight-900 shadow-[0_0_10px_rgba(221,185,75,0.35)]">
+                {toArabicDigits(page)}
+              </span>
+
+              <span
+                dir="rtl"
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
+                  isDark
+                    ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
+                    : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
+                }`}
+              >
+                {`پارہ ${toArabicDigits(data.juz[0])}`}
               </span>
             </div>
           )}
@@ -172,57 +187,95 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.22 }}
-                className="flex flex-col justify-between gap-0"
+                className="flex flex-col justify-between gap-0 overflow-hidden"
                 style={{ minHeight: '48vh' }}
               >
                 {data.lines.map((line, i) => (
-                  <div
-                    key={i}
-                    dir="rtl"
-                    // min-h keeps blank lines (e.g. page 1's decorative Al-Fatihah header,
-                    // which the API doesn't return content for) taking up their real
-                    // vertical space instead of collapsing — an empty flex row has no
-                    // intrinsic height on its own.
-                    className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-2 text-[1.7rem] sm:text-[1.9rem] leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
-                      isDark ? 'text-parchment' : 'text-ink'
-                    }`}
-                    style={{
-                      // Real mushaf lines never wrap — a printed line is exactly one row.
-                      // If the font renders wider than the source dataset assumed,
-                      // compress words to fit rather than wrapping.
-                      fontSize: line.length > 9 ? '1.35rem' : undefined,
-                    }}
-                  >
-                    {line.map((word, wi) =>
-                      word.charType === 'end' ? (
-                        <span
-                          key={wi}
-                          className={`inline-flex shrink-0 items-center justify-center w-[1.35em] h-[1.35em] rounded-full border-2 text-[0.55em] font-semibold align-middle ${
-                            isDark
-                              ? 'border-gold-400/70 text-gold-200 bg-emerald-950/60'
-                              : 'border-amber-700/50 text-amber-800 bg-amber-50/80'
-                          }`}
-                        >
-                          {word.textUthmani}
-                        </span>
-                      ) : (
-                        // tajweedHtml is pre-sanitized at ingest time to `<span
-                        // class="tajweed-RULE">…</span>` + plain text only — see
-                        // sanitizeTajweedFragment in the ingestion script.
-                        <span
-                          key={wi}
-                          className="shrink whitespace-nowrap"
-                          dangerouslySetInnerHTML={{ __html: word.tajweedHtml }}
-                        />
-                      ),
-                    )}
-                  </div>
+                  <MushafLine key={i} line={line} isLast={i === data.lines.length - 1} isDark={isDark} />
                 ))}
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Base font size for a mushaf line; dense lines are shrunk from here to fit.
+const LINE_BASE_REM = 1.9;
+
+/**
+ * One printed line of the page. A real mushaf line never wraps, so this
+ * renders at full size, measures actual overflow, and shrinks just this
+ * line's font precisely enough to fit its row — the digital equivalent of a
+ * typesetter condensing a dense line. Fixed font-size thresholds can't cover
+ * all 548 pages (word width varies too much), and clipping would silently
+ * hide words, so fit-to-measure is the only safe option. Line-height is a
+ * fixed rem so shrunken lines still sit on the same evenly-spaced rules.
+ */
+function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: boolean; isDark: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.fontSize = `${LINE_BASE_REM}rem`;
+      if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth) {
+        const scale = Math.max(0.45, (el.clientWidth / el.scrollWidth) * 0.98);
+        el.style.fontSize = `${LINE_BASE_REM * scale}rem`;
+      }
+    };
+    fit();
+    // Container width changes (window resize, sidebar toggle) need a re-fit.
+    // Font-size changes don't alter the row's own box (line-height and padding
+    // are in fixed rem), so this doesn't feed back into itself.
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [line]);
+
+  return (
+    <div
+      ref={ref}
+      dir="rtl"
+      // min-h keeps blank lines (e.g. page 1's decorative Al-Fatihah header,
+      // which the API doesn't return content for) taking up their real
+      // vertical space instead of collapsing — an empty flex row has no
+      // intrinsic height on its own. Every row except the last carries a
+      // thin rule underneath, like the ruled lines of a printed page.
+      className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-2 py-1.5 font-bold leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
+        isDark ? 'text-parchment' : 'text-ink'
+      } ${
+        isLast ? '' : isDark ? 'border-b border-gold-400/15' : 'border-b border-amber-800/15'
+      }`}
+      style={{ fontSize: `${LINE_BASE_REM}rem` }}
+    >
+      {line.map((word, wi) =>
+        word.charType === 'end' ? (
+          <span
+            key={wi}
+            className={`inline-flex shrink-0 items-center justify-center w-[1.35em] h-[1.35em] rounded-full border-2 text-[0.55em] font-semibold align-middle ${
+              isDark
+                ? 'border-gold-400/70 text-gold-200 bg-emerald-950/60'
+                : 'border-amber-700/50 text-amber-800 bg-amber-50/80'
+            }`}
+          >
+            {toArabicDigits(Number(word.verseKey.split(':')[1]) || 0)}
+          </span>
+        ) : (
+          // tajweedHtml is pre-sanitized at ingest time to `<span
+          // class="tajweed-RULE">…</span>` + plain text only — see
+          // sanitizeTajweedFragment in the ingestion script.
+          <span
+            key={wi}
+            className="shrink whitespace-nowrap"
+            dangerouslySetInnerHTML={{ __html: word.tajweedHtml }}
+          />
+        ),
+      )}
     </div>
   );
 }
