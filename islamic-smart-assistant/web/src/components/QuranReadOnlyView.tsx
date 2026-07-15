@@ -37,9 +37,12 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
   const headerSurah = data ? SURAHS.find((s) => s.number === data.surahs[0]) : undefined;
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
+    // On phones the mushaf page runs edge-to-edge: the negative margin cancels
+    // the two ancestor x-paddings (px-5 content wrapper + px-2 player wrapper
+    // in page.tsx = 1.75rem per side); ≥sm it re-centers with the usual gutter.
+    <div className="w-[calc(100%+3.5rem)] -mx-7 sm:w-full sm:mx-auto max-w-2xl flex flex-col gap-4">
       {/* ── Header: Juz · Page + navigation ── */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-3 sm:px-1">
         <button
           onClick={() => goTo(page - 1)}
           disabled={page <= 1}
@@ -119,7 +122,7 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
           }`}
         >
           <div
-            className={`relative rounded-lg border px-5 py-5 sm:px-8 sm:py-6 ${
+            className={`relative rounded-lg border px-2 py-5 sm:px-8 sm:py-6 ${
               isDark
                 ? 'border-gold-400/25 bg-emerald-950/90'
                 : 'border-amber-700/25 bg-[#FBF4E2]'
@@ -187,12 +190,8 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.22 }}
-                className="flex flex-col justify-between gap-0 overflow-hidden"
-                style={{ minHeight: '48vh' }}
               >
-                {data.lines.map((line, i) => (
-                  <MushafLine key={i} line={line} isLast={i === data.lines.length - 1} isDark={isDark} />
-                ))}
+                <MushafPageLines lines={data.lines} isDark={isDark} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -203,35 +202,48 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
   );
 }
 
-// Base font size for a mushaf line; dense lines are shrunk from here to fit.
+// Base font size for a mushaf line; the page is shrunk from here to fit.
 const LINE_BASE_REM = 1.9;
 
 /**
- * One printed line of the page. A real mushaf line never wraps, so this
- * renders at full size, measures actual overflow, and shrinks just this
- * line's font precisely enough to fit its row — the digital equivalent of a
- * typesetter condensing a dense line. Fixed font-size thresholds can't cover
- * all 548 pages (word width varies too much), and clipping would silently
+ * All 16 printed lines of the page, sharing ONE font size — like real print,
+ * where the whole page is typeset at a single size. A mushaf line never
+ * wraps, so the fitting pass measures every row at full size, finds the
+ * tightest one, and applies that single scale to the entire page (per-line
+ * fitting made dense lines visibly smaller than their neighbors). Fixed
+ * font-size thresholds can't cover all 548 pages and clipping would silently
  * hide words, so fit-to-measure is the only safe option. Line-height is a
- * fixed rem so shrunken lines still sit on the same evenly-spaced rules.
+ * fixed rem so the 16 ruled rows stay evenly spaced regardless of font size.
  */
-function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: boolean; isDark: boolean }) {
+function MushafPageLines({ lines, isDark }: { lines: MushafWord[][]; isDark: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const cont = ref.current;
+    if (!cont) return;
+    const rows = Array.from(cont.children) as HTMLElement[];
+    const apply = (size: number) => rows.forEach((r) => { r.style.fontSize = `${size}rem`; });
     const fit = () => {
-      // Iterative: the gap between words is fixed rem (doesn't shrink with the
-      // font), so a single proportional pass undershoots on dense lines —
-      // repeat until it actually fits (or the floor is reached).
+      if (!rows.length) return;
+      // Iterative: parts of a row (borders, roundel strokes) don't shrink
+      // perfectly linearly with the font, so a single proportional pass can
+      // undershoot — repeat until every row fits (or the floor is reached).
       let size = LINE_BASE_REM;
-      el.style.fontSize = `${size}rem`;
+      apply(size);
       for (let pass = 0; pass < 8; pass++) {
-        if (el.clientWidth <= 0 || el.scrollWidth <= el.clientWidth) break;
-        size = Math.max(0.85, size * (el.clientWidth / el.scrollWidth) * 0.97);
-        el.style.fontSize = `${size}rem`;
-        if (size <= 0.85) break;
+        let worst = 1;
+        for (const r of rows) {
+          if (r.clientWidth > 0 && r.scrollWidth > r.clientWidth) {
+            worst = Math.min(worst, r.clientWidth / r.scrollWidth);
+          }
+        }
+        if (worst >= 1) break;
+        // Floor is a safety net against measurement pathologies only — it must
+        // sit low enough that even the densest line on a phone-width screen
+        // fits, because clipping words of the Quran is never acceptable.
+        size = Math.max(0.5, size * worst * 0.97);
+        apply(size);
+        if (size <= 0.5) break;
       }
     };
     fit();
@@ -241,16 +253,26 @@ function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: bool
       document.fonts.ready.then(fit).catch(() => {});
     }
     // Container width changes (window resize, sidebar toggle) need a re-fit.
-    // Font-size changes don't alter the row's own box (line-height and padding
-    // are in fixed rem), so this doesn't feed back into itself.
+    // Font-size changes don't alter the container's box (row height and
+    // padding are in fixed rem), so this doesn't feed back into itself.
     const ro = new ResizeObserver(fit);
-    ro.observe(el);
+    ro.observe(cont);
     return () => ro.disconnect();
-  }, [line]);
+  }, [lines]);
 
   return (
+    <div ref={ref} className="flex flex-col justify-between gap-0 overflow-hidden" style={{ minHeight: '48vh' }}>
+      {lines.map((line, i) => (
+        <MushafLine key={i} line={line} isLast={i === lines.length - 1} isDark={isDark} />
+      ))}
+    </div>
+  );
+}
+
+/** One printed line — purely presentational; MushafPageLines owns the sizing. */
+function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: boolean; isDark: boolean }) {
+  return (
     <div
-      ref={ref}
       dir="rtl"
       // min-h keeps blank lines (e.g. page 1's decorative Al-Fatihah header,
       // which the API doesn't return content for) taking up their real

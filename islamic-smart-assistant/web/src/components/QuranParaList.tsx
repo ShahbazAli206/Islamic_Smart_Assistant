@@ -71,8 +71,10 @@ export function QuranParaList({ activeJuz, onSelect, isDark }: Props) {
       <div
         className="relative flex-1 overflow-y-auto min-h-0"
         style={{
-          maskImage: 'linear-gradient(180deg, transparent 0%, black 6%, black 94%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 6%, black 94%, transparent 100%)',
+          // Fade only at the bottom — a top fade made the first visible rows
+          // under the header look washed-out/semi-transparent.
+          maskImage: 'linear-gradient(180deg, black 0%, black 94%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(180deg, black 0%, black 94%, transparent 100%)',
         }}
       >
         <div className="px-3 py-3 space-y-1.5">
