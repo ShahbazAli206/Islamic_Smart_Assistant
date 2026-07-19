@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, WifiOff } from 'lucide-react';
 import { useMushafPage, useMushafIndex, usePrefetchMushafNeighbors, MUSHAF_TOTAL_PAGES, type MushafWord } from '@/lib/mushaf';
 import { SURAHS } from '@/lib/surahs';
@@ -114,8 +114,12 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
       `}</style>
 
       {/* ── The mushaf page itself — layered frame like a printed mushaf:
-             gold band → double rule → thin inner rule → plain cream page ── */}
-      <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient">
+             gold band → double rule → thin inner rule → plain cream page.
+             Font size is FIXED; the page's width comes from its widest line
+             (w-max), and this wrapper scrolls horizontally when the window is
+             narrower than the page — never shrinking the text. ── */}
+      <div className="overflow-x-auto">
+      <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient w-max min-w-full">
         <div
           className={`rounded-xl border-4 border-double p-[3px] ${
             isDark ? 'border-gold-400/60' : 'border-amber-700/60'
@@ -160,108 +164,50 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
             </div>
           )}
 
-          <AnimatePresence mode="wait">
-            {isLoading && (
-              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <PageSkeleton isDark={isDark} />
-              </motion.div>
-            )}
+          {/* No exit animations here — an exit that fails to complete can leave
+              the PREVIOUS page's lines stuck on screen while the header above
+              (outside this block) already shows the new page. Enter-only fades
+              keyed by page cannot get into that state. */}
+          {isLoading && <PageSkeleton isDark={isDark} />}
 
-            {isError && !isLoading && (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className={`flex flex-col items-center gap-2 py-16 text-center ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}
-              >
-                <WifiOff size={28} />
-                <p className="font-semibold">This page isn&apos;t available offline yet</p>
-                <p className="text-sm max-w-xs">
-                  Connect to the internet once to load it — after that it stays available offline.
-                </p>
-              </motion.div>
-            )}
+          {isError && !isLoading && (
+            <div className={`flex flex-col items-center gap-2 py-16 text-center ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>
+              <WifiOff size={28} />
+              <p className="font-semibold">This page isn&apos;t available offline yet</p>
+              <p className="text-sm max-w-xs">
+                Connect to the internet once to load it — after that it stays available offline.
+              </p>
+            </div>
+          )}
 
-            {data && !isLoading && (
-              <motion.div
-                key={page}
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.22 }}
-              >
-                <MushafPageLines lines={data.lines} isDark={isDark} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {data && !isLoading && (
+            <motion.div
+              key={page}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.22 }}
+            >
+              <MushafPageLines lines={data.lines} isDark={isDark} />
+            </motion.div>
+          )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
 }
 
-// Base font size for a mushaf line; the page is shrunk from here to fit.
-const LINE_BASE_REM = 1.9;
-
 /**
- * All 16 printed lines of the page, sharing ONE font size — like real print,
- * where the whole page is typeset at a single size. A mushaf line never
- * wraps, so the fitting pass measures every row at full size, finds the
- * tightest one, and applies that single scale to the entire page (per-line
- * fitting made dense lines visibly smaller than their neighbors). Fixed
- * font-size thresholds can't cover all 548 pages and clipping would silently
- * hide words, so fit-to-measure is the only safe option. Line-height is a
- * fixed rem so the 16 ruled rows stay evenly spaced regardless of font size.
+ * All 16 printed lines of the page, at one FIXED font size — like real print.
+ * A mushaf line never wraps; instead of shrinking text to fit small windows,
+ * the container is width:max-content, so the page is exactly as wide as its
+ * widest line and every other line justifies to that same width. Ancestors
+ * scroll when the window is narrower than the page.
  */
 function MushafPageLines({ lines, isDark }: { lines: MushafWord[][]; isDark: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const cont = ref.current;
-    if (!cont) return;
-    const rows = Array.from(cont.children) as HTMLElement[];
-    const apply = (size: number) => rows.forEach((r) => { r.style.fontSize = `${size}rem`; });
-    const fit = () => {
-      if (!rows.length) return;
-      // Iterative: parts of a row (borders, roundel strokes) don't shrink
-      // perfectly linearly with the font, so a single proportional pass can
-      // undershoot — repeat until every row fits (or the floor is reached).
-      let size = LINE_BASE_REM;
-      apply(size);
-      for (let pass = 0; pass < 8; pass++) {
-        let worst = 1;
-        for (const r of rows) {
-          if (r.clientWidth > 0 && r.scrollWidth > r.clientWidth) {
-            worst = Math.min(worst, r.clientWidth / r.scrollWidth);
-          }
-        }
-        if (worst >= 1) break;
-        // Floor is a safety net against measurement pathologies only — it must
-        // sit low enough that even the densest line on a phone-width screen
-        // fits, because clipping words of the Quran is never acceptable.
-        size = Math.max(0.5, size * worst * 0.97);
-        apply(size);
-        if (size <= 0.5) break;
-      }
-    };
-    fit();
-    // The Arabic webfont may finish loading after the first measurement — its
-    // glyphs are wider than the fallback font's, so re-fit once fonts settle.
-    if (typeof document !== 'undefined' && document.fonts?.ready) {
-      document.fonts.ready.then(fit).catch(() => {});
-    }
-    // Container width changes (window resize, sidebar toggle) need a re-fit.
-    // Font-size changes don't alter the container's box (row height and
-    // padding are in fixed rem), so this doesn't feed back into itself.
-    const ro = new ResizeObserver(fit);
-    ro.observe(cont);
-    return () => ro.disconnect();
-  }, [lines]);
-
   return (
-    <div ref={ref} className="flex flex-col justify-between gap-0 overflow-hidden" style={{ minHeight: '48vh' }}>
+    <div className="flex flex-col w-max min-w-full">
       {lines.map((line, i) => (
         <MushafLine key={i} line={line} isLast={i === lines.length - 1} isDark={isDark} />
       ))}
@@ -269,7 +215,7 @@ function MushafPageLines({ lines, isDark }: { lines: MushafWord[][]; isDark: boo
   );
 }
 
-/** One printed line — purely presentational; MushafPageLines owns the sizing. */
+/** One printed line — fixed font size, never wraps, never shrinks. */
 function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: boolean; isDark: boolean }) {
   return (
     <div
@@ -279,14 +225,11 @@ function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: bool
       // vertical space instead of collapsing — an empty flex row has no
       // intrinsic height on its own. Every row except the last carries a
       // thin rule underneath, like the ruled lines of a printed page.
-      // gap is em-based so word spacing shrinks along with the font — a fixed
-      // px gap makes very dense lines (19-20 words) unfittable at any size.
-      className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-[0.3em] py-1.5 font-bold leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
+      className={`font-arabic flex flex-nowrap justify-between items-baseline gap-x-2 py-1.5 text-[1.5rem] font-bold leading-[2.6rem] min-h-[2.6rem] whitespace-nowrap ${
         isDark ? 'text-parchment' : 'text-ink'
       } ${
         isLast ? '' : isDark ? 'border-b border-gold-400/15' : 'border-b border-amber-800/15'
       }`}
-      style={{ fontSize: `${LINE_BASE_REM}rem` }}
     >
       {line.map((word, wi) =>
         word.charType === 'end' ? (
@@ -306,7 +249,7 @@ function MushafLine({ line, isLast, isDark }: { line: MushafWord[]; isLast: bool
           // sanitizeTajweedFragment in the ingestion script.
           <span
             key={wi}
-            className="shrink whitespace-nowrap"
+            className="whitespace-nowrap"
             dangerouslySetInnerHTML={{ __html: word.tajweedHtml }}
           />
         ),

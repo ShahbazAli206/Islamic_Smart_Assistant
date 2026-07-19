@@ -183,6 +183,12 @@ function transformPage(pageNumber: number, data: ApiPageResponse): MushafPage {
 
     verse.words.forEach((word, wordIdx) => {
       if (word.char_type_name && word.char_type_name !== 'word' && word.char_type_name !== 'end') return;
+      // A verse that spans a page boundary is returned by by_page with ALL its
+      // words, including the ones that physically sit on the neighboring page
+      // (they carry that page's page_number and line_number). Without this
+      // filter those words get merged into this page's lines — corrupting line
+      // content and inflating some lines to 19-23 words.
+      if (word.page_number !== pageNumber) return;
       const line = wordsByLine.get(word.line_number) ?? [];
       const plain = escapeHtml(word.text_uthmani ?? '');
       const sanitized = tajweedAligned ? sanitizeTajweedFragment(tajweedTokens[wordIdx]) : null;

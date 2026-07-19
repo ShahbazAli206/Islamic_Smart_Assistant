@@ -18,7 +18,7 @@ const INDEX_KEY = 'index';
 // have that field — are treated as misses instead of being served stale and
 // silently rendering incomplete/blank content. A version mismatch just means
 // one extra network fetch to repopulate the cache with the current shape.
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3; // v3: dataset re-ingested with cross-page word pollution fixed
 
 type CacheEntry<T> = { v: number; data: T };
 
