@@ -722,27 +722,6 @@ export default function AzanPage() {
       .catch((e) => { setActiveId(null); setLoadingId(null); setError(`Couldn't play ${meta.name}: ${e?.message ?? 'browser blocked playback'}`); });
   };
 
-  const deleteCustom = async (id: string) => {
-    if (activeId === id) { audioRef.current?.pause(); setActiveId(null); revokeCustomUrl(); }
-    await deleteAzanClip(id);
-    setCustomAzans((prev) => prev.filter((c) => c.id !== id));
-    setRemoteCustoms((prev) => prev.filter((c) => c.id !== id));
-    // Remove the synced copy too (server checks ownership; no-op otherwise).
-    Azan.deleteVoice(id).catch(() => {});
-    if (selectedId === id) setSelectedId('makkah');
-  };
-
-  const deleteItem = async (item: Item) => {
-    if (item.isCustom) {
-      await deleteCustom(item.id);
-    } else {
-      if (activeId === item.id) { audioRef.current?.pause(); setActiveId(null); }
-      if (selectedId === item.id) setSelectedId('makkah');
-      setHiddenVoices((prev) => [...prev, item.id]);
-    }
-    setDeleteToast(item.name);
-  };
-
   const openTrimmer = (item: Item) => {
     const v = VOICES.find((x) => x.id === item.id);
     setTrimmingItem({
@@ -1362,10 +1341,6 @@ export default function AzanPage() {
                       <button onClick={() => openTrimmer(item)} title="Trim"
                         className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
                         <Scissors size={15} />
-                      </button>
-                      <button onClick={() => deleteItem(item)} title="Delete"
-                        className="w-10 h-10 grid place-items-center rounded-full border border-rose-100 text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition shrink-0">
-                        <Trash2 size={15} />
                       </button>
                       <button
                         onClick={() => setSelectedId(item.id)}

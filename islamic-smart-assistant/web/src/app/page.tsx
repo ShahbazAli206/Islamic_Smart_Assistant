@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { useDesktopDownloadUrl } from '@/lib/desktopApp';
+import { useIsDesktop } from '@/lib/useIsDesktop';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';
@@ -57,6 +58,7 @@ export default function HomePage() {
   // matches instead of silently defaulting to the Standard/Shafi calculation.
   const loc = usePrayerParams();
   const desktopDownloadUrl = useDesktopDownloadUrl();
+  const isDesktop = useIsDesktop();
 
   // Nav is transparent over the hero photo at the top, then gains a dark blurred
   // bar once the user scrolls past the fold.
@@ -148,13 +150,15 @@ export default function HomePage() {
                 >
                   <BookOpen size={18} /> Explore Quran
                 </Link>
-                <a
-                  href={desktopDownloadUrl}
-                  download
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 font-bold shadow-lg shadow-emerald-900/40 transition-all hover:shadow-emerald-700/50 hover:scale-[1.02] active:scale-100"
-                >
-                  <MonitorDown size={18} /> Download Desktop App
-                </a>
+                {!isDesktop && (
+                  <a
+                    href={desktopDownloadUrl}
+                    download
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 font-bold shadow-lg shadow-emerald-900/40 transition-all hover:shadow-emerald-700/50 hover:scale-[1.02] active:scale-100"
+                  >
+                    <MonitorDown size={18} /> Download Desktop App
+                  </a>
+                )}
               </div>
               <div className="flex items-center gap-3 pt-3">
                 <div className="flex -space-x-3">

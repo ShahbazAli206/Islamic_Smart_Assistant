@@ -66,8 +66,9 @@ function MainTabs() {
   const theme  = useTheme();
   const isDark = theme.scheme === 'dark';
 
-  const tabBarBg     = isDark ? '#0A1220' : '#FFFFFF';
-  const accentColor  = theme.accent;
+  // Bottom bar matches the light home design: white surface, emerald active tab.
+  const tabBarBg    = '#FFFFFF';
+  const accentColor = '#0E9E63';
 
   const stackHeaderStyle: any = {
     backgroundColor: isDark ? '#0E1B2A' : theme.card,
@@ -81,18 +82,19 @@ function MainTabs() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: tabBarBg,
-          borderTopColor: theme.divider,
+          borderTopColor: '#EEECF3',
           borderTopWidth: 1,
-          height: 66,
-          paddingBottom: 10,
-          paddingTop: 6,
-          shadowColor: '#000',
-          shadowOpacity: isDark ? 0.4 : 0.08,
-          shadowRadius: 12,
-          elevation: 10,
+          height: 68,
+          paddingBottom: 12,
+          paddingTop: 8,
+          shadowColor: '#1B2530',
+          shadowOpacity: 0.06,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: -4 },
+          elevation: 12,
         },
         tabBarActiveTintColor:   accentColor,
-        tabBarInactiveTintColor: theme.subText,
+        tabBarInactiveTintColor: '#9AA0AB',
         tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
       }}
     >

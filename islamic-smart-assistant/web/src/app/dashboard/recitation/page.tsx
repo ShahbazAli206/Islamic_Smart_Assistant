@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlarmClock, Search, X, Plus, Trash2, Pencil, Play, Square,
   Volume2, Volume1, VolumeX, Mic2, Languages, CalendarClock, CalendarDays,
   Clock, Repeat, Check, Power, Sparkles, BookOpen, Bell, Users, Headphones,
   Download, Compass, Leaf, Award, Heart, History, ChevronRight, ChevronDown,
+  Sunrise, Sun, Sunset, Moon,
 } from 'lucide-react';
 import { SURAHS } from '@/lib/surahs';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -21,8 +23,18 @@ import {
 import {
   formatTime, type RecitationSchedule, type RepeatMode,
 } from '@/lib/recitationSchedule';
+import { fetchTimingsByCity, fetchTimingsByCoords, type PrayerTimes } from '@/lib/prayer';
+import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
+
+// Prayers offered as an "after prayer" quick-set for the time field, in daily order.
+// Uses the exact same location + calculation method/fiqh inputs as the rest of the
+// app (see usePrayerParams), so the time matches what the user sees elsewhere.
+const AFTER_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const satisfies readonly (keyof PrayerTimes)[];
+const PRAYER_ICON: Record<(typeof AFTER_PRAYERS)[number], typeof Sun> = {
+  Fajr: Sunrise, Dhuhr: Sun, Asr: Sun, Maghrib: Sunset, Isha: Moon,
+};
 
 // Repeat modes for the modal's segmented picker, with their labels + icons.
 const REPEAT_MODES: RepeatMode[] = ['once', 'daily', 'weekly', 'monthly'];
@@ -194,6 +206,22 @@ export default function RecitationSchedulerPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Prayer times for the "after prayer" quick-set buttons — same location +
+  // calculation method/fiqh inputs as the rest of the app (see usePrayerParams),
+  // so clicking e.g. "Fajr" fills in the exact time shown on the dashboard.
+  const prayerParams = usePrayerParams();
+  const { data: prayerTimingsData } = useQuery({
+    queryKey: prayerParams.byCoords
+      ? ['timings', 'coords', prayerParams.lat, prayerParams.lng, prayerParams.method, prayerParams.school]
+      : ['timings', 'city', prayerParams.city, prayerParams.country],
+    queryFn: () =>
+      prayerParams.byCoords && prayerParams.lat != null && prayerParams.lng != null
+        ? fetchTimingsByCoords(prayerParams.lat, prayerParams.lng, { method: prayerParams.method, school: prayerParams.school, label: prayerParams.label })
+        : fetchTimingsByCity(prayerParams.city, prayerParams.country),
+    staleTime: 5 * 60 * 1000,
+  });
+  const prayerTimings = prayerTimingsData?.timings;
 
   // Header ayah carousel (auto-advancing → continuous animation).
   const [heroIdx, setHeroIdx] = useState(0);
@@ -713,7 +741,7 @@ export default function RecitationSchedulerPage() {
                   <label className="relative block mb-3">
                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-700/40" />
                     <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search Surah by name or number..."
-                      className="w-full pl-10 pr-3 py-3 rounded-2xl border border-emerald-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                      className="w-full pl-10 pr-3 py-3 rounded-2xl border border-emerald-200 bg-white text-sm text-emerald-950 placeholder:text-emerald-900/40 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                   </label>
 
                   <div className={`rounded-2xl border border-emerald-100 bg-white divide-y divide-emerald-50 overflow-hidden ${query.trim() || viewAll ? 'max-h-64 overflow-y-auto' : ''}`}>
@@ -750,7 +778,7 @@ export default function RecitationSchedulerPage() {
                       <p className="text-xs font-medium text-emerald-900/55 mb-1.5">Reciter</p>
                       <div className="relative">
                         <select value={reciter} onChange={(e) => setReciter(e.target.value as ReciterId)}
-                          className="w-full appearance-none px-3.5 py-3 pr-9 rounded-2xl border border-emerald-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                          className="w-full appearance-none px-3.5 py-3 pr-9 rounded-2xl border border-emerald-200 bg-white text-sm text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-300">
                           {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </select>
                         <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-700/50 pointer-events-none" />
@@ -765,7 +793,7 @@ export default function RecitationSchedulerPage() {
                             className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow ${withTranslation ? 'left-[22px]' : 'left-0.5'}`} />
                         </button>
                         <select value={translation} disabled={!withTranslation} onChange={(e) => setTranslation(e.target.value as TranslationId)}
-                          className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="flex-1 min-w-0 bg-transparent text-sm text-emerald-950 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
                           {TRANSLATIONS.filter((t) => t.id !== 'none').map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                       </div>
@@ -776,18 +804,46 @@ export default function RecitationSchedulerPage() {
 
                 {/* STEP 3: Time & Date */}
                 <StepSection n={3} title="Time & Date">
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-emerald-900/55 mb-1.5">Or set automatically after a prayer</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {AFTER_PRAYERS.map((p) => {
+                        const Icon = PRAYER_ICON[p];
+                        const t = prayerTimings?.[p];
+                        const active = !!t && time === t;
+                        return (
+                          <motion.button
+                            key={p} type="button" whileTap={{ scale: 0.96 }}
+                            onClick={() => t && setTime(t)}
+                            disabled={!t}
+                            title={t ? `Set time to ${p} (${formatTime(t)})` : `${p} time unavailable`}
+                            className={`flex flex-col items-center justify-center gap-1 px-2 py-2.5 rounded-2xl text-xs font-semibold border transition-colors
+                              ${active
+                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-glow-emerald'
+                                : 'bg-white border-emerald-200 text-emerald-900/70 hover:border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed'}`}
+                          >
+                            <Icon size={14} />
+                            {p}
+                            <span className={`text-[10px] font-normal ${active ? 'text-white/80' : 'text-emerald-900/45'}`}>
+                              {t ? formatTime(t) : '—'}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs font-medium text-emerald-900/55 mb-1.5">Time</p>
                       <div className="relative">
                         <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                          className="w-full px-3.5 py-3 rounded-2xl border border-emerald-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                          className="w-full px-3.5 py-3 rounded-2xl border border-emerald-200 bg-white text-sm text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                       </div>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-emerald-900/55 mb-1.5">{repeat === 'once' ? 'Date' : 'Start Date'}</p>
                       <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                        className="w-full px-3.5 py-3 rounded-2xl border border-emerald-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                        className="w-full px-3.5 py-3 rounded-2xl border border-emerald-200 bg-white text-sm text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                     </div>
                   </div>
                 </StepSection>
