@@ -36,6 +36,71 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
   // printed mushaf shows in the page's top corner cartouche.
   const headerSurah = data ? SURAHS.find((s) => s.number === data.surahs[0]) : undefined;
 
+  // Cartouche header + page content — identical in both the dark (CSS-framed)
+  // and light (border-image-framed) variants, only the frame around it differs.
+  const pageBody = (
+    <>
+      {/* Page-top cartouches, printed-mushaf style: surah name+number (left),
+          page number in Arabic digits (center), para/juz number (right). */}
+      {data && (
+        <div className={`flex items-center justify-between gap-2 mb-4 pb-3 border-b ${isDark ? 'border-gold-400/25' : 'border-amber-700/25'}`}>
+          <span
+            dir="rtl"
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
+              isDark
+                ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
+                : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
+            }`}
+          >
+            {headerSurah ? `${headerSurah.arabic} ${toArabicDigits(headerSurah.number)}` : ''}
+          </span>
+
+          <span className="inline-flex items-center justify-center rounded-full px-4 py-0.5 font-arabic text-lg font-bold bg-gold-gradient text-midnight-900 shadow-[0_0_10px_rgba(221,185,75,0.35)]">
+            {toArabicDigits(page)}
+          </span>
+
+          <span
+            dir="rtl"
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
+              isDark
+                ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
+                : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
+            }`}
+          >
+            {`پارہ ${toArabicDigits(data.juz[0])}`}
+          </span>
+        </div>
+      )}
+
+      {/* No exit animations here — an exit that fails to complete can leave
+          the PREVIOUS page's lines stuck on screen while the header above
+          (outside this block) already shows the new page. Enter-only fades
+          keyed by page cannot get into that state. */}
+      {isLoading && <PageSkeleton isDark={isDark} />}
+
+      {isError && !isLoading && (
+        <div className={`flex flex-col items-center gap-2 py-16 text-center ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>
+          <WifiOff size={28} />
+          <p className="font-semibold">This page isn&apos;t available offline yet</p>
+          <p className="text-sm max-w-xs">
+            Connect to the internet once to load it — after that it stays available offline.
+          </p>
+        </div>
+      )}
+
+      {data && !isLoading && (
+        <motion.div
+          key={page}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.22 }}
+        >
+          <MushafPageLines lines={data.lines} isDark={isDark} />
+        </motion.div>
+      )}
+    </>
+  );
+
   return (
     // On phones the mushaf page runs edge-to-edge: the negative margin cancels
     // the two ancestor x-paddings (px-5 content wrapper + px-2 player wrapper
@@ -96,6 +161,24 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
           wild disagree on spelling (e.g. "laam_shamsiyah" vs "…yyah") — both
           are mapped so whichever one the API actually returns still resolves. */}
       <style>{`
+        /* Light-mode page frame: the ornate border is a single image
+           (public/border_blank_page.png), applied via border-image so it wraps
+           whatever height the page content ends up being — no aspect-ratio lock
+           or JS measurement needed. Slice % come from sampling the source image's
+           actual blank-vs-ornate boundary (see git history for the sampling
+           script); repeat:stretch avoids visible seams on the long edges. */
+        .mushaf-ornate-frame {
+          border-style: solid;
+          border-width: 20px 36px;
+          border-image-source: url('/border_blank_page.png');
+          border-image-slice: 6.99% 13.96% 6.53% 13.67%;
+          border-image-repeat: stretch;
+          background-color: #FBF4E2;
+          background-clip: padding-box;
+        }
+        @media (min-width: 640px) {
+          .mushaf-ornate-frame { border-width: 28px 52px; }
+        }
         .tajweed-ham_wasl, .tajweed-silent,
         .tajweed-laam_shamsiyah, .tajweed-laam_shamsiyyah { color: #AAAAAA; }
         .tajweed-madda_normal { color: #537FFF; }
@@ -113,86 +196,28 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
         .tajweed-ghunnah { color: #FF7E1E; }
       `}</style>
 
-      {/* ── The mushaf page itself — layered frame like a printed mushaf:
-             gold band → double rule → thin inner rule → plain cream page.
+      {/* ── The mushaf page itself. Dark mode keeps the CSS-drawn layered frame
+             (gold band → double rule → thin inner rule) since no dark variant of
+             the ornate border image exists yet, and the image's baked-in cream
+             background would make dark mode's light text unreadable. Light mode
+             uses the border image directly (see .mushaf-ornate-frame above).
              Font size is FIXED; the page's width comes from its widest line
              (w-max), and this wrapper scrolls horizontally when the window is
              narrower than the page — never shrinking the text. ── */}
       <div className="overflow-x-auto">
-      <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient w-max min-w-full">
-        <div
-          className={`rounded-xl border-4 border-double p-[3px] ${
-            isDark ? 'border-gold-400/60' : 'border-amber-700/60'
-          }`}
-        >
-          <div
-            className={`relative rounded-lg border px-2 py-5 sm:px-8 sm:py-6 ${
-              isDark
-                ? 'border-gold-400/25 bg-emerald-950/90'
-                : 'border-amber-700/25 bg-[#FBF4E2]'
-            }`}
-          >
-          {/* Page-top cartouches, printed-mushaf style: surah name+number (left),
-              page number in Arabic digits (center), para/juz number (right). */}
-          {data && (
-            <div className={`flex items-center justify-between gap-2 mb-4 pb-3 border-b ${isDark ? 'border-gold-400/25' : 'border-amber-700/25'}`}>
-              <span
-                dir="rtl"
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
-                  isDark
-                    ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
-                    : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
-                }`}
-              >
-                {headerSurah ? `${headerSurah.arabic} ${toArabicDigits(headerSurah.number)}` : ''}
-              </span>
-
-              <span className="inline-flex items-center justify-center rounded-full px-4 py-0.5 font-arabic text-lg font-bold bg-gold-gradient text-midnight-900 shadow-[0_0_10px_rgba(221,185,75,0.35)]">
-                {toArabicDigits(page)}
-              </span>
-
-              <span
-                dir="rtl"
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-0.5 font-arabic text-lg leading-relaxed ${
-                  isDark
-                    ? 'border-gold-400/40 bg-emerald-950/60 text-gold-200'
-                    : 'border-amber-700/40 bg-amber-50/80 text-amber-900'
-                }`}
-              >
-                {`پارہ ${toArabicDigits(data.juz[0])}`}
-              </span>
+      {isDark ? (
+        <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient w-max min-w-full">
+          <div className="rounded-xl border-4 border-double p-[3px] border-gold-400/60">
+            <div className="relative rounded-lg border px-2 py-5 sm:px-8 sm:py-6 border-gold-400/25 bg-emerald-950/90">
+              {pageBody}
             </div>
-          )}
-
-          {/* No exit animations here — an exit that fails to complete can leave
-              the PREVIOUS page's lines stuck on screen while the header above
-              (outside this block) already shows the new page. Enter-only fades
-              keyed by page cannot get into that state. */}
-          {isLoading && <PageSkeleton isDark={isDark} />}
-
-          {isError && !isLoading && (
-            <div className={`flex flex-col items-center gap-2 py-16 text-center ${isDark ? 'text-parchment/60' : 'text-ink/55'}`}>
-              <WifiOff size={28} />
-              <p className="font-semibold">This page isn&apos;t available offline yet</p>
-              <p className="text-sm max-w-xs">
-                Connect to the internet once to load it — after that it stays available offline.
-              </p>
-            </div>
-          )}
-
-          {data && !isLoading && (
-            <motion.div
-              key={page}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.22 }}
-            >
-              <MushafPageLines lines={data.lines} isDark={isDark} />
-            </motion.div>
-          )}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mushaf-ornate-frame relative shadow-card-soft w-max min-w-full px-2 py-5 sm:px-8 sm:py-6">
+          {pageBody}
+        </div>
+      )}
       </div>
     </div>
   );
