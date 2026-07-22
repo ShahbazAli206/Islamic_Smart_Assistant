@@ -53,3 +53,23 @@ export function useLocalStorage<T>(key: string, initial: T): [T, (next: T | ((pr
 
   return [value, setter];
 }
+
+/**
+ * One-shot outside-React read of a useLocalStorage-backed value — a plain
+ * synchronous localStorage.getItem, no React state or subscription. For firing
+ * logic (schedulers/runners mounted once for the whole session) that must
+ * never trust another component's possibly-stale useLocalStorage snapshot:
+ * the native `storage` event only fires in OTHER tabs, never the tab that made
+ * the write, so a same-tab writer (e.g. the Devices page) is otherwise invisible
+ * to an already-mounted reader until the app restarts. Mirrors the pattern
+ * `readAzanDeviceSetting` already uses for the desktop/web dual-backend keys.
+ */
+export function readLocalStorageJSON<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw !== null ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}

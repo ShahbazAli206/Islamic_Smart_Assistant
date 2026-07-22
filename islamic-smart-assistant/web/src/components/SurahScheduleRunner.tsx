@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Pause, Volume2, X } from 'lucide-react';
-import { useLocalStorage } from '@/lib/useLocalStorage';
+import { useLocalStorage, readLocalStorageJSON } from '@/lib/useLocalStorage';
 import { SURAHS } from '@/lib/surahs';
 import {
   createRecitationController, type RecitationController,
@@ -59,7 +59,6 @@ type NowPlaying = { id: string; label: string; surah: number; index: number; tot
 export function SurahScheduleRunner() {
   const [schedules] = useLocalStorage<RecitationSchedule[]>('isa:recitationSchedules', []);
   const [outputId] = useLocalStorage<string>('isa:audioOutput', '');
-  const [recitationDeviceIds] = useLocalStorage<string[]>('isa:recitationDeviceIds', []);
 
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
   // A schedule that tried to fire but was blocked by the autoplay policy.
@@ -75,8 +74,6 @@ export function SurahScheduleRunner() {
   schedulesRef.current = schedules;
   const outputIdRef = useRef(outputId);
   outputIdRef.current = outputId;
-  const recitationDeviceIdsRef = useRef(recitationDeviceIds);
-  recitationDeviceIdsRef.current = recitationDeviceIds;
 
   // Create the playback controller once the <audio> element is mounted.
   useEffect(() => {
@@ -109,9 +106,13 @@ export function SurahScheduleRunner() {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       try { new Notification('Quran recitation', { body: label, silent: true }); } catch {}
     }
-    // LAN devices — fire first surah as a CDN URL on all selected devices simultaneously
+    // LAN devices — fire first surah as a CDN URL on all selected devices simultaneously.
+    // Read fresh from localStorage rather than a useLocalStorage snapshot: this
+    // component mounts once for the whole session, and the Devices page's own
+    // useLocalStorage instance writing the same key won't update our React state
+    // in the same tab (see readLocalStorageJSON's doc comment).
     const desktopApi = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
-    const lanDeviceIds = recitationDeviceIdsRef.current;
+    const lanDeviceIds = readLocalStorageJSON<string[]>('isa:recitationDeviceIds', []);
     if (desktopApi && lanDeviceIds.length > 0 && s.surahs.length > 0) {
       const url = surahAudioUrl(s.surahs[0], s.reciter);
       lanDeviceIds.forEach((id) => {
@@ -213,7 +214,8 @@ export function SurahScheduleRunner() {
     setNowPlaying(null);
     const api = typeof window !== 'undefined' ? (window as any).desktop?.devices : null;
     if (api) {
-      recitationDeviceIdsRef.current.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
+      const lanDeviceIds = readLocalStorageJSON<string[]>('isa:recitationDeviceIds', []);
+      lanDeviceIds.forEach((id) => { try { api.stop({ deviceId: id }); } catch {} });
     }
   };
 

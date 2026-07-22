@@ -9,8 +9,8 @@ import { fetchTimingsByCity, fetchTimingsByCoords, LocationError, type PrayerTim
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { readAzanDeviceSetting } from '@/lib/useAzanDeviceStorage';
 import { usePrayerParams } from '@/lib/usePrayerParams';
-import { customAzanUrl, isCustomAzan, type CustomAzan } from '@/lib/customAzan';
-import { azanLocalPath, resolveAzanCastUrl } from '@/lib/castAudioSources';
+import { customAzanUrl, getStoredRemoteUrl, isCustomAzan, type CustomAzan } from '@/lib/customAzan';
+import { azanLocalPath, resolveAzanCastUrl, toCastableUrl } from '@/lib/castAudioSources';
 
 /** Prayers that get an Azan (Sunrise is excluded). */
 const AZAN_PRAYERS: (keyof PrayerTimes)[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -406,10 +406,14 @@ export function AutoAzanScheduler() {
 
     // Resolve main azan src (needed both for the LAN branch below and local playback).
     let mainSrc: string;
+    let customRemoteUrl: string | null = null;
     if (isCustomAzan(v)) {
       const url = await customAzanUrl(v);
       if (url) { customUrlRef.current = url; mainSrc = url; }
       else mainSrc = UNLOCK_SRC;
+      // The backend-hosted URL for this clip, if it was ever uploaded/synced —
+      // unlike the IndexedDB blob URL above, this is reachable BY a Chromecast.
+      customRemoteUrl = getStoredRemoteUrl(v);
     } else {
       mainSrc = azanLocalPath(v) ?? UNLOCK_SRC;
     }
@@ -430,8 +434,16 @@ export function AutoAzanScheduler() {
     const effectiveIds = combined.length > 0 ? combined : (freshCastId ? [freshCastId] : []);
     activeLanIdsRef.current = effectiveIds;
 
-    if (effectiveIds.length > 0 && desktopApi && lanPath) {
-      const source = { kind: 'lan' as const, path: lanPath, fallbackUrl: resolveAzanCastUrl(v).url };
+    // No bundled LAN path (custom/unknown voice) no longer blocks casting entirely —
+    // fall back to a publicly-reachable URL instead: the custom clip's own synced
+    // recording when we have one, otherwise resolveAzanCastUrl's guaranteed-non-null
+    // substitute. Only the bundled-file path is gated on `lanPath`; the cast attempt
+    // itself isn't, so every selected device still gets the Azan either way.
+    if (effectiveIds.length > 0 && desktopApi) {
+      const castUrl = (customRemoteUrl && toCastableUrl(customRemoteUrl).url) || resolveAzanCastUrl(v).url;
+      const source = lanPath
+        ? { kind: 'lan' as const, path: lanPath, fallbackUrl: castUrl }
+        : { kind: 'url' as const, url: castUrl };
       const results = await Promise.allSettled(
         effectiveIds.map((id) => desktopApi.play({ deviceId: id, source, title: `Adhan — ${voiceLabel}` }))
       );

@@ -7,7 +7,7 @@ import {
   Smartphone, Tablet, Monitor, Speaker, Headphones, Radio, Wifi, Globe2,
   Bluetooth, RefreshCw, Volume2, VolumeX, CheckCircle2, AlertTriangle, Info, Cast, Loader2,
   Star, Bell, Users, Download, Compass, ChevronRight, ChevronDown, Zap, Music2, Activity,
-  MonitorSpeaker, MonitorSmartphone, Mic, X, Plus, Play, Pause, Trash2, Link2, WifiOff, LogIn,
+  MonitorSpeaker, MonitorSmartphone, Mic, X, Plus, Play, Pause, Square, Trash2, Link2, WifiOff, LogIn,
   HelpCircle, Settings, ExternalLink,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
@@ -1594,21 +1594,6 @@ export default function DevicesPage() {
                           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
                           className={`rounded-2xl p-4 flex flex-col gap-3 ${active ? T.deviceSel : isDefaultDevice ? T.deviceDefault : T.deviceCard}`}
                         >
-                          {/* Now-Playing banner  -  persists across navigation via sessionStorage */}
-                          {active && (
-                            <div className="flex items-center gap-2 rounded-xl px-3 py-2"
-                              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)' }}>
-                              <MiniEq />
-                              <p className="flex-1 text-xs font-bold text-emerald-600 truncate">
-                                Now Playing{lan.activeLabel ? ` - ${lan.activeLabel}` : ''}
-                              </p>
-                              <button onClick={() => lan.stop(d.id).catch((e: any) => showToast(`Stop failed: ${e?.message ?? e}`))}
-                                className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700 transition">
-                                <X size={12} /> Stop
-                              </button>
-                            </div>
-                          )}
-
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-start gap-3 min-w-0">
                               <span className={`w-11 h-11 shrink-0 grid place-items-center rounded-xl ${castable ? (isDark ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md') : (isDark ? 'bg-white/5 text-parchment/50' : 'bg-slate-100 text-slate-500')}`}>
@@ -1663,16 +1648,37 @@ export default function DevicesPage() {
                                 </button>
                               </div>
 
-                              {/* Volume slider (shown when playing) */}
+                              {/* Now-Playing status + stop + volume — shown while this device
+                                  is actively playing a test/recitation clip */}
                               {active && (
-                                <div className="flex items-center gap-2 max-w-xs">
-                                  <Volume2 size={14} className={T.faint} />
-                                  <input
-                                    type="range" min={0} max={1} step={0.05} value={lanVol}
-                                    onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) { setLanVol(v); lan.setVolume(d.id, v).catch(() => {}); } }}
-                                    className="flex-1 accent-emerald-500 cursor-pointer" aria-label="Device volume"
-                                  />
-                                  <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(lanVol * 100)}%</span>
+                                <div className={`rounded-2xl p-3 ${T.innerNote}`}>
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="relative shrink-0 w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center shadow-glow-emerald">
+                                      <MiniEq />
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-bold text-emerald-600 truncate">
+                                        Now Playing{lan.activeLabel ? ` — ${lan.activeLabel}` : ''}
+                                      </p>
+                                      <p className={`text-[11px] ${T.faint} truncate`}>{d.name}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => lan.stop(d.id).catch((e: any) => showToast(`Stop failed: ${e?.message ?? e}`))}
+                                      title="Stop"
+                                      className="shrink-0 w-8 h-8 grid place-items-center rounded-full bg-rose-500 text-white hover:bg-rose-600 transition shadow-sm"
+                                    >
+                                      <Square size={13} fill="currentColor" />
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-2.5">
+                                    <Volume2 size={13} className={T.faint} />
+                                    <input
+                                      type="range" min={0} max={1} step={0.05} value={lanVol}
+                                      onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) { setLanVol(v); lan.setVolume(d.id, v).catch(() => {}); } }}
+                                      className="flex-1 accent-emerald-500 cursor-pointer" aria-label="Device volume"
+                                    />
+                                    <span className={`text-xs tabular-nums ${T.faint}`}>{Math.round(lanVol * 100)}%</span>
+                                  </div>
                                 </div>
                               )}
 

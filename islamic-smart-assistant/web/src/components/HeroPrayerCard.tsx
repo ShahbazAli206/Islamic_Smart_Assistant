@@ -16,12 +16,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Settings, Clock, Sparkles, BookOpen, Compass, CircleDot, Heart } from 'lucide-react';
+import { MapPin, Settings, Clock } from 'lucide-react';
 import {
   fetchTimingsByCity, fetchTimingsByCoords, nextPrayerInZone, formatCountdown,
   LocationError, type PrayerTimes,
 } from '@/lib/prayer';
-import { useLocalStorage } from '@/lib/useLocalStorage';
 
 const ORDER: (keyof PrayerTimes)[] = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -36,13 +35,6 @@ const MOCKUP = {
   countdown: '04:24',
 };
 
-const QUICK = [
-  { icon: BookOpen, label: 'Quran',        sub: 'Recitation & Translation', href: '/dashboard/quran' },
-  { icon: Compass,  label: 'Qibla Finder', sub: 'Find Direction',           href: '/dashboard/qibla' },
-  { icon: CircleDot, label: 'Tasbih',      sub: 'Digital Counter',          href: '/dashboard' },
-  { icon: Heart,    label: 'Daily Duas',   sub: 'Supplications',            href: '/dashboard' },
-];
-
 function fmt12(t: string): { time: string; period: string } {
   const [h, m] = t.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
@@ -56,22 +48,9 @@ function prevOf(name: keyof PrayerTimes): keyof PrayerTimes {
   return ORDER[(i - 1 + ORDER.length) % ORDER.length];
 }
 
-const DHIKR_TRANS: Record<string, string> = {
-  en: 'And remember Allah often',
-  ur: 'اور اللہ کو کثرت سے یاد کرو',
-  tr: 'Allah\'ı çokça anın',
-  hi: 'और अल्लाह को बहुत ज़्यादा याद करो',
-  bn: 'এবং আল্লাহকে অধিক স্মরণ করো',
-  fr: 'Et invoquez Allah souvent',
-  zh: '要多多赞念真主',
-  id: 'Dan perbanyaklah mengingat Allah',
-  ps: 'او الله ډیر زیاد یادوئ',
-};
-
 type Props = { lat?: number; lng?: number; city?: string; country?: string; method?: number; school?: 0 | 1 };
 
 export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan', method, school = 0 }: Props) {
-  const [language] = useLocalStorage<string>('isa:language', 'en');
   // Only fetch live data once the visitor has actually saved a location — a brand
   // new visitor (no stored keys) sees the design's London mockup instead of the
   // app's Karachi default. Read raw localStorage so we don't treat the default as "set".
@@ -155,47 +134,14 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
         })}
       </div>
 
-      {/* next prayer countdown + dhikr */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-3 mt-3">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="flex items-center gap-1.5 text-parchment/60 text-xs font-semibold">
-            <Clock size={13} /> Next Prayer
-          </p>
-          <p className="text-lg font-bold mt-1 text-parchment">{nextName}</p>
-          <p className="text-4xl font-display font-bold text-gold-300 tabular-nums leading-none mt-1">{countdown}</p>
-          <p className="text-parchment/55 text-xs mt-2">Left until Adhan</p>
-        </div>
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center justify-center text-center">
-          {language !== 'none' && (
-            <p className={`text-parchment/60 text-xs ${['ur','ar','ps'].includes(language) ? 'font-arabic' : ''}`}
-               style={['ur','ar','ps'].includes(language) ? { direction: 'rtl' } : undefined}>
-              {DHIKR_TRANS[language] ?? DHIKR_TRANS.en}
-            </p>
-          )}
-          <p className="font-arabic text-2xl text-parchment mt-2" dir="rtl">وَٱذْكُرُوا۟ ٱللّٰهَ كَثِيرًۭا</p>
-          <p className="text-gold-300 text-xs font-semibold mt-2 flex items-center gap-1">
-            <Sparkles size={11} /> Al-Jumu&apos;ah 62:10
-          </p>
-        </div>
-      </div>
-
-      {/* quick actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 mt-3 pt-3 border-t border-white/10">
-        {QUICK.map((q) => (
-          <Link
-            key={q.label}
-            href={q.href}
-            className="rounded-xl px-2 py-2 hover:bg-white/5 transition flex items-center gap-2"
-          >
-            <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gold-300 shrink-0">
-              <q.icon size={15} />
-            </span>
-            <span className="min-w-0">
-              <p className="text-xs font-bold leading-tight truncate text-parchment">{q.label}</p>
-              <p className="text-[10px] text-parchment/50 leading-tight truncate">{q.sub}</p>
-            </span>
-          </Link>
-        ))}
+      {/* next prayer countdown */}
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-4 mt-3">
+        <p className="flex items-center gap-1.5 text-parchment/60 text-xs font-semibold">
+          <Clock size={13} /> Next Prayer
+        </p>
+        <p className="text-lg font-bold mt-1 text-parchment">{nextName}</p>
+        <p className="text-4xl font-display font-bold text-gold-300 tabular-nums leading-none mt-1">{countdown}</p>
+        <p className="text-parchment/55 text-xs mt-2">Left until Adhan</p>
       </div>
     </div>
   );

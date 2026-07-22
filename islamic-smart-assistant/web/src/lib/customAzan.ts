@@ -126,7 +126,12 @@ export function saveRemoteUrl(id: string, url: string): void {
   } catch {}
 }
 
-function getStoredRemoteUrl(id: string): string | null {
+/** The backend audio_url cached for a synced custom clip, or null if it was
+ *  never uploaded/synced (e.g. a purely local-only recording). Exported so
+ *  callers that need a publicly-reachable URL (e.g. casting to a Chromecast,
+ *  which can't fetch a local IndexedDB blob) can use the clip's own recording
+ *  instead of falling back to a generic substitute. */
+export function getStoredRemoteUrl(id: string): string | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const map: Record<string, string> = JSON.parse(localStorage.getItem(REMOTE_CACHE_KEY) ?? '{}');

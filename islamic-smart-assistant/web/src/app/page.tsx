@@ -183,12 +183,14 @@ export default function HomePage() {
             {/* MIDDLE: "Azan at Your Home" teaser + setup guide */}
             <AzanAtHomeCard />
 
-            {/* RIGHT: live prayer card (design styling, real data, London mockup fallback) */}
+            {/* RIGHT: live prayer card (design styling, real data, London mockup fallback).
+                lg:ml-6 adds breathing room from the Azan-at-Home card (on top of the
+                grid's own gap) since the two sit close together at this width. */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7 }}
-              className="lg:-mt-8 lg:-ml-6"
+              className="lg:-mt-8 lg:ml-6"
             >
               <HeroPrayerCard
                 lat={loc.lat ?? undefined}
