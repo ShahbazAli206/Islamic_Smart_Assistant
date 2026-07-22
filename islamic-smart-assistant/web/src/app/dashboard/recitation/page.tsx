@@ -14,9 +14,10 @@ import {
 import { SURAHS } from '@/lib/surahs';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import {
-  RECITERS, TRANSLATIONS, hasTranslationAudio, langToTranslation,
+  RECITERS, TRANSLATIONS, hasTranslationAudio, hasLocalAudio, localAudioLangOf, langToTranslation,
   type ReciterId, type TranslationId,
 } from '@/lib/quran';
+import { isLocalAudioSupported, useDownloadedAyahs } from '@/lib/translationAudioLocal';
 import {
   createRecitationController, type RecitationController,
 } from '@/lib/recitationPlayer';
@@ -27,6 +28,8 @@ import { fetchTimingsByCity, fetchTimingsByCoords, type PrayerTimes } from '@/li
 import { usePrayerParams } from '@/lib/usePrayerParams';
 import { useTheme } from '@/lib/ThemeContext';
 import { ContentBackdrop } from '@/components/ContentBackdrop';
+import { DesktopAppPromoModal } from '@/components/DesktopAppPromoModal';
+import { TranslationDownloadModal } from '@/components/TranslationDownloadModal';
 
 // Prayers offered as an "after prayer" quick-set for the time field, in daily order.
 // Uses the exact same location + calculation method/fiqh inputs as the rest of the
@@ -206,6 +209,30 @@ export default function RecitationSchedulerPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Offline-audio prompts for translations with desktop-only spoken audio —
+  // same pattern as the Quran page: promote the desktop app on web, or open
+  // the download manager on desktop if the language isn't downloaded yet.
+  const [showDesktopPromo, setShowDesktopPromo] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const localLang = localAudioLangOf(translation);
+  const localDownloaded = useDownloadedAyahs(translation);
+  const desktopAudioSupported = isLocalAudioSupported();
+  const hasCdnAudio = hasTranslationAudio(translation);
+  const localReady = desktopAudioSupported && !!localLang && localDownloaded.size >= 6236 - 10;
+  const localNeedsDownload = desktopAudioSupported && !!localLang && !hasCdnAudio && !localReady;
+  const webPromoNotice = !desktopAudioSupported && !!localLang && !hasCdnAudio;
+
+  const checkTranslationAudio = useCallback((id: TranslationId) => {
+    if (!hasLocalAudio(id)) return;
+    if (!isLocalAudioSupported()) { setShowDesktopPromo(true); return; }
+    const api = (window as any).desktop?.transAudio;
+    const lang = localAudioLangOf(id);
+    if (!api || !lang) return;
+    api.list(lang).then((nums: number[]) => {
+      if (nums.length < 6236 - 10) setShowDownloadModal(true);
+    }).catch(() => {});
+  }, []);
 
   // Prayer times for the "after prayer" quick-set buttons — same location +
   // calculation method/fiqh inputs as the rest of the app (see usePrayerParams),
@@ -787,19 +814,39 @@ export default function RecitationSchedulerPage() {
                     <div>
                       <p className="text-xs font-medium text-emerald-900/55 mb-1.5">Translation</p>
                       <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white px-3 py-2.5">
-                        <button type="button" onClick={() => setWithTranslation((v) => !v)} role="switch" aria-checked={withTranslation}
+                        <button type="button" onClick={() => setWithTranslation((v) => { const next = !v; if (next) checkTranslationAudio(translation); return next; })} role="switch" aria-checked={withTranslation}
                           className={`relative w-10 h-5.5 shrink-0 rounded-full transition-colors ${withTranslation ? 'bg-emerald-500' : 'bg-emerald-900/15'}`} style={{ height: '22px' }}>
                           <motion.span layout transition={{ type: 'spring', stiffness: 500, damping: 32 }}
                             className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow ${withTranslation ? 'left-[22px]' : 'left-0.5'}`} />
                         </button>
-                        <select value={translation} disabled={!withTranslation} onChange={(e) => setTranslation(e.target.value as TranslationId)}
+                        <select value={translation} disabled={!withTranslation} onChange={(e) => { const id = e.target.value as TranslationId; setTranslation(id); checkTranslationAudio(id); }}
                           className="flex-1 min-w-0 bg-transparent text-sm text-emerald-950 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
                           {TRANSLATIONS.filter((t) => t.id !== 'none').map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                       </div>
                     </div>
                   </div>
-                  {noTransAudio && <p className="text-xs text-amber-700 mt-2">Spoken audio isn&apos;t available for this translation yet — only the Arabic will be recited.</p>}
+                  {withTranslation && translation !== 'none' && !hasCdnAudio && (
+                    localNeedsDownload ? (
+                      <div className="mt-2.5 flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        <Download size={13} className="shrink-0" />
+                        <span className="flex-1">Spoken translation for this language isn&apos;t downloaded yet — only the Arabic will be recited.</span>
+                        <button type="button" onClick={() => setShowDownloadModal(true)}
+                          className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-2.5 py-1 font-semibold text-white transition hover:bg-amber-700">
+                          <Download size={11} /> Download
+                        </button>
+                      </div>
+                    ) : webPromoNotice ? (
+                      <div className="mt-2.5 flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                        <Languages size={13} className="shrink-0" />
+                        <span className="flex-1">Spoken audio for this language is available in the Desktop app, offline, for all languages — only the Arabic will be recited here.</span>
+                        <button type="button" onClick={() => setShowDesktopPromo(true)}
+                          className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 font-semibold text-white transition hover:bg-emerald-700">
+                          Get the app
+                        </button>
+                      </div>
+                    ) : null
+                  )}
                 </StepSection>
 
                 {/* STEP 3: Time & Date */}
@@ -913,6 +960,19 @@ export default function RecitationSchedulerPage() {
       </AnimatePresence>
 
       <audio ref={previewRef} preload="auto" />
+
+      <TranslationDownloadModal
+        open={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        highlight={translation}
+        isDark={!!isDark}
+      />
+      <DesktopAppPromoModal
+        open={showDesktopPromo}
+        onClose={() => setShowDesktopPromo(false)}
+        translation={translation}
+        isDark={!!isDark}
+      />
     </div>
   );
 }

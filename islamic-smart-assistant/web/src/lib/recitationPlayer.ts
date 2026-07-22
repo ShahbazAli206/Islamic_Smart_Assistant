@@ -15,8 +15,25 @@
 
 import {
   surahAudioUrl, ayahAudioUrl, translationAudioUrl, hasTranslationAudio,
+  hasLocalAudio, localAudioLangOf,
   fetchSurah, fetchSurahMulti, type ReciterId, type TranslationId,
 } from './quran';
+import { isLocalAudioSupported, localAudioUrl } from './translationAudioLocal';
+
+/**
+ * Resolve the spoken-translation URL for one ayah — prefers the desktop app's
+ * downloaded local audio (if this edition has any and it's actually running
+ * there), falling back to CDN/TTS-bucket audio otherwise. A local file that
+ * hasn't been downloaded yet simply 404s and playClip() skips it gracefully,
+ * same as any other missing translation clip.
+ */
+function resolveTranslationUrl(translation: TranslationId, globalAyahNumber: number): string | null {
+  if (isLocalAudioSupported()) {
+    const lang = localAudioLangOf(translation);
+    if (lang) return localAudioUrl(lang, globalAyahNumber);
+  }
+  return translationAudioUrl(translation, globalAyahNumber);
+}
 
 export type PlayRequest = {
   surahs: number[];
@@ -119,7 +136,7 @@ export function createRecitationController(el: HTMLAudioElement): RecitationCont
       const ra = await playClip(ayahAudioUrl(ayah.number, req.reciter), myToken);
       if (ra.blocked) return true;
       if (myToken !== token) return false;
-      const turl = translationAudioUrl(req.translation, ayah.number);
+      const turl = resolveTranslationUrl(req.translation, ayah.number);
       if (turl) {
         const rt = await playClip(turl, myToken);
         if (rt.blocked) return true;
@@ -131,7 +148,8 @@ export function createRecitationController(el: HTMLAudioElement): RecitationCont
 
   function playOneSurah(n: number, req: PlayRequest, myToken: number): Promise<boolean> {
     const wantsTranslation =
-      req.withTranslation && req.translation !== 'none' && hasTranslationAudio(req.translation);
+      req.withTranslation && req.translation !== 'none' &&
+      (hasTranslationAudio(req.translation) || (hasLocalAudio(req.translation) && isLocalAudioSupported()));
     return wantsTranslation
       ? playWithTranslation(n, req, myToken)
       : playArabicOnly(n, req, myToken);

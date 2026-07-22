@@ -24,6 +24,7 @@ import {
 import { useDesktopDownloadUrl } from '@/lib/desktopApp';
 import { useIsDesktop } from '@/lib/useIsDesktop';
 import { HeroPrayerCard } from '@/components/HeroPrayerCard';
+import { AzanAtHomeCard } from '@/components/AzanAtHomeCard';
 import { AzanShowcase, QuranShowcase, DevicesShowcase } from '@/components/LandingShowcase';
 import FaithShowcase from '@/components/FaithShowcase';
 import { usePrayerParams } from '@/lib/usePrayerParams';
@@ -116,7 +117,11 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 pt-28 lg:pt-32 pb-10">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center">
+          {/* 3-way split (was an even 2-col left/right): the prayer card lands at
+              ~25% of the row (half its old 50%), copy shrinks to ~39%, and the new
+              Azan-at-Home column takes the remaining ~36%. See HeroPrayerCard.tsx
+              for the matching lg: breakpoint changes that keep it legible this narrow. */}
+          <div className="grid lg:grid-cols-[1.1fr_1fr_0.7fr] gap-8 lg:gap-6 items-center">
             {/* LEFT: badge, headline, copy, CTAs, social proof */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -174,6 +179,9 @@ export default function HomePage() {
                 </p>
               </div>
             </motion.div>
+
+            {/* MIDDLE: "Azan at Your Home" teaser + setup guide */}
+            <AzanAtHomeCard />
 
             {/* RIGHT: live prayer card (design styling, real data, London mockup fallback) */}
             <motion.div

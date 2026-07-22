@@ -5,6 +5,12 @@
  * the marketing design. It shows LIVE prayer times for the visitor's saved
  * location, and falls back to a fixed "London" mockup (identical to the design)
  * until a location has actually been set — so first paint always looks right.
+ *
+ * The internal row-grids below use viewport breakpoints (sm:), not container
+ * queries, so the hero's 3-column layout (page.tsx) narrows this card's track
+ * without the CSS "knowing" — the `lg:` overrides re-collapse each row back to
+ * a legible layout specifically at the point that hero split kicks in. This
+ * component is only ever used in that one hero, so it's safe to tune for it.
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -128,7 +134,7 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
       </div>
 
       {/* prayer-time cells (current prayer highlighted in gold) */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-5">
+      <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-3 gap-2 mt-5">
         {ORDER.map((name) => {
           const { time, period } = fmt12(timings[name]);
           const active = name === currentNm;
@@ -150,7 +156,7 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
       </div>
 
       {/* next prayer countdown + dhikr */}
-      <div className="grid sm:grid-cols-2 gap-3 mt-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-3 mt-3">
         <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
           <p className="flex items-center gap-1.5 text-parchment/60 text-xs font-semibold">
             <Clock size={13} /> Next Prayer
@@ -174,7 +180,7 @@ export function HeroPrayerCard({ lat, lng, city = 'Karachi', country = 'Pakistan
       </div>
 
       {/* quick actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-white/10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 mt-3 pt-3 border-t border-white/10">
         {QUICK.map((q) => (
           <Link
             key={q.label}

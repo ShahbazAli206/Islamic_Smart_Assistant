@@ -13,12 +13,11 @@ import {
   BellRing, BellOff, UploadCloud, Trash2, Music2, Search, Globe2,
   ArrowDownUp, LayoutGrid, List, MapPin, Heart, Activity, Zap, Compass,
   RefreshCcw, ShieldCheck, Clock, Settings2, ChevronRight, Headphones,
-  Pencil, Scissors, Square, X, AlertTriangle, Moon,
+  Pencil, Square, X, AlertTriangle, Moon,
 } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { AzanUploader } from '@/components/AzanUploader';
 import { AzanDeviceMenu } from '@/components/AzanDeviceMenu';
-import { AzanTrimmer, type TrimTarget } from '@/components/AzanTrimmer';
 import {
   customAzanUrl, deleteAzanClip, putAzanClip, getAzanClip, isCustomAzan,
   saveRemoteUrl,
@@ -314,11 +313,11 @@ function MiniCompass({ bearing, isDark }: { bearing: number | null; isDark: bool
 // ── Uploaded supplementary track card ────────────────────────────────────────
 
 function UploadedCard({
-  meta, isPlaying, accent, onPlay, onDelete,
+  meta, isPlaying, isLoading = false, accent, onPlay, onDelete,
   isBefore, isAfter, onToggleBefore, onToggleAfter,
   readOnly = false,
 }: {
-  meta: CustomAzan; isPlaying: boolean;
+  meta: CustomAzan; isPlaying: boolean; isLoading?: boolean;
   accent: 'emerald' | 'rose';
   onPlay: () => void; onDelete: () => void;
   isBefore: boolean; isAfter: boolean;
@@ -372,15 +371,20 @@ function UploadedCard({
         </div>
 
         {/* Play button — sits between avatar and name */}
-        <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} onClick={onPlay}
+        <motion.button whileHover={{ scale: isLoading ? 1 : 1.12 }} whileTap={{ scale: isLoading ? 1 : 0.92 }}
+          onClick={onPlay} disabled={isLoading}
           className={`shrink-0 w-8 h-8 rounded-full grid place-items-center shadow-md transition-all
             ${isPlaying
               ? 'bg-emerald-500 text-white ring-2 ring-emerald-300/60 shadow-emerald-400/40'
+              : isLoading
+              ? (isDark ? 'bg-white/10 text-emerald-300 cursor-default' : 'bg-emerald-100 text-emerald-400 cursor-default')
               : isDark
               ? 'bg-white/10 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-white/20'
               : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200'}`}
         >
-          {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-px" />}
+          {isLoading ? <Loader2 size={12} className="animate-spin" />
+           : isPlaying ? <Pause size={12} fill="currentColor" />
+           : <Play size={12} fill="currentColor" className="ml-px" />}
         </motion.button>
 
         <div className="min-w-0 flex-1">
@@ -557,9 +561,6 @@ export default function AzanPage() {
   const [uploadType, setUploadType] = useState<AudioType | null>(null);
   const [typePicker, setTypePicker] = useState(false);
 
-  // Azan trimmer — trim any existing voice and save as a new custom clip
-  const [trimmingItem, setTrimmingItem] = useState<TrimTarget | null>(null);
-
   // Toast shown after a delete action.
   const [deleteToast, setDeleteToast] = useState<string | null>(null);
   useEffect(() => {
@@ -720,18 +721,6 @@ export default function AzanPage() {
     el.src = url;
     el.play().then(() => { setActiveId(meta.id); setLoadingId(null); })
       .catch((e) => { setActiveId(null); setLoadingId(null); setError(`Couldn't play ${meta.name}: ${e?.message ?? 'browser blocked playback'}`); });
-  };
-
-  const openTrimmer = (item: Item) => {
-    const v = VOICES.find((x) => x.id === item.id);
-    setTrimmingItem({
-      id: item.id,
-      name: item.name,
-      local: v?.local,
-      remote: v?.remote ?? item.remoteUrl,
-      badge: item.badge,
-      tags: item.tags,
-    });
   };
 
   const openEditor = (item: Item) => {
@@ -1338,10 +1327,6 @@ export default function AzanPage() {
                         className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
                         <Pencil size={15} />
                       </button>
-                      <button onClick={() => openTrimmer(item)} title="Trim"
-                        className="w-10 h-10 grid place-items-center rounded-full border border-emerald-900/10 text-emerald-900/40 hover:text-emerald-700 hover:border-emerald-300 transition shrink-0">
-                        <Scissors size={15} />
-                      </button>
                       <button
                         onClick={() => setSelectedId(item.id)}
                         className={`flex-1 min-w-[7rem] whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition
@@ -1487,6 +1472,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="emerald" readOnly
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1501,6 +1487,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="emerald" readOnly
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1513,6 +1500,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="emerald"
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1574,6 +1562,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="rose" readOnly
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1588,6 +1577,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="rose" readOnly
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1600,6 +1590,7 @@ export default function AzanPage() {
                     <UploadedCard
                       key={track.id} meta={track} accent="rose"
                       isPlaying={activeId === track.id}
+                      isLoading={loadingId === track.id}
                       isBefore={preAzanQueue.some(x => x.id === track.id)}
                       isAfter={postAzanQueue.some(x => x.id === track.id)}
                       onPlay={() => previewCustom(track)}
@@ -1778,31 +1769,6 @@ export default function AzanPage() {
         onClose={() => setUploadPromo(null)}
         audioType={uploadPromo === 'generic' ? null : uploadPromo}
         isDark={isDark}
-      />
-
-      <AzanTrimmer
-        open={trimmingItem !== null}
-        target={trimmingItem}
-        onClose={() => setTrimmingItem(null)}
-        onSaved={(meta, replacedId) => {
-          setCustomAzans((prev) => {
-            const filtered = replacedId && isCustomAzan(replacedId) ? prev.filter((x) => x.id !== replacedId) : prev;
-            return [meta, ...filtered];
-          });
-          // If the original was a built-in voice, hide it from the list.
-          if (replacedId && !isCustomAzan(replacedId)) {
-            setHiddenVoices((prev) => prev.includes(replacedId) ? prev : [...prev, replacedId]);
-          }
-          // Sync remoteCustoms: remove replaced clip, add new one if it uploaded.
-          if (replacedId && isCustomAzan(replacedId)) {
-            setRemoteCustoms((prev) => prev.filter((c) => c.id !== replacedId));
-          }
-          if (meta.remoteUrl) {
-            const item = { id: meta.id, name: meta.name, url: meta.remoteUrl, durationMs: meta.durationSec * 1000 };
-            setRemoteCustoms((prev) => [item, ...prev.filter((c) => c.id !== meta.id)]);
-          }
-          setSelectedId(meta.id);
-        }}
       />
 
       {/* ── Azan Editor modal — add intro / outro to any existing voice ── */}
