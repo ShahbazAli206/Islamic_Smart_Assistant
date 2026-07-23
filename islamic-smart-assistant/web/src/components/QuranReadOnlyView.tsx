@@ -105,7 +105,7 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
     // On phones the mushaf page runs edge-to-edge: the negative margin cancels
     // the two ancestor x-paddings (px-5 content wrapper + px-2 player wrapper
     // in page.tsx = 1.75rem per side); ≥sm it re-centers with the usual gutter.
-    <div className="w-[calc(100%+3.5rem)] -mx-7 sm:w-full sm:mx-auto max-w-2xl flex flex-col gap-4">
+    <div className="w-[calc(100%+3.5rem)] -mx-7 sm:w-full sm:mx-auto max-w-3xl flex flex-col gap-4">
       {/* ── Header: Juz · Page + navigation ── */}
       <div className="flex items-center justify-between px-3 sm:px-1">
         <button
@@ -201,24 +201,31 @@ export function QuranReadOnlyView({ page, onPageChange, isDark }: Props) {
              the ornate border image exists yet, and the image's baked-in cream
              background would make dark mode's light text unreadable. Light mode
              uses the border image directly (see .mushaf-ornate-frame above).
-             Font size is FIXED; the page's width comes from its widest line
-             (w-max), and this wrapper scrolls horizontally when the window is
-             narrower than the page — never shrinking the text. ── */}
-      <div className="overflow-x-auto">
+
+             The frame is fixed to the column width (w-full) so it's ALWAYS fully
+             visible; only the inner page content scrolls horizontally when a
+             (fixed-font, never-wrapping, never-shrinking) mushaf line is wider
+             than the frame. Previously the whole framed page lived inside
+             overflow-x-auto sized to its widest line (w-max), so any overflow
+             pinned it at scrollLeft:0 and clipped the trailing (right) border
+             out of view. ── */}
       {isDark ? (
-        <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient w-max min-w-full">
+        <div className="relative rounded-2xl p-[5px] shadow-card-soft bg-gold-gradient w-full">
           <div className="rounded-xl border-4 border-double p-[3px] border-gold-400/60">
             <div className="relative rounded-lg border px-2 py-5 sm:px-8 sm:py-6 border-gold-400/25 bg-emerald-950/90">
-              {pageBody}
+              <div className="overflow-x-auto">
+                <div className="w-max min-w-full">{pageBody}</div>
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="mushaf-ornate-frame relative shadow-card-soft w-max min-w-full px-2 py-5 sm:px-8 sm:py-6">
-          {pageBody}
+        <div className="mushaf-ornate-frame relative shadow-card-soft w-full px-2 py-5 sm:px-8 sm:py-6">
+          <div className="overflow-x-auto">
+            <div className="w-max min-w-full">{pageBody}</div>
+          </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
